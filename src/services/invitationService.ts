@@ -169,7 +169,7 @@ export const invitationService = {
    * GET /api/v1/events/:eventId/invitations/preview?inviteeId=:inviteeId
    */
   async previewCardPNG(eventId: string, inviteeId?: string): Promise<Blob> {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
     const token = tokenStorage.getAccessToken();
     const url = inviteeId
       ? `${API_BASE_URL}/api/v1/events/${eventId}/invitations/preview?inviteeId=${inviteeId}`
