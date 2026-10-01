@@ -26,6 +26,19 @@ export function formatDateTime(value: string | null | undefined, fallback = ""):
   });
 }
 
+// Compact table format used by the Figma lists: "25/12/25 11:00 AM"
+export function formatCompactDateTime(value: string | null | undefined, fallback = ""): string {
+  const date = parseIso(value);
+  if (!date) return fallback;
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yy = String(date.getFullYear()).slice(-2);
+  const h = date.getHours();
+  const hh = String(h % 12 || 12).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yy} ${hh}:${min} ${h >= 12 ? "PM" : "AM"}`;
+}
+
 // "10:30 AM"
 export function formatTime(value: string | null | undefined, fallback = ""): string {
   const date = parseIso(value);

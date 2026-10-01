@@ -4,22 +4,9 @@ import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
-
-// Client-side route access per role. The backend enforces authorization independently;
-// this only keeps users out of screens they cannot use.
-function canAccess(role: string | undefined, pathname: string | null): boolean {
-  const path = pathname || "";
-  const within = (p: string) => path === p || path.startsWith(p + "/");
-
-  if (role === "SYSTEM_USER") {
-    return ["/dashboard", "/settings/account", "/notification", "/notifications"].some(within);
-  }
-  if (role === "ORGANIZER") {
-    if (within("/user-management/assign")) return true;
-    return !["/user-management", "/event-organizer", "/earnings", "/settings/price-rate"].some(within);
-  }
-  return true;
-}
+import { loginRedirectPath } from "@/components/auth/authPortal";
+import { canAccessRoute } from "@/components/sidebar/navConfig";
+import { tokenStorage } from "@/services/tokenStorage";
 
 export default function DashboardLayout({
   children,
@@ -28,19 +15,37 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const allowed = !!user && canAccess(user.role, pathname);
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const isSystemUser = user?.role === "SYSTEM_USER";
+  const allowed = !!user && !isSystemUser && canAccessRoute(user.role, pathname);
+
+  // The client router does not run in a document restored from the back/forward cache, so leave with
+  // a full navigation when such a page comes back without a session
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted && !tokenStorage.getAccessToken()) {
+        window.location.replace(loginRedirectPath(window.location.pathname));
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      router.replace("/signin");
+      router.replace(loginRedirectPath(pathname || undefined));
       return;
     }
-    if (user && !canAccess(user.role, pathname)) {
+    // Assigned users work only in the mobile app; end any web session they still hold
+    if (isSystemUser) {
+      logout().then(() => router.replace("/signin?mode=app"));
+      return;
+    }
+    if (user && !canAccessRoute(user.role, pathname)) {
       router.replace("/dashboard");
     }
-  }, [isLoading, isAuthenticated, user, pathname, router]);
+  }, [isLoading, isAuthenticated, isSystemUser, user, pathname, router, logout]);
 
   if (isLoading) {
     return (
@@ -72,7 +77,7 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col md:flex-row h-screen bg-[#F8F9FA] overflow-hidden font-sans">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
+      <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col">
         {children}
       </main>
     </div>

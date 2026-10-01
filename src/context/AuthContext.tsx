@@ -5,6 +5,7 @@ import { UserData, tokenStorage } from "@/services/tokenStorage";
 import { authService, LoginPayload, RegisterPayload } from "@/services/authService";
 import { userService, UpdateProfilePayload } from "@/services/userService";
 import { ApiResponse } from "@/services/apiClient";
+import { rememberPortal } from "@/components/auth/authPortal";
 
 interface AuthContextType {
   user: UserData | null;
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (res.success && res.data) {
         setUser(res.data);
         tokenStorage.setUser(res.data);
+        rememberPortal(res.data.role);
       }
     } catch {
       // keep stored user if network error occurs temporarily
@@ -50,10 +52,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser();
   }, []);
 
+  // A page restored from the back/forward cache (e.g. Back after logout) or a logout in another tab
+  // must not keep showing an authenticated UI once the stored session is gone.
+  useEffect(() => {
+    const dropIfSignedOut = () => {
+      if (!tokenStorage.getAccessToken()) setUser(null);
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) dropIfSignedOut();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("storage", dropIfSignedOut);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("storage", dropIfSignedOut);
+    };
+  }, []);
+
   const login = async (credentials: LoginPayload): Promise<ApiResponse> => {
     const res = await authService.login(credentials);
     if (res.success && res.data?.user) {
       setUser(res.data.user);
+      rememberPortal(res.data.user.role);
     }
     return res;
   };

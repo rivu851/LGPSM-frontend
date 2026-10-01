@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import CustomDropdown from "@/components/common/CustomDropdown";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
@@ -287,7 +288,11 @@ export default function AssignedSystemUsersPage() {
 
       // Only confirm success when at least one assignment was actually saved
       setIsAssignModalOpen(false);
-      if (errorMessages.length < selectedIds.length) {
+      const savedAny = errorMessages.length < selectedIds.length;
+      // Never carry a previous selection or session scope into the next assignment
+      setSelectedIds([]);
+      setSessionScope(null);
+      if (savedAny) {
         setIsAssignSuccessModalOpen(true);
       }
       await loadData();
@@ -654,7 +659,7 @@ export default function AssignedSystemUsersPage() {
           </button>
           <button
             type="button"
-            onClick={() => setIsAssignModalOpen(true)}
+            onClick={() => { setSessionScope(null); setErrorFeedback(null); setIsAssignModalOpen(true); }}
             className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer shrink-0"
           >
             <span>Assign {selectedIds.length} users</span>
@@ -857,20 +862,17 @@ export default function AssignedSystemUsersPage() {
                 <label className="text-xs font-semibold text-gray-800">
                   Event<span className="text-[#FF5B22]">*</span>
                 </label>
-                <select
+                <CustomDropdown
                   value={selectedEventId}
-                  onChange={(e) => {
-                    setSelectedEventId(e.target.value);
+                  onChange={(v) => {
+                    setSelectedEventId(v);
                     setSessionScope(null);
                   }}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                >
-                  {eventsList.map((evt) => (
-                    <option key={evt.id} value={evt.id}>
-                      {evt.title}
-                    </option>
-                  ))}
-                </select>
+                  options={eventsList.map((evt) => ({ value: evt.id, label: evt.title }))}
+                  placeholder="Select an event"
+                  emptyMessage="No events yet"
+                  ariaLabel="Event"
+                />
               </div>
 
               <SessionScopePicker

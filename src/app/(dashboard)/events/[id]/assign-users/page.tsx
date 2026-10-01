@@ -9,7 +9,7 @@ import { userService } from "@/services/userService";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
 import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
-import UserNavDropdown from "@/components/common/UserNavDropdown";
+import PageHeader from "@/components/common/PageHeader";
 import { getAssignedCountText, SystemUserRow } from "@/app/(dashboard)/user-management/assign/page";
 
 export default function EventAssignUsersPage() {
@@ -45,11 +45,13 @@ export default function EventAssignUsersPage() {
 
       // 2. Fetch system users only (role === SYSTEM_USER)
       const usersRes = await userService.getUsers("SYSTEM_USER");
+      if (!usersRes.success) throw new Error(usersRes.message || "Failed to load system users.");
       const rawUsers = Array.isArray(usersRes?.data) ? usersRes.data : [];
       const systemUsersOnly = rawUsers.filter(u => u.role === "SYSTEM_USER");
 
       // 3. Fetch assignments for this event
       const assignRes = await assignmentService.getAssignmentsByEvent(eventId);
+      if (!assignRes.success) throw new Error(assignRes.message || "Failed to load assignments.");
       const assignmentsList: AssignmentData[] = Array.isArray(assignRes?.data) ? assignRes.data : [];
 
       const userAssignmentsMap: Record<string, SystemUserRow["assignments"]> = {};
@@ -107,6 +109,15 @@ export default function EventAssignUsersPage() {
       fetchAssignmentsAndSessions();
     }
   }, [eventId]);
+
+  // Opening the popup starts from the selected user's current sessions (or "All sessions")
+  const openAssignModal = () => {
+    setErrorFeedback(null);
+    const only = selectedUserIds.length === 1 ? users.find((u) => u.id === selectedUserIds[0]) : undefined;
+    const current = only?.assignments.find((a) => a.eventId === eventId);
+    setSessionScope(current && current.sessions.length > 0 ? current.sessions.map((s) => s.id) : null);
+    setIsAssignModalOpen(true);
+  };
 
   const toggleExpand = (id: string) => {
     if (expandedUserIds.includes(id)) {
@@ -185,6 +196,9 @@ export default function EventAssignUsersPage() {
 
       // Only confirm success when at least one assignment was actually saved
       setIsAssignModalOpen(false);
+      // Never carry a previous selection or session scope into the next assignment
+      setSelectedUserIds([]);
+      setSessionScope(null);
       if (errors.length < selectedUserIds.length) {
         setIsAssignSuccessModalOpen(true);
       }
@@ -209,16 +223,7 @@ export default function EventAssignUsersPage() {
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
-      {/* Top Navigation Bar */}
-      <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
-          <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-          </svg>
-          <h1 className="text-xl font-bold text-gray-900">Assign System Users</h1>
-        </div>
-        <UserNavDropdown />
-      </header>
+      <PageHeader title="Event" />
 
       {/* Page Content */}
       <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 relative pb-24 bg-white">
@@ -285,7 +290,7 @@ export default function EventAssignUsersPage() {
 
             <button
               type="button"
-              onClick={() => setIsAssignModalOpen(true)}
+              onClick={openAssignModal}
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -460,7 +465,7 @@ export default function EventAssignUsersPage() {
           <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
             <button
               type="button"
-              onClick={() => setIsAssignModalOpen(true)}
+              onClick={openAssignModal}
               className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               <span>Assign {selectedUserIds.length} users</span>

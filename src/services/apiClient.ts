@@ -1,6 +1,7 @@
 import { tokenStorage } from "./tokenStorage";
+import { loginRedirectPath } from "@/components/auth/authPortal";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
 
 export interface ApiResponse<T = any> {
   success?: boolean;
@@ -98,7 +99,7 @@ export async function apiClient<T = any>(
           response = await fetch(url, { ...config, headers });
         } else {
           if (typeof window !== "undefined" && !window.location.pathname.includes("/signin")) {
-            window.location.href = "/signin";
+            window.location.href = loginRedirectPath(window.location.pathname + window.location.search);
           }
           return { success: false, message: "Session expired. Please log in again." };
         }

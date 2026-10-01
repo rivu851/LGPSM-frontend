@@ -5,13 +5,16 @@ import { gsap } from "gsap";
 import StepHeader from "./StepHeader";
 import Step1EventDetails, { EventDateField } from "./Step1EventDetails";
 import Step2Settings from "./Step2Settings";
-import Step3Sessions, { InviteeRow, SessionInviteeFile } from "./Step3Sessions";
+import Step3Sessions, { SessionInviteeFile } from "./Step3Sessions";
 import MobileCardPreview from "./MobileCardPreview";
 import SelectTemplateModal from "./modals/SelectTemplateModal";
 import DateTimePickerModal from "./modals/DateTimePickerModal";
 import InviteesPreviewModal from "./modals/InviteesPreviewModal";
-import UserNavDropdown from "@/components/common/UserNavDropdown";
-import { categoryService, Category } from "@/services/categoryService";
+import PageHeader from "@/components/common/PageHeader";
+import { useAuth } from "@/context/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
+import { ALL_EVENT_FEATURES, EventFeatureSettings, platformSettingsService } from "@/services/platformSettingsService";
+import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { DraftErrors, EventDraft, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 
@@ -26,7 +29,6 @@ export interface EventWizardSubmit {
 
 interface EventWizardProps {
   heading: string;
-  headerIcon: React.ReactNode;
   draft: EventDraft;
   setDraft: (updater: (prev: EventDraft) => EventDraft) => void;
   draftStatus: DraftStatus;
@@ -44,7 +46,6 @@ interface EventWizardProps {
 // Shared create/edit event wizard. The page owns the draft (and its persistence); the steps are controlled.
 export default function EventWizard({
   heading,
-  headerIcon,
   draft,
   setDraft,
   draftStatus,
@@ -58,21 +59,21 @@ export default function EventWizard({
   onSubmit,
   onCancel,
 }: EventWizardProps) {
+  const { user } = useAuth();
+  const categories = useCategories();
   const stepContentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showErrors, setShowErrors] = useState(false);
-  const [logoFile, setLogoFile] = useState<{ name: string; url: string } | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [features, setFeatures] = useState<EventFeatureSettings>(ALL_EVENT_FEATURES);
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<Record<string, SessionInviteeFile | undefined>>({});
-  const [preview, setPreview] = useState<{ sessionKey?: string; sessionName: string; list: InviteeRow[] } | null>(null);
+  const [previewKey, setPreviewKey] = useState<string | null>(null);
 
+  // Options the admin switched off are hidden from the form (the backend also enforces them)
   useEffect(() => {
-    categoryService.getCategories().then((res) => {
-      if (res.success && Array.isArray(res.data)) setCategories(res.data);
-      else setCategoriesError(res.message || "Failed to load categories.");
+    platformSettingsService.getEventFeatures().then((res) => {
+      if (res.success && res.data) setFeatures(res.data);
     });
   }, []);
 
@@ -82,33 +83,18 @@ export default function EventWizard({
     }
   }, [currentStep]);
 
-  // Release blob URLs created for the logo preview
-  useEffect(() => () => {
-    if (logoFile?.url.startsWith("blob:")) URL.revokeObjectURL(logoFile.url);
-  }, [logoFile]);
-
-  const allErrors = useMemo(() => validateEventDraft(draft), [draft]);
+  const subcategoryRequired = !!draft.categoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0;
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired }), [draft, subcategoryRequired]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
   const patch = (p: Partial<EventDraft>) => setDraft((prev) => ({ ...prev, ...p }));
 
-  const goToStep = (step: number) => setCurrentStep(step);
-
-  const handleStep1Next = () => {
-    const step1Errors = Object.keys(allErrors).filter((k) => stepOfError(k) === 1);
-    if (step1Errors.length > 0) {
+  const goIfValid = (step: 1 | 2, next: number) => {
+    if (Object.keys(allErrors).some((k) => stepOfError(k) === step)) {
       setShowErrors(true);
       return;
     }
-    setCurrentStep(2);
-  };
-
-  const handleStep2Next = () => {
-    if (allErrors.thresholdLimit) {
-      setShowErrors(true);
-      return;
-    }
-    setCurrentStep(3);
+    setCurrentStep(next);
   };
 
   const handleFinish = () => {
@@ -119,6 +105,15 @@ export default function EventWizard({
       return;
     }
     onSubmit({ draft, sessionFiles });
+  };
+
+  const discard = () => {
+    if (confirm("Discard this draft? The information you entered will be lost.")) {
+      setSessionFiles({});
+      setShowErrors(false);
+      setCurrentStep(1);
+      onDiscardDraft();
+    }
   };
 
   const pickerValue = (() => {
@@ -152,88 +147,55 @@ export default function EventWizard({
     }));
   };
 
-  const sessionOptions = draft.sessions.map((s) => ({ id: s.key, name: s.name || "Session" }));
+  const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
+  const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-[#F4F5F8] font-sans text-gray-800">
-      <div className="flex-1 flex flex-col">
-        <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between shrink-0 gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            {headerIcon}
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight truncate">{heading}</h1>
-          </div>
-          <UserNavDropdown />
-        </header>
+    <div className="w-full flex-1 flex flex-col bg-white">
+      <PageHeader title={heading} />
 
-        {/* Draft status */}
-        {(draftStatus !== "idle" || draftSavedAt || submitError) && (
-          <div className="bg-white px-6 sm:px-8 pt-4 space-y-2">
-            {draftStatus === "restored" && (
-              <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-xs font-medium flex flex-wrap items-center justify-between gap-2">
-                <span>Your unsaved draft was restored. Uploaded invitee files need to be attached again.</span>
-                <div className="flex items-center gap-3">
-                  <button type="button" onClick={onDismissDraftStatus} className="font-semibold cursor-pointer">OK</button>
-                  {canDiscard && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm("Discard this draft? The information you entered will be lost.")) {
-                          setSessionFiles({});
-                          setShowErrors(false);
-                          setCurrentStep(1);
-                          onDiscardDraft();
-                        }
-                      }}
-                      className="font-semibold text-rose-600 cursor-pointer"
-                    >
-                      Discard draft
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-            {draftStatus === "discarded-stale" && (
-              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-xs font-medium flex items-center justify-between gap-2">
-                <span>An older unsaved draft was discarded because this event was changed since it was saved.</span>
-                <button type="button" onClick={onDismissDraftStatus} className="font-semibold cursor-pointer shrink-0">OK</button>
-              </div>
-            )}
-            {submitError && (
-              <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">
-                {submitError} Your entries are kept, so you can fix the problem and try again.
-              </div>
-            )}
-            {draftSavedAt && draftStatus !== "restored" && (
-              <p className="text-[11px] text-gray-400 font-medium">
-                Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+      {(draftStatus !== "idle" || draftSavedAt || submitError) && (
+        <div className="px-4 sm:px-6 pt-4 space-y-2">
+          {draftStatus === "restored" && (
+            <div role="status" className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-sm flex flex-wrap items-center justify-between gap-2">
+              <span>Your unsaved draft was restored. Uploaded invitee files need to be attached again.</span>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer">OK</button>
                 {canDiscard && (
-                  <>
-                    {" · "}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (confirm("Discard this draft? The information you entered will be lost.")) {
-                          setSessionFiles({});
-                          setShowErrors(false);
-                          setCurrentStep(1);
-                          onDiscardDraft();
-                        }
-                      }}
-                      className="underline cursor-pointer hover:text-rose-600"
-                    >
-                      Discard draft
-                    </button>
-                  </>
+                  <button type="button" onClick={discard} className="font-medium text-rose-600 cursor-pointer">Discard draft</button>
                 )}
-              </p>
-            )}
-          </div>
-        )}
+              </div>
+            </div>
+          )}
+          {draftStatus === "discarded-stale" && (
+            <div role="status" className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center justify-between gap-2">
+              <span>An older unsaved draft was discarded because this event was changed since it was saved.</span>
+              <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer shrink-0">OK</button>
+            </div>
+          )}
+          {submitError && (
+            <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-sm break-words">
+              {submitError} Your entries are kept, so you can fix the problem and try again.
+            </div>
+          )}
+          {draftSavedAt && draftStatus !== "restored" && (
+            <p className="text-xs text-[#828282]">
+              Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {canDiscard && (
+                <>
+                  {" · "}
+                  <button type="button" onClick={discard} className="underline cursor-pointer hover:text-rose-600">Discard draft</button>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+      )}
 
-        <div className="flex-1 flex flex-col lg:flex-row bg-white">
-          <div className="w-full lg:w-[65%] flex flex-col min-w-0">
-            <StepHeader currentStep={currentStep} onStepClick={goToStep} />
-
+      <div className="p-4 sm:p-6 flex-1">
+        <div className="border border-[#E0E0E0] rounded-lg overflow-hidden flex flex-col xl:flex-row bg-white">
+          <div className="w-full xl:w-[62%] flex flex-col min-w-0">
+            <StepHeader currentStep={currentStep} onStepClick={setCurrentStep} />
             <div ref={stepContentRef} className="flex-1">
               {currentStep === 1 && (
                 <Step1EventDetails
@@ -241,25 +203,16 @@ export default function EventWizard({
                   onChange={patch}
                   onOpenDatePicker={(field) => setPickerTarget({ kind: "event", field })}
                   categories={categories}
-                  categoriesError={categoriesError}
+                  canManageCategories={user?.role === "ADMIN"}
+                  rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
-                  logoFile={logoFile}
-                  setLogoFile={setLogoFile}
-                  onNext={handleStep1Next}
+                  onNext={() => goIfValid(1, 2)}
                   onCancel={onCancel}
                 />
               )}
-
               {currentStep === 2 && (
-                <Step2Settings
-                  draft={draft}
-                  onChange={patch}
-                  errors={visibleErrors}
-                  onNext={handleStep2Next}
-                  onBack={() => setCurrentStep(1)}
-                />
+                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} onNext={() => goIfValid(2, 3)} onBack={() => setCurrentStep(1)} />
               )}
-
               {currentStep === 3 && (
                 <Step3Sessions
                   sessions={draft.sessions}
@@ -272,10 +225,7 @@ export default function EventWizard({
                   eventEnd={draft.end}
                   errors={visibleErrors}
                   onOpenSessionPicker={(key, field) => setPickerTarget({ kind: "session", key, field })}
-                  onOpenInviteesPreview={(sessionName, list) => {
-                    const session = draft.sessions.find((s) => s.name === sessionName);
-                    setPreview({ sessionKey: session?.key, sessionName, list: list || [] });
-                  }}
+                  onOpenInviteesPreview={setPreviewKey}
                   onFinish={handleFinish}
                   onBack={() => setCurrentStep(2)}
                   submitting={submitting}
@@ -284,13 +234,15 @@ export default function EventWizard({
               )}
             </div>
           </div>
-
-          <div className="w-full lg:w-[35%] shrink-0 lg:sticky lg:top-4 self-start">
+          <div className="w-full xl:w-[38%] shrink-0 border-t xl:border-t-0 xl:border-l border-[#E0E0E0]">
             <MobileCardPreview
               template={draft.template}
               eventTitle={draft.title}
               eventStart={draft.start}
               venue={draft.venue}
+              logoKey={draft.logoKey}
+              categoryName={categories.categoryName(draft.categoryId)}
+              subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}
               onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
             />
           </div>
@@ -304,6 +256,7 @@ export default function EventWizard({
         onSelectTemplate={(template) => patch({ template })}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
+        subcategoryId={draft.subcategoryId || undefined}
       />
 
       <DateTimePickerModal
@@ -315,20 +268,23 @@ export default function EventWizard({
         title={pickerTitle}
       />
 
-      <InviteesPreviewModal
-        isOpen={!!preview}
-        onClose={() => setPreview(null)}
-        sessionName={preview?.sessionName}
-        inviteesList={preview?.list || []}
-        sessionsOptions={sessionOptions}
-        onSave={(updatedList) => {
-          // Edited rows are submitted individually instead of the original file
-          const key = preview?.sessionKey;
-          if (key && sessionFiles[key]) {
-            setSessionFiles((prev) => ({ ...prev, [key]: { ...prev[key]!, inviteesList: updatedList, edited: true } }));
-          }
-        }}
-      />
+      {previewKey && previewFile && (
+        <InviteesPreviewModal
+          title="Invitees List Preview"
+          subtitle={`${previewSession?.name || "Session"} · ${previewFile.name}`}
+          rows={previewFile.rows}
+          onClose={() => setPreviewKey(null)}
+          onSave={(rows) => {
+            // Edits replace the uploaded file, so the import receives exactly what was previewed
+            const key = previewKey;
+            setSessionFiles((prev) => {
+              const current = prev[key];
+              if (!current) return prev;
+              return { ...prev, [key]: { ...current, rows, file: rowsToSheetFile(rows, current.name), problemCount: rows.filter((r) => rowProblem(r)).length } };
+            });
+          }}
+        />
+      )}
     </div>
   );
 }

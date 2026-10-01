@@ -4,13 +4,16 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
+import { loginRedirectPath } from "@/components/auth/authPortal";
 import { notificationService, onNotificationsChanged } from "@/services/notificationService";
+import NavIcon from "./NavIcon";
 
 interface SidebarFooterProps {
   activeItem?: string;
+  onNavigate?: () => void;
 }
 
-export default function SidebarFooter({ activeItem }: SidebarFooterProps) {
+export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout, isAuthenticated } = useAuth();
@@ -36,62 +39,43 @@ export default function SidebarFooter({ activeItem }: SidebarFooterProps) {
   }, [isAuthenticated, pathname]);
 
   const handleLogout = async () => {
+    onNavigate?.();
     await logout();
-    router.push("/signin");
+    router.push(loginRedirectPath());
   };
 
-  const isNotificationActive =
-    activeItem === "notification" || activeItem === "notifications";
+  const active = activeItem === "notification";
 
   return (
-    <div className="pt-4 border-t border-gray-800 space-y-1">
+    <div className="border-t border-[#2C3237] pt-2.5 flex flex-col">
       <Link
         href="/notification"
-        className={`flex items-center gap-3 px-3 py-2.5 text-xs rounded-md cursor-pointer transition-colors ${
-          isNotificationActive
-            ? "bg-[#282B33] font-semibold text-[#FF5B22]"
-            : "text-gray-400 hover:text-white hover:bg-gray-800/40"
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-colors ${
+          active ? "text-[#FF651D]" : "text-[#DEE2E5] hover:text-white"
         }`}
       >
-        <svg
-          className={`w-4 h-4 shrink-0 ${
-            isNotificationActive ? "text-[#FF5B22]" : "text-gray-400"
-          }`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
-        <span>Notification</span>
+        <NavIcon name="notifications" />
+        <span className="flex-1">Notification</span>
         {unreadCount > 0 && (
           <span
-            className="ml-auto min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF5B22] text-white text-[10px] font-bold flex items-center justify-center"
+            className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#FF651D] text-white text-[11px] font-semibold flex items-center justify-center"
             aria-label={`${unreadCount} unread notifications`}
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </Link>
-
       <button
+        type="button"
         onClick={handleLogout}
-        className="w-full flex items-center gap-3 px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 rounded-md cursor-pointer transition-colors"
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-300 hover:text-red-200 cursor-pointer transition-colors"
       >
-        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-          />
+        <svg className="size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
-        <span>Log out</span>
+        Log out
       </button>
     </div>
   );

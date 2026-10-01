@@ -22,6 +22,11 @@ export interface UseFormDraftOptions {
   enabled?: boolean;
 }
 
+export interface UseFormDraftHooks<T> {
+  // Upgrades a restored draft saved by an older version of the form
+  normalize?: (stored: T) => T;
+}
+
 export type DraftStatus = "idle" | "restored" | "discarded-stale";
 
 function readStorage(key: string): string | null {
@@ -41,8 +46,12 @@ function writeStorage(key: string, value: string | null) {
   }
 }
 
-export function useFormDraft<T>(key: string, createInitial: () => T, options: UseFormDraftOptions) {
+export function useFormDraft<T>(key: string, createInitial: () => T, options: UseFormDraftOptions & UseFormDraftHooks<T>) {
   const { version, debounceMs = 600, maxAgeDays = 14, baseVersion, enabled = true } = options;
+  const normalizeRef = useRef(options.normalize);
+  useEffect(() => {
+    normalizeRef.current = options.normalize;
+  }, [options.normalize]);
 
   const [value, setValue] = useState<T>(createInitial);
   const [status, setStatus] = useState<DraftStatus>("idle");
@@ -71,7 +80,7 @@ export function useFormDraft<T>(key: string, createInitial: () => T, options: Us
           writeStorage(key, null);
           setStatus("discarded-stale");
         } else {
-          setValue(stored.data);
+          setValue(normalizeRef.current ? normalizeRef.current(stored.data) : stored.data);
           setSavedAt(stored.savedAt);
           setStatus("restored");
           dirtyRef.current = true;

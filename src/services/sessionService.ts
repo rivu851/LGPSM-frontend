@@ -14,6 +14,8 @@ export interface SessionData {
   location?: string;
   maxAttendees?: number;
   accessControl?: string;
+  inviteeSource?: "NEW_LIST" | "COPY_SESSION";
+  sourceSessionId?: string | null;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -25,6 +27,8 @@ export interface SessionRequest {
   schedule: { start: string; end: string };
   accessControl?: "NO_RESTRICTION" | "ONLY_ONCE";
   validateAgainstOtherSessions?: boolean;
+  inviteeSource?: "NEW_LIST" | "COPY_SESSION";
+  sourceSessionId?: string | null;
 }
 
 export const sessionService = {
@@ -35,7 +39,7 @@ export const sessionService = {
   async createSession(eventId: string, payload: SessionRequest): Promise<ApiResponse<SessionData>> {
     return apiClient<SessionData>(`/api/v1/events/${eventId}/sessions`, {
       method: "POST",
-      body: JSON.stringify({ ...payload, inviteeSource: "NEW_LIST" }),
+      body: JSON.stringify(payload),
     }, true);
   },
 

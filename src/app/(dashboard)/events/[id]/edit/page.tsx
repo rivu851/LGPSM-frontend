@@ -14,6 +14,7 @@ import {
   createEmptyEventDraft,
   draftToUpdatePayload,
   eventToDraft,
+  normalizeEventDraft,
   ServerEvent,
 } from "@/components/add-event/eventDraft";
 import { persistSessionsAndInvitees } from "@/components/add-event/persistEventExtras";
@@ -33,7 +34,7 @@ export default function EditEventPage() {
   const draftState = useFormDraft<EventDraft>(
     `lgpsm:event-edit-draft:${eventId}`,
     () => serverDraftRef.current || createEmptyEventDraft(),
-    { version: EVENT_DRAFT_VERSION, baseVersion, enabled: !!baseVersion }
+    { version: EVENT_DRAFT_VERSION, baseVersion, enabled: !!baseVersion, normalize: normalizeEventDraft }
   );
   const { reset } = draftState;
 
@@ -122,11 +123,6 @@ export default function EditEventPage() {
   return (
     <EventWizard
       heading="Edit Event"
-      headerIcon={
-        <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      }
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}

@@ -34,16 +34,7 @@ export const templateService = {
     isSystemTemplate?: boolean;
     isPublished?: boolean;
   }): Promise<ApiResponse<Template>> {
-    // The backend models publish state as isActive
-    const { isPublished, ...rest } = payload;
-    return apiClient<Template>(
-      "/api/v1/templates",
-      {
-        method: "POST",
-        body: JSON.stringify({ ...rest, ...(isPublished !== undefined ? { isActive: isPublished } : {}) }),
-      },
-      true
-    );
+    return apiClient<Template>("/api/v1/templates", { method: "POST", body: JSON.stringify(payload) }, true);
   },
 
   async updateTemplate(
@@ -55,19 +46,10 @@ export const templateService = {
       previewImageKey?: string;
       templateData?: Record<string, any>;
       isSystemTemplate?: boolean;
-      isActive?: boolean;
       isPublished?: boolean;
     }
   ): Promise<ApiResponse<Template>> {
-    const { isPublished, ...rest } = payload;
-    return apiClient<Template>(
-      `/api/v1/templates/${id}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ ...rest, ...(isPublished !== undefined && rest.isActive === undefined ? { isActive: isPublished } : {}) }),
-      },
-      true
-    );
+    return apiClient<Template>(`/api/v1/templates/${id}`, { method: "PATCH", body: JSON.stringify(payload) }, true);
   },
 
   async deleteTemplate(id: string): Promise<ApiResponse<Template>> {

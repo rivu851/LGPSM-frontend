@@ -72,6 +72,7 @@ interface EventRequestBase {
   attendeeSettings?: { thresholdLimit?: number };
   dietaryPreference?: { enabled: boolean; title?: string; options?: unknown[] };
   templateId?: string;
+  media?: { logoKey?: string };
 }
 
 export interface CreateEventRequest extends EventRequestBase {

@@ -33,6 +33,7 @@ export interface EventReportData {
     checkInCount: number;
     attendeeCount?: number;
     invitedCount?: number;
+    checkInsToday?: number;
     systemUsers?: number;
     accessControl?: string;
     schedule: { start: string; end: string };

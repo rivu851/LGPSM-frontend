@@ -50,7 +50,7 @@ export default function Navbar() {
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
           <Link
-            href="/signin"
+            href="/signin?mode=organizer"
             className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] px-3 py-2 transition-colors font-[family-name:var(--font-space-grotesk)]"
           >
             Sign In
@@ -81,7 +81,7 @@ export default function Navbar() {
           <Link href="/pricing" className="block py-2 text-sm font-semibold text-gray-700">Pricing</Link>
           <Link href="/contact" className="block py-2 text-sm font-semibold text-gray-700">Contact</Link>
           <div className="pt-2 flex flex-col gap-2">
-            <Link href="/signin" className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg">Sign In</Link>
+            <Link href="/signin?mode=organizer" className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg">Sign In</Link>
             <Link href="/signup" className="w-full text-center py-2.5 text-sm font-bold text-white bg-[#FF5B22] rounded-lg">Sign Up Free</Link>
           </div>
         </div>

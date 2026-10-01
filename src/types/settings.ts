@@ -14,7 +14,8 @@ export interface TemplateItem {
   name: string;
   categoryId: string;
   subcategoryId: string;
-  imageUrl: string;
+  // Stored image reference (see utils/mediaUrl.ts); null when no image was uploaded
+  imageKey: string | null;
   status: "Published" | "Saved on Draft";
   createdAt: string;
 }
