@@ -122,6 +122,44 @@ body.is-scrolling .custom-scrollbar::-webkit-scrollbar-thumb {
   }
 }
 
+// ── Auth Card Skeleton Shimmer ────────────────────────────────────────────
+@keyframes authShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.auth-card-shimmer {
+  background: linear-gradient(
+    105deg,
+    rgba(255, 101,  29, 0.55) 25%,
+    rgba(255, 175,  90, 0.80) 50%,
+    rgba(255, 101,  29, 0.55) 75%
+  );
+  background-size: 200% 100%;
+  animation: authShimmer 1.6s ease-in-out infinite;
+}
+
+.auth-card-shimmer-dark {
+  background: linear-gradient(
+    105deg,
+    rgba(30,  58, 138, 0.55) 25%,
+    rgba(59,  130, 246, 0.40) 50%,
+    rgba(30,  58, 138, 0.55) 75%
+  );
+  background-size: 200% 100%;
+  animation: authShimmer 1.6s ease-in-out infinite;
+}
+
+// ── Auth Card Slide-In from Left ──────────────────────────────────────────
+@keyframes authCardSlideLeft {
+  from { opacity: 0; transform: translateX(-56px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.auth-card-enter {
+  animation: authCardSlideLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 // ── Page Entrance Animations ──────────────────────────────────────────────
 @keyframes pageEntrance {
   from {

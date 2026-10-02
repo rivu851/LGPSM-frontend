@@ -1,24 +1,97 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { gsap } from "gsap";
 
 // Auth screens follow Login-Signup-Flow/02-Login.pdf & 03-Register.pdf (1440-wide frame):
 // left = orange sunburst panel (666px) with a 739px-tall rounded photo card, vertically centred, that
 // overhangs 71px into the white; right = 440px form column starting 190px past the panel, top-aligned at 80px.
+// aside gets z-10 so the card (right-[-10.66%]) overhangs on top of the white main panel.
 export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
+  const [cardLoaded, setCardLoaded] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    const form = formRef.current;
+    if (!card || !form) return;
+    // Card slides in from the left (horizontal)
+    gsap.fromTo(card,
+      { x: -90, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.8, ease: "power3.out", delay: 0.05 }
+    );
+    // Form slides up from below (vertical)
+    gsap.fromTo(form,
+      { y: 28, opacity: 0 },
+      { y: 0, opacity: 1, duration: 0.65, ease: "power2.out", delay: 0.18 }
+    );
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
-      <aside className="hidden lg:block relative shrink-0 w-[46.25%] bg-[#FF651D]">
-        <Image src="/images/auth/auth-sunburst.svg" alt="" fill sizes="47vw" className="object-cover" />
-        <div className="absolute z-20 left-[12.61%] right-[-10.66%] top-1/2 -translate-y-1/2 h-[min(739px,calc(100%-48px))] rounded-[20px] overflow-hidden">
-          <Image src="/images/auth/Auth.webp" alt="" fill sizes="46vw" className="object-cover object-center" />
+    <div data-page-reveal className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
+      {/* z-10 so the card's right-[-10.66%] overhang renders on top of the white main panel */}
+      <aside className="hidden lg:block relative z-10 shrink-0 w-[46.25%] bg-[#FF651D]">
+        <Image src="/images/auth/auth-sunburst.svg" alt="" fill sizes="47vw" className="object-cover" priority />
+        <div
+          ref={cardRef}
+          className="absolute z-20 left-[12.61%] right-[-10.66%] top-1/2 -translate-y-1/2 h-[min(739px,calc(100%-48px))] rounded-[20px] overflow-hidden shadow-2xl"
+        >
+          <div
+            aria-hidden
+            className={`absolute inset-0 auth-card-shimmer rounded-[20px] transition-opacity duration-500 ${
+              cardLoaded ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          />
+          <Image
+            src="/images/auth/Auth.webp"
+            alt=""
+            fill
+            sizes="46vw"
+            priority
+            fetchPriority="high"
+            className={`object-cover object-center transition-opacity duration-700 ease-out ${
+              cardLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            onLoad={() => setCardLoaded(true)}
+          />
         </div>
       </aside>
       <main className="flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 pt-10 lg:pt-20 pb-12">
-        <div className="w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))]">{children}</div>
+        <div ref={formRef} className="w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))]">
+          {children}
+        </div>
       </main>
+    </div>
+  );
+}
+
+// Admin login: centered white card on a light gray page — no left panel, no Google button.
+export function AdminAuthLayout({ children }: { children: React.ReactNode }) {
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!cardRef.current) return;
+    // Card scales + slides up from below (vertical entrance)
+    gsap.fromTo(cardRef.current,
+      { y: 32, opacity: 0, scale: 0.97 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.6, ease: "power2.out" }
+    );
+  }, []);
+
+  return (
+    <div
+      data-page-reveal
+      className="min-h-screen bg-[#F5F5F5] flex items-center justify-center font-[family-name:var(--font-inter)] p-4"
+    >
+      <div
+        ref={cardRef}
+        className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.09)] px-8 sm:px-10 py-10"
+      >
+        {children}
+      </div>
     </div>
   );
 }

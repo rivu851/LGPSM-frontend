@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
+  AdminAuthLayout,
   AuthAlert,
   AuthHeading,
   AuthLogo,
@@ -113,6 +114,84 @@ function SigninContent() {
   const dashboardLabel =
     mode === "admin" ? "Admin Dashboard" : mode === "system_user" ? "your account" : "Organizer Dashboard";
 
+  const sharedForm = (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="signin-email" className={authLabelClass}>
+          Email Address<span className="text-[#FF651D]">*</span>
+        </label>
+        <input
+          id="signin-email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder={INPUT_PLACEHOLDERS.auth.email}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isSubmitting}
+          className={authInputClass}
+        />
+      </div>
+      <div className="mt-3">
+        <label htmlFor="signin-password" className={authLabelClass}>
+          Password<span className="text-[#FF651D]">*</span>
+        </label>
+        <PasswordInput
+          id="signin-password"
+          value={password}
+          onChange={setPassword}
+          placeholder="Type your password"
+          autoComplete="current-password"
+          disabled={isSubmitting}
+        />
+      </div>
+      <div className="mt-[14px] flex items-center justify-between gap-3 text-xs leading-4">
+        <label className="flex items-center gap-2 cursor-pointer text-[#4A5568]">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 rounded border-[#CFD9E0] accent-[#FF651D] cursor-pointer"
+          />
+          Remember me
+        </label>
+        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#FF651D]">
+          Forgot Password?
+        </Link>
+      </div>
+      <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-7`}>
+        {isSubmitting ? <><Spinner /> Signing in...</> : "Sign in"}
+      </button>
+    </form>
+  );
+
+  // Admin login: centered card — no left panel, no Google button, no signup link
+  if (mode === "admin") {
+    return (
+      <AdminAuthLayout>
+        <div className="flex justify-center mb-6">
+          <AuthLogo />
+        </div>
+        <div className="mb-6 text-center">
+          <h1 className="text-[22px] leading-7 font-semibold text-black">Super Admin Log In</h1>
+          <p className="mt-2 text-sm leading-5 text-[#5C5C5C]">Welcome back! Login to Dashboard</p>
+        </div>
+        {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+        {sharedForm}
+        <p className="text-center mt-6 text-xs text-[#9CA3AF]">
+          Not an admin?{" "}
+          <button
+            type="button"
+            onClick={() => handleModeChange("organizer")}
+            className="text-[#FF651D] font-medium hover:underline cursor-pointer"
+          >
+            Organizer Login
+          </button>
+        </p>
+      </AdminAuthLayout>
+    );
+  }
+
   return (
     <AuthSplitLayout>
       <div className="mb-8 lg:mb-[45px] h-[34px]">
@@ -132,60 +211,7 @@ function SigninContent() {
       <GoogleButton onToken={handleGoogle} disabled={isSubmitting} />
       <OrDivider />
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="signin-email" className={authLabelClass}>
-            Email Address<span className="text-[#FF651D]">*</span>
-          </label>
-          <input
-            id="signin-email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder={INPUT_PLACEHOLDERS.auth.email}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={isSubmitting}
-            className={authInputClass}
-          />
-        </div>
-        <div className="mt-3">
-          <label htmlFor="signin-password" className={authLabelClass}>
-            Password<span className="text-[#FF651D]">*</span>
-          </label>
-          <PasswordInput
-            id="signin-password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Type your password"
-            autoComplete="current-password"
-            disabled={isSubmitting}
-          />
-        </div>
-        <div className="mt-[14px] flex items-center justify-between gap-3 text-xs leading-4">
-          <label className="flex items-center gap-2 cursor-pointer text-[#4A5568]">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-[#CFD9E0] accent-[#FF651D] cursor-pointer"
-            />
-            Remember me
-          </label>
-          <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#FF651D]">
-            Forgot Password?
-          </Link>
-        </div>
-        <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-7`}>
-          {isSubmitting ? (
-            <>
-              <Spinner /> Signing in...
-            </>
-          ) : (
-            "Sign in"
-          )}
-        </button>
-      </form>
+      {sharedForm}
 
       <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
         Don&apos;t have an account?{" "}
