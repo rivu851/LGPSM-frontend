@@ -312,7 +312,7 @@ export default function PricingSection() {
               <p className="text-xs text-gray-500 font-medium mb-8">Up to 250 Attendees per month</p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 border border-[#C44200] text-[#C44200] hover:bg-[#C44200] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <button className="w-full py-3 px-4 border border-[#dd5c1b] text-[#dd5c1b] hover:bg-[#dd5c1b] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </button>
 
@@ -355,7 +355,7 @@ export default function PricingSection() {
               <h3 className="text-xl font-bold text-white mb-2">Professional Plan</h3>
               
               {/* Most Popular Badge */}
-              <div className="inline-block bg-[#C44200] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
+              <div className="inline-block bg-[#dd5c1b] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
                 Most Popular
               </div>
 
@@ -367,7 +367,7 @@ export default function PricingSection() {
               <p className="text-xs text-gray-300 font-medium mb-8">Up to 1,500 Attendees per month</p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 bg-[#C44200] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-md mb-8">
+              <button className="w-full py-3 px-4 bg-[#dd5c1b] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-md mb-8">
                 Start My 15-day Trial
               </button>
 
@@ -410,7 +410,7 @@ export default function PricingSection() {
               </p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 border border-[#C44200] text-[#C44200] hover:bg-[#C44200] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <button className="w-full py-3 px-4 border border-[#dd5c1b] text-[#dd5c1b] hover:bg-[#dd5c1b] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </button>
 

@@ -57,7 +57,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/signup"
-            className="px-5 py-2.5 text-sm font-bold text-white bg-[#C44200] hover:bg-[#A83800] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
+            className="px-5 py-2.5 text-sm font-bold text-white bg-[#dd5c1b] hover:bg-[#A83800] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
           >
             Sign Up Free
           </Link>
@@ -83,7 +83,7 @@ export default function Navbar() {
           <Link href="/contact" className="block py-2 text-sm font-semibold text-gray-700">Contact</Link>
           <div className="pt-2 flex flex-col gap-2">
             <Link href="/signin?mode=organizer" className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg">Sign In</Link>
-            <Link href="/signup" className="w-full text-center py-2.5 text-sm font-bold text-white bg-[#C44200] hover:bg-[#A83800] rounded-lg">Sign Up Free</Link>
+            <Link href="/signup" className="w-full text-center py-2.5 text-sm font-bold text-white bg-[#dd5c1b] hover:bg-[#A83800] rounded-lg">Sign Up Free</Link>
           </div>
         </div>
       )}

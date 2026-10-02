@@ -150,7 +150,7 @@ export const authLabelClass = "block text-sm leading-5 font-medium text-[#15191C
 export const authFieldStackClass = "space-y-3";
 
 export const authPrimaryButtonClass =
-  "w-full h-[41px] bg-[#C44200] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
+  "w-full h-[41px] bg-[#dd5c1b] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
 
 export function PasswordInput({
   value,
