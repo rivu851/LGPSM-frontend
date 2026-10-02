@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import Lenis from "lenis";
 import { gsap } from "gsap";
 
 interface SmoothScrollProviderProps {
@@ -11,78 +10,36 @@ interface SmoothScrollProviderProps {
 
 export default function SmoothScrollProvider({ children }: SmoothScrollProviderProps) {
   const pathname = usePathname();
-  const lenisRef = useRef<Lenis | null>(null);
 
-  // 1. Initialize Lenis & Auto-Hiding Scrollbar (without blocking inner container scrolling)
+  // 1. Auto-hiding scrollbar: mark only the element being scrolled. The page-level scrollbar is
+  // hidden in CSS, so window scrolls need no work at all.
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 2.0,
-      prevent: (node) => {
-        // Prevent Lenis from hijacking wheel events inside inner overflow containers
-        return !!(
-          node instanceof HTMLElement &&
-          node.closest &&
-          (node.closest(".overflow-y-auto") ||
-            node.closest("main") ||
-            node.closest("aside") ||
-            node.closest(".overflow-x-auto"))
-        );
-      },
-    });
+    let active: Element | null = null;
+    let scrollTimeout: ReturnType<typeof setTimeout> | undefined;
 
-    lenisRef.current = lenis;
+    const handleScroll = (e: Event) => {
+      const target = e.target;
+      if (!(target instanceof Element) || target === document.documentElement) return;
 
-    const updateRaf = (time: number) => {
-      lenis.raf(time * 1000);
-    };
-
-    gsap.ticker.add(updateRaf);
-    gsap.ticker.lagSmoothing(0);
-
-    // Auto-hide scrollbar logic: show when scrolling any element, fade out smoothly when stopped
-    let scrollTimeout: NodeJS.Timeout;
-
-    const triggerScrollIndicator = (target?: HTMLElement | null) => {
-      document.body.classList.add("is-scrolling");
-      document.documentElement.classList.add("is-scrolling");
-
-      if (target && target.classList) {
+      if (active !== target) {
+        active?.classList.remove("is-scrolling");
+        active = target;
         target.classList.add("is-scrolling");
       }
 
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
-        document.body.classList.remove("is-scrolling");
-        document.documentElement.classList.remove("is-scrolling");
-        if (target && target.classList) {
-          target.classList.remove("is-scrolling");
-        }
+        active?.classList.remove("is-scrolling");
+        active = null;
       }, 900);
     };
 
-    const handleWindowScroll = (e: Event) => {
-      triggerScrollIndicator(e.target as HTMLElement);
-    };
-
-    const handleLenisScroll = () => {
-      triggerScrollIndicator();
-    };
-
-    lenis.on("scroll", handleLenisScroll);
-    window.addEventListener("scroll", handleWindowScroll, { capture: true, passive: true });
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
 
     return () => {
       clearTimeout(scrollTimeout);
-      gsap.ticker.remove(updateRaf);
-      window.removeEventListener("scroll", handleWindowScroll, { capture: true });
-      lenis.destroy();
-      lenisRef.current = null;
+      active?.classList.remove("is-scrolling");
+      window.removeEventListener("scroll", handleScroll, { capture: true });
     };
   }, []);
 

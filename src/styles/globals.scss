@@ -25,7 +25,6 @@ body,
 main,
 aside,
 .overflow-y-auto {
-  scroll-behavior: smooth;
   overscroll-behavior-y: contain;
 }
 
@@ -52,10 +51,8 @@ body {
   transition: background-color 0.4s ease, background 0.4s ease;
 }
 
-body.is-scrolling ::-webkit-scrollbar-thumb,
-html.is-scrolling ::-webkit-scrollbar-thumb,
-main.is-scrolling::-webkit-scrollbar-thumb,
-aside.is-scrolling::-webkit-scrollbar-thumb,
+// `is-scrolling` sits only on the element being scrolled. Descendant selectors from body/html
+// restyled the whole document at every scroll start and stop, which stuttered long pages.
 .is-scrolling::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.6);
 
@@ -68,11 +65,9 @@ aside.is-scrolling::-webkit-scrollbar-thumb,
 * {
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
-  transition: scrollbar-color 0.4s ease;
 }
 
-body.is-scrolling *,
-html.is-scrolling * {
+.is-scrolling {
   scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
 }
 
@@ -104,7 +99,7 @@ html {
   }
 }
 
-body.is-scrolling .custom-scrollbar::-webkit-scrollbar-thumb {
+.custom-scrollbar.is-scrolling::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.6);
 
   &:hover {

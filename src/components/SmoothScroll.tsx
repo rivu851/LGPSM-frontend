@@ -9,26 +9,48 @@ export default function SmoothScroll({ children }: { children: React.ReactNode }
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel: true,
-      touchMultiplier: 1.8,
-    });
+    // Refs to items created inside the deferred callback so cleanup can reach them
+    let lenis: Lenis | null = null;
+    let rafCallback: ((time: number) => void) | null = null;
 
-    // Sync Lenis scroll updates with GSAP ScrollTrigger
-    lenis.on("scroll", ScrollTrigger.update);
+    const initLenis = () => {
+      lenis = new Lenis({
+        duration: 0.9,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smoothWheel: true,
+        touchMultiplier: 1.8,
+      });
 
-    const updateRaf = (time: number) => {
-      lenis.raf(time * 1000);
+      lenis.on("scroll", ScrollTrigger.update);
+
+      rafCallback = (time: number) => lenis!.raf(time * 1000);
+      gsap.ticker.add(rafCallback);
+      gsap.ticker.lagSmoothing(0);
+
+      // Measure all trigger positions now that everything is loaded and painted
+      ScrollTrigger.refresh();
     };
 
-    gsap.ticker.add(updateRaf);
-    gsap.ticker.lagSmoothing(0);
+    // Defer Lenis + GSAP ticker start until after window.load + one RAF.
+    // During load the browser is busy (JS parse, image decode, 9+ useEffect calls)
+    // and every RAF frame exceeds 16ms. Starting Lenis here causes those dropped
+    // frames to show as scroll lag. After load the page is idle → instant 60fps.
+    const start = () => requestAnimationFrame(initLenis);
+
+    if (document.readyState === "complete") {
+      start();
+    } else {
+      window.addEventListener("load", start, { once: true });
+    }
+
+    const onResize = () => ScrollTrigger.refresh();
+    window.addEventListener("resize", onResize, { passive: true });
 
     return () => {
-      lenis.destroy();
-      gsap.ticker.remove(updateRaf);
+      window.removeEventListener("load", start);
+      window.removeEventListener("resize", onResize);
+      if (rafCallback) gsap.ticker.remove(rafCallback);
+      if (lenis) lenis.destroy();
     };
   }, []);
 

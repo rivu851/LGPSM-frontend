@@ -85,7 +85,7 @@ export default function Footer() {
               src="/images/navbar/Nav_logo.webp"
               alt="LGPSM Logo"
               width={140}
-              height={36}
+              height={47}
               className="h-22 w-auto object-contain"
             />
           </div>
