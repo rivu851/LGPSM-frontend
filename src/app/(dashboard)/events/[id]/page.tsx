@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
@@ -10,8 +9,8 @@ import { sessionService, SessionData } from "@/services/sessionService";
 import { assignmentService } from "@/services/assignmentService";
 import { reportService, EventReportData } from "@/services/reportService";
 import { auditLogService, AuditLogItem } from "@/services/auditLogService";
-import { invitationService } from "@/services/invitationService";
 import { formatCompactDateTime, formatDateTime, formatTime } from "@/utils/dateTime";
+import TemplateThumb from "@/components/settings/TemplateThumb";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import { formatEventId } from "@/utils/formatId";
 import PageHeader from "@/components/common/PageHeader";
@@ -30,7 +29,7 @@ interface EventDetail {
   subcategory?: { name?: string } | null;
   organizerId?: { fullName?: string; profile?: { organizationName?: string } } | string;
   location?: { address?: string } | string;
-  templateId?: { name?: string } | string | null;
+  templateId?: { name?: string; previewImageKey?: string } | string | null;
   operationalDataCleared?: boolean;
 }
 
@@ -134,8 +133,6 @@ export default function EventDetailsPage() {
   const [report, setReport] = useState<EventReportData | null>(null);
   const [accessLogs, setAccessLogs] = useState<AuditLogItem[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
-  const [cardUrl, setCardUrl] = useState<string | null>(null);
-  const [cardError, setCardError] = useState<string | null>(null);
   const [cardExpanded, setCardExpanded] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -175,29 +172,10 @@ export default function EventDetailsPage() {
     if (eventId) load();
   }, [eventId, load]);
 
-  // The panel shows the same server-rendered card guests receive (sample guest)
-  useEffect(() => {
-    if (!event) return;
-    let objectUrl: string | null = null;
-    let cancelled = false;
-    invitationService
-      .previewCardPNG(eventId)
-      .then((blob) => {
-        if (cancelled) return;
-        objectUrl = URL.createObjectURL(blob);
-        setCardUrl(objectUrl);
-      })
-      .catch((e: Error) => !cancelled && setCardError(e.message || "Card preview unavailable"));
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [event, eventId]);
-
   if (loading) {
     return (
       <div className="w-full min-h-full bg-white">
-        <PageHeader title="Event" />
+        <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
         <p className="py-24 text-center text-sm text-[#828282]">Loading event...</p>
       </div>
     );
@@ -206,7 +184,7 @@ export default function EventDetailsPage() {
   if (!event) {
     return (
       <div className="w-full min-h-full bg-white">
-        <PageHeader title="Event" />
+        <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
         <div role="alert" className="max-w-md mx-auto mt-16 border border-[#E0E0E0] rounded-lg p-8 text-center space-y-4">
           <h2 className="text-lg font-medium text-gray-900">Event unavailable</h2>
           <p className="text-sm text-[#4B4F52] break-words">{loadError}</p>
@@ -242,7 +220,7 @@ export default function EventDetailsPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Event" />
+      <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
       <div className="p-4 sm:p-6 lg:p-8 max-w-[1240px] w-full mx-auto space-y-6 pb-24">
         {notice && (
           <div role="status" className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-sm text-emerald-800 flex justify-between gap-3">
@@ -356,7 +334,7 @@ export default function EventDetailsPage() {
           <section className={`${card} p-4`} aria-labelledby="card-preview-heading">
             <div className="flex items-center justify-between mb-3">
               <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">Card Preview</h3>
-              {cardUrl && (
+              {typeof event.templateId === "object" && event.templateId?.name && (
                 <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#FF651D] cursor-pointer">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -364,12 +342,11 @@ export default function EventDetailsPage() {
                 </button>
               )}
             </div>
-            <div className="relative w-full aspect-[2/3] rounded-md overflow-hidden bg-[#F4F5F8] border border-[#EEEEEE]">
-              {cardUrl ? (
-                <Image src={cardUrl} alt={`Invitation card for ${event.title}`} fill unoptimized className="object-contain" />
-              ) : (
-                <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-xs text-[#828282]">{cardError || "Generating preview..."}</p>
-              )}
+            <div className="rounded-md overflow-hidden border border-[#EEEEEE]">
+              <TemplateThumb
+                imageKey={typeof event.templateId === "object" ? event.templateId?.previewImageKey : undefined}
+                name={typeof event.templateId === "object" && event.templateId?.name ? event.templateId.name : event.title}
+              />
             </div>
             <p className="mt-2 text-xs text-[#828282] truncate">
               {typeof event.templateId === "object" && event.templateId?.name ? `Template: ${event.templateId.name}` : "No template selected"}

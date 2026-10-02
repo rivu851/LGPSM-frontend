@@ -18,21 +18,60 @@ import {
   authLabelClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
-import { MOBILE_ONLY_NOTICE, forgotPasswordHref, isSafeReturnPath, parsePortalMode } from "@/components/auth/authPortal";
+import {
+  MOBILE_ONLY_NOTICE,
+  PortalMode,
+  forgotPasswordHref,
+  isSafeReturnPath,
+  parsePortalMode,
+  portalRole,
+} from "@/components/auth/authPortal";
+import { INPUT_PLACEHOLDERS } from "@/constants/placeholders";
+import { ERROR_MESSAGES } from "@/constants/errorMessages";
+
+const PORTAL_TABS: { mode: PortalMode; label: string }[] = [
+  { mode: "admin", label: "Admin" },
+  { mode: "organizer", label: "Organizer" },
+  { mode: "system_user", label: "System User" },
+];
+
+function PortalTabs({ value, onChange }: { value: PortalMode; onChange: (m: PortalMode) => void }) {
+  return (
+    <div role="tablist" aria-label="Sign in as" className="flex mb-[35px] rounded-lg border border-[#E0E0E0] overflow-hidden bg-[#FAFAFA]">
+      {PORTAL_TABS.map(({ mode, label }) => (
+        <button
+          key={mode}
+          type="button"
+          role="tab"
+          aria-selected={value === mode}
+          onClick={() => onChange(mode)}
+          className={`flex-1 h-[38px] text-xs font-semibold transition-colors cursor-pointer
+            ${value === mode ? "bg-[#C44200] text-white" : "text-[#5C5C5C] hover:bg-gray-100"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
 
-  // The portal comes from the URL (?mode=admin|organizer|app); the design has no on-page switch.
   const initial = parsePortalMode(searchParams.get("mode"));
-  const mode = initial.mode;
+  const [mode, setMode] = useState<PortalMode>(initial.mode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const handleModeChange = (m: PortalMode) => {
+    setMode(m);
+    setErrorMessage("");
+  };
 
   const onSuccess = () => {
     const from = searchParams.get("from");
@@ -49,11 +88,11 @@ function SigninContent() {
     setErrorMessage("");
     setIsSubmitting(true);
     try {
-      const res = await login({ email, password, role: mode === "admin" ? "ADMIN" : "ORGANIZER" });
+      const res = await login({ email, password, role: portalRole(mode) });
       if (res.success) onSuccess();
-      else setErrorMessage(res.message || "Invalid credentials. Please check your email and password.");
+      else setErrorMessage(res.message || ERROR_MESSAGES.auth.invalidCredentials);
     } catch {
-      setErrorMessage("An unexpected error occurred. Please try again.");
+      setErrorMessage(ERROR_MESSAGES.network.genericFailure);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,13 +104,14 @@ function SigninContent() {
     try {
       const res = await loginWithGoogle(idToken);
       if (res.success) onSuccess();
-      else setErrorMessage(res.message || "Google sign-in failed.");
+      else setErrorMessage(res.message || ERROR_MESSAGES.network.genericFailure);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const dashboardName = mode === "admin" ? "Admin Dashboard" : "Organizer Dashboard";
+  const dashboardLabel =
+    mode === "admin" ? "Admin Dashboard" : mode === "system_user" ? "your account" : "Organizer Dashboard";
 
   return (
     <AuthSplitLayout>
@@ -82,7 +122,9 @@ function SigninContent() {
         <BackLink href="/" label="Back to Home" />
       </div>
 
-      <AuthHeading title="Sign in your account" subtitle={`Welcome back! Login to ${dashboardName}`} />
+      <AuthHeading title="Sign in your account" subtitle={`Welcome back! Login to ${dashboardLabel}`} />
+
+      <PortalTabs value={mode} onChange={handleModeChange} />
 
       {initial.mobileOnly && <AuthAlert tone="info">{MOBILE_ONLY_NOTICE}</AuthAlert>}
       {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
@@ -100,7 +142,7 @@ function SigninContent() {
             type="email"
             required
             autoComplete="email"
-            placeholder="hello@example.com"
+            placeholder={INPUT_PLACEHOLDERS.auth.email}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             disabled={isSubmitting}
@@ -121,7 +163,7 @@ function SigninContent() {
           />
         </div>
         <div className="mt-[14px] flex items-center justify-between gap-3 text-xs leading-4">
-          <label className="flex items-center gap-2 cursor-pointer text-[#718096]">
+          <label className="flex items-center gap-2 cursor-pointer text-[#4A5568]">
             <input
               type="checkbox"
               checked={rememberMe}
@@ -145,9 +187,9 @@ function SigninContent() {
         </button>
       </form>
 
-      <p className="text-center mt-[37px] text-sm leading-5 text-[#718096]">
+      <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-[#FF651D] font-medium underline underline-offset-2">
+        <Link href="/signup" className="text-[#B83D00] font-medium underline underline-offset-2">
           Sign up
         </Link>
       </p>

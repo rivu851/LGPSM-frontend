@@ -11,9 +11,9 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
       <aside className="hidden lg:block relative shrink-0 w-[46.25%] bg-[#FF651D]">
-        <Image src="/images/auth/auth-sunburst.svg" alt="" fill priority sizes="47vw" className="object-cover" />
+        <Image src="/images/auth/auth-sunburst.svg" alt="" fill sizes="47vw" className="object-cover" />
         <div className="absolute z-20 left-[12.61%] right-[-10.66%] top-1/2 -translate-y-1/2 h-[min(739px,calc(100%-48px))] rounded-[20px] overflow-hidden">
-          <Image src="/images/auth/Auth.png" alt="" fill priority sizes="46vw" className="object-cover object-center" />
+          <Image src="/images/auth/Auth.webp" alt="" fill sizes="46vw" className="object-cover object-center" />
         </div>
       </aside>
       <main className="flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 pt-10 lg:pt-20 pb-12">
@@ -26,7 +26,7 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
 export function AuthLogo() {
   return (
     <Link href="/" className="inline-block">
-      <Image src="/images/branding/lgpsm-logo.svg" alt="LGPSM" width={202} height={34} priority className="h-[34px] w-auto" />
+      <Image src="/images/branding/lgpsm-logo.svg" alt="LGPSM" width={202} height={34} priority fetchPriority="high" className="h-[34px] w-auto" />
     </Link>
   );
 }
@@ -51,7 +51,7 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle: stri
   return (
     <div className="mb-[35px]">
       <h1 className="text-[22px] leading-7 font-medium text-black">{title}</h1>
-      <p className="mt-[9px] text-sm leading-5 text-[#828282]">{subtitle}</p>
+      <p className="mt-[9px] text-sm leading-5 text-[#5C5C5C]">{subtitle}</p>
     </div>
   );
 }
@@ -78,7 +78,7 @@ export const authLabelClass = "block text-sm leading-5 font-medium text-[#15191C
 export const authFieldStackClass = "space-y-3";
 
 export const authPrimaryButtonClass =
-  "w-full h-[41px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
+  "w-full h-[41px] bg-[#C44200] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
 
 export function PasswordInput({
   value,
@@ -184,7 +184,7 @@ export function GoogleButton({ onToken, disabled }: { onToken: (idToken: string)
         </svg>
         Sign in with Google
       </button>
-      {note && <p className="mt-1.5 text-xs text-[#828282]">{note}</p>}
+      {note && <p className="mt-1.5 text-xs text-[#5C5C5C]">{note}</p>}
     </div>
   );
 }

@@ -44,7 +44,7 @@ function AddEventContent() {
     templateService.getTemplateById(templateParam).then((res) => {
       if (res.success && res.data && res.data.isPublished !== false) {
         const t = res.data;
-        update((prev) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null } }));
+        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null } }));
       }
     });
   }, [hydrated, templateParam, update]);

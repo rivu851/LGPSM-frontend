@@ -49,7 +49,7 @@ export default function EarningsOverviewCard({
                 ADJUST RATE
               </span>
               {isSavedNotice && (
-                <span className="text-xs font-semibold text-emerald-600 animate-in fade-in">
+                <span className="text-xs font-semibold text-emerald-600 animate-fadeIn">
                   Rate applied to estimates (not stored on server)
                 </span>
               )}

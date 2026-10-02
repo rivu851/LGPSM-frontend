@@ -36,8 +36,8 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="invitee-preview-title">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="invitee-preview-title">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-modal">
         <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-[#E5E5E5]">
           <div className="min-w-0">
             <h2 id="invitee-preview-title" className="text-base font-medium text-gray-900">

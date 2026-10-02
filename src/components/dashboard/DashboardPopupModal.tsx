@@ -121,7 +121,7 @@ export default function DashboardPopupModal({
         <div className="hidden md:block w-1/2 relative bg-gray-900 min-h-[420px] overflow-hidden">
           <div className="absolute inset-0 animate-image-zoom">
             <Image
-              src="/images/dashboard/Dashboard_Popup.png"
+              src="/images/dashboard/Dashboard_Popup.webp"
               alt="Scanning QR Code"
               fill
               sizes="(max-width: 768px) 100vw, 50vw"

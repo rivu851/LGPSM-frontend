@@ -1,3 +1,12 @@
+/**
+ * API service for event creation, updates, listing, and media presigns.
+ *
+ * Integration Contract:
+ * - Authentication: All write operations and organizer event queries require authenticated sessions (`requiresAuth = true`).
+ * - Payload Contract: Dates (`schedule.start`, `schedule.end`, `rsvp.acceptanceLastDate`) are sent as UTC ISO-8601 strings.
+ * - Rate Locking: New event creation triggers backend price rate locking for the event.
+ */
+
 import { apiClient, ApiResponse } from "./apiClient";
 
 // ─────────────────────────────────────────────

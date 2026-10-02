@@ -8,6 +8,7 @@ import UserNavDropdown from "@/components/common/UserNavDropdown";
 import { eventService } from "@/services/eventService";
 import { useEventSessions } from "@/hooks/useEventSessions";
 import SessionScopePicker from "@/components/common/SessionScopePicker";
+import CustomDropdown from "@/components/common/CustomDropdown";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
 import { getAssignedCountText, SystemUserRow } from "@/app/(dashboard)/user-management/assign/page";
 
@@ -274,11 +275,11 @@ export default function AllUsersPage() {
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
       {/* Header */}
       <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
-          <h1 className="text-xl font-bold text-gray-900">All System Users</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">All System Users</h1>
         </div>
         <UserNavDropdown />
       </header>
@@ -326,7 +327,7 @@ export default function AllUsersPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-3 shrink-0 w-fit">
             <Link
               href="/user-management/add"
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
@@ -571,8 +572,8 @@ export default function AllUsersPage() {
 
       {/* ── Edit User Modal ── */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Edit System User</h3>
               <button
@@ -646,8 +647,8 @@ export default function AllUsersPage() {
 
       {/* ── Assign User Modal ── */}
       {isAssignModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Assign System User</h3>
               <button
@@ -666,20 +667,12 @@ export default function AllUsersPage() {
                 <label className="text-xs font-semibold text-gray-800">
                   Event<span className="text-[#FF5B22]">*</span>
                 </label>
-                <select
+                <CustomDropdown
                   value={selectedEventId}
-                  onChange={(e) => {
-                    setSelectedEventId(e.target.value);
-                    setSessionScope(null);
-                  }}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                >
-                  {eventsList.map((evt) => (
-                    <option key={evt.id} value={evt.id}>
-                      {evt.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(v) => { setSelectedEventId(v); setSessionScope(null); }}
+                  options={eventsList.map((evt) => ({ value: evt.id, label: evt.name }))}
+                  ariaLabel="Select event"
+                />
               </div>
 
               <SessionScopePicker
@@ -717,8 +710,8 @@ export default function AllUsersPage() {
 
       {/* Success Modal */}
       {isAssignSuccessModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal">
             <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

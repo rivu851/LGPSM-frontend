@@ -77,7 +77,7 @@ export default function DashboardLayout({
   return (
     <div className="flex flex-col md:flex-row h-screen bg-[#F8F9FA] overflow-hidden font-sans">
       <Sidebar />
-      <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col">
+      <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
         {children}
       </main>
     </div>

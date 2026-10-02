@@ -150,7 +150,7 @@ export default function HowItWorks() {
           <div className="flex-1 relative rounded-2xl p-2 sm:p-3 bg-gradient-to-r from-[#FF7338] via-[#FF5B22] to-[#FF8546] shadow-2xl overflow-hidden">
             <div className="relative rounded-md overflow-hidden bg-gray-900 aspect-[16/10] sm:aspect-[16/9] flex items-center justify-center group cursor-pointer">
               <Image
-                src="/images/auth/Auth.png"
+                src="/images/auth/Auth.webp"
                 alt="LGPSM Step Preview"
                 fill
                 priority
@@ -166,20 +166,22 @@ export default function HowItWorks() {
           </div>
 
           {/* Vertical Step Number Indicator */}
-          <div className="flex flex-col items-center gap-2 shrink-0">
-            <span className="text-xs font-bold text-white">01</span>
+          <nav aria-label="How It Works steps" className="flex flex-col items-center gap-2 shrink-0">
+            <span className="text-xs font-bold text-white" aria-hidden="true">01</span>
             <div className="w-[2px] h-28 bg-gray-800 relative rounded-full overflow-hidden flex flex-col justify-between">
-              {stepsData.map((_, idx) => (
+              {stepsData.map((step, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleStepChange(idx)}
+                  aria-label={`Go to step ${idx + 1}: ${step.step}`}
+                  aria-current={activeStep === idx ? "true" : undefined}
                   className={`w-full h-5 transition-colors cursor-pointer ${activeStep === idx ? "bg-white" : "bg-transparent hover:bg-gray-600"
                     }`}
                 />
               ))}
             </div>
-            <span className="text-xs font-bold text-gray-500">05</span>
-          </div>
+            <span className="text-xs font-bold text-gray-500" aria-hidden="true">05</span>
+          </nav>
         </div>
       </div>
     </section>

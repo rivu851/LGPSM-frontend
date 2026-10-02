@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { checkInService, CheckInResponseData } from "@/services/checkInService";
 import { ApiResponse } from "@/services/apiClient";
 import { formatDateTime, formatTime } from "@/utils/dateTime";
+import CustomDropdown from "@/components/common/CustomDropdown";
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -287,8 +288,6 @@ function CheckInDialog({ onClose, eventId: propEventId, eventName: propEventName
   const qrReady = upload.status === "ready" || !!pastedLink.trim();
   const canSubmit = contextReady && !submitting && (mode === "QR" ? qrReady : !!manualValue.trim());
 
-  const selectClass =
-    "w-full h-10 px-3 bg-white border border-[#E0E0E0] rounded-lg text-sm text-[#15191C] focus:outline-none focus:border-[#FF651D] focus:ring-2 focus:ring-[#FF651D]/15 disabled:bg-gray-50 disabled:text-gray-400";
   const inputClass =
     "w-full h-10 px-3 bg-white border border-[#E0E0E0] rounded-lg text-sm text-[#15191C] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#FF651D] focus:ring-2 focus:ring-[#FF651D]/15";
 
@@ -364,22 +363,18 @@ function CheckInDialog({ onClose, eventId: propEventId, eventName: propEventName
                     ) : events.length === 0 ? (
                       <p className="text-xs text-[#828282] py-2.5">{isStaff ? "You have no event assignments yet." : "No events are available for check-in."}</p>
                     ) : (
-                      <select
-                        id={`${ids}-event`}
+                      <CustomDropdown
                         value={eventId}
-                        onChange={(e) => {
-                          setEventId(e.target.value);
+                        onChange={(v) => {
+                          setEventId(v);
                           setSessionId("");
-                          setEventName(events.find((ev) => ev.id === e.target.value)?.title || "");
+                          setEventName(events.find((ev) => ev.id === v)?.title || "");
                           resetVerification();
                         }}
-                        className={selectClass}
-                      >
-                        <option value="">Select event</option>
-                        {events.map((ev) => (
-                          <option key={ev.id} value={ev.id}>{ev.title}</option>
-                        ))}
-                      </select>
+                        placeholder="Select event"
+                        options={events.map((ev) => ({ value: ev.id, label: ev.title }))}
+                        ariaLabel="Select event"
+                      />
                     )}
                   </div>
                   <div className="space-y-1.5 min-w-0">
@@ -387,24 +382,20 @@ function CheckInDialog({ onClose, eventId: propEventId, eventName: propEventName
                     {sessionsState === "loading" ? (
                       <div className="h-10 rounded-lg bg-gray-100 animate-pulse" aria-label="Loading sessions" />
                     ) : (
-                      <select
-                        id={`${ids}-session`}
+                      <CustomDropdown
                         value={sessionId}
                         disabled={!eventId}
-                        onChange={(e) => {
-                          setSessionId(e.target.value);
-                          setProblem(null);
-                        }}
-                        className={selectClass}
-                      >
-                        <option value="">Event entry (no specific session)</option>
-                        {sessions.map((s) => (
-                          <option key={s._id} value={s._id as string}>
-                            {s.name}
-                            {s.schedule?.start ? ` · ${formatTime(s.schedule.start)}` : ""}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => { setSessionId(v); setProblem(null); }}
+                        placeholder="Event entry (no specific session)"
+                        options={[
+                          { value: "", label: "Event entry (no specific session)" },
+                          ...sessions.map((s) => ({
+                            value: s._id as string,
+                            label: s.name + (s.schedule?.start ? ` · ${formatTime(s.schedule.start)}` : ""),
+                          })),
+                        ]}
+                        ariaLabel="Select session"
+                      />
                     )}
                     {sessionsState === "error" && <p className="text-xs text-rose-600">Sessions could not be loaded.</p>}
                     {selectedSession?.accessControl === "ONLY_ONCE" && <p className="text-[11px] text-[#828282]">Guests can enter this session only once.</p>}

@@ -92,7 +92,7 @@ export default function CustomDropdown({
       </button>
 
       {isOpen && !disabled && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden z-50">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden z-50 animate-dropdown">
           {topAction && (
             <button
               type="button"
@@ -125,7 +125,7 @@ export default function CustomDropdown({
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 cursor-pointer ${
-                      isSelected ? "bg-orange-50 text-[#E5520F] font-medium" : "text-gray-700 hover:bg-orange-50/60 hover:text-[#E5520F]"
+                      isSelected ? "bg-orange-50 text-[#E5520F] font-medium" : "text-gray-700 hover:text-[#E5520F]"
                     }`}
                   >
                     <span className="inline-flex items-center gap-2 min-w-0">

@@ -173,11 +173,11 @@ export default function EarningsPage() {
   return (
     <div className="w-full min-h-full bg-white">
       <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
-          <h1 className="text-xl font-bold text-gray-900">Earnings</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Earnings</h1>
         </div>
         <UserNavDropdown />
       </header>

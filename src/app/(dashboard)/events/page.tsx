@@ -152,7 +152,7 @@ export default function EventListingPage() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Event" />
+      <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
       <div className="p-4 sm:p-6 lg:px-9 lg:py-6 w-full space-y-4 pb-24">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <label htmlFor="event-search" className="text-base font-medium text-black shrink-0">Search</label>
@@ -169,7 +169,7 @@ export default function EventListingPage() {
               className="w-full h-[47px] pl-11 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
             />
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 w-fit">
             <button
               type="button"
               onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}

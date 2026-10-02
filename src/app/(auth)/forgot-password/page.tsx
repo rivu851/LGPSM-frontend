@@ -17,6 +17,8 @@ import {
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
 import { MOBILE_ONLY_NOTICE, parsePortalMode, signinHref } from "@/components/auth/authPortal";
+import { INPUT_PLACEHOLDERS } from "@/constants/placeholders";
+import { ERROR_MESSAGES } from "@/constants/errorMessages";
 
 type ForgotStage = "request" | "sent" | "reset" | "done";
 const MIN_NEW_PASSWORD = 10; // matches the on-screen hint in 04C-Forgot Password.pdf
@@ -52,7 +54,7 @@ function ForgotPasswordContent() {
       if (res.success) setStage("sent");
       else setErrorMessage(res.message || "Failed to process request. Please try again.");
     } catch {
-      setErrorMessage("An error occurred. Please try again.");
+      setErrorMessage(ERROR_MESSAGES.network.genericFailure);
     } finally {
       setIsSubmitting(false);
     }
@@ -62,11 +64,11 @@ function ForgotPasswordContent() {
     e.preventDefault();
     setErrorMessage("");
     if (newPassword !== repeatPassword) {
-      setErrorMessage("Passwords do not match. Please re-enter.");
+      setErrorMessage(ERROR_MESSAGES.auth.passwordsDoNotMatch);
       return;
     }
     if (newPassword.length < MIN_NEW_PASSWORD) {
-      setErrorMessage(`Password must be at least ${MIN_NEW_PASSWORD} characters long.`);
+      setErrorMessage(ERROR_MESSAGES.auth.passwordResetMinLength);
       return;
     }
     if (!resetToken.trim()) {
@@ -79,7 +81,7 @@ function ForgotPasswordContent() {
       if (res.success) setStage("done");
       else setErrorMessage(res.message || "Failed to reset password. The link may be invalid or expired.");
     } catch {
-      setErrorMessage("An error occurred during password reset.");
+      setErrorMessage(ERROR_MESSAGES.network.genericFailure);
     } finally {
       setIsSubmitting(false);
     }
@@ -106,7 +108,7 @@ function ForgotPasswordContent() {
               <label htmlFor="forgot-email" className={authLabelClass}>
                 Email Address<span className="text-[#FF651D]">*</span>
               </label>
-              <input id="forgot-email" type="email" required autoComplete="email" placeholder="hello@example.com"
+              <input id="forgot-email" type="email" required autoComplete="email" placeholder={INPUT_PLACEHOLDERS.auth.email}
                 value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
             </div>
             <button type="submit" disabled={isSubmitting} className={authPrimaryButtonClass}>
@@ -132,9 +134,9 @@ function ForgotPasswordContent() {
           <button type="button" onClick={() => setStage("reset")} className="w-full text-sm font-medium text-[#2D2D2D] underline underline-offset-2 hover:text-[#FF651D] cursor-pointer mb-3">
             I have a reset code
           </button>
-          <p className="text-center text-sm text-[#718096]">
+          <p className="text-center text-sm text-[#4A5568]">
             Don&apos;t received the email?{" "}
-            <button type="button" onClick={() => setStage("request")} className="text-[#FF651D] font-semibold underline cursor-pointer">
+            <button type="button" onClick={() => setStage("request")} className="text-[#B83D00] font-semibold underline cursor-pointer">
               Resend
             </button>
           </p>
@@ -150,7 +152,7 @@ function ForgotPasswordContent() {
                 <label htmlFor="reset-token" className={authLabelClass}>
                   Reset Code<span className="text-[#FF651D]">*</span>
                 </label>
-                <input id="reset-token" type="text" required placeholder="Paste the code from your email"
+                <input id="reset-token" type="text" required placeholder={INPUT_PLACEHOLDERS.auth.resetCode}
                   value={resetToken} onChange={(e) => setResetToken(e.target.value)} disabled={isSubmitting} className={authInputClass} />
               </div>
             )}
@@ -158,15 +160,15 @@ function ForgotPasswordContent() {
               <label htmlFor="reset-new" className={authLabelClass}>
                 New Password<span className="text-[#FF651D]">*</span>
               </label>
-              <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder="Type your password"
+              <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
-              <p className="mt-1.5 text-xs text-[#828282] text-right">Must be at least {MIN_NEW_PASSWORD} characters</p>
+              <p className="mt-1.5 text-xs text-[#5C5C5C] text-right">Must be at least {MIN_NEW_PASSWORD} characters</p>
             </div>
             <div>
               <label htmlFor="reset-repeat" className={authLabelClass}>
                 Repeat New Password<span className="text-[#FF651D]">*</span>
               </label>
-              <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder="Type your password"
+              <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
             </div>
             <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-2`}>
@@ -185,7 +187,7 @@ function ForgotPasswordContent() {
           </div>
           <AuthHeading title="Your password has been successfully reset!" subtitle="You can now log in with your new password. If you encounter any issues, please contact support" />
           {mobileOnly ? (
-            <p className="text-sm text-[#828282]">{MOBILE_ONLY_NOTICE.replace(" Ask your event organizer for access details.", "")}</p>
+            <p className="text-sm text-[#5C5C5C]">{MOBILE_ONLY_NOTICE.replace(" Ask your event organizer for access details.", "")}</p>
           ) : (
             <Link href={loginHref} className={authPrimaryButtonClass}>
               Back to login

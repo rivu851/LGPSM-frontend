@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SelectedTemplate } from "./eventDraft";
 import { formatDateTime } from "@/utils/dateTime";
 import { resolveImageUrl } from "@/utils/mediaUrl";
+import CustomDropdown from "@/components/common/CustomDropdown";
 
 interface MobileCardPreviewProps {
   template: SelectedTemplate | null;
@@ -41,17 +42,14 @@ export default function MobileCardPreview({
     <div className="h-full bg-[#F7F3F0] p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
         <span className="text-xs font-medium px-3 py-1 bg-white border border-[#E0E0E0] rounded-md text-gray-800">Preview</span>
-        <label className="sr-only" htmlFor="preview-zoom">Preview zoom</label>
-        <select
-          id="preview-zoom"
-          value={zoomLevel}
-          onChange={(e) => setZoomLevel(e.target.value)}
-          className="text-xs font-medium px-2 py-1 bg-white border border-[#E0E0E0] rounded-md text-gray-800 cursor-pointer"
-        >
-          {Object.keys(ZOOM_SCALE).map((z) => (
-            <option key={z} value={z}>{z}</option>
-          ))}
-        </select>
+        <div className="w-28">
+          <CustomDropdown
+            value={zoomLevel}
+            onChange={setZoomLevel}
+            options={Object.keys(ZOOM_SCALE).map((z) => ({ value: z, label: z }))}
+            ariaLabel="Preview zoom"
+          />
+        </div>
       </div>
 
       <div className="flex flex-col items-center">

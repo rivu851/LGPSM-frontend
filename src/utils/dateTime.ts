@@ -1,6 +1,14 @@
-// Single conversion boundary for date/time values.
-// Form state and API payloads always use ISO-8601 strings (UTC instants);
-// user-facing text is produced only by the formatters below, in the browser's local time zone.
+/**
+ * Single conversion boundary for date/time values across the frontend.
+ *
+ * Date/Time Conversion Rules:
+ * - Storage & Payload Contract: Form state, draft storage, and API request/response payloads
+ *   ALWAYS use UTC ISO-8601 strings (e.g. `2026-10-15T18:30:00.000Z`).
+ * - UI Presentation: `formatDateTime`, `formatCompactDateTime`, and `formatTime` format UTC ISO
+ *   strings into the user's browser local time zone for human presentation.
+ * - Form Pickers: Local HTML `<input type="datetime-local">` controls bind to local time strings,
+ *   which are parsed and converted to UTC ISO strings before updating form draft state or sending payloads to the backend API.
+ */
 
 export function parseIso(value: string | null | undefined): Date | null {
   if (!value) return null;

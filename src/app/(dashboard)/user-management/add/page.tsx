@@ -77,11 +77,11 @@ export default function AddUserPage() {
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
             </svg>
-            <h1 className="text-xl font-bold text-gray-900">Add User</h1>
+            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Add User</h1>
           </div>
           <UserNavDropdown />
         </header>
@@ -118,7 +118,7 @@ export default function AddUserPage() {
 
             <button
               onClick={() => setIsAddUserModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs w-fit self-start"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -129,7 +129,7 @@ export default function AddUserPage() {
 
           {/* Success Notification Banner */}
           {addedUserName && (
-            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold text-center animate-in fade-in break-words">
+            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold text-center animate-fadeIn break-words">
               User &quot;{addedUserName}&quot; added successfully!
             </div>
           )}
@@ -198,8 +198,8 @@ export default function AddUserPage() {
 
       {/* Add User Modal (Image 2) */}
       {isAddUserModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Add User</h3>

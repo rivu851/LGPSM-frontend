@@ -57,8 +57,8 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="select-template-title">
-      <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="select-template-title">
+      <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] animate-modal">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <h2 id="select-template-title" className="text-base font-medium text-gray-900">Select Template</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">

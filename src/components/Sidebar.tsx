@@ -98,9 +98,11 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
 
 function Logo() {
   return (
-    <Link href="/dashboard" className="inline-block">
-      <Image src="/images/navbar/Nav_logo.png" alt="LGPSM" width={202} height={34} priority className="h-[34px] w-auto object-contain" />
-    </Link>
+    <div className="flex justify-center">
+      <Link href="/dashboard" className="inline-block">
+        <Image src="/images/navbar/Nav_logo.webp" alt="LGPSM" width={202} height={34} priority className="h-[38px] w-auto object-contain" />
+      </Link>
+    </div>
   );
 }
 
@@ -140,7 +142,7 @@ export default function Sidebar() {
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="fixed inset-0 bg-black/60" onClick={close} />
-          <div className="relative w-[271px] max-w-[85vw] bg-[#15191C] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain">
+          <div className="relative w-[271px] max-w-[85vw] bg-[#15191C] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain animate-drawer">
             <div className="flex items-center justify-between">
               <Logo />
               <button type="button" onClick={close} className="p-1 text-[#DEE2E5] hover:text-white cursor-pointer" aria-label="Close menu">

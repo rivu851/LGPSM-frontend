@@ -183,12 +183,12 @@ export default function FeaturesSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           {/* FEATURES badge */}
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#FF5B22]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#C44200]">
             <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
-              <rect x="9" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
-              <rect x="2" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
-              <rect x="9" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
+              <rect x="2" y="2" width="5" height="5" rx="1" fill="#C44200" />
+              <rect x="9" y="2" width="5" height="5" rx="1" fill="#C44200" />
+              <rect x="2" y="9" width="5" height="5" rx="1" fill="#C44200" />
+              <rect x="9" y="9" width="5" height="5" rx="1" fill="#C44200" />
             </svg>
             <span>FEATURES</span>
           </div>
@@ -197,7 +197,7 @@ export default function FeaturesSection() {
           <h2 ref={titleRef} className="text-3xl sm:text-4xl lg:text-[46px] font-medium tracking-tight leading-[1.15] font-[family-name:var(--font-space-grotesk)]">
             <span className="text-[#0D0D0D]">Everything You Need to</span>
             <br />
-            <span className="text-gray-400 font-normal">Manage Invitations</span>
+            <span className="text-gray-600 font-normal">Manage Invitations</span>
           </h2>
 
           {/* Description */}

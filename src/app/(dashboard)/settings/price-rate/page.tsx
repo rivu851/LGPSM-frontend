@@ -38,11 +38,11 @@ export default function PriceRateSettingsPage() {
     <div className="w-full min-h-full bg-white">
       {/* Header */}
       <header className="h-16 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0 sticky top-0 z-20">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <svg className="w-6 h-6 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h10M7 12h10m-5 5h5M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
           </svg>
-          <h1 className="text-base font-bold text-gray-800">Price Rate Settings</h1>
+          <h1 className="text-sm sm:text-base font-bold text-gray-800 truncate">Price Rate Settings</h1>
         </div>
         <UserNavDropdown />
       </header>

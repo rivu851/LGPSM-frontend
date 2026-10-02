@@ -138,67 +138,108 @@ body.is-scrolling .custom-scrollbar::-webkit-scrollbar-thumb {
   animation: pageEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-// ── Modal Animations ──────────────────────────────────────────────────────
+// ── Shared easing ─────────────────────────────────────────────────────────
+// All popups use one of three curves so the whole UI feels like one system:
+//   spring  → modals that need character (scale + translate)
+//   smooth  → overlays, menus, dropdowns (simple fade/slide)
+//   drawer  → side / bottom sheets (directional slide)
+
+// ── Keyframes ─────────────────────────────────────────────────────────────
 @keyframes modalOverlayFade {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(4px);
-  }
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to   { opacity: 1; backdrop-filter: blur(4px); }
 }
 
 @keyframes modalPopSpring {
-  0% {
-    opacity: 0;
-    transform: scale(0.92) translateY(16px);
-  }
-  70% {
-    opacity: 1;
-    transform: scale(1.01) translateY(-2px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  0%   { opacity: 0; transform: scale(0.92) translateY(16px); }
+  70%  { opacity: 1; transform: scale(1.01) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
 }
 
 @keyframes itemSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes imageZoomIn {
-  from {
-    opacity: 0;
-    transform: scale(1.08);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(1.08); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
+// Overlay-only fade (no blur) for simple backdrops
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// Dropdown / action-menu: slide down + fade
+@keyframes dropdownSlideIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+// Mobile drawer: slide from left
+@keyframes drawerSlideIn {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+// Bottom sheet: slide up
+@keyframes sheetSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// Toast / banner: slide from top
+@keyframes toastSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+// ── Animation utility classes ──────────────────────────────────────────────
+// Overlays
 .animate-modal-overlay {
-  animation: modalOverlayFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalOverlayFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-overlay {
+  animation: overlayFadeIn 0.25s ease forwards;
 }
 
+// Modal panels
 .animate-modal-pop {
-  animation: modalPopSpring 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: modalPopSpring 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-modal {
+  animation: modalPopSpring 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+// Dropdowns & menus
+.animate-dropdown {
+  animation: dropdownSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-menu {
+  animation: dropdownSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// Drawers / sheets
+.animate-drawer {
+  animation: drawerSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-sheet {
+  animation: sheetSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// Misc
 .animate-item-slide {
   animation: itemSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-
 .animate-image-zoom {
   animation: imageZoomIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.animate-toast {
+  animation: toastSlideDown 0.25s ease-out forwards;
+}
+// ChangePasswordModal used this class before it was defined
+.animate-fadeIn {
+  animation: overlayFadeIn 0.3s ease forwards;
 }

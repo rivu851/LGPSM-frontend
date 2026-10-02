@@ -44,8 +44,8 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="edit-template-title">
-      <div className="w-full max-w-3xl bg-white rounded-lg shadow-xl my-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto animate-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-template-title">
+      <div className="w-full max-w-3xl bg-white rounded-lg shadow-xl my-auto animate-modal">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <h3 id="edit-template-title" className="text-base font-medium text-gray-900">Edit Template</h3>
           <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">

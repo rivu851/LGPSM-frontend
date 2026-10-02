@@ -36,8 +36,8 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
   }, [eventId, inviteeId]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-lg flex flex-col max-h-[94vh] animate-modal">
         <div className="px-5 py-4 border-b border-[#E5E5E5] flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 id="card-preview-title" className="text-base font-medium text-gray-900">Invitation Card Preview</h2>
