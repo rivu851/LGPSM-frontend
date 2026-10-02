@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/services/authService";
 import {
   AuthAlert,
-  AuthCardLayout,
+  AuthHeading,
+  AuthLogo,
   AuthSplitLayout,
+  BackLink,
   PasswordInput,
   Spinner,
   authInputClass,
@@ -17,12 +19,12 @@ import {
 import { MOBILE_ONLY_NOTICE, parsePortalMode, signinHref } from "@/components/auth/authPortal";
 
 type ForgotStage = "request" | "sent" | "reset" | "done";
+const MIN_NEW_PASSWORD = 10; // matches the on-screen hint in 04C-Forgot Password.pdf
 
 function ForgotPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tokenFromUrl = searchParams.get("token") || "";
-  // The portal the user came from (or, for emailed links, the account's portal)
   const { mode, mobileOnly } = parsePortalMode(searchParams.get("mode"), "organizer");
   const loginHref = signinHref(mode);
 
@@ -63,8 +65,8 @@ function ForgotPasswordContent() {
       setErrorMessage("Passwords do not match. Please re-enter.");
       return;
     }
-    if (newPassword.length < 8) {
-      setErrorMessage("Password must be at least 8 characters long.");
+    if (newPassword.length < MIN_NEW_PASSWORD) {
+      setErrorMessage(`Password must be at least ${MIN_NEW_PASSWORD} characters long.`);
       return;
     }
     if (!resetToken.trim()) {
@@ -83,29 +85,22 @@ function ForgotPasswordContent() {
     }
   };
 
-  const content = (
-    <>
+  return (
+    <AuthSplitLayout>
+      <div className="mb-8 lg:mb-[45px] h-[34px]">
+        <AuthLogo />
+      </div>
       {stage !== "done" && (
-        <button
-          type="button"
-          onClick={goBack}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:text-[#FF651D] transition-colors cursor-pointer"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back
-        </button>
+        <div className="mb-10 lg:mb-[76px]">
+          <BackLink label="Back" onClick={goBack} />
+        </div>
       )}
 
       {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
 
       {stage === "request" && (
         <>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight mb-2">Forgot password</h1>
-          <p className="text-sm text-gray-500 leading-relaxed mb-6">
-            No worries! Enter your email address below, and we&apos;ll send you a link to reset your password.
-          </p>
+          <AuthHeading title="Forgot password" subtitle="No worries! Enter email address below, and we'll send you a link to reset your password." />
           <form onSubmit={handleRequest} className="space-y-5">
             <div>
               <label htmlFor="forgot-email" className={authLabelClass}>
@@ -115,13 +110,7 @@ function ForgotPasswordContent() {
                 value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
             </div>
             <button type="submit" disabled={isSubmitting} className={authPrimaryButtonClass}>
-              {isSubmitting ? (
-                <>
-                  <Spinner /> Submitting...
-                </>
-              ) : (
-                "Submit"
-              )}
+              {isSubmitting ? (<><Spinner /> Submitting...</>) : "Submit"}
             </button>
           </form>
         </>
@@ -129,18 +118,24 @@ function ForgotPasswordContent() {
 
       {stage === "sent" && (
         <>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight mb-2">Check your email</h1>
-          <p className="text-sm text-gray-500 leading-relaxed mb-6">
-            If an account exists for <span className="font-medium text-gray-800 break-all">{email}</span>, we sent it a password reset
-            link. The link expires in 15 minutes.
-          </p>
-          <button type="button" onClick={() => setStage("reset")} className={`${authPrimaryButtonClass} mb-4`}>
+          <div className="w-14 h-14 rounded-full bg-[#FFE3D7] flex items-center justify-center mb-5">
+            <span className="w-9 h-9 rounded-full bg-[#FF651D] flex items-center justify-center text-white">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </span>
+          </div>
+          <AuthHeading title="Check your email" subtitle={`We sent a password reset link to ${email || "your email"}. Please check your inbox.`} />
+          <a href="https://mail.google.com" target="_blank" rel="noreferrer" className={`${authPrimaryButtonClass} mb-4`}>
+            Open Gmail
+          </a>
+          <button type="button" onClick={() => setStage("reset")} className="w-full text-sm font-medium text-[#2D2D2D] underline underline-offset-2 hover:text-[#FF651D] cursor-pointer mb-3">
             I have a reset code
           </button>
-          <p className="text-center text-sm text-gray-500">
-            Didn&apos;t receive the email?{" "}
+          <p className="text-center text-sm text-[#718096]">
+            Don&apos;t received the email?{" "}
             <button type="button" onClick={() => setStage("request")} className="text-[#FF651D] font-semibold underline cursor-pointer">
-              Send again
+              Resend
             </button>
           </p>
         </>
@@ -148,8 +143,7 @@ function ForgotPasswordContent() {
 
       {stage === "reset" && (
         <>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight mb-2">Create a new password</h1>
-          <p className="text-sm text-gray-500 leading-relaxed mb-6">Enter your new password below to complete the reset.</p>
+          <AuthHeading title="Create a new password" subtitle="Enter your new password below to complete the reset process. Ensure it's strong and secure" />
           <form onSubmit={handleReset} className="space-y-4">
             {!tokenFromUrl && (
               <div>
@@ -164,24 +158,19 @@ function ForgotPasswordContent() {
               <label htmlFor="reset-new" className={authLabelClass}>
                 New Password<span className="text-[#FF651D]">*</span>
               </label>
-              <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder="Type your new password"
+              <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder="Type your password"
                 autoComplete="new-password" disabled={isSubmitting} />
+              <p className="mt-1.5 text-xs text-[#828282] text-right">Must be at least {MIN_NEW_PASSWORD} characters</p>
             </div>
             <div>
               <label htmlFor="reset-repeat" className={authLabelClass}>
                 Repeat New Password<span className="text-[#FF651D]">*</span>
               </label>
-              <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder="Repeat your password"
+              <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder="Type your password"
                 autoComplete="new-password" disabled={isSubmitting} />
             </div>
             <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-2`}>
-              {isSubmitting ? (
-                <>
-                  <Spinner /> Resetting...
-                </>
-              ) : (
-                "Submit"
-              )}
+              {isSubmitting ? (<><Spinner /> Resetting...</>) : "Submit"}
             </button>
           </form>
         </>
@@ -189,28 +178,23 @@ function ForgotPasswordContent() {
 
       {stage === "done" && (
         <>
-          <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mb-5">
-            <svg className="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <div className="w-14 h-14 rounded-full bg-[#C7F5D9] flex items-center justify-center mb-5">
+            <svg className="w-7 h-7 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight mb-2">Your password has been reset</h1>
+          <AuthHeading title="Your password has been successfully reset!" subtitle="You can now log in with your new password. If you encounter any issues, please contact support" />
           {mobileOnly ? (
-            <p className="text-sm text-gray-500 leading-relaxed">{MOBILE_ONLY_NOTICE.replace(" Ask your event organizer for access details.", "")}</p>
+            <p className="text-sm text-[#828282]">{MOBILE_ONLY_NOTICE.replace(" Ask your event organizer for access details.", "")}</p>
           ) : (
-            <>
-              <p className="text-sm text-gray-500 leading-relaxed mb-6">You can now log in with your new password.</p>
-              <Link href={loginHref} className={authPrimaryButtonClass}>
-                Back to login
-              </Link>
-            </>
+            <Link href={loginHref} className={authPrimaryButtonClass}>
+              Back to login
+            </Link>
           )}
         </>
       )}
-    </>
+    </AuthSplitLayout>
   );
-
-  return mode === "admin" ? <AuthCardLayout>{content}</AuthCardLayout> : <AuthSplitLayout>{content}</AuthSplitLayout>;
 }
 
 export default function ForgotPasswordPage() {

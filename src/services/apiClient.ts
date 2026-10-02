@@ -1,13 +1,16 @@
 import { tokenStorage } from "./tokenStorage";
 import { loginRedirectPath } from "@/components/auth/authPortal";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
 
 export interface ApiResponse<T = any> {
   success?: boolean;
   message?: string;
   data?: T;
   error?: string;
+  /** Machine-readable reason some endpoints add to error responses (e.g. QR check-in rejections) */
+  code?: string;
 }
 
 let isRefreshing = false;
@@ -62,7 +65,8 @@ export async function apiClient<T = any>(
   options: RequestInit = {},
   requiresAuth: boolean = false
 ): Promise<ApiResponse<T>> {
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${normalizedEndpoint}`;
 
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers: Record<string, string> = {

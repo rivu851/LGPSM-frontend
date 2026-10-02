@@ -15,14 +15,16 @@ interface CardPreviewModalProps {
 export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onClose }: CardPreviewModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [qr, setQr] = useState<"ISSUED" | "SAMPLE" | null>(null);
 
   useEffect(() => {
     let objectUrl: string | null = null;
     let cancelled = false;
     invitationService
-      .previewCardPNG(eventId, inviteeId)
-      .then((blob) => {
+      .previewCard(eventId, inviteeId)
+      .then(({ blob, qr: qrKind }) => {
         if (cancelled) return;
+        setQr(qrKind);
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
       })
@@ -58,6 +60,13 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
             <p className="text-sm text-[#828282]">Generating preview...</p>
           )}
         </div>
+        {url && qr && (
+          <p className={`px-5 py-2.5 text-xs border-t ${qr === "ISSUED" ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-amber-50 border-amber-100 text-amber-800"}`}>
+            {qr === "ISSUED"
+              ? "This QR is the guest's current check-in pass. Sending the invitation again replaces it."
+              : "Sample QR only — it cannot be used for check-in. Send the invitation to issue this guest a real pass."}
+          </p>
+        )}
         <div className="px-5 py-3 border-t border-[#E5E5E5] flex justify-end gap-3">
           {url && (
             <a href={url} download={`Invitation_${(inviteeName || "guest").replace(/\s+/g, "_")}.png`} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50">

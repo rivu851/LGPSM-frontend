@@ -10,6 +10,7 @@ import { assignmentService, AssignmentData } from "@/services/assignmentService"
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import UserNavDropdown from "@/components/common/UserNavDropdown";
 import CheckInModal from "@/components/common/CheckInModal";
+import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 
 interface OrganizerSummary {
   id: string;
@@ -41,8 +42,17 @@ export default function DashboardPage() {
   // CheckIn Modal state
   const [checkInModalEvent, setCheckInModalEvent] = useState<{ id: string; title: string } | null>(null);
 
+  // Welcome Popup modal (06-Popup.pdf)
+  const [showWelcomePopup, setShowWelcomePopup] = useState<boolean>(false);
+
   const isSystemUser = user?.role === "SYSTEM_USER";
   const isAdmin = user?.role === "ADMIN";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("show_dashboard_popup") === "true") {
+      setShowWelcomePopup(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -443,6 +453,16 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <DashboardPopupModal
+        isOpen={showWelcomePopup}
+        onClose={() => {
+          setShowWelcomePopup(false);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("show_dashboard_popup");
+          }
+        }}
+      />
     </div>
   );
 }

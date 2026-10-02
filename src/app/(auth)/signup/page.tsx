@@ -6,10 +6,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
   AuthAlert,
+  AuthHeading,
+  AuthLogo,
   AuthSplitLayout,
+  BackLink,
   PasswordInput,
   Spinner,
   authInputClass,
+  authFieldStackClass,
   authLabelClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
@@ -66,13 +70,19 @@ export default function SignupPage() {
 
   return (
     <AuthSplitLayout>
-      <div className="mb-5">
-        <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight mb-1">Create your account</h1>
-        <p className="text-sm text-gray-500">Register as an organizer and start sending invitations digitally</p>
+      <div className="mb-8 lg:mb-[45px] h-[34px]">
+        <AuthLogo />
       </div>
+      <div className="mb-10 lg:mb-[76px]">
+        <BackLink href="/" label="Back to Home" />
+      </div>
+
+      <AuthHeading title="Create your account" subtitle="Register here and start sending invitations digitally" />
+
       {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
       {successMessage && <AuthAlert tone="success">{successMessage}</AuthAlert>}
-      <form onSubmit={handleSubmit} className="space-y-3.5">
+
+      <form onSubmit={handleSubmit} className={authFieldStackClass}>
         <div>
           <label htmlFor="signup-name" className={authLabelClass}>
             Full Name<span className="text-[#FF651D]">*</span>
@@ -89,9 +99,9 @@ export default function SignupPage() {
         </div>
         <div>
           <label htmlFor="signup-phone" className={authLabelClass}>
-            Phone no<span className="text-gray-400 font-normal ml-1">(optional)</span>
+            Phone no<span className="text-[#FF651D]">*</span>
           </label>
-          <input id="signup-phone" type="tel" autoComplete="tel" placeholder="Enter phone number"
+          <input id="signup-phone" type="tel" required autoComplete="tel" placeholder="Enter phone number"
             value={phone} onChange={(e) => setPhone(e.target.value)} disabled={isSubmitting} className={authInputClass} />
         </div>
         <div>
@@ -108,7 +118,7 @@ export default function SignupPage() {
           <PasswordInput id="signup-confirm" value={confirmPassword} onChange={setConfirmPassword} placeholder="Type password again"
             autoComplete="new-password" disabled={isSubmitting} />
         </div>
-        <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} mt-3`}>
+        <button type="submit" disabled={isSubmitting} className={`${authPrimaryButtonClass} !mt-7`}>
           {isSubmitting ? (
             <>
               <Spinner /> Creating Account...
@@ -118,9 +128,10 @@ export default function SignupPage() {
           )}
         </button>
       </form>
-      <p className="text-center pt-5 text-sm text-gray-500">
+
+      <p className="text-center mt-[37px] text-sm leading-5 text-[#718096]">
         Already registered?{" "}
-        <Link href={signinHref("organizer")} className="text-[#FF651D] font-semibold hover:underline">
+        <Link href={signinHref("organizer")} className="text-[#FF651D] font-medium underline underline-offset-2">
           Sign in
         </Link>
       </p>

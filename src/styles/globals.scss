@@ -76,6 +76,17 @@ html.is-scrolling * {
   scrollbar-color: rgba(156, 163, 175, 0.6) transparent;
 }
 
+// The page-level scrollbar can't overlay content: its "transparent" track is painted with the white
+// canvas, leaving a narrow white strip beside full-bleed dark sections (landing CTA/footer). The thumb
+// is invisible at rest anyway, so the root gutter is removed; scrolling itself is unaffected.
+html {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 // ── Utility: Custom Scrollbar ─────────────────────────────────────────────
 .custom-scrollbar {
   &::-webkit-scrollbar {
@@ -125,4 +136,69 @@ body.is-scrolling .custom-scrollbar::-webkit-scrollbar-thumb {
 
 .animate-page {
   animation: pageEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// ── Modal Animations ──────────────────────────────────────────────────────
+@keyframes modalOverlayFade {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modalPopSpring {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes itemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes imageZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-modal-overlay {
+  animation: modalOverlayFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-pop {
+  animation: modalPopSpring 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-item-slide {
+  animation: itemSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-image-zoom {
+  animation: imageZoomIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

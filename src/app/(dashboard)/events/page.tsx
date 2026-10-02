@@ -7,7 +7,7 @@ import { eventService } from "@/services/eventService";
 import { useCategories } from "@/hooks/useCategories";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import { formatEventId } from "@/utils/formatId";
-import { formatCompactDateTime } from "@/utils/dateTime";
+import { formatCompactDateTime, formatDateTime } from "@/utils/dateTime";
 import PageHeader from "@/components/common/PageHeader";
 import CustomDropdown from "@/components/common/CustomDropdown";
 
@@ -224,8 +224,8 @@ export default function EventListingPage() {
                     <td className="px-2.5 max-w-[180px] truncate" title={r.organizer}>{r.organizer}</td>
                     <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.createdAt, "—")}</td>
                     <td className="px-2.5 whitespace-nowrap">{r.category}</td>
-                    <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.start, "—")}</td>
-                    <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.end, "—")}</td>
+                    <td className="px-2.5 whitespace-nowrap">{formatDateTime(r.start, "—")}</td>
+                    <td className="px-2.5 whitespace-nowrap">{formatDateTime(r.end, "—")}</td>
                     <td className="px-2.5"><span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_STYLE[r.status]}`}>{r.status}</span></td>
                     <td className="px-2.5 text-right"><RowActions row={r} onDelete={(row) => { setDeleteError(null); setDeleting(row); }} /></td>
                   </tr>
