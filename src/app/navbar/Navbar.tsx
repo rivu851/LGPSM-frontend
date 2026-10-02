@@ -15,7 +15,7 @@ export default function Navbar() {
         <div className="flex items-center gap-10">
           <Link href="/" className="flex items-center group">
             <Image
-              src="/images/navbar/Nav_logo.png"
+              src="/images/navbar/Nav_logo.webp"
               alt="LGPSM Logo"
               width={240}
               height={170}
@@ -50,14 +50,14 @@ export default function Navbar() {
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-4">
           <Link
-            href="/signin"
+            href="/signin?mode=organizer"
             className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] px-3 py-2 transition-colors font-[family-name:var(--font-space-grotesk)]"
           >
             Sign In
           </Link>
           <Link
             href="/signup"
-            className="px-5 py-2.5 text-sm font-bold text-white bg-[#FF5B22] hover:bg-[#E04B16] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
+            className="px-5 py-2.5 text-sm font-bold text-white bg-[#C44200] hover:bg-[#A83800] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
           >
             Sign Up Free
           </Link>
@@ -66,6 +66,7 @@ export default function Navbar() {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle navigation menu"
           className="md:hidden p-2 text-gray-600 focus:outline-none"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,8 +82,8 @@ export default function Navbar() {
           <Link href="/pricing" className="block py-2 text-sm font-semibold text-gray-700">Pricing</Link>
           <Link href="/contact" className="block py-2 text-sm font-semibold text-gray-700">Contact</Link>
           <div className="pt-2 flex flex-col gap-2">
-            <Link href="/signin" className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg">Sign In</Link>
-            <Link href="/signup" className="w-full text-center py-2.5 text-sm font-bold text-white bg-[#FF5B22] rounded-lg">Sign Up Free</Link>
+            <Link href="/signin?mode=organizer" className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg">Sign In</Link>
+            <Link href="/signup" className="w-full text-center py-2.5 text-sm font-bold text-white bg-[#C44200] hover:bg-[#A83800] rounded-lg">Sign Up Free</Link>
           </div>
         </div>
       )}

@@ -46,7 +46,8 @@ export const categoryService = {
     payload: {
       name?: string;
       description?: string;
-      subcategories?: { name: string; isActive?: boolean }[];
+      // Send existing subcategories with their _id so their identity is preserved
+      subcategories?: { _id?: string; name: string; isActive?: boolean }[];
       isActive?: boolean;
     }
   ): Promise<ApiResponse<Category>> {
@@ -56,6 +57,15 @@ export const categoryService = {
         method: "PATCH",
         body: JSON.stringify(payload),
       },
+      true
+    );
+  },
+
+  // Appends a subcategory without touching existing ones (their ids stay stable)
+  async addSubcategory(categoryId: string, name: string): Promise<ApiResponse<Category>> {
+    return apiClient<Category>(
+      `/api/v1/categories/${categoryId}/subcategories`,
+      { method: "POST", body: JSON.stringify({ name }) },
       true
     );
   },

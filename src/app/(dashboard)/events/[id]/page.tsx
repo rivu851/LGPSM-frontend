@@ -5,652 +5,400 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
-import { sessionService } from "@/services/sessionService";
-import { formatDateTime, formatTime } from "@/utils/dateTime";
-import { inviteeService } from "@/services/inviteeService";
+import { sessionService, SessionData } from "@/services/sessionService";
 import { assignmentService } from "@/services/assignmentService";
 import { reportService, EventReportData } from "@/services/reportService";
 import { auditLogService, AuditLogItem } from "@/services/auditLogService";
-import EventSubNav from "@/components/EventSubNav";
-import UserNavDropdown from "@/components/common/UserNavDropdown";
-import EventCleanupModal from "@/components/events/EventCleanupModal";
+import { formatCompactDateTime, formatDateTime, formatTime } from "@/utils/dateTime";
+import TemplateThumb from "@/components/settings/TemplateThumb";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
-import { templatePreviewUrl } from "@/components/add-event/eventDraft";
+import { formatEventId } from "@/utils/formatId";
+import PageHeader from "@/components/common/PageHeader";
+import CustomDropdown from "@/components/common/CustomDropdown";
+import EventSubNav from "@/components/EventSubNav";
+import EventCleanupModal from "@/components/events/EventCleanupModal";
+import CardPreviewModal from "@/components/invitees/CardPreviewModal";
+import HorizontalScroll from "@/components/common/HorizontalScroll";
 
-function formatSessionDateTime(session: any): string {
-  const start = session?.schedule?.start;
-  const end = session?.schedule?.end;
-  if (!start) return "N/A";
-  const startText = formatDateTime(start, "N/A");
-  return end ? `${startText} - ${formatTime(end)}` : startText;
+interface EventDetail {
+  _id: string;
+  title: string;
+  status?: string;
+  schedule?: { start?: string; end?: string };
+  categoryId?: { name?: string } | string;
+  subcategory?: { name?: string } | null;
+  organizerId?: { fullName?: string; profile?: { organizationName?: string } } | string;
+  location?: { address?: string } | string;
+  templateId?: { name?: string; previewImageKey?: string } | string | null;
+  operationalDataCleared?: boolean;
 }
 
-function GuestLogsDonutChart({ invitees }: { invitees: any[] }) {
-  const total = invitees.length;
+const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
-  let accepted = 0;
-  let pending = 0;
-  let declined = 0;
-
-  invitees.forEach((inv) => {
-    const rsvp = (inv.rsvpStatus || "").toUpperCase();
-    const reg = (inv.registrationStatus || "").toLowerCase();
-
-    if (rsvp === "ACCEPTED" || rsvp === "CONFIRMED" || reg === "confirmed") {
-      accepted++;
-    } else if (rsvp === "DECLINED") {
-      declined++;
-    } else {
-      pending++;
-    }
-  });
-
-  const R = 36;
-  const C = 2 * Math.PI * R;
-
-  const pAccepted = total > 0 ? (accepted / total) * C : 0;
-  const pPending = total > 0 ? (pending / total) * C : total === 0 ? C : 0;
-  const pDeclined = total > 0 ? (declined / total) * C : 0;
-
-  const offAccepted = 0;
-  const offPending = pAccepted;
-  const offDeclined = pAccepted + pPending;
-
+function ArrowLink({ href, label }: { href: string; label: string }) {
   return (
-    <div className="flex flex-col items-center justify-center space-y-3 py-2 w-full font-sans">
-      <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-          <circle
-            cx="50"
-            cy="50"
-            r={R}
-            fill="transparent"
-            stroke="#F3F4F6"
-            strokeWidth="12"
-          />
+    <Link href={href} aria-label={label} title={label} className="p-1 -m-1 text-gray-900 hover:text-[#FF651D]">
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
+      </svg>
+    </Link>
+  );
+}
 
-          {pAccepted > 0 && (
-            <circle
-              cx="50"
-              cy="50"
-              r={R}
-              fill="transparent"
-              stroke="#10B981"
-              strokeWidth="12"
-              strokeDasharray={`${pAccepted} ${C}`}
-              strokeDashoffset={-offAccepted}
-              className="transition-all duration-500"
-            />
-          )}
-
-          {pPending > 0 && (
-            <circle
-              cx="50"
-              cy="50"
-              r={R}
-              fill="transparent"
-              stroke="#F59E0B"
-              strokeWidth="12"
-              strokeDasharray={`${pPending} ${C}`}
-              strokeDashoffset={-offPending}
-              className="transition-all duration-500"
-            />
-          )}
-
-          {pDeclined > 0 && (
-            <circle
-              cx="50"
-              cy="50"
-              r={R}
-              fill="transparent"
-              stroke="#EF4444"
-              strokeWidth="12"
-              strokeDasharray={`${pDeclined} ${C}`}
-              strokeDashoffset={-offDeclined}
-              className="transition-all duration-500"
-            />
-          )}
-        </svg>
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-          <span className="text-lg font-bold text-gray-900 leading-none">{total}</span>
-          <span className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mt-0.5">
-            {total === 1 ? "Guest" : "Guests"}
-          </span>
-        </div>
+// Figma widget: coloured round icon, big number, label, arrow to the related list
+function MetricCard({ value, label, href, tone, icon }: { value: number; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
+  const tones = { peach: "bg-[#FFDCCF] text-[#FF651D]", mint: "bg-[#C9F6E6] text-[#16A34A]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
+  return (
+    <div className={`${card} p-4 flex flex-col gap-3`}>
+      <div className="flex items-start justify-between">
+        <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
+        <ArrowLink href={href} label={`Open ${label}`} />
       </div>
-
-      <div className="w-full pt-1 grid grid-cols-3 gap-1 text-center text-[10px] font-medium text-gray-600">
-        <div className="flex items-center justify-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-          <span>Accepted ({accepted})</span>
-        </div>
-        <div className="flex items-center justify-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-          <span>Pending ({pending})</span>
-        </div>
-        <div className="flex items-center justify-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-          <span>Declined ({declined})</span>
-        </div>
+      <div>
+        <p className="text-3xl font-medium text-black leading-none">{String(value).padStart(2, "0")}</p>
+        <p className="mt-1.5 text-sm text-[#4B4F52]">{label}</p>
       </div>
     </div>
   );
 }
 
-export default function EventDetailsDashboardPage() {
+function Ring({ value, max, center, label }: { value: number; max: number; center: React.ReactNode; label: string }) {
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const pct = max > 0 ? Math.min(1, value / max) : 0;
+  return (
+    <div className="flex flex-col items-center gap-2 min-w-0">
+      <div className="relative size-16">
+        <svg viewBox="0 0 64 64" className="size-16 -rotate-90" aria-hidden>
+          <circle cx="32" cy="32" r={r} fill="none" stroke="#E8ECFF" strokeWidth="6" />
+          <circle cx="32" cy="32" r={r} fill="none" stroke="#FF651D" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-900">{center}</span>
+      </div>
+      <span className="text-xs text-[#4B4F52] text-center">{label}</span>
+    </div>
+  );
+}
+
+function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: number; failed: number }) {
+  const total = sent + notSent + failed;
+  const r = 36;
+  const c = 2 * Math.PI * r;
+  const parts = [
+    { v: sent, color: "#FF651D", label: "Sent" },
+    { v: notSent, color: "#262A2D", label: "Not sent" },
+    { v: failed, color: "#9CA3AF", label: "Failed" },
+  ];
+  let offset = 0;
+  return (
+    <div className="flex items-center gap-5">
+      <div className="relative size-28 shrink-0">
+        <svg viewBox="0 0 100 100" className="size-28 -rotate-90" role="img" aria-label={`${sent} sent, ${notSent} not sent, ${failed} failed`}>
+          <circle cx="50" cy="50" r={r} fill="none" stroke="#E5E5E5" strokeWidth="14" />
+          {total > 0 &&
+            parts.map((p) => {
+              const len = (p.v / total) * c;
+              const el = p.v > 0 ? <circle key={p.label} cx="50" cy="50" r={r} fill="none" stroke={p.color} strokeWidth="14" strokeDasharray={`${len} ${c}`} strokeDashoffset={-offset} /> : null;
+              offset += len;
+              return el;
+            })}
+        </svg>
+        <span className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-lg font-medium text-gray-900 leading-none">{total}</span>
+          <span className="text-[10px] text-[#828282]">guests</span>
+        </span>
+      </div>
+      <ul className="space-y-2 text-sm text-[#4B4F52]">
+        {parts.map((p) => (
+          <li key={p.label} className="flex items-center gap-2 whitespace-nowrap">
+            <span className="size-2.5 rounded-full shrink-0" style={{ background: p.color }} />
+            {p.label} <span className="text-gray-900 font-medium">{p.v}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default function EventDetailsPage() {
   const params = useParams();
   const eventId = (params?.id as string) || "";
   const { user } = useAuth();
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [eventData, setEventData] = useState<any>(null);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [invitees, setInvitees] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
-
-  const [eventStatus, setEventStatus] = useState<"Invitation not send" | "Upcoming" | "Ongoing" | "Completed">("Upcoming");
-  // "All" or a session id
-  const [selectedSessionFilter, setSelectedSessionFilter] = useState("All");
-  const [eventReport, setEventReport] = useState<EventReportData | null>(null);
+  const [event, setEvent] = useState<EventDetail | null>(null);
+  const [sessions, setSessions] = useState<SessionData[]>([]);
+  const [assignmentsCount, setAssignmentsCount] = useState(0);
+  const [report, setReport] = useState<EventReportData | null>(null);
   const [accessLogs, setAccessLogs] = useState<AuditLogItem[]>([]);
+  const [analysisSession, setAnalysisSession] = useState("");
+  const [cardExpanded, setCardExpanded] = useState(false);
+  const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  // Cleanup Modal State
-  const [isCleanupModalOpen, setIsCleanupModalOpen] = useState<boolean>(false);
-  const [cleanupSuccessMessage, setCleanupSuccessMessage] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
+  const load = useCallback(async () => {
+    setLoading(true);
     setLoadError(null);
-    let eventObj: any = null;
-    let sessionsList: any[] = [];
-    let inviteesList: any[] = [];
-    let assignmentsList: any[] = [];
-
-    try {
-      const [eventRes, sessionsRes, inviteesRes, assignmentsRes, reportRes, auditRes] = await Promise.all([
-        eventService.getEvent(eventId),
-        sessionService.getSessions(eventId),
-        inviteeService.getInvitees(eventId),
-        assignmentService.getEventAssignments(eventId),
-        reportService.getEventReport(eventId),
-        auditLogService.getAuditLogs({ eventId, limit: 10 }),
-      ]);
-      setEventReport(reportRes.success && reportRes.data ? reportRes.data : null);
-      setAccessLogs(auditRes.success && Array.isArray(auditRes.data) ? auditRes.data : []);
-
-      if (!eventRes?.success) {
-        setLoadError(eventRes?.message || "Event not found or you do not have access to it.");
-      }
-      if (eventRes?.success && eventRes?.data) {
-        const raw = (eventRes.data as any).event || eventRes.data;
-        if (raw && (raw.title || raw.name || raw.eventName)) {
-          const startVal = raw.schedule?.start || raw.startDate;
-          const endVal = raw.schedule?.end || raw.endDate;
-          const locVal = typeof raw.location === "string" ? raw.location : raw.location?.address;
-
-          eventObj = {
-            ...raw,
-            title: raw.title || raw.name || raw.eventName,
-            category: raw.category || raw.categoryId?.name || null,
-            organizer: raw.organizerId?.fullName || raw.organizer || user?.fullName || "",
-            organizerId: { fullName: raw.organizerId?.fullName || raw.organizer || user?.fullName || "" },
-            startRaw: startVal || null,
-            endRaw: endVal || null,
-            startDate: formatDateTime(startVal, "TBD"),
-            endDate: formatDateTime(endVal, "TBD"),
-            status: raw.status || "Upcoming",
-            venue: locVal || "",
-            operationalDataCleared: raw.operationalDataCleared ?? false,
-          };
-        }
-      }
-      if (sessionsRes?.success && Array.isArray(sessionsRes.data)) {
-        sessionsList = sessionsRes.data;
-      }
-      if (inviteesRes?.success && Array.isArray(inviteesRes.data)) {
-        inviteesList = inviteesRes.data;
-      }
-      if (assignmentsRes?.success && Array.isArray(assignmentsRes.data)) {
-        assignmentsList = assignmentsRes.data;
-      }
-    } catch (error) {
-      console.error("Failed to fetch event data:", error);
-      setLoadError("Could not reach the server. Please try again.");
+    const [evRes, sessRes, asgRes, repRes, logRes] = await Promise.all([
+      eventService.getEvent(eventId),
+      sessionService.getSessions(eventId),
+      assignmentService.getEventAssignments(eventId),
+      reportService.getEventReport(eventId),
+      auditLogService.getAuditLogs({ eventId, limit: 10 }),
+    ]);
+    if (!evRes.success || !evRes.data) {
+      setLoadError(evRes.message || "Event not found or you do not have access to it.");
+      setLoading(false);
+      return;
     }
+    const ev = evRes.data as unknown as EventDetail;
+    setEvent(ev);
+    const ss = sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : [];
+    setSessions(ss);
+    setAnalysisSession((prev) => prev || ss[0]?._id || "");
+    setAssignmentsCount(asgRes.success && Array.isArray(asgRes.data) ? asgRes.data.length : 0);
+    setReport(repRes.success && repRes.data ? repRes.data : null);
+    setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data : []);
+    setLoading(false);
 
-    setEventData(eventObj);
-    if (eventObj) {
-      // Use the raw ISO schedule; locale-formatted strings are ambiguous (M/D vs D/M)
-      const computedStatus = getDynamicEventStatus(eventObj.startRaw, eventObj.endRaw, eventObj.status);
-      setEventStatus(computedStatus as any);
-
-      // Check if event is ended and ADMIN cleanup prompt should show
-      if (user?.role === "ADMIN") {
-        const now = new Date();
-        const endRaw = eventObj.schedule?.end || eventObj.endDate;
-        const endDate = endRaw ? new Date(endRaw) : null;
-        const isEnded = (endDate && !isNaN(endDate.getTime()) && now > endDate) || computedStatus === "Completed" || eventObj.status === "COMPLETED";
-
-        const isCleared = eventObj.operationalDataCleared === true;
-        const isDismissed = sessionStorage.getItem(`dismiss_cleanup_${eventId}`) === "true";
-
-        if (isEnded && !isCleared && !isDismissed) {
-          setIsCleanupModalOpen(true);
-        }
-      }
+    const ended = ev.schedule?.end && new Date(ev.schedule.end) < new Date();
+    if (user?.role === "ADMIN" && ended && !ev.operationalDataCleared && sessionStorage.getItem(`dismiss_cleanup_${eventId}`) !== "true") {
+      setCleanupOpen(true);
     }
-
-    setSessions(sessionsList);
-    setInvitees(inviteesList);
-    setAssignments(assignmentsList);
-    setIsLoading(false);
-  }, [eventId, user]);
+  }, [eventId, user?.role]);
 
   useEffect(() => {
-    if (eventId) {
-      fetchData();
-    }
-  }, [eventId, fetchData]);
+    if (eventId) load();
+  }, [eventId, load]);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="w-full min-h-full flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-4 border-[#FF5B22] border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-full min-h-full bg-white">
+        <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+        <p className="py-24 text-center text-sm text-[#828282]">Loading event...</p>
       </div>
     );
   }
 
-  if (!eventData) {
+  if (!event) {
     return (
-      <div className="w-full min-h-full bg-white flex items-center justify-center p-6">
-        <div className="max-w-md w-full border border-gray-200 rounded-md p-8 text-center space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">Event unavailable</h2>
-          <p className="text-xs text-gray-500 break-words">
-            {loadError || "Event not found or you do not have access to it."}
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={() => fetchData()}
-              className="px-4 py-2 border border-gray-200 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50"
-            >
-              Retry
-            </button>
-            <Link
-              href="/events"
-              className="px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white rounded-md text-xs font-semibold"
-            >
-              Back to Events
-            </Link>
+      <div className="w-full min-h-full bg-white">
+        <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+        <div role="alert" className="max-w-md mx-auto mt-16 border border-[#E0E0E0] rounded-lg p-8 text-center space-y-4">
+          <h2 className="text-lg font-medium text-gray-900">Event unavailable</h2>
+          <p className="text-sm text-[#4B4F52] break-words">{loadError}</p>
+          <div className="flex justify-center gap-3">
+            <button type="button" onClick={load} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Retry</button>
+            <Link href="/events" className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-medium">Back to Events</Link>
           </div>
         </div>
       </div>
     );
   }
 
-  const isEventEnded = () => {
-    if (!eventData) return false;
-    const now = new Date();
-    const endRaw = eventData.endRaw;
-    const endDate = endRaw ? new Date(endRaw) : null;
-    return (endDate && !isNaN(endDate.getTime()) && now > endDate) || eventStatus === "Completed" || eventData.status === "COMPLETED";
+  const categoryName = typeof event.categoryId === "object" ? event.categoryId?.name : "";
+  const categoryPill = [categoryName, event.subcategory?.name].filter(Boolean).join(" · ");
+  const organizer = typeof event.organizerId === "object" ? event.organizerId?.profile?.organizationName || event.organizerId?.fullName : "";
+  const venue = typeof event.location === "string" ? event.location : event.location?.address;
+  const delivery = report?.deliverySummary || { SENT: 0, PENDING: 0, FAILED: 0 };
+  const totalInvitees = report?.totalInvitees ?? 0;
+  const timeStatus = event.status === "CANCELLED" ? "Cancelled" : getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
+  const status = timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not send" : timeStatus;
+  const statusTone: Record<string, string> = {
+    "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+    Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
+    Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
+    Completed: "bg-[#FFE3D7] text-[#FF651D]",
+    Cancelled: "bg-gray-200 text-gray-700",
   };
+  const ended = !!event.schedule?.end && new Date(event.schedule.end) < new Date();
+  const sessionRow = (id: string) => report?.sessionReports.find((r) => String(r.sessionId) === id);
+  const selected = sessionRow(analysisSession);
+  const invited = selected?.invitedCount ?? 0;
+  const attended = selected?.attendeeCount ?? 0;
 
   return (
-    <div className="w-full min-h-full bg-white text-gray-900 font-sans">
-      {/* Top Navigation Bar */}
-      <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
-          <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <h1 className="text-xl font-bold text-gray-900">Event Overview</h1>
-        </div>
-        <UserNavDropdown />
-      </header>
-
-      {/* Page Content */}
-      <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 pb-24">
-        {/* Success Banner if Cleanup Was Performed */}
-        {cleanupSuccessMessage && (
-          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-between animate-in fade-in duration-200">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-              </svg>
-              <span className="font-semibold">{cleanupSuccessMessage}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setCleanupSuccessMessage(null)}
-              className="text-emerald-600 hover:text-emerald-900 text-xs font-bold"
-            >
-              Dismiss
-            </button>
+    <div className="w-full min-h-full bg-white">
+      <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+      <div className="p-4 sm:p-6 lg:p-8 max-w-[1240px] w-full mx-auto space-y-6 pb-24">
+        {notice && (
+          <div role="status" className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-sm text-emerald-800 flex justify-between gap-3">
+            <span>{notice}</span>
+            <button type="button" onClick={() => setNotice(null)} className="font-medium cursor-pointer">Dismiss</button>
           </div>
         )}
-
-        {/* Operational Data Cleared Banner Notice */}
-        {eventData?.operationalDataCleared && (
-          <div className="p-4 bg-gray-100 border border-gray-300 rounded-lg text-xs text-gray-700 flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <span className="font-bold text-gray-900">Operational Data Cleared:</span> The event-specific sessions, invitees, invitations, and staff assignments for this completed event have been cleared by an administrator. Global user accounts and event reference records remain preserved.
-            </div>
-          </div>
+        {event.operationalDataCleared && (
+          <p className="p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-700">
+            Operational data (sessions, invitees, invitations and staff assignments) for this completed event was cleared by an administrator.
+          </p>
         )}
 
-        {/* Header Bar: Title, Category Pill, Status Badge & Actions */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div className="min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl font-bold text-gray-900">{eventData?.title}</h2>
-              <span className="px-2.5 py-0.5 border border-[#FF5B22] text-[#FF5B22] text-[11px] font-medium rounded-md bg-[#FF5B22]/5">
-                {eventData?.category || "Event"}
-              </span>
+              <h2 className="text-2xl sm:text-[28px] font-medium text-black break-words">{event.title}</h2>
+              {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#FF651D] text-xs font-medium rounded">{categoryPill}</span>}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500 mt-2 font-normal flex-wrap">
-              {eventStatus === "Invitation not send" && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-amber-100 text-amber-700">
-                  Invitation not send
-                </span>
-              )}
-              {eventStatus === "Upcoming" && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100 text-emerald-700">
-                  Upcoming
-                </span>
-              )}
-              {eventStatus === "Ongoing" && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-100 text-indigo-700">
-                  Ongoing
-                </span>
-              )}
-              {eventStatus === "Completed" && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-semibold bg-red-100 text-red-600">
-                  Completed
-                </span>
-              )}
-              <span className="text-gray-600 font-medium">Organized by: <span className="font-semibold text-gray-800">{eventData?.organizerId?.fullName || eventData?.organizer || "—"}</span></span>
-              <span className="text-gray-300">|</span>
-              <span><span className="font-semibold text-gray-700">Start:</span> {eventData?.startDate || 'N/A'}</span>
-              <span className="text-gray-300">|</span>
-              <span><span className="font-semibold text-gray-700">End:</span> {eventData?.endDate || 'N/A'}</span>
+            <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap text-xs text-[#4B4F52]">
+              <span className={`px-3 py-1 rounded-full font-medium ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
+              <span className="text-[#828282]">{formatEventId(event._id)}</span>
+              {organizer && <span><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
+              <span className="text-[#D3D3D3] hidden sm:inline">|</span>
+              <span><span className="font-medium text-gray-900">Start:</span> {formatDateTime(event.schedule?.start, "—")}</span>
+              <span className="text-[#D3D3D3] hidden sm:inline">|</span>
+              <span><span className="font-medium text-gray-900">End:</span> {formatDateTime(event.schedule?.end, "—")}</span>
             </div>
+            {venue && <p className="mt-2 text-xs text-[#828282] break-words">{venue}</p>}
           </div>
-
-          <div className="flex items-center gap-3">
-            {/* Manual Admin Cleanup Button if Event Ended & Not Cleared */}
-            {user?.role === "ADMIN" && isEventEnded() && !eventData?.operationalDataCleared && (
-              <button
-                type="button"
-                onClick={() => setIsCleanupModalOpen(true)}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-md shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                <span>Clear Event Data</span>
+          <div className="flex items-center gap-3 shrink-0">
+            {user?.role === "ADMIN" && ended && !event.operationalDataCleared && (
+              <button type="button" onClick={() => setCleanupOpen(true)} className="px-4 py-2 border border-amber-600 text-amber-700 hover:bg-amber-50 text-sm font-medium rounded-md cursor-pointer">
+                Clear Event Data
               </button>
             )}
-
-            <Link
-              href={`/events/${eventId}/edit`}
-              className="px-4 py-2 bg-white border-2 border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white text-xs font-bold rounded-md shadow-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-            >
-              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <Link href={`/events/${eventId}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
-              <span>Edit Event</span>
+              Edit
             </Link>
           </div>
         </div>
 
-        {/* Secondary Navigation Tabs */}
-        <EventSubNav
-          eventId={eventId}
-          activeTab="overview"
-          sessionsCount={sessions.length}
-          inviteesCount={invitees.length}
-          assignmentsCount={assignments.length}
-        />
+        <EventSubNav eventId={eventId} activeTab="overview" sessionsCount={sessions.length} inviteesCount={totalInvitees} assignmentsCount={assignmentsCount} />
 
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left 8 Columns - Metrics & Sessions */}
-          <div className="lg:col-span-8 space-y-6">
-            {/* 3 Metric Cards */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_290px] gap-5 items-start">
+          <div className="space-y-5 min-w-0">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white border border-gray-200 rounded-md p-5 shadow-2xs">
-                <p className="text-xs font-medium text-gray-500">Total Invitees</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1">{invitees.length}</h3>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-md p-5 shadow-2xs">
-                <p className="text-xs font-medium text-gray-500">Total Sessions</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1">{sessions.length}</h3>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-md p-5 shadow-2xs">
-                <p className="text-xs font-medium text-gray-500">Assigned System Users</p>
-                <h3 className="text-2xl font-bold text-gray-900 mt-1">{assignments.length}</h3>
-              </div>
+              <MetricCard value={totalInvitees} label="Total Invitees" href={`/events/${eventId}/invitees`} tone="peach" icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              } />
+              <MetricCard value={assignmentsCount} label="Assigned System Users" href={`/events/${eventId}/assign-users`} tone="mint" icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+              } />
+              <MetricCard value={sessions.length} label="Total Sessions" href={`/events/${eventId}/sessions`} tone="lavender" icon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              } />
             </div>
 
-            {/* Guest Logs & Sessions Table */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-6">
-              {/* Guest Logs Donut Chart (5 cols) */}
-              <div className="sm:col-span-5 bg-white border border-gray-200 rounded-md p-5 shadow-2xs flex flex-col justify-between overflow-hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-bold text-gray-900">Guest Logs</h3>
-                  <svg className="w-4 h-4 text-gray-800 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7V15" />
-                  </svg>
-                </div>
-
-                {eventData?.operationalDataCleared ? (
-                  <div className="flex items-center justify-center flex-1 py-12 text-sm text-gray-500">
-                    Operational data cleared
-                  </div>
-                ) : (
-                  <GuestLogsDonutChart invitees={invitees} />
-                )}
-              </div>
-
-              {/* Sessions Table Card (7 cols) */}
-              <div className="sm:col-span-7 bg-white border border-gray-200 rounded-md p-5 shadow-2xs">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
+              <section className={`${card} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-bold text-gray-900">Sessions</h3>
+                  <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
+                  <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
                 </div>
+                {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
+              </section>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs whitespace-nowrap">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                        <th className="py-2 pr-4 font-medium">#</th>
-                        <th className="py-2 pr-6 font-medium">Session Name</th>
-                        <th className="py-2 pr-6 font-medium">Date & Time</th>
-                        <th className="py-2 text-right font-medium pr-6">No. of Guests</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 text-gray-800">
-                      {sessions.length > 0 ? (
-                        sessions.map((session, index) => (
-                          <tr key={session._id || session.id || index} className="hover:bg-gray-50/80 transition-colors">
-                            <td className="py-3 pr-4 font-bold text-gray-900">{index + 1}</td>
-                            <td className="py-3 pr-6 font-semibold text-gray-900">{session.name || session.title || "Unnamed Session"}</td>
-                            <td className="py-3 pr-6 text-gray-600">
-                              {formatSessionDateTime(session)}
-                            </td>
-                            <td className="py-3 text-right text-gray-900 font-semibold pr-6">
-                              {invitees.length > 0 ? invitees.length : (session.invitesCount ?? session.maxAttendees ?? 0)}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
+              <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">Sessions</h3>
+                  <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
+                </div>
+                {sessions.length === 0 ? (
+                  <p className="text-sm text-[#828282] py-6 text-center">No sessions yet.</p>
+                ) : (
+                  <HorizontalScroll>
+                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[520px]">
+                      <thead className="text-[#828282] border-b border-[#D3D3D3]">
                         <tr>
-                          <td colSpan={4} className="py-6 text-center text-gray-500">
-                            {eventData?.operationalDataCleared ? "No sessions found (operational data cleared)." : "No sessions found."}
-                          </td>
+                          <th className="py-2 pr-3 font-medium">#</th>
+                          <th className="py-2 pr-4 font-medium">Session Name</th>
+                          <th className="py-2 pr-4 font-medium">Date &amp; Time</th>
+                          <th className="py-2 pr-4 font-medium">No. of Guests</th>
+                          <th className="py-2 font-medium">Checked in</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                      </thead>
+                      <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
+                        {sessions.map((s, i) => {
+                          const r = sessionRow(s._id!);
+                          return (
+                            <tr key={s._id}>
+                              <td className="py-2.5 pr-3">{i + 1}</td>
+                              <td className="py-2.5 pr-4 text-gray-900">{s.name}</td>
+                              <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}{s.schedule?.end ? ` to ${formatTime(s.schedule.end)}` : ""}</td>
+                              <td className="py-2.5 pr-4">{r?.invitedCount ?? 0}</td>
+                              <td className="py-2.5">{r?.attendeeCount ?? 0}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </HorizontalScroll>
+                )}
+              </section>
             </div>
           </div>
 
-          {/* Right 4 Columns - Card Preview */}
-          <div className="lg:col-span-4 bg-white border border-gray-200 rounded-md p-5 shadow-2xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-bold text-gray-900">Card Preview</h3>
-                <svg className="w-4 h-4 text-gray-800 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </div>
-
-              {/* Dynamic Card Poster Container */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex flex-col items-center justify-center text-center">
-                <div className="w-full h-80 rounded-lg overflow-hidden relative shadow-md bg-slate-950 flex flex-col justify-between p-4 text-white">
-                  {(() => {
-                    const templateObj = eventData?.templateId && typeof eventData.templateId === "object" ? eventData.templateId : null;
-                    const templateImg = templatePreviewUrl(templateObj?.previewImageKey);
-                    return (
-                      <div className="relative z-10 flex flex-col justify-between h-full w-full select-none">
-                        {templateImg && (
-                          // Template previews can be hosted anywhere, so a plain img is used
-                          <img src={templateImg} alt="" className="absolute inset-0 -z-10 w-full h-full object-cover opacity-25 rounded-lg" />
-                        )}
-                        <div className="flex items-center justify-between border-b border-white/20 pb-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF5B22] bg-white/90 px-2.5 py-0.5 rounded-full shadow-xs max-w-[50%] truncate">
-                            {eventData?.category || "Official Pass"}
-                          </span>
-                          <span className="text-[10px] text-gray-300 font-semibold truncate max-w-[50%]" title={templateObj?.name}>
-                            {templateObj ? `Template: ${templateObj.name}` : "No template selected"}
-                          </span>
-                        </div>
-
-                        <div className="my-auto py-3">
-                          <p className="text-[10px] font-bold text-[#FF5B22] uppercase tracking-widest">INVITATION PASS</p>
-                          <h4 className="font-extrabold text-base text-white mt-1 leading-tight break-words line-clamp-3">{eventData?.title}</h4>
-                          <p className="text-xs text-gray-300 font-medium mt-1">
-                            Host: <span className="text-white font-bold">{eventData?.organizerId?.fullName || eventData?.organizer || user?.fullName || "Organizer"}</span>
-                          </p>
-                          <div className="mt-3 inline-block bg-white/10 backdrop-blur-xs px-3 py-1 rounded-md text-xs font-semibold text-white border border-white/20">
-                            {formatDateTime(eventData?.startRaw, "Date TBD")}
-                          </div>
-                        </div>
-
-                        <div className="border-t border-white/20 pt-2 text-[10px] text-gray-300 font-medium truncate">
-                          📍 {eventData?.venue || (typeof eventData?.location === "string" ? eventData.location : eventData?.location?.address) || "Venue to be announced"}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
+          <section className={`${card} p-4`} aria-labelledby="card-preview-heading">
+            <div className="flex items-center justify-between mb-3">
+              <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">Card Preview</h3>
+              {typeof event.templateId === "object" && event.templateId?.name && (
+                <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#FF651D] cursor-pointer">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
+              )}
             </div>
-
-            {/* Send Invitation Button */}
-            <Link
-              href={`/events/${eventId}/invitees`}
-              className="w-full mt-4 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-semibold text-xs rounded-md transition-colors shadow-2xs flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-              </svg>
-              <span>Send Invitation</span>
+            <div className="rounded-md overflow-hidden border border-[#EEEEEE]">
+              <TemplateThumb
+                imageKey={typeof event.templateId === "object" ? event.templateId?.previewImageKey : undefined}
+                name={typeof event.templateId === "object" && event.templateId?.name ? event.templateId.name : event.title}
+              />
+            </div>
+            <p className="mt-2 text-xs text-[#828282] truncate">
+              {typeof event.templateId === "object" && event.templateId?.name ? `Template: ${event.templateId.name}` : "No template selected"}
+            </p>
+            <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+              Send Invitation
             </Link>
-          </div>
+          </section>
         </div>
 
-        {/* Analysis Section Card */}
-        <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-gray-900">Analysis</h3>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 font-medium">Session:</span>
-              <select
-                value={selectedSessionFilter}
-                onChange={(e) => setSelectedSessionFilter(e.target.value)}
-                className="px-3 py-1.5 border border-gray-200 rounded-md text-xs text-gray-700 bg-white font-medium focus:outline-none cursor-pointer"
-              >
-                <option value="All">All Sessions</option>
-                {sessions.map((s, idx) => (
-                  <option key={s._id || idx} value={s._id}>{s.name || `Session ${idx + 1}`}</option>
-                ))}
-              </select>
-            </div>
+        <section className={`${card} p-4 sm:p-5 space-y-5`} aria-labelledby="analysis-title">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h3 id="analysis-title" className="text-xl font-medium text-gray-900">Analysis</h3>
+            {sessions.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[#4B4F52]">Session:</span>
+                <div className="w-48">
+                  <CustomDropdown value={analysisSession} onChange={setAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
+                </div>
+              </div>
+            )}
           </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Session Health Overview Panel (5 cols) */}
-            <div className="lg:col-span-5 border border-gray-200 rounded-md p-5 bg-white space-y-4">
-              <h4 className="text-xs font-semibold text-gray-800">Session Health Overview Panel</h4>
-
-              {(() => {
-                const rows = (eventReport?.sessionReports || []).filter(
-                  (r) => selectedSessionFilter === "All" || String(r.sessionId) === selectedSessionFilter
-                );
-                if (rows.length === 0) {
-                  return (
-                    <div className="flex items-center justify-center py-6 text-sm text-gray-500">
-                      {eventData?.operationalDataCleared ? "Operational data cleared" : "No sessions to report yet"}
-                    </div>
-                  );
-                }
-                return (
-                  <ul className="space-y-3">
-                    {rows.map((r) => {
-                      const invited = r.invitedCount ?? 0;
-                      const attended = r.attendeeCount ?? r.checkInCount ?? 0;
-                      const pct = invited > 0 ? Math.min(100, Math.round((attended / invited) * 100)) : 0;
-                      return (
-                        <li key={String(r.sessionId)} className="space-y-1">
-                          <div className="flex items-center justify-between gap-2 text-xs">
-                            <span className="font-semibold text-gray-800 truncate" title={r.name}>{r.name}</span>
-                            <span className="text-gray-500 shrink-0">{attended} / {invited} checked in</span>
-                          </div>
-                          <div className="h-2 rounded-full bg-gray-100 overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                            <div className="h-full bg-[#FF5B22] rounded-full" style={{ width: `${pct}%` }} />
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                );
-              })()}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div className="border border-[#E0E0E0] rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-4">Session Health Overview Panel</h4>
+              {selected ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <Ring value={attended} max={invited} center={<>{attended}<span className="text-[10px] text-[#828282]">/{invited}</span></>} label="Current Logged" />
+                  <Ring value={selected.checkInsToday ?? 0} max={Math.max(invited, 1)} center={selected.checkInsToday ?? 0} label="Check-ins Today" />
+                  <Ring value={attended} max={invited} center={`${invited > 0 ? Math.round((attended / invited) * 100) : 0}%`} label="Occupancy" />
+                </div>
+              ) : (
+                <p className="text-sm text-[#828282] py-6 text-center">{sessions.length ? "No data for this session yet." : "Add a session to see its health."}</p>
+              )}
             </div>
-
-            {/* Access Logs (7 cols) */}
-            <div className="lg:col-span-7 border border-gray-200 rounded-md p-5 bg-white space-y-4">
-              <h4 className="text-xs font-semibold text-gray-800">Access Logs</h4>
-
+            <div className="border border-[#E0E0E0] rounded-lg p-4 min-w-0">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Access Logs</h4>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead>
-                    <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                      <th className="py-2 px-3 font-medium">User Type</th>
-                      <th className="py-2 px-3 font-medium">Date & Time</th>
-                      <th className="py-2 px-3 font-medium">Action</th>
-                    </tr>
+                <table className="w-full text-left text-sm min-w-[360px]">
+                  <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                    <tr><th className="py-2 pr-3 font-medium">User Type</th><th className="py-2 pr-3 font-medium">Date &amp; Time</th><th className="py-2 font-medium">Action</th></tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 text-gray-800">
+                  <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {accessLogs.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="py-6 text-center text-gray-500 text-xs">
-                          No recorded activity for this event yet.
-                        </td>
-                      </tr>
+                      <tr><td colSpan={3} className="py-6 text-center text-[#828282]">No recorded activity yet.</td></tr>
                     ) : (
                       accessLogs.map((log) => (
                         <tr key={log._id}>
-                          <td className="py-2 px-3">{log.actorType === "SYSTEM_USER" ? "System User" : log.actorType === "ORGANIZER" ? "Organizer" : "Admin"}</td>
-                          <td className="py-2 px-3 text-gray-600">{formatDateTime(log.createdAt)}</td>
-                          <td className="py-2 px-3 max-w-[240px] truncate" title={log.action}>{log.action}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">{log.actorType === "SYSTEM_USER" ? "System User" : log.actorType === "ORGANIZER" ? "Organizer" : "Admin"}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">{formatDateTime(log.createdAt)}</td>
+                          <td className="py-2 max-w-[220px] truncate" title={log.action}>{log.action}</td>
                         </tr>
                       ))
                     )}
@@ -659,22 +407,22 @@ export default function EventDetailsDashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* Event Cleanup Modal */}
+      {cardExpanded && <CardPreviewModal eventId={eventId} onClose={() => setCardExpanded(false)} />}
       <EventCleanupModal
-        isOpen={isCleanupModalOpen}
+        isOpen={cleanupOpen}
         onClose={() => {
-          setIsCleanupModalOpen(false);
+          setCleanupOpen(false);
           sessionStorage.setItem(`dismiss_cleanup_${eventId}`, "true");
         }}
         eventId={eventId}
-        eventTitle={eventData?.title}
+        eventTitle={event.title}
         onCleanupSuccess={async () => {
-          setIsCleanupModalOpen(false);
-          setCleanupSuccessMessage("Operational data for this event has been successfully cleared.");
-          await fetchData();
+          setCleanupOpen(false);
+          setNotice("Operational data for this event has been cleared.");
+          await load();
         }}
       />
     </div>

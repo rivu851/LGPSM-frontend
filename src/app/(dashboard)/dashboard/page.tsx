@@ -10,6 +10,7 @@ import { assignmentService, AssignmentData } from "@/services/assignmentService"
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import UserNavDropdown from "@/components/common/UserNavDropdown";
 import CheckInModal from "@/components/common/CheckInModal";
+import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 
 interface OrganizerSummary {
   id: string;
@@ -41,8 +42,17 @@ export default function DashboardPage() {
   // CheckIn Modal state
   const [checkInModalEvent, setCheckInModalEvent] = useState<{ id: string; title: string } | null>(null);
 
+  // Welcome Popup modal (06-Popup.pdf)
+  const [showWelcomePopup, setShowWelcomePopup] = useState<boolean>(false);
+
   const isSystemUser = user?.role === "SYSTEM_USER";
   const isAdmin = user?.role === "ADMIN";
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && sessionStorage.getItem("show_dashboard_popup") === "true") {
+      setShowWelcomePopup(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -126,12 +136,12 @@ export default function DashboardPage() {
       <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
         {/* Top Header Bar */}
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
             </svg>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">My Assignments</h1>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">My Assignments</h1>
               <p className="text-xs text-gray-500">System User Operations Portal</p>
             </div>
           </div>
@@ -291,11 +301,11 @@ export default function DashboardPage() {
     <div className="w-full min-h-full bg-white text-gray-900 font-sans">
       {/* Top Header Bar */}
       <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2h-2a2 2 0 01-2-2v-2z" />
           </svg>
-          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Dashboard</h1>
         </div>
         <UserNavDropdown />
       </header>
@@ -443,6 +453,16 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <DashboardPopupModal
+        isOpen={showWelcomePopup}
+        onClose={() => {
+          setShowWelcomePopup(false);
+          if (typeof window !== "undefined") {
+            sessionStorage.removeItem("show_dashboard_popup");
+          }
+        }}
+      />
     </div>
   );
 }

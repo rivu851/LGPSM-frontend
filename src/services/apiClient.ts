@@ -1,12 +1,23 @@
 import { tokenStorage } from "./tokenStorage";
+import { loginRedirectPath } from "@/components/auth/authPortal";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success?: boolean;
   message?: string;
   data?: T;
   error?: string;
+  /** Machine-readable reason some endpoints add to error responses (e.g. QR check-in rejections) */
+  code?: string;
+}
+
+interface RawResponseBody {
+  message?: string;
+  error?: string | unknown;
+  errors?: Record<string, { _errors?: string[] }>;
+  [key: string]: unknown;
 }
 
 let isRefreshing = false;
@@ -37,7 +48,7 @@ async function performTokenRefresh(): Promise<string | null> {
       body: JSON.stringify({ refreshToken: currentRefreshToken }),
     });
 
-    const data: ApiResponse = await res.json();
+    const data: ApiResponse<{ accessToken?: string; refreshToken?: string }> = await res.json();
     if (res.ok && data.success && data.data?.accessToken) {
       const newAccessToken = data.data.accessToken;
       const newRefreshToken = data.data.refreshToken || currentRefreshToken;
@@ -56,12 +67,13 @@ async function performTokenRefresh(): Promise<string | null> {
   }
 }
 
-export async function apiClient<T = any>(
+export async function apiClient<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
   requiresAuth: boolean = false
 ): Promise<ApiResponse<T>> {
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${normalizedEndpoint}`;
 
   const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
   const headers: Record<string, string> = {
@@ -98,7 +110,7 @@ export async function apiClient<T = any>(
           response = await fetch(url, { ...config, headers });
         } else {
           if (typeof window !== "undefined" && !window.location.pathname.includes("/signin")) {
-            window.location.href = "/signin";
+            window.location.href = loginRedirectPath(window.location.pathname + window.location.search);
           }
           return { success: false, message: "Session expired. Please log in again." };
         }
@@ -117,9 +129,9 @@ export async function apiClient<T = any>(
       }
     }
 
-    let data: any = {};
+    let data: RawResponseBody = {};
     try {
-      data = await response.json();
+      data = (await response.json()) as RawResponseBody;
     } catch {
       data = {};
     }
@@ -134,7 +146,7 @@ export async function apiClient<T = any>(
       if (!errorMessage && data.errors && typeof data.errors === "object") {
         const errorMessages: string[] = [];
         Object.keys(data.errors).forEach((key) => {
-          const fieldErr = data.errors[key];
+          const fieldErr = data.errors?.[key];
           if (fieldErr?._errors && Array.isArray(fieldErr._errors) && fieldErr._errors.length > 0) {
             errorMessages.push(fieldErr._errors.join(", "));
           }
@@ -147,15 +159,16 @@ export async function apiClient<T = any>(
       return {
         success: false,
         message: errorMessage || `Request failed with status ${response.status}`,
-        ...data,
+        ...(data as ApiResponse<T>),
       };
     }
 
-    return data;
-  } catch (err: any) {
+    return data as ApiResponse<T>;
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Network error. Please check backend server connection.";
     return {
       success: false,
-      message: err.message || "Network error. Please check backend server connection.",
+      message: errorMessage,
     };
   }
 }

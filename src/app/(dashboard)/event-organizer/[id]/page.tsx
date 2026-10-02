@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
+import CustomDropdown from "@/components/common/CustomDropdown";
 import { formatEventId } from "@/utils/formatId";
 
 interface EventRow {
@@ -147,7 +148,12 @@ export default function OrganizerDetailsPage() {
     return (
       <div className="flex-1 flex flex-col min-w-0 bg-white">
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <h1 className="text-xl font-bold text-gray-900">Event Organizer</h1>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V7m0 0h4m-4 0H9" />
+            </svg>
+            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Event Organizer</h1>
+          </div>
           <UserNavDropdown />
         </header>
         <div className="flex-1 flex justify-center items-center py-24 px-6">
@@ -167,11 +173,11 @@ export default function OrganizerDetailsPage() {
     return (
       <div className="flex-1 flex flex-col min-w-0 bg-white">
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V7m0 0h4m-4 0H9" />
             </svg>
-            <h1 className="text-xl font-bold text-gray-900">Event Organizer</h1>
+            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Event Organizer</h1>
           </div>
           <UserNavDropdown />
         </header>
@@ -186,11 +192,11 @@ export default function OrganizerDetailsPage() {
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V7m0 0h4m-4 0H9" />
             </svg>
-            <h1 className="text-xl font-bold text-gray-900">Event Organizer Details</h1>
+            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Event Organizer Details</h1>
           </div>
           <UserNavDropdown />
         </header>
@@ -400,8 +406,8 @@ export default function OrganizerDetailsPage() {
 
       {/* Deactivate Organizer Modal (Image 4) */}
       {isDeactivateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-lg w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-lg w-full overflow-hidden space-y-6 animate-modal">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Deactivate Organizer</h3>
@@ -422,16 +428,17 @@ export default function OrganizerDetailsPage() {
                 <label className="text-xs font-semibold text-gray-800">
                   Reason<span className="text-red-500">*</span>
                 </label>
-                <select
+                <CustomDropdown
                   value={deactivateReason}
-                  onChange={(e) => setDeactivateReason(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                >
-                  <option value="Product Launch Event 2026">Product Launch Event 2026</option>
-                  <option value="Policy Violation">Policy Violation</option>
-                  <option value="Account Inactivity">Account Inactivity</option>
-                  <option value="Other">Other</option>
-                </select>
+                  onChange={setDeactivateReason}
+                  options={[
+                    { value: "Product Launch Event 2026", label: "Product Launch Event 2026" },
+                    { value: "Policy Violation", label: "Policy Violation" },
+                    { value: "Account Inactivity", label: "Account Inactivity" },
+                    { value: "Other", label: "Other" },
+                  ]}
+                  ariaLabel="Deactivation reason"
+                />
               </div>
 
               {/* Message Organizer Textarea */}

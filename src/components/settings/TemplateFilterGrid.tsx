@@ -1,114 +1,83 @@
 "use client";
 
 import React, { useState } from "react";
-import { TemplateCategory, TemplateSubcategory, TemplateItem } from "@/types/settings";
+import { TemplateItem } from "@/types/settings";
 import TemplateGridItem from "./TemplateGridItem";
 import CustomDropdown from "@/components/common/CustomDropdown";
+import { CategoriesApi } from "@/hooks/useCategories";
 
 interface TemplateFilterGridProps {
   templates: TemplateItem[];
-  categories: TemplateCategory[];
-  subcategories: TemplateSubcategory[];
+  categories: CategoriesApi;
+  loading?: boolean;
   // Omitted for read-only viewers (template management is admin-only)
   onEditTemplate?: (template: TemplateItem) => void;
 }
 
-export default function TemplateFilterGrid({
-  templates,
-  categories,
-  subcategories,
-  onEditTemplate,
-}: TemplateFilterGridProps) {
-  const [selectedCat, setSelectedCat] = useState("personal");
-  const [selectedSub, setSelectedSub] = useState("birthday");
-  const [statusFilter, setStatusFilter] = useState("All");
+export default function TemplateFilterGrid({ templates, categories, loading = false, onEditTemplate }: TemplateFilterGridProps) {
+  const [selectedCat, setSelectedCat] = useState("");
+  const [selectedSub, setSelectedSub] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
-  const categoryOptions = [
-    { value: "", label: "All Categories" },
-    ...categories.map((c) => ({ value: c.id, label: c.name })),
-  ];
-
-  const subcategoryOptions = [
-    { value: "", label: "All Subcategories" },
-    ...subcategories
-      .filter((s) => !selectedCat || s.categoryId === selectedCat)
-      .map((s) => ({ value: s.id, label: s.name })),
-  ];
-
-  const statusOptions = [
-    { value: "All", label: "All Status" },
-    { value: "Published", label: "Published" },
-    { value: "Draft", label: "Saved on Draft" },
-  ];
-
-  const filteredTemplates = templates.filter((tpl) => {
-    const matchCat = !selectedCat || tpl.categoryId === selectedCat;
-    const matchSub = !selectedSub || tpl.subcategoryId === selectedSub;
-    const matchStatus =
-      statusFilter === "All" ||
-      !statusFilter ||
-      tpl.status.toLowerCase() === statusFilter.toLowerCase() ||
-      (statusFilter === "Published" && tpl.status === "Published") ||
-      (statusFilter === "Draft" && tpl.status === "Saved on Draft");
-    return matchCat && matchSub && matchStatus;
-  });
+  const filtered = templates.filter(
+    (t) =>
+      (!selectedCat || t.categoryId === selectedCat) &&
+      (!selectedSub || t.subcategoryId === selectedSub) &&
+      (!statusFilter || t.status === statusFilter)
+  );
 
   return (
-    <div className="space-y-6">
-      {/* Filters Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Event Category */}
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Event Category<span className="text-red-500">*</span>
-          </label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</label>
           <CustomDropdown
             value={selectedCat}
-            onChange={setSelectedCat}
-            options={categoryOptions}
-            placeholder="- Event Category -"
+            onChange={(v) => {
+              setSelectedCat(v);
+              setSelectedSub("");
+            }}
+            options={[{ value: "", label: "All Categories" }, ...categories.categoryOptions]}
           />
         </div>
-
-        {/* Event Subcategory */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Event Subcategory<span className="text-red-500">*</span>
-          </label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Event Subcategory</label>
           <CustomDropdown
             value={selectedSub}
             onChange={setSelectedSub}
-            options={subcategoryOptions}
-            placeholder="- Event Subcategory -"
+            disabled={!selectedCat}
+            placeholder={selectedCat ? "All Subcategories" : "Select a category first"}
+            options={selectedCat ? [{ value: "", label: "All Subcategories" }, ...categories.subcategoryOptionsFor(selectedCat)] : []}
           />
         </div>
-
-        {/* Template Status */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Template Status
-          </label>
+          <label className="block text-sm font-medium text-gray-900 mb-1.5">Template Status</label>
           <CustomDropdown
             value={statusFilter}
             onChange={setStatusFilter}
-            options={statusOptions}
-            placeholder="- Template Status -"
+            options={[
+              { value: "", label: "All Status" },
+              { value: "Published", label: "Published" },
+              { value: "Saved on Draft", label: "Saved on Draft" },
+            ]}
           />
         </div>
       </div>
 
-      {/* Cards Grid */}
-      {filteredTemplates.length === 0 ? (
-        <div className="bg-white rounded-md border border-gray-200 p-8 text-center text-gray-500 text-xs">
-          No card templates found for the selected filter criteria.
+      {loading ? (
+        <p className="text-sm text-[#828282]">Loading templates...</p>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-md border border-[#E0E0E0] p-8 text-center text-sm text-[#828282]">
+          {templates.length === 0 ? "No templates have been added yet." : "No templates match the selected filters."}
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          {filteredTemplates.map((template) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          {filtered.map((t) => (
             <TemplateGridItem
-              key={template.id}
-              template={template}
+              key={t.id}
+              template={t}
               onEdit={onEditTemplate}
+              categoryLabel={[categories.categoryName(t.categoryId), categories.subcategoryName(t.categoryId, t.subcategoryId)].filter(Boolean).join(" · ")}
             />
           ))}
         </div>

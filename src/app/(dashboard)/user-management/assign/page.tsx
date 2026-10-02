@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import CustomDropdown from "@/components/common/CustomDropdown";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
@@ -287,7 +288,11 @@ export default function AssignedSystemUsersPage() {
 
       // Only confirm success when at least one assignment was actually saved
       setIsAssignModalOpen(false);
-      if (errorMessages.length < selectedIds.length) {
+      const savedAny = errorMessages.length < selectedIds.length;
+      // Never carry a previous selection or session scope into the next assignment
+      setSelectedIds([]);
+      setSessionScope(null);
+      if (savedAny) {
         setIsAssignSuccessModalOpen(true);
       }
       await loadData();
@@ -373,11 +378,11 @@ export default function AssignedSystemUsersPage() {
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
       {/* Header */}
       <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <h1 className="text-xl font-bold text-gray-900">Assigned System Users</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Assigned System Users</h1>
         </div>
         <UserNavDropdown />
       </header>
@@ -428,7 +433,7 @@ export default function AssignedSystemUsersPage() {
           <button
             type="button"
             onClick={() => setIsAddUserModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs w-fit"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -459,7 +464,16 @@ export default function AssignedSystemUsersPage() {
           </span>
         </div>
 
+        {/* Loading state — outside the scrollable table so it always centers on screen */}
+        {isLoading && (
+          <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-500 text-sm">
+            <div className="w-6 h-6 border-2 border-[#FF5B22] border-t-transparent rounded-full animate-spin" />
+            <p>Loading assigned system users...</p>
+          </div>
+        )}
+
         {/* Table Container */}
+        {!isLoading && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead>
@@ -473,16 +487,7 @@ export default function AssignedSystemUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 text-gray-800">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <div className="w-6 h-6 border-2 border-[#FF5B22] border-t-transparent rounded-full animate-spin"></div>
-                      <p>Loading assigned system users...</p>
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredUsers.length === 0 ? (
+              {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-400 text-sm">
                     No assigned system users found. Assign users from the All Users tab.
@@ -638,6 +643,7 @@ export default function AssignedSystemUsersPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         {/* Bottom Control Bar with Trash Can icon beside Assign users button */}
         <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
@@ -654,7 +660,7 @@ export default function AssignedSystemUsersPage() {
           </button>
           <button
             type="button"
-            onClick={() => setIsAssignModalOpen(true)}
+            onClick={() => { setSessionScope(null); setErrorFeedback(null); setIsAssignModalOpen(true); }}
             className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer shrink-0"
           >
             <span>Assign {selectedIds.length} users</span>
@@ -667,8 +673,8 @@ export default function AssignedSystemUsersPage() {
 
       {/* ── Edit User Modal ── */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Edit System User</h3>
               <button
@@ -742,8 +748,8 @@ export default function AssignedSystemUsersPage() {
 
       {/* ── Add User Modal ── */}
       {isAddUserModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Add System User</h3>
               <button
@@ -837,8 +843,8 @@ export default function AssignedSystemUsersPage() {
 
       {/* ── Assign Attendees Modal ── */}
       {isAssignModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full overflow-hidden space-y-6 animate-modal">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-base font-bold text-gray-900">Assign System Users to Event</h3>
               <button
@@ -857,20 +863,17 @@ export default function AssignedSystemUsersPage() {
                 <label className="text-xs font-semibold text-gray-800">
                   Event<span className="text-[#FF5B22]">*</span>
                 </label>
-                <select
+                <CustomDropdown
                   value={selectedEventId}
-                  onChange={(e) => {
-                    setSelectedEventId(e.target.value);
+                  onChange={(v) => {
+                    setSelectedEventId(v);
                     setSessionScope(null);
                   }}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                >
-                  {eventsList.map((evt) => (
-                    <option key={evt.id} value={evt.id}>
-                      {evt.title}
-                    </option>
-                  ))}
-                </select>
+                  options={eventsList.map((evt) => ({ value: evt.id, label: evt.title }))}
+                  placeholder="Select an event"
+                  emptyMessage="No events yet"
+                  ariaLabel="Event"
+                />
               </div>
 
               <SessionScopePicker
@@ -904,8 +907,8 @@ export default function AssignedSystemUsersPage() {
 
       {/* Success Modal */}
       {isAssignSuccessModalOpen && (
-        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6">
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal">
             <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

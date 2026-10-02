@@ -2,10 +2,13 @@
 // All dates are ISO strings (see utils/dateTime.ts); payload builders produce the exact backend contract.
 
 import { addHours, isAfter, isValidIso, nextWholeHourIso, parseIso } from "@/utils/dateTime";
+import { resolveImageUrl } from "@/utils/mediaUrl";
 import type { CreateEventRequest, UpdateEventRequest } from "@/services/eventService";
 import type { SessionRequest } from "@/services/sessionService";
 
 export type AccessControl = "NO_RESTRICTION" | "ONLY_ONCE";
+// NEW_LIST: the session has its own invitee list; COPY_SESSION: it keeps another session's invitees
+export type InviteeSource = "NEW_LIST" | "COPY_SESSION";
 
 export interface DraftSession {
   key: string; // stable client key
@@ -14,7 +17,11 @@ export interface DraftSession {
   start: string;
   end: string;
   accessControl: AccessControl;
+  // Only meaningful on the first (primary) session
   validateAgainstOtherSessions: boolean;
+  inviteeSource: InviteeSource;
+  // Client key of the session whose invitees are reused (COPY_SESSION only)
+  sourceSessionKey: string | null;
   // While true, the session follows the event's start/end; editing the session's own times unlinks it
   timesLinked: boolean;
 }
@@ -28,7 +35,8 @@ export interface PreferenceCategory {
 export interface SelectedTemplate {
   id: string;
   name: string;
-  previewUrl?: string | null;
+  // Stored image reference of the template (resolve with utils/mediaUrl.ts when rendering)
+  previewKey?: string | null;
 }
 
 export interface EventDraft {
@@ -49,6 +57,8 @@ export interface EventDraft {
   dietaryEnabled: boolean;
   preferenceCategories: PreferenceCategory[];
   template: SelectedTemplate | null;
+  // Uploaded event logo ("media:<id>"), shown on the card preview
+  logoKey: string | null;
   sessions: DraftSession[];
   skipInvitees: boolean;
 }
@@ -69,6 +79,8 @@ export function createSessionDraft(name: string, start: string, end: string): Dr
     end,
     accessControl: "NO_RESTRICTION",
     validateAgainstOtherSessions: false,
+    inviteeSource: "NEW_LIST",
+    sourceSessionKey: null,
     timesLinked: true,
   };
 }
@@ -94,9 +106,28 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
+    logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
     skipInvitees: true,
   };
+}
+
+// Drafts saved by earlier versions of the form lack newer fields; fill them so a restored draft is never lost
+export function normalizeEventDraft(raw: EventDraft): EventDraft {
+  const base = createEmptyEventDraft();
+  const sessions = (Array.isArray(raw?.sessions) && raw.sessions.length ? raw.sessions : base.sessions).map((s, index) => ({
+    ...createSessionDraft(s.name ?? "", s.start, s.end),
+    ...s,
+    inviteeSource: s.inviteeSource === "COPY_SESSION" && index > 0 ? ("COPY_SESSION" as const) : ("NEW_LIST" as const),
+    sourceSessionKey: s.inviteeSource === "COPY_SESSION" && index > 0 ? s.sourceSessionKey ?? null : null,
+    validateAgainstOtherSessions: index === 0 ? !!s.validateAgainstOtherSessions : false,
+  }));
+  // Older drafts stored a resolved preview URL under `previewUrl`
+  const legacyTemplate = raw?.template as (SelectedTemplate & { previewUrl?: string | null }) | null | undefined;
+  const template = legacyTemplate
+    ? { id: legacyTemplate.id, name: legacyTemplate.name, previewKey: legacyTemplate.previewKey ?? legacyTemplate.previewUrl ?? null }
+    : null;
+  return { ...base, ...raw, template, logoKey: raw?.logoKey ?? null, sessions };
 }
 
 // Changing the event window moves every session that still follows it
@@ -115,16 +146,29 @@ export function hasMeaningfulContent(draft: EventDraft): boolean {
       draft.venue.trim() ||
       draft.contactNumber.trim() ||
       draft.template ||
+      draft.logoKey ||
       draft.sessions.some((s) => !s.timesLinked || s.name !== "Entry Session")
   );
 }
 
 export type DraftErrors = Record<string, string>;
 
-export function validateEventDraft(draft: EventDraft): DraftErrors {
+export interface DraftValidationOptions {
+  // True when the chosen category offers subcategories
+  subcategoryRequired?: boolean;
+}
+
+export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
   const errors: DraftErrors = {};
   if (!draft.title.trim()) errors.title = "Title is required.";
   else if (draft.title.trim().length > 100) errors.title = "Title cannot exceed 100 characters.";
+  if (!draft.description.trim()) errors.description = "Description is required.";
+  if (!draft.categoryId) errors.categoryId = "Choose an event category.";
+  else if (options.subcategoryRequired && !draft.subcategoryId) errors.subcategoryId = "Choose a subcategory.";
+  const contactDigits = draft.contactNumber.replace(/\D/g, "");
+  if (!contactDigits) errors.contactNumber = "Contact number is required.";
+  else if (contactDigits.length < 7 || contactDigits.length > 15) errors.contactNumber = "Enter a valid contact number.";
+  if (!draft.venue.trim()) errors.venue = "Event address is required.";
   if (!isValidIso(draft.start)) errors.start = "Choose a start date and time.";
   if (!isValidIso(draft.end)) errors.end = "Choose an end date and time.";
   else if (!isAfter(draft.end, draft.start)) errors.end = "End must be after the start.";
@@ -137,8 +181,14 @@ export function validateEventDraft(draft: EventDraft): DraftErrors {
 
   const start = parseIso(draft.start);
   const end = parseIso(draft.end);
-  draft.sessions.forEach((s) => {
+  draft.sessions.forEach((s, index) => {
     if (!s.name.trim()) errors[`session:${s.key}:name`] = "Session name is required.";
+    if (s.inviteeSource === "COPY_SESSION") {
+      const sourceIndex = draft.sessions.findIndex((o) => o.key === s.sourceSessionKey);
+      if (index === 0 || sourceIndex < 0 || sourceIndex >= index || draft.sessions[sourceIndex].inviteeSource !== "NEW_LIST") {
+        errors[`session:${s.key}:source`] = "Choose an earlier session that has its own invitee list.";
+      }
+    }
     if (!isAfter(s.end, s.start)) {
       errors[`session:${s.key}:time`] = "Session end must be after its start.";
     } else if (start && end) {
@@ -187,6 +237,8 @@ function commonPayload(draft: EventDraft) {
     attendeeSettings: threshold > 0 ? { thresholdLimit: threshold } : {},
     dietaryPreference: buildDietaryPreference(draft),
     ...(draft.template ? { templateId: draft.template.id } : {}),
+    // An empty key clears a previously saved logo
+    media: { logoKey: draft.logoKey || "" },
   };
 }
 
@@ -198,12 +250,16 @@ export function draftToUpdatePayload(draft: EventDraft): UpdateEventRequest {
   return commonPayload(draft);
 }
 
-export function sessionToRequest(s: DraftSession): SessionRequest {
+// `isPrimary`: the first session carries the cross-session validation flag.
+// `backendIdOf` maps a session's client key to its saved id (sources are saved before the sessions copying them).
+export function sessionToRequest(s: DraftSession, isPrimary: boolean, backendIdOf: (key: string) => string | undefined): SessionRequest {
+  const sourceId = s.inviteeSource === "COPY_SESSION" && s.sourceSessionKey ? backendIdOf(s.sourceSessionKey) : undefined;
   return {
     name: s.name.trim(),
     schedule: { start: s.start, end: s.end },
     accessControl: s.accessControl,
-    validateAgainstOtherSessions: s.validateAgainstOtherSessions,
+    validateAgainstOtherSessions: isPrimary ? s.validateAgainstOtherSessions : false,
+    ...(sourceId ? { inviteeSource: "COPY_SESSION" as const, sourceSessionId: sourceId } : { inviteeSource: "NEW_LIST" as const, sourceSessionId: null }),
   };
 }
 
@@ -222,6 +278,7 @@ export interface ServerEvent {
   attendeeSettings?: { thresholdLimit?: number };
   dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] };
   templateId?: string | { _id: string; name: string; previewImageKey?: string } | null;
+  media?: { logoKey?: string };
   updatedAt?: string;
 }
 
@@ -232,6 +289,8 @@ export interface ServerSession {
   schedule?: { start?: string; end?: string };
   accessControl?: string;
   validateAgainstOtherSessions?: boolean;
+  inviteeSource?: string;
+  sourceSessionId?: string | null;
 }
 
 // Server event (+ its sessions) -> editable draft
@@ -252,9 +311,9 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     : [{ id: newClientKey("pref"), title: event?.dietaryPreference?.title || "Dietary Preference", options: rawOptions.length ? rawOptions.map(String) : [""] }];
 
   const template = event?.templateId && typeof event.templateId === "object"
-    ? { id: event.templateId._id, name: event.templateId.name, previewUrl: templatePreviewUrl(event.templateId.previewImageKey) }
+    ? { id: event.templateId._id, name: event.templateId.name, previewKey: event.templateId.previewImageKey || null }
     : event?.templateId
-      ? { id: String(event.templateId), name: "Selected template", previewUrl: null }
+      ? { id: String(event.templateId), name: "Selected template", previewKey: null }
       : null;
 
   return {
@@ -276,22 +335,39 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     dietaryEnabled: event?.dietaryPreference?.enabled ?? false,
     preferenceCategories,
     template,
-    sessions: (sessions || []).map((s) => ({
-      key: newClientKey("session"),
-      backendId: s._id || s.id,
-      name: s.name || "",
-      start: s.schedule?.start || start,
-      end: s.schedule?.end || end,
-      accessControl: s.accessControl === "ONLY_ONCE" ? "ONLY_ONCE" : "NO_RESTRICTION",
-      validateAgainstOtherSessions: !!s.validateAgainstOtherSessions,
-      timesLinked: false,
-    })),
+    logoKey: event?.media?.logoKey || null,
+    sessions: draftSessionsFromServer(sessions || [], start, end),
     skipInvitees: true,
   };
 }
 
-// Template previews are only renderable when the stored key is a URL/path
-export function templatePreviewUrl(key?: string | null): string | null {
-  if (!key) return null;
-  return key.startsWith("http://") || key.startsWith("https://") || key.startsWith("/") ? key : null;
+// Server sessions in creation order (the first one is the primary session), with source links mapped to client keys
+function draftSessionsFromServer(sessions: ServerSession[], start: string, end: string): DraftSession[] {
+  const ordered = [...sessions].sort((a, b) => String(a._id || a.id || "").localeCompare(String(b._id || b.id || "")));
+  const keyById = new Map<string, string>();
+  const drafts = ordered.map((s, index) => {
+    const key = newClientKey("session");
+    keyById.set(String(s._id || s.id), key);
+    return {
+      key,
+      backendId: s._id || s.id,
+      name: s.name || "",
+      start: s.schedule?.start || start,
+      end: s.schedule?.end || end,
+      accessControl: (s.accessControl === "ONLY_ONCE" ? "ONLY_ONCE" : "NO_RESTRICTION") as AccessControl,
+      validateAgainstOtherSessions: index === 0 && !!s.validateAgainstOtherSessions,
+      inviteeSource: "NEW_LIST" as InviteeSource,
+      sourceSessionKey: null as string | null,
+      timesLinked: false,
+    };
+  });
+  ordered.forEach((s, index) => {
+    if (s.inviteeSource === "COPY_SESSION" && s.sourceSessionId && keyById.has(String(s.sourceSessionId))) {
+      drafts[index].inviteeSource = "COPY_SESSION";
+      drafts[index].sourceSessionKey = keyById.get(String(s.sourceSessionId)) || null;
+    }
+  });
+  return drafts;
 }
+
+export const templatePreviewUrl = resolveImageUrl;

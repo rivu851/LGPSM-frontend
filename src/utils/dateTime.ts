@@ -1,6 +1,14 @@
-// Single conversion boundary for date/time values.
-// Form state and API payloads always use ISO-8601 strings (UTC instants);
-// user-facing text is produced only by the formatters below, in the browser's local time zone.
+/**
+ * Single conversion boundary for date/time values across the frontend.
+ *
+ * Date/Time Conversion Rules:
+ * - Storage & Payload Contract: Form state, draft storage, and API request/response payloads
+ *   ALWAYS use UTC ISO-8601 strings (e.g. `2026-10-15T18:30:00.000Z`).
+ * - UI Presentation: `formatDateTime`, `formatCompactDateTime`, and `formatTime` format UTC ISO
+ *   strings into the user's browser local time zone for human presentation.
+ * - Form Pickers: Local HTML `<input type="datetime-local">` controls bind to local time strings,
+ *   which are parsed and converted to UTC ISO strings before updating form draft state or sending payloads to the backend API.
+ */
 
 export function parseIso(value: string | null | undefined): Date | null {
   if (!value) return null;
@@ -24,6 +32,19 @@ export function formatDateTime(value: string | null | undefined, fallback = ""):
     minute: "2-digit",
     hour12: true,
   });
+}
+
+// Compact table format used by the Figma lists: "25/12/25 11:00 AM"
+export function formatCompactDateTime(value: string | null | undefined, fallback = ""): string {
+  const date = parseIso(value);
+  if (!date) return fallback;
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yy = String(date.getFullYear()).slice(-2);
+  const h = date.getHours();
+  const hh = String(h % 12 || 12).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  return `${dd}/${mm}/${yy} ${hh}:${min} ${h >= 12 ? "PM" : "AM"}`;
 }
 
 // "10:30 AM"

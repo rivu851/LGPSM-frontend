@@ -41,7 +41,7 @@ export default function Footer() {
       ref={footerRef}
       className="relative text-gray-300 py-16 lg:py-24 overflow-hidden"
       style={{
-        backgroundImage: "url('/images/footer/Footer.png')",
+        backgroundImage: "url('/images/footer/Footer.webp')",
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -82,7 +82,7 @@ export default function Footer() {
           {/* LGPSM Logo */}
           <div className="flex justify-center mb-4">
             <Image
-              src="/images/navbar/Nav_logo.png"
+              src="/images/navbar/Nav_logo.webp"
               alt="LGPSM Logo"
               width={140}
               height={36}

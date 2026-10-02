@@ -1,534 +1,296 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { eventService, EventData } from "@/services/eventService";
-
+import { eventService } from "@/services/eventService";
+import { useCategories } from "@/hooks/useCategories";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import { formatEventId } from "@/utils/formatId";
-import { formatDateTime } from "@/utils/dateTime";
-import UserNavDropdown from "@/components/common/UserNavDropdown";
+import { formatCompactDateTime, formatDateTime } from "@/utils/dateTime";
+import PageHeader from "@/components/common/PageHeader";
+import CustomDropdown from "@/components/common/CustomDropdown";
+
+type RowStatus = "Upcoming" | "Ongoing" | "Completed" | "Invitation not send" | "Cancelled";
 
 interface EventRow {
   id: string;
-  eventId: string;
-  eventName: string;
+  displayId: string;
+  name: string;
   organizer: string;
-  createdOn: string;
+  categoryId: string;
   category: string;
-  startDate: string;
-  endDate: string;
-  status: "Upcoming" | "Completed" | "Ongoing" | "Invitation Sent" | "Cancelled";
+  createdAt?: string;
+  start?: string;
+  end?: string;
+  status: RowStatus;
+}
+
+const STATUS_STYLE: Record<RowStatus, string> = {
+  Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
+  Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
+  Completed: "bg-[#FFE3D7] text-[#FF651D]",
+  "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+  Cancelled: "bg-gray-200 text-gray-700",
+};
+
+interface RawEvent {
+  _id?: string;
+  id?: string;
+  title?: string;
+  status?: string;
+  createdAt?: string;
+  schedule?: { start?: string; end?: string };
+  categoryId?: { _id?: string; name?: string } | string;
+  organizerId?: { fullName?: string; profile?: { organizationName?: string } } | string;
+  invitationsSent?: number;
+}
+
+function toRow(e: RawEvent): EventRow {
+  const id = String(e._id || e.id);
+  const timeStatus = getDynamicEventStatus(e.schedule?.start, e.schedule?.end, "Upcoming") as RowStatus;
+  const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not send" : timeStatus;
+  const cat = typeof e.categoryId === "object" ? e.categoryId : null;
+  const org = typeof e.organizerId === "object" ? e.organizerId : null;
+  return {
+    id,
+    displayId: formatEventId(id),
+    name: e.title || "Untitled event",
+    organizer: org?.profile?.organizationName || org?.fullName || "—",
+    categoryId: cat?._id || "",
+    category: cat?.name || "—",
+    createdAt: e.createdAt,
+    start: e.schedule?.start,
+    end: e.schedule?.end,
+    status,
+  };
+}
+
+function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+  const item = "w-full text-left px-3 py-2 text-sm hover:bg-white/10 flex items-center gap-2";
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="p-1.5 rounded text-[#828282] hover:text-gray-900 hover:bg-gray-100 cursor-pointer">
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M6 10a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z" /></svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 z-30 min-w-[150px] rounded-md bg-[#1E232A] text-white py-1 shadow-xl">
+          <Link href={`/events/${row.id}`} className={item}>View Event</Link>
+          {row.status !== "Cancelled" && <Link href={`/events/${row.id}/edit`} className={item}>Edit Event</Link>}
+          {row.status !== "Cancelled" && (
+            <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
+              Delete Event
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function EventListingPage() {
   const { user } = useAuth();
-  const [events, setEvents] = useState<EventRow[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const isAdmin = user?.role === "ADMIN";
+  const categories = useCategories();
+  const [rows, setRows] = useState<EventRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filters, setFilters] = useState({ category: "", status: "", organizer: "", from: "", to: "" });
+  const [draftFilters, setDraftFilters] = useState(filters);
+  const [deleting, setDeleting] = useState<EventRow | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const [activeActionId, setActiveActionId] = useState<string | null>(null);
-  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
-
-  const loadEvents = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
-    try {
-      const res = await eventService.getEvents();
-      const rawList = Array.isArray(res?.data)
-        ? res.data
-        : ((res?.data as any)?.events || []);
-
-      if (res && res.success && Array.isArray(rawList)) {
-        const apiMapped: EventRow[] = rawList.map((item: any, index: number) => {
-          const id = item._id || item.id || String(index + 1);
-          const eventId = formatEventId(id);
-
-          const rawStatus = (item.status || "Upcoming").toString().toUpperCase();
-          let mappedStatus: "Upcoming" | "Completed" | "Ongoing" | "Invitation Sent" = "Upcoming";
-          if (rawStatus === "PUBLISHED" || rawStatus === "ACTIVE" || rawStatus === "UPCOMING") {
-            mappedStatus = "Upcoming";
-          } else if (rawStatus === "COMPLETED") {
-            mappedStatus = "Completed";
-          } else if (rawStatus === "DRAFT" || rawStatus === "ONGOING") {
-            mappedStatus = "Ongoing";
-          }
-
-          const startVal = item.schedule?.start || item.startDate;
-          const endVal = item.schedule?.end || item.endDate;
-          // A deleted event is soft-deleted (CANCELLED) by the backend; show that instead of a date-derived status
-          const dynamicStatus = rawStatus === "CANCELLED"
-            ? "Cancelled"
-            : getDynamicEventStatus(startVal, endVal, mappedStatus);
-
-          return {
-            id,
-            eventId,
-            eventName: item.title || "Untitled Event",
-            organizer: item.organizerId?.fullName
-              || (String(item.organizerId) === String(user?._id) ? user?.fullName : "")
-              || "—",
-            createdOn: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "Recently",
-            category: item.category || item.categoryId?.name || "—",
-            startDate: formatDateTime(startVal, "TBD"),
-            endDate: formatDateTime(endVal, "TBD"),
-            status: dynamicStatus as EventRow["status"],
-          };
-        });
-        setEvents(apiMapped);
-      } else {
-        setEvents([]);
-        setLoadError(res?.message || "Failed to load events.");
-      }
-    } catch (e) {
-      console.error("Failed to fetch events from API:", e);
-      setEvents([]);
-      setLoadError("Could not reach the server. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteEvent = async (id: string) => {
-    try {
-      const res = await eventService.deleteEvent(id);
-      if (!res.success) {
-        setLoadError(res.message || "Failed to delete event.");
-      }
-    } catch (e) {
-      console.warn("Backend delete error:", e);
-      setLoadError("Failed to delete event.");
-    }
-
-    setDeletingEventId(null);
-    setActiveActionId(null);
-    await loadEvents();
-  };
+    const res = await eventService.getEvents();
+    const list = Array.isArray(res.data) ? (res.data as unknown as RawEvent[]) : [];
+    if (res.success) setRows(list.map(toRow));
+    else setLoadError(res.message || "Failed to load events.");
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
-    loadEvents();
-  }, [user]);
+    load();
+  }, [load]);
 
-  // Filter Form State
-  const [filterEventName, setFilterEventName] = useState("");
-  const [filterOrganizer, setFilterOrganizer] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterSessions, setFilterSessions] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    const res = await eventService.deleteEvent(deleting.id);
+    if (!res.success) {
+      setDeleteError(res.message || "Failed to delete event.");
+      return;
+    }
+    setDeleting(null);
+    await load();
+  };
 
-  const filteredEvents = events.filter((ev) => {
-    const matchesSearch =
-      ev.eventName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ev.organizer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ev.eventId.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesName = filterEventName
-      ? ev.eventName.toLowerCase().includes(filterEventName.toLowerCase())
-      : true;
-    const matchesOrg = filterOrganizer
-      ? ev.organizer.toLowerCase().includes(filterOrganizer.toLowerCase())
-      : true;
-    const matchesCat = filterCategory ? ev.category === filterCategory : true;
-    const matchesStatus = filterStatus ? ev.status === filterStatus : true;
-
-    return matchesSearch && matchesName && matchesOrg && matchesCat && matchesStatus;
+  const term = search.trim().toLowerCase();
+  const fromDate = filters.from ? new Date(`${filters.from}T00:00:00`) : null;
+  const toDate = filters.to ? new Date(`${filters.to}T23:59:59.999`) : null;
+  const visible = rows.filter((r) => {
+    if (term && ![r.name, r.organizer, r.displayId, r.category].some((v) => v.toLowerCase().includes(term))) return false;
+    if (filters.category && r.categoryId !== filters.category) return false;
+    if (filters.status && r.status !== filters.status) return false;
+    if (filters.organizer && !r.organizer.toLowerCase().includes(filters.organizer.trim().toLowerCase())) return false;
+    const start = r.start ? new Date(r.start) : null;
+    if (fromDate && (!start || start < fromDate)) return false;
+    if (toDate && (!start || start > toDate)) return false;
+    return true;
   });
+  const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="w-full min-h-full bg-white text-gray-900 font-sans">
-      {/* Top Header Bar */}
-      <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
-          <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          <h1 className="text-xl font-bold text-gray-900">Events</h1>
-        </div>
-        <UserNavDropdown />
-      </header>
-
-      {/* Page Content */}
-      <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
-          {/* Controls Bar: Search label + Search Input + Grey Funnel Filter + Add Event Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Search Input inline */}
-            <div className="flex items-center gap-4 flex-1 max-w-2xl">
-              <span className="text-xs font-semibold text-gray-700 shrink-0">Search</span>
-
-              <div className="relative flex-1">
-                <svg
-                  className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search event.."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22]"
-                />
-              </div>
-
-              {/* Grey Funnel Filter Button */}
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(true)}
-                className="p-2 border border-gray-200 rounded-md bg-white hover:bg-gray-50 text-gray-500 cursor-pointer shrink-0 transition-colors"
-                title="Filter Events"
-              >
-                <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* + Add Event Button on Right */}
-            <div className="flex items-center gap-3 shrink-0">
-              <Link
-                href="/events/add"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Add Event</span>
-              </Link>
-            </div>
+    <div className="w-full min-h-full bg-white">
+      <PageHeader title="Event" icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
+      <div className="p-4 sm:p-6 lg:px-9 lg:py-6 w-full space-y-4 pb-24">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <label htmlFor="event-search" className="text-base font-medium text-black shrink-0">Search</label>
+          <div className="relative flex-1">
+            <svg className="w-5 h-5 text-[#828282] absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              id="event-search"
+              type="search"
+              placeholder="Search event.."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full h-[47px] pl-11 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+            />
           </div>
+          <div className="flex items-center gap-2 shrink-0 w-fit">
+            <button
+              type="button"
+              onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}
+              aria-label={`Filter events${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
+              className="relative h-[47px] px-4 rounded-md text-[#828282] hover:bg-gray-100 cursor-pointer"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z" /></svg>
+              {activeFilterCount > 0 && <span className="absolute top-2 right-2 size-4 rounded-full bg-[#FF651D] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+            </button>
+            <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+              Add Event
+            </Link>
+          </div>
+        </div>
 
-          {/* Events Table Container with padding bottom for dropdown overflow */}
-          {loadError && events.length > 0 && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium flex items-center justify-between gap-3">
-              <span className="break-words min-w-0">{loadError}</span>
-              <button type="button" onClick={() => setLoadError(null)} className="font-semibold shrink-0 cursor-pointer">
-                Dismiss
-              </button>
-            </div>
-          )}
-          <div className="overflow-x-auto pt-2 pb-24">
-            <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                  <th className="py-3 px-4 font-medium">Event ID</th>
-                  <th className="py-3 px-4 font-medium">Event Name</th>
-                  <th className="py-3 px-4 font-medium">Organizer</th>
-                  <th className="py-3 px-4 font-medium">Created on</th>
-                  <th className="py-3 px-4 font-medium">Category</th>
-                  <th className="py-3 px-4 font-medium">Event Start Date</th>
-                  <th className="py-3 px-4 font-medium">Event End Date</th>
-                  <th className="py-3 px-4 font-medium text-center">Status</th>
-                  <th className="py-3 px-4 font-medium text-right">Action</th>
+        {loadError && (
+          <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-sm flex items-center justify-between gap-3">
+            <span className="break-words">{loadError}</span>
+            <button type="button" onClick={load} className="font-medium underline shrink-0 cursor-pointer">Retry</button>
+          </div>
+        )}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[900px]">
+            <thead>
+              <tr className="border-b border-[#D3D3D3] text-[#828282]">
+                {["Event ID", "Event Name", "Organizer", "Created on", "Category", "Event Start Date", "Event End Date", "Status"].map((h) => (
+                  <th key={h} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{h}</th>
+                ))}
+                <th className="h-[46px] px-2.5 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="text-[#4B4F52]">
+              {loading ? (
+                <tr><td colSpan={9} className="py-10 text-center text-[#828282]">Loading events...</td></tr>
+              ) : visible.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-[#828282]">
+                    {rows.length === 0 ? (
+                      <>No events yet. <Link href="/events/add" className="text-[#E5520F] font-medium underline">Create your first event</Link></>
+                    ) : (
+                      "No events match your search or filters."
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 text-gray-800">
-                {loading ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-500 font-medium">
-                      Loading events...
-                    </td>
+              ) : (
+                visible.map((r) => (
+                  <tr key={r.id} className="border-b border-[#D3D3D3] hover:bg-gray-50/70">
+                    <td className="h-[46px] px-2.5 font-medium whitespace-nowrap"><Link href={`/events/${r.id}`} className="hover:text-[#FF651D]">{r.displayId}</Link></td>
+                    <td className="px-2.5 max-w-[220px]"><Link href={`/events/${r.id}`} className="text-gray-900 hover:text-[#FF651D] line-clamp-2 break-words">{r.name}</Link></td>
+                    <td className="px-2.5 max-w-[180px] truncate" title={r.organizer}>{r.organizer}</td>
+                    <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.createdAt, "—")}</td>
+                    <td className="px-2.5 whitespace-nowrap">{r.category}</td>
+                    <td className="px-2.5 whitespace-nowrap">{formatDateTime(r.start, "—")}</td>
+                    <td className="px-2.5 whitespace-nowrap">{formatDateTime(r.end, "—")}</td>
+                    <td className="px-2.5"><span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_STYLE[r.status]}`}>{r.status}</span></td>
+                    <td className="px-2.5 text-right"><RowActions row={r} onDelete={(row) => { setDeleteError(null); setDeleting(row); }} /></td>
                   </tr>
-                ) : loadError && events.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-rose-600 font-medium">
-                      {loadError}{" "}
-                      <button type="button" onClick={() => loadEvents()} className="underline font-semibold cursor-pointer">
-                        Retry
-                      </button>
-                    </td>
-                  </tr>
-                ) : filteredEvents.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-gray-500 font-medium">
-                      No events found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredEvents.map((ev, idx) => {
-                    const isActionOpen = activeActionId === ev.id;
-                    const shouldOpenUpwards = idx > 2 && idx >= filteredEvents.length - 2;
-
-                    return (
-                      <tr key={ev.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="py-4 px-4 font-semibold text-gray-900">
-                          <Link href={`/events/${ev.id}`} className="hover:text-[#FF5B22] transition-colors">
-                            {ev.eventId}
-                          </Link>
-                        </td>
-                        <td className="py-4 px-4 font-medium text-gray-900">
-                          <Link href={`/events/${ev.id}`} className="hover:text-[#FF5B22] transition-colors">
-                            {ev.eventName}
-                          </Link>
-                        </td>
-                        <td className="py-4 px-4 text-gray-600">{ev.organizer}</td>
-                        <td className="py-4 px-4 text-gray-600">{ev.createdOn}</td>
-                        <td className="py-4 px-4 text-gray-600">{ev.category}</td>
-                        <td className="py-4 px-4 text-gray-600">{ev.startDate}</td>
-                        <td className="py-4 px-4 text-gray-600">{ev.endDate}</td>
-
-                        {/* Status Column */}
-                        <td className="py-4 px-4 text-center">
-                          {ev.status === "Upcoming" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
-                              Upcoming
-                            </span>
-                          )}
-                          {ev.status === "Completed" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-red-100 text-red-600">
-                              Completed
-                            </span>
-                          )}
-                          {ev.status === "Ongoing" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700">
-                              Ongoing
-                            </span>
-                          )}
-                          {ev.status === "Invitation Sent" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
-                              Invitation Sent
-                            </span>
-                          )}
-                          {ev.status !== "Upcoming" && ev.status !== "Completed" && ev.status !== "Ongoing" && ev.status !== "Invitation Sent" && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-700">
-                              {ev.status}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Action Column with Three Dots */}
-                        <td className="py-4 px-4 text-right">
-                          <div className="relative inline-block text-left">
-                            <button
-                              onClick={() => setActiveActionId(isActionOpen ? null : ev.id)}
-                              className="p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-                              title="Actions"
-                            >
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M6 10a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z" />
-                              </svg>
-                            </button>
-
-                            {isActionOpen && (
-                              <div className={`absolute right-0 ${shouldOpenUpwards ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-[#1E232A] text-white text-xs font-medium py-2 px-3 rounded-md border border-gray-700 animate-in fade-in duration-150 flex flex-col gap-2 min-w-[130px] text-left`}>
-                                <Link
-                                  href={`/events/${ev.id}/edit`}
-                                  className="py-1 hover:text-[#FF5B22] transition-colors flex items-center gap-2"
-                                >
-                                  <svg className="w-3.5 h-3.5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                  <span>Edit Event</span>
-                                </Link>
-                                <button
-                                  onClick={() => setDeletingEventId(ev.id)}
-                                  className="py-1 text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-2 text-left cursor-pointer"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                  <span>Delete Event</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
 
-      {/* Delete Event Confirmation Modal */}
-      {deletingEventId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-6 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </div>
-            <h3 className="text-base font-bold text-gray-900">Delete Event</h3>
-            <p className="text-xs text-gray-600">
-              Are you sure you want to delete this event? This action cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                onClick={() => setDeletingEventId(null)}
-                className="px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-xs font-semibold rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteEvent(deletingEventId)}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-md transition-colors"
-              >
-                Delete
-              </button>
+      {deleting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="delete-event-title">
+          <div className="bg-white rounded-lg shadow-2xl max-w-sm w-full p-6 space-y-4 text-center">
+            <h3 id="delete-event-title" className="text-base font-medium text-gray-900">Delete Event</h3>
+            <p className="text-sm text-[#4B4F52] break-words">Delete “{deleting.name}”? It will be cancelled and its invitations stop working.</p>
+            {deleteError && <p role="alert" className="text-sm text-rose-600">{deleteError}</p>}
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setDeleting(null)} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Cancel</button>
+              <button type="button" onClick={confirmDelete} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-sm font-medium cursor-pointer">Delete</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Filter Slide-over Drawer (Matching Image 1) */}
-      {isFilterOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end">
-          {/* Backdrop Overlay */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
-            onClick={() => setIsFilterOpen(false)}
-          />
-
-          {/* Drawer Panel */}
-          <div className="relative w-full max-w-sm bg-white h-full shadow-2xl p-6 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-300">
-            {/* Header */}
-            <div>
-              <div className="flex items-center justify-between pb-4 border-b border-gray-200">
-                <div className="flex items-center gap-2 text-gray-900 font-bold text-base">
-                  <svg className="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
-                  </svg>
-                  <span>Filter</span>
-                </div>
-                <button
-                  onClick={() => setIsFilterOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Form Fields */}
-              <div className="space-y-4 pt-6 text-xs">
-                {/* Event Name */}
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Event Name"
-                    value={filterEventName}
-                    onChange={(e) => setFilterEventName(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-md text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22]"
-                  />
-                </div>
-
-                {/* Event Organizer */}
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Event Organizer"
-                    value={filterOrganizer}
-                    onChange={(e) => setFilterOrganizer(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-md text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22]"
-                  />
-                </div>
-
-                {/* Event Category */}
-                <div>
-                  <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-md text-gray-700 bg-white focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                  >
-                    <option value="">Event Category</option>
-                    <option value="Corporate">Corporate</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Social">Social</option>
-                  </select>
-                </div>
-
-                {/* No. of Sessions */}
-                <div>
-                  <select
-                    value={filterSessions}
-                    onChange={(e) => setFilterSessions(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-md text-gray-700 bg-white focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                  >
-                    <option value="">No. of Sessions</option>
-                    <option value="1">1 Session</option>
-                    <option value="2">2 Sessions</option>
-                    <option value="3">3 Sessions</option>
-                  </select>
-                </div>
-
-                {/* Event Status */}
-                <div>
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-md text-gray-700 bg-white focus:outline-none focus:border-[#FF5B22] cursor-pointer"
-                  >
-                    <option value="">Event Status</option>
-                    <option value="Upcoming">Upcoming</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Invitation Sent">Invitation Sent</option>
-                    <option value="Cancelled">Cancelled</option>
-                  </select>
-                </div>
-
-                {/* Date range */}
-                <div className="pt-2 space-y-2">
-                  <label className="block font-semibold text-gray-900 text-xs">Date range</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => setDateFrom(e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-md text-gray-700 focus:outline-none focus:border-[#FF5B22]"
-                    />
-                  </div>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => setDateTo(e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-md text-gray-700 focus:outline-none focus:border-[#FF5B22]"
-                    />
-                  </div>
-                </div>
-              </div>
+      {filterOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="filter-title">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setFilterOpen(false)} />
+          <div className="relative w-full max-w-sm bg-white h-full shadow-2xl p-6 flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E5E5E5]">
+              <h2 id="filter-title" className="text-base font-medium text-gray-900">Filter</h2>
+              <button type="button" onClick={() => setFilterOpen(false)} aria-label="Close filters" className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
             </div>
-
-            {/* Footer Actions */}
-            <div className="flex items-center gap-3 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setFilterEventName("");
-                  setFilterOrganizer("");
-                  setFilterCategory("");
-                  setFilterSessions("");
-                  setFilterStatus("");
-                  setDateFrom("");
-                  setDateTo("");
-                  setIsFilterOpen(false);
-                }}
-                className="flex-1 py-2.5 border border-gray-300 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer text-center"
-              >
-                Cancel
+            <div className="flex-1 overflow-y-auto space-y-4 pt-5">
+              <div>
+                <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</span>
+                <CustomDropdown value={draftFilters.category} onChange={(v) => setDraftFilters((f) => ({ ...f, category: v }))} options={[{ value: "", label: "All categories" }, ...categories.categoryOptions]} ariaLabel="Category filter" />
+              </div>
+              <div>
+                <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Status</span>
+                <CustomDropdown
+                  value={draftFilters.status}
+                  onChange={(v) => setDraftFilters((f) => ({ ...f, status: v }))}
+                  options={[{ value: "", label: "All statuses" }, ...(Object.keys(STATUS_STYLE) as RowStatus[]).map((s) => ({ value: s, label: s }))]}
+                  ariaLabel="Status filter"
+                />
+              </div>
+              {isAdmin && (
+                <div>
+                  <label htmlFor="filter-organizer" className="block text-sm font-medium text-gray-900 mb-1.5">Organizer</label>
+                  <input id="filter-organizer" type="text" value={draftFilters.organizer} onChange={(e) => setDraftFilters((f) => ({ ...f, organizer: e.target.value }))} placeholder="Organisation or name" className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-[#FF651D]" />
+                </div>
+              )}
+              <fieldset>
+                <legend className="text-sm font-medium text-gray-900 mb-1.5">Event start date</legend>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs text-[#828282]">From<input type="date" value={draftFilters.from} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value }))} className="mt-1 w-full px-3 py-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900" /></label>
+                  <label className="text-xs text-[#828282]">To<input type="date" value={draftFilters.to} onChange={(e) => setDraftFilters((f) => ({ ...f, to: e.target.value }))} className="mt-1 w-full px-3 py-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900" /></label>
+                </div>
+              </fieldset>
+            </div>
+            <div className="flex gap-3 pt-4 border-t border-[#E5E5E5]">
+              <button type="button" onClick={() => { const empty = { category: "", status: "", organizer: "", from: "", to: "" }; setDraftFilters(empty); setFilters(empty); setFilterOpen(false); }} className="flex-1 py-2.5 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">
+                Clear
               </button>
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(false)}
-                className="flex-1 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] rounded-md text-xs font-semibold text-white transition-colors cursor-pointer text-center shadow-2xs"
-              >
+              <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className="flex-1 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] rounded-md text-sm font-medium text-white cursor-pointer">
                 Apply
               </button>
             </div>

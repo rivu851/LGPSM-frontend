@@ -87,11 +87,11 @@ export default function AllOrganizersPage() {
     <div className="flex-1 flex flex-col min-w-0 bg-white">
         {/* Header */}
         <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4m-4 0H9m4 0V7m0 0h4m-4 0H9" />
             </svg>
-            <h1 className="text-xl font-bold text-gray-900">Event Organizers</h1>
+            <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Event Organizers</h1>
           </div>
           <UserNavDropdown />
         </header>
@@ -128,7 +128,7 @@ export default function AllOrganizersPage() {
 
             <Link
               href="/event-organizer/add"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shrink-0 shadow-2xs w-fit self-start"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -291,7 +291,7 @@ export default function AllOrganizersPage() {
                             </button>
 
                             {isActionOpen && (
-                              <div className={`absolute right-0 ${shouldOpenUpwards ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-[#1E232A] text-white text-xs font-medium py-1.5 px-3 rounded-md shadow-2xl border border-gray-700 animate-in fade-in duration-150 flex flex-col gap-1 min-w-[110px] text-left`}>
+                              <div className={`absolute right-0 ${shouldOpenUpwards ? "bottom-full mb-1" : "top-full mt-1"} z-50 bg-[#1E232A] text-white text-xs font-medium py-1.5 px-3 rounded-md shadow-2xl border border-gray-700 animate-menu flex flex-col gap-1 min-w-[110px] text-left`}>
                                 <button
                                   onClick={() => router.push(`/event-organizer/${org.id}`)}
                                   className="py-1 hover:text-[#FF5B22] text-left transition-colors cursor-pointer"

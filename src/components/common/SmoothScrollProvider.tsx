@@ -88,15 +88,16 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
 
   // 2. Trigger GSAP Smooth Reveal Animations on Route Change
   useEffect(() => {
-    const mainEl = document.querySelector("main");
+    const mainEl = document.querySelector("[data-page-reveal]");
     if (mainEl) {
       mainEl.scrollTop = 0;
     }
 
     const ctx = gsap.context(() => {
-      // Exclude sidebar (<aside>) completely - target ONLY elements strictly inside <main>
+      // Only the dashboard content area opts in: it renders after auth has loaded, so animating it
+      // can never touch markup that React is still hydrating (e.g. Suspense-wrapped public pages)
       const revealElements = document.querySelectorAll(
-        "main h1, main h2, main h3, main table, main .grid > div"
+        "[data-page-reveal] h1, [data-page-reveal] h2, [data-page-reveal] h3, [data-page-reveal] table, [data-page-reveal] .grid > div"
       );
 
       if (revealElements.length > 0) {

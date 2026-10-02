@@ -90,8 +90,8 @@ export default function CameraCaptureModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-lg w-full overflow-hidden space-y-4 p-6 font-sans">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
+      <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-lg w-full overflow-hidden space-y-4 p-6 font-sans animate-modal">
         <div className="flex items-center justify-between border-b border-gray-200 pb-3">
           <h3 className="text-base font-bold text-gray-900">Take a Photo</h3>
           <button

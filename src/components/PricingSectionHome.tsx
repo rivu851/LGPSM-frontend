@@ -62,7 +62,7 @@ export default function PricingSectionHome() {
           ref={containerRef}
           className="relative rounded-[32px] overflow-hidden shadow-2xl p-8 sm:p-12 lg:p-16 text-center text-white"
           style={{
-            backgroundImage: "url('/images/home/last_hero.png')",
+            backgroundImage: "url('/images/home/last_hero.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
@@ -107,7 +107,7 @@ export default function PricingSectionHome() {
                         <span className="text-3xl sm:text-4xl lg:text-[40px] font-extrabold text-gray-900 tracking-tight font-[family-name:var(--font-space-grotesk)]">
                           ₹11.99
                         </span>
-                        <span className="text-xs font-semibold text-gray-400">
+                        <span className="text-xs font-semibold text-gray-600">
                           / each Invitations
                         </span>
                       </div>

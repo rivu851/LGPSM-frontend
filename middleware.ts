@@ -25,7 +25,10 @@ export function middleware(request: NextRequest) {
 
   if (isProtectedRoute && !token) {
     const signinUrl = new URL("/signin", request.url);
-    signinUrl.searchParams.set("from", pathname);
+    // Return to the portal the user last signed in through (see components/auth/authPortal.ts)
+    const portal = request.cookies.get("lgpsm_portal")?.value;
+    signinUrl.searchParams.set("mode", portal === "admin" ? "admin" : "organizer");
+    signinUrl.searchParams.set("from", pathname + request.nextUrl.search);
     return NextResponse.redirect(signinUrl);
   }
 

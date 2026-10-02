@@ -2,8 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Persists an in-progress form to localStorage so it survives navigation, remounts and reloads.
-// The draft stays purely client-side until the caller's real submit succeeds and calls `clearDraft()`.
+/**
+ * Generic custom hook for form draft persistence in localStorage.
+ *
+ * Form Draft Persistence Lifecycle Rules:
+ * - Draft Qualification: Captures in-progress form state (e.g., event wizard step inputs, session lists, selected templates, and media references).
+ * - Debounced Auto-Save: Saves user edits to localStorage after a configurable debounce delay (`debounceMs`).
+ * - Restoration: Restores stored draft state automatically on client-side mount after hydration.
+ * - Clear on Success: Cleared (`clearDraft()`) ONLY when the backend creation/update API call succeeds.
+ * - Preserve on Failure: If the API submission fails (e.g. network error, validation rejection), the draft remains intact in localStorage so user input is never lost.
+ */
 
 interface StoredDraft<T> {
   version: number;
@@ -20,6 +28,11 @@ export interface UseFormDraftOptions {
   baseVersion?: string;
   // Drafts are only read/written once the key is known (e.g. after the user id is available)
   enabled?: boolean;
+}
+
+export interface UseFormDraftHooks<T> {
+  // Upgrades a restored draft saved by an older version of the form
+  normalize?: (stored: T) => T;
 }
 
 export type DraftStatus = "idle" | "restored" | "discarded-stale";
@@ -41,8 +54,12 @@ function writeStorage(key: string, value: string | null) {
   }
 }
 
-export function useFormDraft<T>(key: string, createInitial: () => T, options: UseFormDraftOptions) {
+export function useFormDraft<T>(key: string, createInitial: () => T, options: UseFormDraftOptions & UseFormDraftHooks<T>) {
   const { version, debounceMs = 600, maxAgeDays = 14, baseVersion, enabled = true } = options;
+  const normalizeRef = useRef(options.normalize);
+  useEffect(() => {
+    normalizeRef.current = options.normalize;
+  }, [options.normalize]);
 
   const [value, setValue] = useState<T>(createInitial);
   const [status, setStatus] = useState<DraftStatus>("idle");
@@ -71,7 +88,7 @@ export function useFormDraft<T>(key: string, createInitial: () => T, options: Us
           writeStorage(key, null);
           setStatus("discarded-stale");
         } else {
-          setValue(stored.data);
+          setValue(normalizeRef.current ? normalizeRef.current(stored.data) : stored.data);
           setSavedAt(stored.savedAt);
           setStatus("restored");
           dirtyRef.current = true;

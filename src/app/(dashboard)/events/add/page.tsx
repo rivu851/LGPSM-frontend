@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
 import { eventService } from "@/services/eventService";
+import { templateService } from "@/services/templateService";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import EventWizard, { EventWizardSubmit } from "@/components/add-event/EventWizard";
 import {
@@ -13,23 +14,40 @@ import {
   createEmptyEventDraft,
   draftToCreatePayload,
   hasMeaningfulContent,
+  normalizeEventDraft,
 } from "@/components/add-event/eventDraft";
 import { persistSessionsAndInvitees } from "@/components/add-event/persistEventExtras";
 
-export default function AddEventPage() {
+function AddEventContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
   // The draft is scoped to the signed-in user and kept until the backend confirms creation
-  const draftState = useFormDraft<EventDraft>(
-    `lgpsm:event-create-draft:${user?._id || "anonymous"}`,
-    createEmptyEventDraft,
-    { version: EVENT_DRAFT_VERSION, enabled: !!user?._id }
-  );
+  const draftState = useFormDraft<EventDraft>(`lgpsm:event-create-draft:${user?._id || "anonymous"}`, createEmptyEventDraft, {
+    version: EVENT_DRAFT_VERSION,
+    enabled: !!user?._id,
+    normalize: normalizeEventDraft,
+  });
+  const { hydrated, update } = draftState;
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // "Create an Event" from the Templates page preselects that template (applied once the draft is loaded)
+  const templateParam = searchParams.get("template");
+  const appliedTemplate = useRef<string | null>(null);
+  useEffect(() => {
+    if (!hydrated || !templateParam || appliedTemplate.current === templateParam) return;
+    appliedTemplate.current = templateParam;
+    templateService.getTemplateById(templateParam).then((res) => {
+      if (res.success && res.data && res.data.isPublished !== false) {
+        const t = res.data;
+        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null } }));
+      }
+    });
+  }, [hydrated, templateParam, update]);
 
   const handleSubmit = async ({ draft, sessionFiles }: EventWizardSubmit) => {
     setSubmitting(true);
@@ -63,11 +81,6 @@ export default function AddEventPage() {
   return (
     <EventWizard
       heading="Add Event"
-      headerIcon={
-        <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      }
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}
@@ -86,5 +99,13 @@ export default function AddEventPage() {
         router.push("/events");
       }}
     />
+  );
+}
+
+export default function AddEventPage() {
+  return (
+    <Suspense fallback={null}>
+      <AddEventContent />
+    </Suspense>
   );
 }

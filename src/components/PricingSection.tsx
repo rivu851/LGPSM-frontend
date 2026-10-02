@@ -266,7 +266,7 @@ export default function PricingSection() {
             <span
               onClick={() => setBillingCycle("yearly")}
               className={`text-xs sm:text-sm font-bold cursor-pointer transition-colors ${
-                billingCycle === "yearly" ? "text-[#1C2228]" : "text-gray-400"
+                billingCycle === "yearly" ? "text-[#1C2228]" : "text-gray-500"
               }`}
             >
               Billed Yearly
@@ -275,6 +275,7 @@ export default function PricingSection() {
             {/* Switch Toggle Pill */}
             <button
               onClick={() => setBillingCycle(billingCycle === "yearly" ? "monthly" : "yearly")}
+              aria-label="Toggle billing cycle"
               className="w-12 h-6 bg-gray-200 rounded-full p-0.5 transition-colors relative focus:outline-none cursor-pointer"
             >
               <div
@@ -288,7 +289,7 @@ export default function PricingSection() {
             <span
               onClick={() => setBillingCycle("monthly")}
               className={`text-xs sm:text-sm font-bold cursor-pointer transition-colors ${
-                billingCycle === "monthly" ? "text-[#1C2228]" : "text-gray-400"
+                billingCycle === "monthly" ? "text-[#1C2228]" : "text-gray-500"
               }`}
             >
               Billed Monthly
@@ -308,10 +309,10 @@ export default function PricingSection() {
                   ₹1,999
                 </span>
               </div>
-              <p className="text-xs text-gray-400 font-medium mb-8">Up to 250 Attendees per month</p>
+              <p className="text-xs text-gray-500 font-medium mb-8">Up to 250 Attendees per month</p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <button className="w-full py-3 px-4 border border-[#C44200] text-[#C44200] hover:bg-[#C44200] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </button>
 
@@ -354,7 +355,7 @@ export default function PricingSection() {
               <h3 className="text-xl font-bold text-white mb-2">Professional Plan</h3>
               
               {/* Most Popular Badge */}
-              <div className="inline-block bg-[#FF5B22] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
+              <div className="inline-block bg-[#C44200] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
                 Most Popular
               </div>
 
@@ -363,10 +364,10 @@ export default function PricingSection() {
                   ₹3,999
                 </span>
               </div>
-              <p className="text-xs text-gray-400 font-medium mb-8">Up to 1,500 Attendees per month</p>
+              <p className="text-xs text-gray-300 font-medium mb-8">Up to 1,500 Attendees per month</p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-md mb-8">
+              <button className="w-full py-3 px-4 bg-[#C44200] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-md mb-8">
                 Start My 15-day Trial
               </button>
 
@@ -404,12 +405,12 @@ export default function PricingSection() {
                   ₹5,999
                 </span>
               </div>
-              <p className="text-xs text-gray-400 font-medium mb-8">
-                1,500+ Attendees & High-Volume Agencies
+              <p className="text-xs text-gray-500 font-medium mb-8">
+                1,500+ Attendees &amp; High-Volume Agencies
               </p>
 
               {/* CTA Button */}
-              <button className="w-full py-3 px-4 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <button className="w-full py-3 px-4 border border-[#C44200] text-[#C44200] hover:bg-[#C44200] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </button>
 

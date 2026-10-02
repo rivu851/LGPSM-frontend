@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { loginRedirectPath } from "@/components/auth/authPortal";
 import { useAuth } from "@/context/AuthContext";
 import CheckInModal from "@/components/common/CheckInModal";
 
@@ -35,7 +36,7 @@ export default function UserNavDropdown() {
   const handleLogoutClick = async () => {
     setIsOpen(false);
     await logout();
-    router.push("/signin");
+    router.push(loginRedirectPath());
   };
 
   return (
@@ -88,7 +89,7 @@ export default function UserNavDropdown() {
 
           {/* Dropdown Menu */}
           {isOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 animate-in fade-in duration-150">
+            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 z-50 animate-menu">
               {/* User Email & Role Header inside Dropdown */}
               <div className="px-4 py-2 border-b border-gray-100">
                 <div className="flex items-center justify-between gap-1">

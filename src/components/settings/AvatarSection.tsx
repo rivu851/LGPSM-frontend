@@ -114,7 +114,7 @@ export default function AvatarSection({
 
       {/* Dropdown Options Box */}
       {isMenuOpen && (
-        <div className="absolute left-0 mt-2 w-52 bg-white rounded-md border border-gray-200 shadow-xl z-40 py-1.5 animate-in fade-in duration-150 text-xs font-semibold text-gray-700 divide-y divide-gray-100">
+        <div className="absolute left-0 mt-2 w-52 bg-white rounded-md border border-gray-200 shadow-xl z-40 py-1.5 animate-menu text-xs font-semibold text-gray-700 divide-y divide-gray-100">
           <div className="py-1">
             {/* 1. Take a Photo */}
             <button

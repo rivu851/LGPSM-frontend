@@ -3,6 +3,7 @@
 import React from "react";
 import { InviteeLog, AccessLog, SessionReport, ReportSessionColumn } from "@/types/reports";
 import { CheckInRecord } from "@/services/checkInService";
+import CustomDropdown from "@/components/common/CustomDropdown";
 
 interface ReportsLogsTableProps {
   activeTab: "checkins" | "invitees" | "access" | "sessions";
@@ -62,8 +63,9 @@ export default function ReportsLogsTable({
   return (
     <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-hidden">
       {/* Tabs Header */}
-      <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 text-xs">
-        <div className="flex items-center gap-5 sm:gap-8 overflow-x-auto max-w-full">
+      <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 text-xs">
+        <div className="flex items-center justify-between gap-3 mb-0">
+        <div className="flex items-center gap-5 sm:gap-8 overflow-x-auto flex-1 min-w-0 no-scrollbar">
           <button
             type="button"
             onClick={() => setActiveTab("checkins")}
@@ -126,6 +128,7 @@ export default function ReportsLogsTable({
             <span>Perform Check-In</span>
           </button>
         )}
+        </div>
       </div>
 
       {/* Table Filters & Actions Bar */}
@@ -155,17 +158,19 @@ export default function ReportsLogsTable({
               />
             </div>
 
-            {/* Method filter dropdown for checkins tab */}
             {activeTab === "checkins" && onMethodFilterChange && (
-              <select
-                value={methodFilter}
-                onChange={(e) => onMethodFilterChange(e.target.value)}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-700 font-medium focus:outline-none focus:border-[#FF5B22]"
-              >
-                <option value="">All Methods</option>
-                <option value="QR">QR Code</option>
-                <option value="MANUAL">Manual</option>
-              </select>
+              <div className="w-40 shrink-0">
+                <CustomDropdown
+                  value={methodFilter ?? ""}
+                  onChange={onMethodFilterChange}
+                  options={[
+                    { value: "", label: "All Methods" },
+                    { value: "QR", label: "QR Code" },
+                    { value: "MANUAL", label: "Manual" },
+                  ]}
+                  ariaLabel="Filter by check-in method"
+                />
+              </div>
             )}
           </div>
 

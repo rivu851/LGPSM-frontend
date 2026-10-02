@@ -1,339 +1,206 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { DraftErrors, EventDraft, PreferenceCategory, newClientKey } from "./eventDraft";
+import { EventFeatureSettings } from "@/services/platformSettingsService";
 
 interface Step2SettingsProps {
   draft: EventDraft;
   onChange: (patch: Partial<EventDraft>) => void;
   errors: DraftErrors;
+  // Options the platform administrator switched off are not offered
+  features: EventFeatureSettings;
   onNext: () => void;
   onBack: () => void;
 }
 
+function OptionRow({
+  id,
+  checked,
+  disabled,
+  onChange,
+  label,
+  help,
+}: {
+  id: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  help: string;
+}) {
+  return (
+    <div className={`p-3.5 border rounded-md flex items-start gap-3 ${disabled ? "bg-[#F4F5F8] border-[#E5E5E5]" : "bg-white border-[#E0E0E0]"}`}>
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer disabled:cursor-not-allowed"
+      />
+      <label htmlFor={id} className={`text-sm ${disabled ? "text-[#828282] cursor-not-allowed" : "text-gray-900 cursor-pointer"}`}>
+        <span className="font-medium">{label}</span>
+        <span className="block text-xs text-[#828282] mt-0.5">{help}</span>
+      </label>
+    </div>
+  );
+}
+
 // Controlled step: values live in the wizard draft owned by the page
-export default function Step2Settings({ draft, onChange, errors, onNext, onBack }: Step2SettingsProps) {
+export default function Step2Settings({ draft, onChange, errors, features, onNext, onBack }: Step2SettingsProps) {
   const categories = draft.preferenceCategories;
-  const setCategories = (updater: (prev: PreferenceCategory[]) => PreferenceCategory[]) =>
-    onChange({ preferenceCategories: updater(categories) });
-  const maxAttendees = draft.thresholdLimit;
-  const acceptAll = draft.allowAllInvited;
-  const allowNotResponded = draft.allowNotResponded;
-  const allowDeclined = draft.allowDeclined;
-  const askFoodPreference = draft.dietaryEnabled;
-
-  const [savedCategories, setSavedCategories] = useState<Record<string, boolean>>({});
-
-  // Category Title Change Handler
-  const handleTitleChange = (id: string, newTitle: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? { ...cat, title: newTitle } : cat))
-    );
-  };
-
-  // Option Value Change Handler
-  const handleOptionChange = (catId: string, optIdx: number, val: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => {
-        if (cat.id !== catId) return cat;
-        const updated = [...cat.options];
-        updated[optIdx] = val;
-        return { ...cat, options: updated };
-      })
-    );
-  };
-
-  // Add Option to Category ("Add another option?")
-  const handleAddOption = (catId: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => {
-        if (cat.id !== catId) return cat;
-        return { ...cat, options: [...cat.options, ""] };
-      })
-    );
-  };
-
-  // Remove Option from Category
-  const handleRemoveOption = (catId: string, optIdx: number) => {
-    setCategories((prev) =>
-      prev.map((cat) => {
-        if (cat.id !== catId) return cat;
-        if (cat.options.length <= 1) return cat;
-        const updated = cat.options.filter((_, idx) => idx !== optIdx);
-        return { ...cat, options: updated };
-      })
-    );
-  };
-
-  // Add New Preference Category ("+ Add Another")
-  const handleAddCategory = () => {
-    const newId = newClientKey("pref");
-    setCategories((prev) => [
-      ...prev,
-      {
-        id: newId,
-        title: "",
-        options: [""],
-      },
-    ]);
-  };
-
-  // Remove Category Block
-  const handleRemoveCategory = (catId: string) => {
-    setCategories((prev) => prev.filter((cat) => cat.id !== catId));
-  };
-
-  // Save Category Feedback
-  const handleSaveCategory = (catId: string) => {
-    setSavedCategories((prev) => ({ ...prev, [catId]: true }));
-    setTimeout(() => {
-      setSavedCategories((prev) => ({ ...prev, [catId]: false }));
-    }, 2500);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onNext();
-  };
+  const setCategories = (next: PreferenceCategory[]) => onChange({ preferenceCategories: next });
+  const updateCategory = (id: string, patch: Partial<PreferenceCategory>) => setCategories(categories.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  // "Accept all invited attendees" already admits guests who have not responded
+  const notRespondedImplied = features.acceptInvitedAttendees && draft.allowAllInvited;
+  const anyRsvpOption = features.acceptInvitedAttendees || features.chooseNotRespondedInvitees || features.chooseRSVPDeclinedInvitees;
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-5 font-sans text-xs">
-      {/* Attendee threshold limit */}
-      <div className="space-y-1.5">
-        <label className="block text-xs font-bold text-gray-900">
-          Attendee threshold limit
-        </label>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onNext();
+      }}
+      noValidate
+      className="p-4 sm:p-6 space-y-5"
+    >
+      <div>
+        <label htmlFor="event-threshold" className="block text-sm font-medium text-gray-900 mb-1.5">Attendee threshold limit</label>
         <input
+          id="event-threshold"
           type="number"
-          value={maxAttendees}
+          inputMode="numeric"
+          min={1}
+          value={draft.thresholdLimit}
           onChange={(e) => onChange({ thresholdLimit: e.target.value })}
           placeholder="Enter Max Attendee count"
-          min={1}
-          className="w-full max-w-lg px-3.5 py-2.5 bg-[#F9FAFB] border border-gray-200 rounded-md text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#FF5B22] focus:border-[#FF5B22] font-medium transition-all"
+          aria-invalid={!!errors.thresholdLimit}
+          className={`w-full max-w-lg px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] ${errors.thresholdLimit ? "border-rose-400" : "border-[#E0E0E0]"}`}
         />
-        {errors.thresholdLimit && <p className="text-[11px] font-medium text-rose-600">{errors.thresholdLimit}</p>}
+        {errors.thresholdLimit && <p className="mt-1 text-xs font-medium text-rose-600">{errors.thresholdLimit}</p>}
       </div>
 
-      {/* Checkbox Options List */}
-      <div className="space-y-3">
-        {/* Accept all invited attendees */}
-        <div className="p-3.5 border border-gray-200 rounded-md bg-white flex items-center justify-between shadow-2xs">
-          <label className="flex items-center gap-3 cursor-pointer select-none" onClick={() => onChange({ allowAllInvited: !acceptAll })}>
-            <div
-              role="checkbox"
-              aria-checked={acceptAll}
-              className={`w-4 h-4 rounded flex items-center justify-center transition-all shrink-0 ${
-                acceptAll ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border border-gray-300 text-transparent"
-              }`}
-            >
-              <svg className="w-3 h-3 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <span className="font-bold text-gray-900 text-xs">
-              Accept all invited attendees
-            </span>
+      {anyRsvpOption && (
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-medium text-gray-900 mb-2">Who can check in</legend>
+          {features.acceptInvitedAttendees && (
+            <OptionRow
+              id="opt-accept-all"
+              checked={draft.allowAllInvited}
+              onChange={(v) => onChange({ allowAllInvited: v })}
+              label="Accept all invited attendees"
+              help="Everyone on the invitee list can check in, whether or not they responded."
+            />
+          )}
+          {features.chooseNotRespondedInvitees && (
+            <OptionRow
+              id="opt-not-responded"
+              checked={notRespondedImplied || draft.allowNotResponded}
+              disabled={notRespondedImplied}
+              onChange={(v) => onChange({ allowNotResponded: v })}
+              label="Allow not-responded invitees"
+              help={notRespondedImplied ? "Included because all invited attendees are accepted." : "Guests who have not replied to the RSVP can still check in."}
+            />
+          )}
+          {features.chooseRSVPDeclinedInvitees && (
+            <OptionRow
+              id="opt-declined"
+              checked={draft.allowDeclined}
+              onChange={(v) => onChange({ allowDeclined: v })}
+              label="Allow RSVP declined invitees"
+              help="Guests who declined the invitation can still check in."
+            />
+          )}
+        </fieldset>
+      )}
+
+      {features.askFoodPreference && (
+        <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-4">
+          <label htmlFor="opt-food" className="flex items-center gap-3 cursor-pointer">
+            <input
+              id="opt-food"
+              type="checkbox"
+              checked={draft.dietaryEnabled}
+              onChange={(e) => onChange({ dietaryEnabled: e.target.checked })}
+              className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-900">Ask for food preference</span>
           </label>
-          <span className="w-4 h-4 text-gray-400 border border-gray-300 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">
-            i
-          </span>
-        </div>
 
-        {/* Allow not-responded invitees */}
-        <div className="p-3.5 border border-gray-200 rounded-md bg-white flex items-center justify-between shadow-2xs">
-          <label className="flex items-center gap-3 cursor-pointer select-none" onClick={() => onChange({ allowNotResponded: !allowNotResponded })}>
-            <div
-              role="checkbox"
-              aria-checked={allowNotResponded}
-              className={`w-4 h-4 rounded flex items-center justify-center transition-all shrink-0 ${
-                allowNotResponded ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border border-gray-300 text-transparent"
-              }`}
-            >
-              <svg className="w-3 h-3 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <span className="font-medium text-gray-400 text-xs">
-              Allow not-responded invitees
-            </span>
-          </label>
-          <span className="w-4 h-4 text-gray-400 border border-gray-300 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">
-            i
-          </span>
-        </div>
-
-        {/* Allow RSVP declined invitees */}
-        <div className="p-3.5 border border-gray-200 rounded-md bg-white flex items-center justify-between shadow-2xs">
-          <label className="flex items-center gap-3 cursor-pointer select-none" onClick={() => onChange({ allowDeclined: !allowDeclined })}>
-            <div
-              role="checkbox"
-              aria-checked={allowDeclined}
-              className={`w-4 h-4 rounded flex items-center justify-center transition-all shrink-0 ${
-                allowDeclined ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border border-gray-300 text-transparent"
-              }`}
-            >
-              <svg className="w-3 h-3 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <span className="font-medium text-gray-400 text-xs">
-              Allow RSVP declined invitees
-            </span>
-          </label>
-          <span className="w-4 h-4 text-gray-400 border border-gray-300 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">
-            i
-          </span>
-        </div>
-
-        {/* Ask for food preference */}
-        <div className="p-4 border border-gray-200 rounded-md bg-white space-y-5 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-3 cursor-pointer select-none" onClick={() => onChange({ dietaryEnabled: !askFoodPreference })}>
-              <div
-                role="checkbox"
-                aria-checked={askFoodPreference}
-                className={`w-4 h-4 rounded flex items-center justify-center transition-all shrink-0 ${
-                  askFoodPreference ? "bg-[#10B981] text-white border-[#10B981]" : "bg-white border border-gray-300 text-transparent"
-                }`}
-              >
-                <svg className="w-3 h-3 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span className="font-bold text-gray-900 text-xs">
-                Ask for food preference
-              </span>
-            </label>
-            <span className="w-4 h-4 text-gray-400 border border-gray-300 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">
-              i
-            </span>
-          </div>
-
-          {askFoodPreference && (
-            <div className="pt-2 space-y-6">
+          {draft.dietaryEnabled && (
+            <div className="space-y-6">
               {categories.map((category, catIdx) => (
-                <div
-                  key={category.id}
-                  className="pt-4 border-t border-gray-200 first:border-t-0 first:pt-0 space-y-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <label className="block text-xs font-bold text-gray-900">
-                      Write title (e.g. Preference Category)
+                <div key={category.id} className="pt-4 border-t border-[#EEEEEE] first:border-t-0 first:pt-0 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <label htmlFor={`pref-title-${category.id}`} className="text-sm font-medium text-gray-900">
+                      Question {catIdx + 1} title
                     </label>
                     {categories.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCategory(category.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-semibold cursor-pointer transition-colors"
-                      >
-                        Remove Category
+                      <button type="button" onClick={() => setCategories(categories.filter((c) => c.id !== category.id))} className="text-sm font-medium text-rose-600 hover:underline cursor-pointer">
+                        Remove question
                       </button>
                     )}
                   </div>
-
                   <input
+                    id={`pref-title-${category.id}`}
                     type="text"
                     value={category.title}
-                    onChange={(e) => handleTitleChange(category.id, e.target.value)}
+                    maxLength={100}
+                    onChange={(e) => updateCategory(category.id, { title: e.target.value })}
                     placeholder="Dietary Preference"
-                    className="w-full max-w-md px-3.5 py-2.5 bg-[#F9FAFB] border border-gray-200 rounded-md text-gray-900 font-medium text-xs focus:outline-none focus:ring-1 focus:ring-[#FF5B22] focus:border-[#FF5B22]"
+                    className="w-full max-w-md px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#FF651D]"
                   />
-
-                  {/* Radio Options List */}
-                  <div className="space-y-2.5 pt-1">
+                  <ul className="space-y-2.5">
                     {category.options.map((opt, optIdx) => (
-                      <div key={optIdx} className="flex items-center gap-2.5">
-                        <span className="w-4 h-4 rounded-full border-2 border-[#10B981] flex items-center justify-center shrink-0">
-                          <span className="w-2 h-2 bg-[#10B981] rounded-full" />
-                        </span>
-                        <div className="flex-1 max-w-xs flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={opt}
-                            onChange={(e) =>
-                              handleOptionChange(category.id, optIdx, e.target.value)
-                            }
-                            placeholder={`Option ${optIdx + 1}`}
-                            className="w-full border-b border-gray-300 focus:border-[#FF5B22] focus:outline-none py-0.5 text-xs text-gray-900 font-medium"
-                          />
-                          {category.options.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveOption(category.id, optIdx)}
-                              className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                              title="Delete option"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                      <li key={optIdx} className="flex items-center gap-2.5">
+                        <span aria-hidden className="size-4 rounded-full border-2 border-[#16A34A] shrink-0" />
+                        <input
+                          type="text"
+                          aria-label={`Option ${optIdx + 1}`}
+                          value={opt}
+                          maxLength={60}
+                          onChange={(e) => updateCategory(category.id, { options: category.options.map((o, i) => (i === optIdx ? e.target.value : o)) })}
+                          placeholder={`Option ${optIdx + 1}`}
+                          className="flex-1 max-w-xs border-b border-gray-300 focus:border-[#FF651D] focus:outline-none py-1 text-sm text-gray-900 bg-transparent"
+                        />
+                        {category.options.length > 1 && (
+                          <button
+                            type="button"
+                            aria-label={`Remove option ${optIdx + 1}`}
+                            onClick={() => updateCategory(category.id, { options: category.options.filter((_, i) => i !== optIdx) })}
+                            className="text-gray-400 hover:text-rose-600 cursor-pointer"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </li>
                     ))}
-
-                    {/* "Add another option?" Action Link */}
-                    <div className="flex items-center gap-2.5 pt-1">
-                      <span className="w-4 h-4 rounded-full border border-gray-300 shrink-0" />
-                      <span className="text-xs text-gray-400 font-medium">
-                        Option {category.options.length + 1}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleAddOption(category.id)}
-                        className="text-[#10B981] font-semibold hover:underline ml-1 text-xs cursor-pointer"
-                      >
-                        Add another option?
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Save Button */}
-                  <div className="pt-2 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleSaveCategory(category.id)}
-                      className="px-5 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md shadow-2xs transition-all cursor-pointer"
-                    >
-                      Save
-                    </button>
-                    {savedCategories[category.id] && (
-                      <span className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
-                        ✓ Saved
-                      </span>
-                    )}
-                  </div>
+                  </ul>
+                  <button type="button" onClick={() => updateCategory(category.id, { options: [...category.options, ""] })} className="text-sm font-medium text-[#16A34A] hover:underline cursor-pointer">
+                    Add another option
+                  </button>
                 </div>
               ))}
-
-              {/* "+ Add Another" Button for adding new Preference Categories */}
-              <div className="pt-3 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleAddCategory}
-                  className="px-4 py-2 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22]/5 font-bold text-xs rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <span className="text-sm font-semibold">+</span> Add Another
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setCategories([...categories, { id: newClientKey("pref"), title: "", options: [""] }])}
+                className="px-4 py-2 border border-[#FF651D] text-[#E5520F] hover:bg-orange-50 text-sm font-medium rounded-md cursor-pointer"
+              >
+                + Add another question
+              </button>
             </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Bottom Footer Actions */}
-      <div className="pt-6 border-t border-gray-200 flex items-center justify-end gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-6 py-2 border border-gray-300 hover:bg-gray-50 text-gray-900 font-bold text-xs rounded-md transition-colors cursor-pointer"
-        >
-          Cancel
+      <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
+        <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
+          Back
         </button>
-        <button
-          type="submit"
-          className="px-7 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer"
-        >
+        <button type="submit" className="px-7 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
       </div>

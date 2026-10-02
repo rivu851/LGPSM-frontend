@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 
 export default function HeroSection() {
@@ -43,9 +44,17 @@ export default function HeroSection() {
         {/* Responsive Grid Hero Container */}
         <div 
           ref={heroRef}
-          className="relative w-full rounded-[15px] overflow-hidden shadow-xl bg-cover bg-center grid grid-cols-1 lg:grid-cols-12 min-h-[620px] items-center"
-          style={{ backgroundImage: "url('/images/home/top_hero.png')" }}
+          className="relative w-full rounded-[15px] overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[620px] items-center"
         >
+          <Image
+            src="/images/home/top_hero.webp"
+            alt="Digital Invitations Hero"
+            fill
+            priority
+            fetchPriority="high"
+            sizes="(max-width: 768px) 100vw, 1240px"
+            className="object-cover object-center -z-0"
+          />
           
           {/* Left Side: Clean HTML Text, Subtitle & Interactive Form Overlay */}
           <div ref={contentRef} className="lg:col-span-6 z-10 p-8 sm:p-12 lg:p-16 space-y-6 sm:space-y-8 bg-transparent">
@@ -76,7 +85,7 @@ export default function HeroSection() {
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[#ea6b3e] hover:bg-[#E04B16] text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-105 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                  className="px-6 py-3 bg-[#C44200] hover:bg-[#A83800] text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-105 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                 >
                   Sign Up Free
                 </button>

@@ -183,11 +183,11 @@ export default function EventSessionsPage() {
     <div className="w-full min-h-full bg-white text-gray-900 font-sans">
       {/* Top Navigation Bar */}
       <header className="h-20 bg-white border-b border-gray-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-20 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <svg className="w-7 h-7 text-[#FF5B22] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h1 className="text-xl font-bold text-gray-900">Event Sessions</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-gray-900 truncate">Event Sessions</h1>
         </div>
         <UserNavDropdown />
       </header>
@@ -221,7 +221,7 @@ export default function EventSessionsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-3 shrink-0 w-fit self-start">
               {/* Back to Dashboard */}
               <Link
                 href={`/events/${eventId}`}

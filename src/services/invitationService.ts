@@ -1,4 +1,4 @@
-import { apiClient, ApiResponse } from "./apiClient";
+import { apiClient, ApiResponse, API_BASE_URL } from "./apiClient";
 import { tokenStorage } from "./tokenStorage";
 
 export interface SendInvitationsPayload {
@@ -169,7 +169,14 @@ export const invitationService = {
    * GET /api/v1/events/:eventId/invitations/preview?inviteeId=:inviteeId
    */
   async previewCardPNG(eventId: string, inviteeId?: string): Promise<Blob> {
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+    return (await this.previewCard(eventId, inviteeId)).blob;
+  },
+
+  /**
+   * Same card plus whether its QR is the guest's issued check-in pass ("ISSUED") or a
+   * placeholder for a guest who has not been sent an invitation yet ("SAMPLE").
+   */
+  async previewCard(eventId: string, inviteeId?: string): Promise<{ blob: Blob; qr: "ISSUED" | "SAMPLE" }> {
     const token = tokenStorage.getAccessToken();
     const url = inviteeId
       ? `${API_BASE_URL}/api/v1/events/${eventId}/invitations/preview?inviteeId=${inviteeId}`
@@ -187,6 +194,7 @@ export const invitationService = {
       }
       throw new Error(message);
     }
-    return res.blob();
+    const qr = res.headers.get("X-Invitation-Qr") === "ISSUED" ? "ISSUED" : "SAMPLE";
+    return { blob: await res.blob(), qr };
   },
 };
