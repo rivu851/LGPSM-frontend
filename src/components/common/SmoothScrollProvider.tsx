@@ -88,31 +88,48 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
 
   // 2. Trigger GSAP Smooth Reveal Animations on Route Change
   useEffect(() => {
-    const mainEl = document.querySelector("[data-page-reveal]");
-    if (mainEl) {
-      mainEl.scrollTop = 0;
-    }
+    const mainEl = document.querySelector<HTMLElement>("[data-page-reveal]");
+    if (!mainEl) return;
+
+    mainEl.scrollTop = 0;
 
     const ctx = gsap.context(() => {
-      // Only the dashboard content area opts in: it renders after auth has loaded, so animating it
-      // can never touch markup that React is still hydrating (e.g. Suspense-wrapped public pages)
-      const revealElements = document.querySelectorAll(
-        "[data-page-reveal] h1, [data-page-reveal] h2, [data-page-reveal] h3, [data-page-reveal] table, [data-page-reveal] .grid > div"
+      // Animate the page container itself for a full-page entrance on every navigation
+      gsap.fromTo(
+        mainEl,
+        { opacity: 0, y: 14 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.42,
+          ease: "power2.out",
+          clearProps: "all",
+        }
       );
 
-      if (revealElements.length > 0) {
+      // Stagger-reveal key content blocks for depth — runs in parallel with the container fade
+      const staggerTargets = mainEl.querySelectorAll(
+        "h1, h2, h3, " +
+        "table, " +
+        ".grid > div, " +
+        "[data-reveal], " +
+        "section, " +
+        "form > div, " +
+        "[class*='rounded'] > [class*='border'], " +
+        ".card"
+      );
+
+      if (staggerTargets.length > 0 && staggerTargets.length <= 40) {
         gsap.fromTo(
-          revealElements,
-          {
-            opacity: 0,
-            y: 8,
-          },
+          staggerTargets,
+          { opacity: 0, y: 6 },
           {
             opacity: 1,
             y: 0,
-            duration: 0.35,
-            stagger: 0.02,
+            duration: 0.3,
+            stagger: 0.025,
             ease: "power2.out",
+            delay: 0.08,
             clearProps: "all",
           }
         );
