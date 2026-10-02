@@ -47,7 +47,7 @@ function PortalTabs({ value, onChange }: { value: PortalMode; onChange: (m: Port
           aria-selected={value === mode}
           onClick={() => onChange(mode)}
           className={`flex-1 h-[38px] text-xs font-semibold transition-colors cursor-pointer
-            ${value === mode ? "bg-[#C44200] text-white" : "text-[#5C5C5C] hover:bg-gray-100"}`}
+            ${value === mode ? "bg-[#dd5c1b] text-white" : "text-[#5C5C5C] hover:bg-gray-100"}`}
         >
           {label}
         </button>

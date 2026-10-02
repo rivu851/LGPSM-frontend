@@ -44,7 +44,7 @@ export default function HeroSection() {
         {/* Responsive Grid Hero Container */}
         <div 
           ref={heroRef}
-          className="relative w-full rounded-[15px] overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[620px] items-center"
+          className="relative w-full rounded-[15px] overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 min-h-[420px] sm:min-h-[520px] lg:min-h-[620px] items-center"
         >
           <Image
             src="/images/home/top_hero.webp"
@@ -53,7 +53,7 @@ export default function HeroSection() {
             priority
             fetchPriority="high"
             sizes="(max-width: 768px) 100vw, 1240px"
-            className="object-cover object-center -z-0"
+            className="object-cover object-left lg:object-center -z-0"
           />
           
           {/* Left Side: Clean HTML Text, Subtitle & Interactive Form Overlay */}
@@ -85,7 +85,7 @@ export default function HeroSection() {
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[#C44200] hover:bg-[#A83800] text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-105 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                  className="px-6 py-3 bg-[#dd5c1b] hover:bg-[#A83800] text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-105 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                 >
                   Sign Up Free
                 </button>

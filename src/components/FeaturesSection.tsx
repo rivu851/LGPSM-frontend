@@ -183,12 +183,12 @@ export default function FeaturesSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           {/* FEATURES badge */}
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#C44200]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#dd5c1b]">
             <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" rx="1" fill="#C44200" />
-              <rect x="9" y="2" width="5" height="5" rx="1" fill="#C44200" />
-              <rect x="2" y="9" width="5" height="5" rx="1" fill="#C44200" />
-              <rect x="9" y="9" width="5" height="5" rx="1" fill="#C44200" />
+              <rect x="2" y="2" width="5" height="5" rx="1" fill="#dd5c1b" />
+              <rect x="9" y="2" width="5" height="5" rx="1" fill="#dd5c1b" />
+              <rect x="2" y="9" width="5" height="5" rx="1" fill="#dd5c1b" />
+              <rect x="9" y="9" width="5" height="5" rx="1" fill="#dd5c1b" />
             </svg>
             <span>FEATURES</span>
           </div>

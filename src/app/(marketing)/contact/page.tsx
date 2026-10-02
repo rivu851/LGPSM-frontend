@@ -118,7 +118,7 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-[#C44200] hover:bg-[#A83800] text-white text-sm sm:text-base font-bold transition-all shadow-none active:scale-[0.99] font-[family-name:var(--font-space-grotesk)] cursor-pointer rounded-md"
+                  className="w-full py-3.5 bg-[#dd5c1b] hover:bg-[#A83800] text-white text-sm sm:text-base font-bold transition-all shadow-none active:scale-[0.99] font-[family-name:var(--font-space-grotesk)] cursor-pointer rounded-md"
                 >
                   {submitted ? "Submitted Successfully!" : "Submit"}
                 </button>

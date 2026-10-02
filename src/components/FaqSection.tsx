@@ -118,7 +118,7 @@ export default function FaqSection() {
           {/* Left Column: Badge, Title & Accordions */}
           <div className="lg:col-span-7">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#C44200] mb-2">
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#dd5c1b] mb-2">
               <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
                 <rect x="2" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
                 <rect x="9" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
