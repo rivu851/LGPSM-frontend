@@ -14,16 +14,16 @@ export default function HeroSection() {
       if (heroRef.current) {
         gsap.fromTo(
           heroRef.current,
-          { opacity: 0, scale: 0.97 },
-          { opacity: 1, scale: 1, duration: 1, ease: "power3.out" }
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" }
         );
       }
 
       if (contentRef.current) {
         gsap.fromTo(
           contentRef.current.children,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.8, stagger: 0.15, ease: "power2.out", delay: 0.2 }
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.45, stagger: 0.08, ease: "power2.out", delay: 0.1 }
         );
       }
     }, heroRef);

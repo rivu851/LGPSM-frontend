@@ -93,22 +93,23 @@ export default function SubHeroIntro() {
         );
       }
 
-      // 3. Smooth 3D scale reveal on Dashboard preview
+      // 3. Smooth scale reveal on Dashboard preview — GPU-promoted for 60fps scrub
       if (dashboardRef.current) {
+        // Promote to compositing layer before the scrubbed animation begins
+        gsap.set(dashboardRef.current, { force3D: true });
         gsap.fromTo(
           dashboardRef.current,
-          { scale: 0.92, opacity: 0.7, y: 40 },
+          { scale: 0.94, opacity: 0.75, y: 30 },
           {
             scale: 1,
             opacity: 1,
             y: 0,
-            duration: 1.2,
-            ease: "power3.out",
+            ease: "none",
             scrollTrigger: {
               trigger: dashboardRef.current,
-              start: "top 85%",
-              end: "top 40%",
-              scrub: 1,
+              start: "top 88%",
+              end: "top 45%",
+              scrub: 0.4,
             },
           }
         );
@@ -170,7 +171,7 @@ export default function SubHeroIntro() {
               alt="LGPSM Interactive App Dashboard Preview"
               width={1200}
               height={700}
-              loading="lazy"
+              loading="eager"
               sizes="(max-width: 768px) 100vw, 900px"
               className="w-full h-auto object-cover"
             />

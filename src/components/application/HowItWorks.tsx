@@ -153,7 +153,7 @@ export default function HowItWorks() {
                 src="/images/auth/Auth.webp"
                 alt="LGPSM Step Preview"
                 fill
-                priority
+                sizes="(max-width: 1024px) 90vw, 560px"
                 className="object-cover object-center opacity-90 transition-transform duration-500 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/20" />

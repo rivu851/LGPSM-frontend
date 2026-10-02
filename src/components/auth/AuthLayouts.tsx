@@ -31,7 +31,7 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div data-page-reveal className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
+    <div className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
       {/* z-10 so the card's right-[-10.66%] overhang renders on top of the white main panel */}
       <aside className="hidden lg:block relative z-10 shrink-0 w-[46.25%] bg-[#FF651D]">
         <Image src="/images/auth/auth-sunburst.svg" alt="" fill sizes="47vw" className="object-cover" priority />
@@ -83,7 +83,6 @@ export function AdminAuthLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      data-page-reveal
       className="min-h-screen bg-[#F5F5F5] flex items-center justify-center font-[family-name:var(--font-inter)] p-4"
     >
       <div

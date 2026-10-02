@@ -8,6 +8,11 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// feTurbulence is rasterised on the CPU; a full-section filter stalled the first scroll past the hero.
+// A small stitched tile repeated as a background is computed once and costs almost nothing.
+const GRAIN_TILE =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+
 export default function ApplicationSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
@@ -38,14 +43,11 @@ export default function ApplicationSection() {
   return (
     <div ref={containerRef} className="w-full bg-[#212629] text-white font-[family-name:var(--font-space-grotesk)] relative overflow-hidden">
       {/* Subtle Grainy Noise Texture Overlay */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-[0.04]">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-          <filter id="grainNoise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" stitchTiles="stitch" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#grainNoise)" />
-        </svg>
-      </div>
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none z-0 opacity-[0.04]"
+        style={{ backgroundImage: GRAIN_TILE, backgroundRepeat: "repeat", backgroundSize: "160px 160px" }}
+      />
 
       {/* Main Content Layer */}
       <div className="relative z-10">

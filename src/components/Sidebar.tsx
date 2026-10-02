@@ -100,7 +100,7 @@ function Logo() {
   return (
     <div className="flex justify-center">
       <Link href="/dashboard" className="inline-block">
-        <Image src="/images/navbar/Nav_logo.webp" alt="LGPSM" width={202} height={34} priority className="h-[38px] w-auto object-contain" />
+        <Image src="/images/navbar/Nav_logo.webp" alt="LGPSM" width={202} height={67} priority className="h-[38px] w-auto object-contain" />
       </Link>
     </div>
   );
