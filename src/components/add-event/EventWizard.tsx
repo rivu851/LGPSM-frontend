@@ -87,14 +87,32 @@ export default function EventWizard({
   const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired }), [draft, subcategoryRequired]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
+  const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
+  const step2Valid = useMemo(() => step1Valid && !Object.keys(allErrors).some((k) => stepOfError(k) === 2), [allErrors, step1Valid]);
+  const maxUnlockedStep = step2Valid ? 3 : step1Valid ? 2 : 1;
+
   const patch = (p: Partial<EventDraft>) => setDraft((prev) => ({ ...prev, ...p }));
 
-  const goIfValid = (step: 1 | 2, next: number) => {
-    if (Object.keys(allErrors).some((k) => stepOfError(k) === step)) {
-      setShowErrors(true);
+  const handleStepChange = (targetStep: number) => {
+    if (targetStep === currentStep) return;
+
+    // Moving backward is always allowed
+    if (targetStep < currentStep) {
+      setCurrentStep(targetStep);
       return;
     }
-    setCurrentStep(next);
+
+    // Moving forward (targetStep > currentStep): Check all prior steps
+    const blockingKeys = Object.keys(allErrors).filter((k) => stepOfError(k) < targetStep);
+
+    if (blockingKeys.length > 0) {
+      setShowErrors(true);
+      const earliestStepWithErrors = Math.min(...blockingKeys.map(stepOfError));
+      setCurrentStep(earliestStepWithErrors);
+      return;
+    }
+
+    setCurrentStep(targetStep);
   };
 
   const handleFinish = () => {
@@ -150,12 +168,25 @@ export default function EventWizard({
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
 
+  const currentStepHasErrors = showErrors && Object.keys(allErrors).some((k) => stepOfError(k) === currentStep);
+
   return (
     <div className="w-full flex-1 flex flex-col bg-white">
       <PageHeader title={heading} />
 
-      {(draftStatus !== "idle" || draftSavedAt || submitError) && (
+      {(draftStatus !== "idle" || draftSavedAt || submitError || currentStepHasErrors) && (
         <div className="px-4 sm:px-6 pt-4 space-y-2">
+          {currentStepHasErrors && (
+            <div role="alert" className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Please complete all required details on Step {currentStep} before proceeding to the next step.</span>
+              </div>
+              <button type="button" onClick={() => setShowErrors(false)} className="text-amber-700 hover:text-amber-900 font-medium text-xs cursor-pointer shrink-0">Dismiss</button>
+            </div>
+          )}
           {draftStatus === "restored" && (
             <div role="status" className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-sm flex flex-wrap items-center justify-between gap-2">
               <span>Your unsaved draft was restored. Uploaded invitee files need to be attached again.</span>
@@ -195,7 +226,7 @@ export default function EventWizard({
       <div className="p-4 sm:p-6 flex-1">
         <div className="border border-[#E0E0E0] rounded-lg overflow-hidden flex flex-col xl:flex-row bg-white">
           <div className="w-full xl:w-[62%] flex flex-col min-w-0">
-            <StepHeader currentStep={currentStep} onStepClick={setCurrentStep} />
+            <StepHeader currentStep={currentStep} onStepClick={handleStepChange} maxUnlockedStep={maxUnlockedStep} />
             <div ref={stepContentRef} className="flex-1">
               {currentStep === 1 && (
                 <Step1EventDetails
@@ -206,12 +237,12 @@ export default function EventWizard({
                   canManageCategories={user?.role === "ADMIN"}
                   rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
-                  onNext={() => goIfValid(1, 2)}
+                  onNext={() => handleStepChange(2)}
                   onCancel={onCancel}
                 />
               )}
               {currentStep === 2 && (
-                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} onNext={() => goIfValid(2, 3)} onBack={() => setCurrentStep(1)} />
+                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
               )}
               {currentStep === 3 && (
                 <Step3Sessions

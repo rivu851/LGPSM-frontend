@@ -5,9 +5,10 @@ import React from "react";
 interface StepHeaderProps {
   currentStep: number;
   onStepClick: (step: number) => void;
+  maxUnlockedStep?: number;
 }
 
-export default function StepHeader({ currentStep, onStepClick }: StepHeaderProps) {
+export default function StepHeader({ currentStep, onStepClick, maxUnlockedStep }: StepHeaderProps) {
   const steps = [
     { num: 1, label: "Event Details" },
     { num: 2, label: "Settings" },
@@ -20,17 +21,22 @@ export default function StepHeader({ currentStep, onStepClick }: StepHeaderProps
         {steps.map((step) => {
           const isActive = currentStep === step.num;
           const isCompleted = currentStep > step.num;
+          const isLocked = maxUnlockedStep !== undefined && step.num > maxUnlockedStep;
 
           return (
             <button
               key={step.num}
+              type="button"
               onClick={() => onStepClick(step.num)}
+              title={isLocked ? "Complete required details on previous steps to unlock" : undefined}
               className={`flex items-center gap-2 pb-3 text-xs font-bold transition-all relative cursor-pointer ${
                 isActive
                   ? "text-gray-900"
                   : isCompleted
                   ? "text-gray-700"
-                  : "text-gray-400 hover:text-gray-600"
+                  : isLocked
+                  ? "text-gray-400 opacity-65"
+                  : "text-gray-500 hover:text-gray-700"
               }`}
             >
               {/* Checkmark or Circle Badge */}
@@ -38,6 +44,8 @@ export default function StepHeader({ currentStep, onStepClick }: StepHeaderProps
                 className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] shrink-0 ${
                   isCompleted || isActive
                     ? "bg-emerald-600 text-white"
+                    : isLocked
+                    ? "bg-gray-200 text-gray-400"
                     : "bg-gray-200 text-gray-500"
                 }`}
               >

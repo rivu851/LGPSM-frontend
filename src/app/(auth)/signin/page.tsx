@@ -30,49 +30,18 @@ import {
 import { INPUT_PLACEHOLDERS } from "@/constants/placeholders";
 import { ERROR_MESSAGES } from "@/constants/errorMessages";
 
-const PORTAL_TABS: { mode: PortalMode; label: string }[] = [
-  { mode: "admin", label: "Admin" },
-  { mode: "organizer", label: "Organizer" },
-  { mode: "system_user", label: "System User" },
-];
-
-function PortalTabs({ value, onChange }: { value: PortalMode; onChange: (m: PortalMode) => void }) {
-  return (
-    <div role="tablist" aria-label="Sign in as" className="flex mb-[35px] rounded-lg border border-[#E0E0E0] overflow-hidden bg-[#FAFAFA]">
-      {PORTAL_TABS.map(({ mode, label }) => (
-        <button
-          key={mode}
-          type="button"
-          role="tab"
-          aria-selected={value === mode}
-          onClick={() => onChange(mode)}
-          className={`flex-1 h-[38px] text-xs font-semibold transition-colors cursor-pointer
-            ${value === mode ? "bg-[#dd5c1b] text-white" : "text-[#5C5C5C] hover:bg-gray-100"}`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, loginWithGoogle } = useAuth();
 
   const initial = parsePortalMode(searchParams.get("mode"));
-  const [mode, setMode] = useState<PortalMode>(initial.mode);
+  const mode: PortalMode = initial.mode;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const handleModeChange = (m: PortalMode) => {
-    setMode(m);
-    setErrorMessage("");
-  };
 
   const onSuccess = () => {
     const from = searchParams.get("from");
@@ -110,9 +79,6 @@ function SigninContent() {
       setIsSubmitting(false);
     }
   };
-
-  const dashboardLabel =
-    mode === "admin" ? "Admin Dashboard" : mode === "system_user" ? "your account" : "Organizer Dashboard";
 
   const sharedForm = (
     <form onSubmit={handleSubmit}>
@@ -165,7 +131,8 @@ function SigninContent() {
     </form>
   );
 
-  // Admin login: centered card — no left panel, no Google button, no signup link
+  // Admin login (Super Admin Figma frame 2021:1333): centered card, no left panel, no Google
+  // button, no signup link, no cross-link to the organizer portal — a dedicated login screen.
   if (mode === "admin") {
     return (
       <AdminAuthLayout>
@@ -178,20 +145,29 @@ function SigninContent() {
         </div>
         {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
         {sharedForm}
-        <p className="text-center mt-6 text-xs text-[#9CA3AF]">
-          Not an admin?{" "}
-          <button
-            type="button"
-            onClick={() => handleModeChange("organizer")}
-            className="text-[#FF651D] font-medium hover:underline cursor-pointer"
-          >
-            Organizer Login
-          </button>
-        </p>
       </AdminAuthLayout>
     );
   }
 
+  // System users have no web portal — they sign in through the mobile app only. This mode is
+  // reached only via the automatic bounce in (dashboard)/layout.tsx; there is no credential form
+  // here since no web session for a system user is ever allowed to stand.
+  if (mode === "system_user") {
+    return (
+      <AuthSplitLayout>
+        <div className="mb-8 lg:mb-[45px] h-[34px]">
+          <AuthLogo />
+        </div>
+        <div className="mb-10 lg:mb-[76px]">
+          <BackLink href="/" label="Back to Home" />
+        </div>
+        <AuthHeading title="Mobile app only" subtitle={MOBILE_ONLY_NOTICE} />
+      </AuthSplitLayout>
+    );
+  }
+
+  // Organizer login (Admin Figma frame 292:680): split panel, Google button, signup link —
+  // a single dedicated screen with no role-switcher tab (none exists in the Figma design).
   return (
     <AuthSplitLayout>
       <div className="mb-8 lg:mb-[45px] h-[34px]">
@@ -201,11 +177,8 @@ function SigninContent() {
         <BackLink href="/" label="Back to Home" />
       </div>
 
-      <AuthHeading title="Sign in your account" subtitle={`Welcome back! Login to ${dashboardLabel}`} />
+      <AuthHeading title="Sign in your account" subtitle="Welcome back! Login to Admin Dashboard" />
 
-      <PortalTabs value={mode} onChange={handleModeChange} />
-
-      {initial.mobileOnly && <AuthAlert tone="info">{MOBILE_ONLY_NOTICE}</AuthAlert>}
       {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
 
       <GoogleButton onToken={handleGoogle} disabled={isSubmitting} />
@@ -216,7 +189,7 @@ function SigninContent() {
       <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
         Don&apos;t have an account?{" "}
         <Link href="/signup" className="text-[#B83D00] font-medium underline underline-offset-2">
-          Sign up
+          Create now
         </Link>
       </p>
     </AuthSplitLayout>
