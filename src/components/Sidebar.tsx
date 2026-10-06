@@ -15,7 +15,39 @@ function NavGroup({ entry, activeItem, onNavigate }: { entry: NavEntry; activeIt
   const children = entry.children || [];
   const groupActive = children.some((c) => c.key === activeItem);
   const [open, setOpen] = useState(groupActive || entry.key === "event");
-  const expanded = open || groupActive;
+  const expanded = entry.alwaysExpanded || open || groupActive;
+
+  // "Configurations" (Admin Figma) renders as a static, permanently-open section label — no
+  // chevron, no collapse control — since every reviewed Figma screen shows it pre-expanded.
+  if (entry.alwaysExpanded) {
+    return (
+      <div>
+        <div className="w-full flex items-center gap-2 py-2 text-base font-medium text-[#DEE2E5]">
+          <NavIcon name={entry.icon} />
+          <span className="flex-1 text-left">{entry.label}</span>
+        </div>
+        <ul className="pl-6">
+          {children.map((c) => {
+            const active = c.key === activeItem;
+            return (
+              <li key={c.key}>
+                <Link
+                  href={c.href}
+                  onClick={onNavigate}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center h-10 pl-2.5 border-l-[1.5px] text-sm font-medium transition-colors ${
+                    active ? "border-[#FF651D] text-[#FF651D]" : "border-[#3A4045] text-white hover:text-[#FFB08A]"
+                  }`}
+                >
+                  {c.label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -110,8 +142,8 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const activeItem = getActiveItemFromPathname(pathname);
   const role: WebRole = user?.role === "ADMIN" ? "ADMIN" : "ORGANIZER";
+  const activeItem = getActiveItemFromPathname(pathname, role);
   const close = () => setIsMobileOpen(false);
 
   const navigation = (
@@ -142,7 +174,9 @@ export default function Sidebar() {
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex" role="dialog" aria-modal="true" aria-label="Menu">
           <div className="fixed inset-0 bg-black/60" onClick={close} />
-          <div className="relative w-[271px] max-w-[85vw] bg-[#15191C] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain animate-drawer">
+          <div
+            className={`relative ${role === "ADMIN" ? "w-[271px]" : "w-[284px]"} max-w-[85vw] bg-[#15191C] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain animate-drawer`}
+          >
             <div className="flex items-center justify-between">
               <Logo />
               <button type="button" onClick={close} className="p-1 text-[#DEE2E5] hover:text-white cursor-pointer" aria-label="Close menu">
@@ -157,8 +191,10 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Desktop sidebar (>= md) — Figma: 271px, #15191C, 24px padding */}
-      <aside className="hidden md:flex w-[240px] lg:w-[271px] shrink-0 h-screen sticky top-0 bg-[#15191C] flex-col gap-8 justify-between p-6 overflow-y-auto overscroll-contain no-scrollbar select-none z-30">
+      {/* Desktop sidebar (>= md) — Figma: 271px for ADMIN (Super Admin design), 284px for ORGANIZER (Admin design), #15191C, 24px padding */}
+      <aside
+        className={`hidden md:flex w-[240px] ${role === "ADMIN" ? "lg:w-[271px]" : "lg:w-[284px]"} shrink-0 h-screen sticky top-0 bg-[#15191C] flex-col gap-8 justify-between p-6 overflow-y-auto overscroll-contain no-scrollbar select-none z-30`}
+      >
         <div className="flex flex-col gap-8">
           <Logo />
           {navigation}

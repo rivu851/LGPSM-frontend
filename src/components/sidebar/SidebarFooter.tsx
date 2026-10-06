@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter, usePathname } from "next/navigation";
-import { loginRedirectPath } from "@/components/auth/authPortal";
+import { usePathname } from "next/navigation";
 import { notificationService, onNotificationsChanged } from "@/services/notificationService";
 import NavIcon from "./NavIcon";
 
@@ -13,10 +12,11 @@ interface SidebarFooterProps {
   onNavigate?: () => void;
 }
 
+// Figma sidebar footer has no logout entry (logout lives in the header's user-nav dropdown) —
+// this only renders Notification, to avoid a logout control duplicated in two places.
 export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const { logout, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   // Unread count comes from the backend (meta.unreadCount); refreshed on navigation and whenever notifications change
@@ -37,12 +37,6 @@ export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterP
       unsubscribe();
     };
   }, [isAuthenticated, pathname]);
-
-  const handleLogout = async () => {
-    onNavigate?.();
-    await logout();
-    router.push(loginRedirectPath());
-  };
 
   const active = activeItem === "notification";
 
@@ -67,16 +61,6 @@ export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterP
           </span>
         )}
       </Link>
-      <button
-        type="button"
-        onClick={handleLogout}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-300 hover:text-red-200 cursor-pointer transition-colors"
-      >
-        <svg className="size-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-        </svg>
-        Log out
-      </button>
     </div>
   );
 }

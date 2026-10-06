@@ -56,14 +56,14 @@ export default function UserNavDropdown() {
         </button>
 
         <div className="relative inline-block text-left" ref={dropdownRef}>
-          {/* Avatar Pill Button */}
+          {/* Flat avatar + name + chevron — Figma header has no pill background */}
           <button
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Account menu"
-            className="flex items-center gap-2 bg-[#F1F3F6] hover:bg-[#E4E7EC] px-2 sm:px-3 py-1.5 rounded-full cursor-pointer transition-all duration-150 focus:outline-none select-none"
+            className="flex items-center gap-2 cursor-pointer select-none focus:outline-none"
           >
-            <div className="w-7 h-7 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-xs overflow-hidden shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gray-400 text-white flex items-center justify-center font-semibold text-xs overflow-hidden shrink-0">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -73,7 +73,7 @@ export default function UserNavDropdown() {
               )}
             </div>
 
-            <span className="hidden sm:inline text-xs font-semibold text-gray-800 max-w-[140px] truncate">
+            <span className="hidden sm:inline text-base font-medium text-black max-w-[140px] truncate">
               {displayName}
             </span>
 
