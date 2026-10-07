@@ -169,6 +169,23 @@ function SigninContent() {
     </form>
   );
 
+  if (mode === "admin") {
+    return (
+      <AdminAuthLayout>
+        <div className="flex justify-center mb-6">
+          <AuthLogo />
+        </div>
+        <RoleTabs currentMode={mode} onSelect={handleModeChange} />
+        <div className="mb-6 text-center">
+          <h1 className="text-[22px] leading-7 font-semibold text-black">Super Admin Log In</h1>
+          <p className="mt-2 text-sm leading-5 text-[#5C5C5C]">Welcome back! Login to Dashboard</p>
+        </div>
+        {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+        {sharedForm}
+      </AdminAuthLayout>
+    );
+  }
+
   return (
     <AuthSplitLayout>
       <div className="mb-6 lg:mb-[35px] h-[34px]">
@@ -179,17 +196,6 @@ function SigninContent() {
       </div>
 
       <RoleTabs currentMode={mode} onSelect={handleModeChange} />
-
-      {mode === "admin" && (
-        <>
-          <AuthHeading title="Super Admin Log In" subtitle="Welcome back! Login to Super Admin Dashboard" />
-          {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
-          {sharedForm}
-          <p className="text-center mt-6 text-xs leading-5 text-gray-500">
-            Super Admin credentials are provisioned by system administration.
-          </p>
-        </>
-      )}
 
       {mode === "system_user" && (
         <>
