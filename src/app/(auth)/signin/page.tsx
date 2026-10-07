@@ -30,6 +30,36 @@ import {
 import { INPUT_PLACEHOLDERS } from "@/constants/placeholders";
 import { ERROR_MESSAGES } from "@/constants/errorMessages";
 
+function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect: (m: PortalMode) => void }) {
+  const tabs: { mode: PortalMode; label: string }[] = [
+    { mode: "organizer", label: "Organizer" },
+    { mode: "admin", label: "Super Admin" },
+    { mode: "system_user", label: "System User" },
+  ];
+
+  return (
+    <div className="mb-6 p-1 bg-gray-100/90 rounded-xl flex items-center justify-between gap-1 text-xs font-semibold">
+      {tabs.map((tab) => {
+        const isActive = currentMode === tab.mode;
+        return (
+          <button
+            key={tab.mode}
+            type="button"
+            onClick={() => onSelect(tab.mode)}
+            className={`flex-1 py-2 px-1 sm:px-2 text-center rounded-lg transition-all cursor-pointer ${
+              isActive
+                ? "bg-white text-[#C44200] shadow-sm font-bold border border-gray-200/60"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            {tab.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -42,6 +72,14 @@ function SigninContent() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const handleModeChange = (newMode: PortalMode) => {
+    setErrorMessage("");
+    const from = searchParams.get("from");
+    const params = new URLSearchParams({ mode: newMode });
+    if (from && isSafeReturnPath(from)) params.set("from", from);
+    router.push(`/signin?${params.toString()}`);
+  };
 
   const onSuccess = () => {
     const from = searchParams.get("from");
@@ -131,67 +169,53 @@ function SigninContent() {
     </form>
   );
 
-  // Admin login (Super Admin Figma frame 2021:1333): centered card, no left panel, no Google
-  // button, no signup link, no cross-link to the organizer portal — a dedicated login screen.
-  if (mode === "admin") {
-    return (
-      <AdminAuthLayout>
-        <div className="flex justify-center mb-6">
-          <AuthLogo />
-        </div>
-        <div className="mb-6 text-center">
-          <h1 className="text-[22px] leading-7 font-semibold text-black">Super Admin Log In</h1>
-          <p className="mt-2 text-sm leading-5 text-[#5C5C5C]">Welcome back! Login to Dashboard</p>
-        </div>
-        {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
-        {sharedForm}
-      </AdminAuthLayout>
-    );
-  }
-
-  // System users have no web portal — they sign in through the mobile app only. This mode is
-  // reached only via the automatic bounce in (dashboard)/layout.tsx; there is no credential form
-  // here since no web session for a system user is ever allowed to stand.
-  if (mode === "system_user") {
-    return (
-      <AuthSplitLayout>
-        <div className="mb-8 lg:mb-[45px] h-[34px]">
-          <AuthLogo />
-        </div>
-        <div className="mb-10 lg:mb-[76px]">
-          <BackLink href="/" label="Back to Home" />
-        </div>
-        <AuthHeading title="Mobile app only" subtitle={MOBILE_ONLY_NOTICE} />
-      </AuthSplitLayout>
-    );
-  }
-
-  // Organizer login (Admin Figma frame 292:680): split panel, Google button, signup link —
-  // a single dedicated screen with no role-switcher tab (none exists in the Figma design).
   return (
     <AuthSplitLayout>
-      <div className="mb-8 lg:mb-[45px] h-[34px]">
+      <div className="mb-6 lg:mb-[35px] h-[34px]">
         <AuthLogo />
       </div>
-      <div className="mb-10 lg:mb-[76px]">
+      <div className="mb-6 lg:mb-[45px]">
         <BackLink href="/" label="Back to Home" />
       </div>
 
-      <AuthHeading title="Sign in your account" subtitle="Welcome back! Login to Admin Dashboard" />
+      <RoleTabs currentMode={mode} onSelect={handleModeChange} />
 
-      {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+      {mode === "admin" && (
+        <>
+          <AuthHeading title="Super Admin Log In" subtitle="Welcome back! Login to Super Admin Dashboard" />
+          {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+          {sharedForm}
+          <p className="text-center mt-6 text-xs leading-5 text-gray-500">
+            Super Admin credentials are provisioned by system administration.
+          </p>
+        </>
+      )}
 
-      <GoogleButton onToken={handleGoogle} disabled={isSubmitting} />
-      <OrDivider />
+      {mode === "system_user" && (
+        <>
+          <AuthHeading title="System User Access" subtitle="On-ground staff & mobile app check-in access" />
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-900 leading-relaxed space-y-2">
+            <p className="font-semibold text-amber-950">Mobile App Check-in Access</p>
+            <p>{MOBILE_ONLY_NOTICE}</p>
+          </div>
+        </>
+      )}
 
-      {sharedForm}
-
-      <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-[#B83D00] font-medium underline underline-offset-2">
-          Create now
-        </Link>
-      </p>
+      {mode === "organizer" && (
+        <>
+          <AuthHeading title="Organizer Sign In" subtitle="Welcome back! Login to Organizer Portal" />
+          {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
+          <GoogleButton onToken={handleGoogle} disabled={isSubmitting} />
+          <OrDivider />
+          {sharedForm}
+          <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-[#C44200] font-bold underline underline-offset-2 hover:text-[#A83800]">
+              Sign Up Free (Organizer)
+            </Link>
+          </p>
+        </>
+      )}
     </AuthSplitLayout>
   );
 }
