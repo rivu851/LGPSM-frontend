@@ -84,7 +84,8 @@ export default function EventWizard({
   }, [currentStep]);
 
   const subcategoryRequired = !!draft.categoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0;
-  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired }), [draft, subcategoryRequired]);
+  const isAdmin = user?.role === "ADMIN";
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, isAdmin }), [draft, subcategoryRequired, isAdmin]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
@@ -234,7 +235,8 @@ export default function EventWizard({
                   onChange={patch}
                   onOpenDatePicker={(field) => setPickerTarget({ kind: "event", field })}
                   categories={categories}
-                  canManageCategories={user?.role === "ADMIN"}
+                  canManageCategories={isAdmin}
+                  isAdmin={isAdmin}
                   rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
                   onNext={() => handleStepChange(2)}

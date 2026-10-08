@@ -40,6 +40,7 @@ export interface SelectedTemplate {
 }
 
 export interface EventDraft {
+  organizerIds: string[];
   title: string;
   description: string;
   categoryId: string;
@@ -89,6 +90,7 @@ export function createEmptyEventDraft(): EventDraft {
   const start = nextWholeHourIso();
   const end = addHours(start, 4);
   return {
+    organizerIds: [],
     title: "",
     description: "",
     categoryId: "",
@@ -127,7 +129,8 @@ export function normalizeEventDraft(raw: EventDraft): EventDraft {
   const template = legacyTemplate
     ? { id: legacyTemplate.id, name: legacyTemplate.name, previewKey: legacyTemplate.previewKey ?? legacyTemplate.previewUrl ?? null }
     : null;
-  return { ...base, ...raw, template, logoKey: raw?.logoKey ?? null, sessions };
+  const organizerIds = Array.isArray(raw?.organizerIds) ? raw.organizerIds : [];
+  return { ...base, ...raw, organizerIds, template, logoKey: raw?.logoKey ?? null, sessions };
 }
 
 // Changing the event window moves every session that still follows it
@@ -147,6 +150,7 @@ export function hasMeaningfulContent(draft: EventDraft): boolean {
       draft.contactNumber.trim() ||
       draft.template ||
       draft.logoKey ||
+      draft.organizerIds.length > 0 ||
       draft.sessions.some((s) => !s.timesLinked || s.name !== "Entry Session")
   );
 }
@@ -156,10 +160,14 @@ export type DraftErrors = Record<string, string>;
 export interface DraftValidationOptions {
   // True when the chosen category offers subcategories
   subcategoryRequired?: boolean;
+  isAdmin?: boolean;
 }
 
 export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
   const errors: DraftErrors = {};
+  if (options.isAdmin && (!draft.organizerIds || draft.organizerIds.length === 0)) {
+    errors.organizerIds = "Select at least one organizer for the event.";
+  }
   if (!draft.title.trim()) errors.title = "Title is required.";
   else if (draft.title.trim().length > 100) errors.title = "Title cannot exceed 100 characters.";
   if (!draft.description.trim()) errors.description = "Description is required.";
@@ -222,6 +230,9 @@ function commonPayload(draft: EventDraft) {
   return {
     title: draft.title.trim(),
     description: draft.description.trim() || draft.title.trim(),
+    ...(draft.organizerIds && draft.organizerIds.length > 0
+      ? { organizerIds: draft.organizerIds, organizerId: draft.organizerIds[0] }
+      : {}),
     ...(draft.categoryId ? { categoryId: draft.categoryId } : {}),
     ...(draft.subcategoryId ? { subcategoryId: draft.subcategoryId } : {}),
     ...(draft.contactNumber.trim() ? { contactNumber: draft.contactNumber.trim() } : {}),

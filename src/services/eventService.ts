@@ -86,6 +86,8 @@ interface EventRequestBase {
 
 export interface CreateEventRequest extends EventRequestBase {
   format?: "PHYSICAL" | "VIRTUAL";
+  organizerId?: string;
+  organizerIds?: string[];
 }
 
 export type UpdateEventRequest = Partial<EventRequestBase> & {
