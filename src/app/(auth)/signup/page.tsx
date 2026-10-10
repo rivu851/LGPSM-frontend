@@ -57,6 +57,12 @@ export default function SignupPage() {
         ...(phone.trim() ? { phone: phone.trim() } : {}),
       });
       if (res.success) {
+        if (res.data?.pendingVerification || res.data?.email) {
+          sessionStorage.setItem("lgpsm_pending_verification_email", res.data?.email || email.trim());
+          setSuccessMessage("Account created! Please check your email for the verification code.");
+          router.push("/verify-email");
+          return;
+        }
         sessionStorage.setItem("show_dashboard_popup", "true");
         setSuccessMessage("Account created successfully! Redirecting...");
         router.push("/dashboard");

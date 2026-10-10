@@ -91,14 +91,22 @@ function SigninContent() {
     }
   };
 
+  const isVerifiedParam = searchParams.get("verified") === "true";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
     setIsSubmitting(true);
     try {
       const res = await login({ email, password, role: portalRole(mode) });
-      if (res.success) onSuccess();
-      else setErrorMessage(res.message || ERROR_MESSAGES.auth.invalidCredentials);
+      if (res.success) {
+        onSuccess();
+      } else if (res.message === "EMAIL_NOT_VERIFIED" || res.message?.includes("EMAIL_NOT_VERIFIED")) {
+        sessionStorage.setItem("lgpsm_pending_verification_email", email.trim());
+        router.push("/verify-email");
+      } else {
+        setErrorMessage(res.message || ERROR_MESSAGES.auth.invalidCredentials);
+      }
     } catch {
       setErrorMessage(ERROR_MESSAGES.network.genericFailure);
     } finally {
@@ -210,6 +218,7 @@ function SigninContent() {
       {mode === "organizer" && (
         <>
           <AuthHeading title="Organizer Sign In" subtitle="Welcome back! Login to Organizer Portal" />
+          {isVerifiedParam && <AuthAlert tone="success">Email verified successfully! Please sign in to access your dashboard.</AuthAlert>}
           {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
           <GoogleButton onToken={handleGoogle} disabled={isSubmitting} />
           <OrDivider />

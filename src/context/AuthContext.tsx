@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserData, tokenStorage } from "@/services/tokenStorage";
-import { authService, LoginPayload, RegisterPayload } from "@/services/authService";
+import { authService, LoginPayload, RegisterPayload, AuthResponseData } from "@/services/authService";
 import { userService, UpdateProfilePayload } from "@/services/userService";
 import { ApiResponse } from "@/services/apiClient";
 import { rememberPortal } from "@/components/auth/authPortal";
@@ -11,9 +11,9 @@ interface AuthContextType {
   user: UserData | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginPayload) => Promise<ApiResponse>;
-  loginWithGoogle: (idToken: string) => Promise<ApiResponse>;
-  register: (payload: RegisterPayload) => Promise<ApiResponse>;
+  login: (credentials: LoginPayload) => Promise<ApiResponse<AuthResponseData>>;
+  loginWithGoogle: (idToken: string) => Promise<ApiResponse<AuthResponseData>>;
+  register: (payload: RegisterPayload) => Promise<ApiResponse<AuthResponseData>>;
   logout: () => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<ApiResponse>;
   refreshUser: () => Promise<void>;
@@ -22,13 +22,11 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<UserData | null>(() => tokenStorage.getUser());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshUser = async () => {
-    const storedUser = tokenStorage.getUser();
-    if (storedUser) setUser(storedUser);
-
+    await Promise.resolve();
     const token = tokenStorage.getAccessToken();
     if (!token) {
       setIsLoading(false);
@@ -50,7 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    refreshUser();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void refreshUser();
   }, []);
 
   // A page restored from the back/forward cache (e.g. Back after logout) or a logout in another tab
@@ -70,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = async (credentials: LoginPayload): Promise<ApiResponse> => {
+  const login = async (credentials: LoginPayload): Promise<ApiResponse<AuthResponseData>> => {
     const res = await authService.login(credentials);
     if (res.success && res.data?.user) {
       setUser(res.data.user);
@@ -79,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
-  const loginWithGoogle = async (idToken: string): Promise<ApiResponse> => {
+  const loginWithGoogle = async (idToken: string): Promise<ApiResponse<AuthResponseData>> => {
     const res = await authService.googleLogin(idToken);
     if (res.success && res.data?.user) {
       setUser(res.data.user);
@@ -88,9 +87,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
-  const register = async (payload: RegisterPayload): Promise<ApiResponse> => {
+  const register = async (payload: RegisterPayload): Promise<ApiResponse<AuthResponseData>> => {
     const res = await authService.register(payload);
     if (!res.success) return res;
+
+    // If the account requires email verification, do not attempt automatic login
+    if (res.data?.pendingVerification) {
+      return res;
+    }
 
     // Registration returns only the created user; sign in to obtain a real session
     const loginRes = await login({ email: payload.email, password: payload.password, role: payload.role });

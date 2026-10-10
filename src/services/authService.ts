@@ -16,9 +16,11 @@ export interface LoginPayload {
 }
 
 export interface AuthResponseData {
-  user: UserData;
+  user?: UserData;
   accessToken?: string;
   refreshToken?: string;
+  pendingVerification?: boolean;
+  email?: string;
 }
 
 export const authService = {
@@ -36,6 +38,20 @@ export const authService = {
     }
 
     return response;
+  },
+
+  async verifyEmail(email: string, code: string): Promise<ApiResponse<{ verified: boolean }>> {
+    return apiClient<{ verified: boolean }>("/api/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    });
+  },
+
+  async resendVerificationCode(email: string): Promise<ApiResponse<{ sent: boolean }>> {
+    return apiClient<{ sent: boolean }>("/api/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
   },
 
   async login(payload: LoginPayload): Promise<ApiResponse<AuthResponseData>> {
