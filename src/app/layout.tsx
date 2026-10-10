@@ -30,9 +30,13 @@ export const metadata: Metadata = {
   description:
     "LGPSM - Design, customize, and share stunning QR-based invitations for events and celebrations all in one simple platform.",
   icons: {
-    icon: "/images/branding/Logo.png",
-    shortcut: "/images/branding/Logo.png",
-    apple: "/images/branding/Logo.png",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
 };
 
