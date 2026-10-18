@@ -30,6 +30,6 @@
     "eslint-config-next": "16.4.2",
     "sass": "^1.104.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^6"
   }
 }
