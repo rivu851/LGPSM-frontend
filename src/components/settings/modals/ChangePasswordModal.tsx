@@ -50,7 +50,7 @@ export default function ChangePasswordModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-overlay">
-      <div className="w-full max-w-[488px] bg-white rounded-lg shadow-xl overflow-hidden animate-modal">
+      <div className="w-full max-w-[488px] bg-white rounded-lg shadow-xl overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 className="text-base font-medium text-[#15191C]">Change Password</h3>

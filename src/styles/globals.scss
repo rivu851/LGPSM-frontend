@@ -394,3 +394,32 @@ html {
   .brand-loader-ring { animation-duration: 3s; }
   .brand-loader-mark { animation: none; }
 }
+
+// Orange checkbox with a white tick. A native checkbox takes its tick colour from the browser, which picks black on orange, so this
+// one is drawn here: orange box, white tick (used by every orange checkbox in the app).
+input[type="checkbox"].check-orange {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  background-color: #fff;
+  border: 1.5px solid #9ca3af;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+
+  &:not(:disabled):hover { border-color: #ff651d; }
+  &:checked {
+    background-color: #ff651d;
+    border-color: #ff651d;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 82% 82%;
+  }
+  &:focus-visible { outline: 2px solid #ff651d; outline-offset: 2px; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

@@ -20,6 +20,13 @@ const ROLE_STYLE: Record<WebRole, { itemPad: string; childRow: string; childList
   ORGANIZER: { itemPad: "px-4", childRow: "h-[60px]", childList: "", highlightGroup: false },
 };
 
+// Clicking the link of the page you are already on does nothing (it used to re-request the whole page for no change)
+const isCurrentPage = (href: string) => typeof window !== "undefined" && window.location.pathname + window.location.search === href;
+const onLinkClick = (href: string, onNavigate: () => void) => (e: React.MouseEvent) => {
+  if (isCurrentPage(href)) e.preventDefault();
+  onNavigate();
+};
+
 function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; role: WebRole; activeItem: string; onNavigate: () => void }) {
   const children = entry.children || [];
   const groupActive = children.some((c) => c.key === activeItem);
@@ -56,7 +63,7 @@ function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; ro
               <li key={c.key}>
                 <Link
                   href={c.href}
-                  onClick={onNavigate}
+                  onClick={onLinkClick(c.href, onNavigate)}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center ${style.childRow} pl-2.5 border-l-[1.5px] text-sm font-medium transition-colors ${
                     active ? "border-[#FF651D] text-[#FF651D]" : "border-[#2C3135] text-white hover:text-[#FFB08A]"
@@ -84,7 +91,7 @@ function NavList({ role, activeItem, onNavigate }: { role: WebRole; activeItem: 
           <Link
             key={entry.key}
             href={entry.href!}
-            onClick={onNavigate}
+            onClick={onLinkClick(entry.href!, onNavigate)}
             aria-current={activeItem === entry.key ? "page" : undefined}
             className={`flex items-center gap-2 py-2 ${itemPad} text-base font-medium transition-colors ${
               activeItem === entry.key ? "text-[#FF651D]" : "text-[#DEE2E5] hover:text-white"
@@ -103,7 +110,7 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
   return (
     <Link
       href="/events/add"
-      onClick={onNavigate}
+      onClick={onLinkClick("/events/add", onNavigate)}
       className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-base font-semibold text-white transition-colors ${
         active ? "bg-[#FF651D] hover:bg-[#E5520F]" : "bg-[#262A2D] hover:bg-[#30353A]"
       }`}

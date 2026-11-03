@@ -190,7 +190,7 @@ function SigninContent() {
                 forgetRememberedEmail(localStorage, mode);
               }
             }}
-            className="w-4 h-4 rounded border-[#CFD9E0] accent-[#FF651D] cursor-pointer"
+            className="w-4 h-4 rounded border-[#CFD9E0] cursor-pointer check-orange"
           />
           Remember me
         </label>

@@ -46,7 +46,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="pass-action-title">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-[490px] overflow-hidden">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-[490px] overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E5E5E5]">
           <h2 id="pass-action-title" className="text-base font-medium text-[#15191C]">{revoke ? "Revoke Access Pass" : "Replace Access Pass"}</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="text-[#15191C] cursor-pointer">✕</button>
@@ -62,7 +62,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
               <p>This pass was revoked for <strong className="font-medium">{reasonLabel(invitee.credentialRevocation?.category)}</strong>, which needs a review before a new pass is issued.</p>
               <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 accent-[#FF651D]" />
+                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-orange" />
                 <span>I have reviewed why this pass was revoked and the guest may have a new one.</span>
               </label>
             </div>

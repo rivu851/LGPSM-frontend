@@ -103,7 +103,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitees Lis
           </div>
           <div>
             <span className="block text-sm font-medium text-gray-900 mb-1.5">Uploaded list</span>
-            <CustomDropdown value={setId ?? ""} onChange={(v) => { setSetId(v); setPage(1); }} placeholder="Loading lists…" emptyMessage="No lists yet" options={options} ariaLabel="Choose which uploaded list to preview" />
+            <CustomDropdown portal value={setId ?? ""} onChange={(v) => { setSetId(v); setPage(1); }} placeholder="Loading lists…" emptyMessage="No lists yet" options={options} ariaLabel="Choose which uploaded list to preview" />
           </div>
         </div>
 

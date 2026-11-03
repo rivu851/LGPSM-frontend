@@ -28,6 +28,7 @@ import { InviteeSheetRow, missingColumnsMessage, parseInviteeSheet, rowsToSheetF
 import SampleReminderModal from "@/components/invitees/SampleReminderModal";
 import { acknowledgeSampleReminder, sampleReminderAcknowledged } from "@/utils/sampleReminder";
 import ImportModeDialog from "@/components/invitees/ImportModeDialog";
+import { ownListSessions, sessionPickOptionsFor, listIdFor } from "@/utils/sessionPick";
 import InviteeListsModal from "@/components/invitees/InviteeListsModal";
 import { canManageInviteeLists, previewDiscrepancy } from "@/utils/inviteeLists";
 import { excelColumnsFor, expectedColumnsFor, headerFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
@@ -197,15 +198,19 @@ export default function InviteesManagementPage() {
     });
   }, []);
 
+  // The skeleton is for the first load of an event; a refresh after an action keeps the rows on screen and swaps the data in
+  const loadedFor = useRef<string | null>(null);
   const load = useCallback(async () => {
     if (!eventId) return;
-    setLoading(true);
+    if (loadedFor.current !== eventId) setLoading(true);
     setLoadError(null);
-    const [evtRes, sessRes, invRes, histRes] = await Promise.all([
+    // The delivery history only adds retry buttons and failure reasons: it is requested together with the rest, but the guest list
+    // is shown as soon as the guests themselves arrive instead of waiting for it.
+    const historyRequest = invitationService.getInvitations(eventId);
+    const [evtRes, sessRes, invRes] = await Promise.all([
       eventService.getEvent(eventId),
       sessionService.getSessions(eventId),
       inviteeService.getInvitees(eventId),
-      invitationService.getInvitations(eventId),
     ]);
     if (!evtRes.success || !evtRes.data) {
       setLoadError(evtRes.message || "Event not found or you do not have access to it.");
@@ -216,10 +221,14 @@ export default function InviteesManagementPage() {
     setSessions(sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : []);
     if (invRes.success && Array.isArray(invRes.data)) setInvitees(invRes.data as unknown as Invitee[]);
     else setLoadError(invRes.message || "Failed to load invitees.");
-    const h = histRes.success && histRes.data ? (Array.isArray(histRes.data) ? histRes.data : (histRes.data as { invitations?: InvitationData[] }).invitations || []) : [];
-    setHistory(h);
     setSelectedIds((prev) => prev.filter((id) => (invRes.data as unknown as Invitee[] | undefined)?.some((i) => i._id === id)));
+    loadedFor.current = eventId;
     setLoading(false);
+    void historyRequest.then((histRes) => {
+      if (loadedFor.current !== eventId) return; // another event was opened meanwhile
+      const h = histRes.success && histRes.data ? (Array.isArray(histRes.data) ? histRes.data : (histRes.data as { invitations?: InvitationData[] }).invitations || []) : [];
+      setHistory(h);
+    });
   }, [eventId]);
 
   useEffect(() => {
@@ -263,9 +272,11 @@ export default function InviteesManagementPage() {
   }
   const selected = invitees.filter((i) => selectedIds.includes(i._id));
   const resendTargets = selected.map((i) => historyByInvitee.get(i._id)).filter((h): h is InvitationData => !!h?._id);
-  const ownListSessions = sessions.filter((s) => s.inviteeSource !== "COPY_SESSION");
+  const ownLists = ownListSessions(sessions);
   // the choice of session is only needed when more than one session has its own invitee list
-  const sessionPickOptions = ownListSessions.length > 1 ? ownListSessions.map((s) => ({ id: String(s._id), name: s.name })) : [];
+  const sessionPickOptions = sessionPickOptionsFor(sessions);
+  // The server wants the session that owns the guest list; a session that shares another's list resolves to that owner
+  const targetListId = listIdFor(sessionPickOptions, targetSessionId);
 
   const filterSession = sessions.find((s) => s._id === sessionFilter);
   const term = search.trim().toLowerCase();
@@ -367,7 +378,7 @@ export default function InviteesManagementPage() {
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
     try {
-      const parsed = await parseInviteeSheet(file, ownListSessions.map((session) => session.name), expectedColumnsFor(fieldConfig));
+      const parsed = await parseInviteeSheet(file, ownLists.map((session) => session.name), expectedColumnsFor(fieldConfig));
       if (parsed.missingColumns.length > 0) {
         setFeedback({ type: "error", message: missingColumnsMessage(parsed.missingColumns) });
         return;
@@ -399,10 +410,10 @@ export default function InviteesManagementPage() {
     setImportChoice((cur) => (cur ? { ...cur, sentSets: sets?.success && sets.data ? sets.data.sets.filter((x) => x.locked).length : 0 } : cur));
     // what each choice would do, from the server (writes nothing); the real import checks everything again
     try {
-      const file = rowsToSheetFile(rows, upload.file.name, ownListSessions.map((session) => session.name));
+      const file = rowsToSheetFile(rows, upload.file.name, ownLists.map((session) => session.name));
       const [rep, app] = await Promise.all([
-        inviteeService.importExcel(eventId, file, targetSessionId || undefined, "REPLACE", { dryRun: true }),
-        inviteeService.importExcel(eventId, file, targetSessionId || undefined, "APPEND", { dryRun: true }),
+        inviteeService.importExcel(eventId, file, targetListId || undefined, "REPLACE", { dryRun: true }),
+        inviteeService.importExcel(eventId, file, targetListId || undefined, "APPEND", { dryRun: true }),
       ]);
       setImportChoice((cur) => (cur ? { ...cur, previews: rep.success && app.success && rep.data?.preview && app.data?.preview ? { replace: rep.data.preview, append: app.data.preview } : null, previewError: rep.success && app.success ? null : "The preview is not available right now; the import will still check everything before changing anything." } : cur));
     } catch {
@@ -417,7 +428,7 @@ export default function InviteesManagementPage() {
     setFeedback(null);
     let res: Awaited<ReturnType<typeof inviteeService.importExcel>>;
     try {
-      res = await inviteeService.importExcel(eventId, rowsToSheetFile(rows, fileName, ownListSessions.map((session) => session.name)), targetSessionId || undefined, mode);
+      res = await inviteeService.importExcel(eventId, rowsToSheetFile(rows, fileName, ownLists.map((session) => session.name)), targetListId || undefined, mode);
     } catch {
       setFeedback({ type: "error", message: "The import request could not reach the server. Existing invitees are unchanged; please retry." });
       return;
@@ -601,7 +612,7 @@ export default function InviteesManagementPage() {
                 )}
                 <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={[{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
-                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
+                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -698,7 +709,7 @@ export default function InviteesManagementPage() {
                     aria-label="Select all visible invitees"
                     checked={allVisibleSelected}
                     onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
-                    className="size-4 accent-[#FF651D] cursor-pointer"
+                    className="size-4 cursor-pointer check-orange"
                   />
                   Select All
                 </label>
@@ -710,7 +721,7 @@ export default function InviteesManagementPage() {
               </div>
             )}
 
-            {filterSession && selectedIds.length > 0 && ownListSessions.some((s) => s._id === filterSession._id) && (
+            {filterSession && selectedIds.length > 0 && ownLists.some((s) => s._id === filterSession._id) && (
               <button type="button" onClick={handleGrantAccess} disabled={busy !== null} className={`${btn} bg-[#262A2D] text-white hover:bg-black`}>
                 Give selected access to {filterSession.name}
               </button>
@@ -725,7 +736,7 @@ export default function InviteesManagementPage() {
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
                 <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
-                <button type="button" onClick={() => setShowChooser(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer">Add Invitees</button>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -760,7 +771,7 @@ export default function InviteesManagementPage() {
                               aria-label={`Select ${i.name}`}
                               checked={selectedIds.includes(i._id)}
                               onChange={() => setSelectedIds((p) => (p.includes(i._id) ? p.filter((x) => x !== i._id) : [...p, i._id]))}
-                              className="size-4 accent-[#FF651D] cursor-pointer"
+                              className="size-4 cursor-pointer check-orange"
                             />
                           </td>
                           <td className="py-3 px-2.5 whitespace-nowrap">{i.name}</td>

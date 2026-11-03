@@ -133,7 +133,7 @@ export default function BillingPage() {
             checked={allSelected}
             disabled={rows.length === 0}
             onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))}
-            className="size-4 rounded-sm border-gray-300 accent-[#FF651D] cursor-pointer disabled:cursor-not-allowed"
+            className="size-4 rounded-sm border-gray-300 cursor-pointer disabled:cursor-not-allowed check-orange"
           />
           <label htmlFor="billing-select-all" className={rows.length === 0 ? "" : "cursor-pointer"}>Select All</label>
         </div>
@@ -172,7 +172,7 @@ export default function BillingPage() {
                         aria-label={`Select invoice ${r.invoiceId}`}
                         checked={selected.includes(r.id)}
                         onChange={() => setSelected((s) => (s.includes(r.id) ? s.filter((x) => x !== r.id) : [...s, r.id]))}
-                        className="size-4 rounded-sm border-gray-300 accent-[#FF651D] cursor-pointer"
+                        className="size-4 rounded-sm border-gray-300 cursor-pointer check-orange"
                       />
                     </td>
                     <td className="px-4">{r.invoiceId}</td>
@@ -201,7 +201,7 @@ export default function BillingPage() {
 
       {statementOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="statement-title">
-          <div className="bg-white border border-[#E5E5E5] rounded-lg w-full max-w-[488px] overflow-hidden">
+          <div className="bg-white border border-[#E5E5E5] rounded-lg w-full max-w-[488px] overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#E5E5E5]">
               <h2 id="statement-title" className="text-base font-medium text-[#15191C]">Download Statement</h2>
               <button type="button" onClick={() => setStatementOpen(false)} aria-label="Close" className="text-[#15191C] cursor-pointer"><Icon name="billing/close" width={16} height={16} /></button>

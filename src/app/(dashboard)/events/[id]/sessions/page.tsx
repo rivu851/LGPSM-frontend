@@ -44,14 +44,15 @@ export default function EventSessionsPage() {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [activeDateField, setActiveDateField] = useState<"start" | "end">("start");
 
+  // The skeleton is for the first load of an event; a refresh after adding or deleting a session keeps the rows on screen
+  const loadedFor = useRef<string | null>(null);
   const fetchSessions = async () => {
     if (!eventId) return;
-    setIsLoading(true);
+    if (loadedFor.current !== eventId) setIsLoading(true);
     setLoadError(null);
     try {
-      const [res, reportRes, assignRes] = await Promise.all([
+      const [res, assignRes] = await Promise.all([
         sessionService.getSessions(eventId),
-        reportService.getEventReport(eventId),
         assignmentService.getEventAssignments(eventId),
       ]);
       // "System Users" column (Figma 217:22014): staff assigned to each session
@@ -62,10 +63,14 @@ export default function EventSessionsPage() {
         const key = String(typeof sid === "object" ? sid._id : sid);
         staffBySession.set(key, (staffBySession.get(key) ?? 0) + 1);
       }));
-      // Invited counts per session come from the event report (sessionAccess-aware)
-      const invitedBySession = new Map<string, number>(
-        (reportRes.success && reportRes.data ? reportRes.data.sessionReports : []).map((r) => [String(r.sessionId), r.invitedCount ?? 0])
-      );
+      // Invited counts per session come from the event report (sessionAccess-aware). That report is the slowest call here, so the
+      // table shows at once with a placeholder in that column and the counts fill in when the report arrives.
+      void reportService.getEventReport(eventId).then((reportRes) => {
+        const invitedBySession = new Map<string, number>(
+          (reportRes.success && reportRes.data ? reportRes.data.sessionReports : []).map((r) => [String(r.sessionId), r.invitedCount ?? 0])
+        );
+        setSessions((rows) => rows.map((row) => ({ ...row, invitesCount: invitedBySession.get(String(row._id)) ?? 0 })));
+      });
       if (res?.success && Array.isArray(res.data)) {
         const mapped = res.data.map((s: any, idx: number) => {
           const id = s._id || s.id;
@@ -81,11 +86,12 @@ export default function EventSessionsPage() {
             endTime: endVal ? (sameDay(startVal, endVal) ? formatTime(endVal) : formatCompactDateTime(endVal)) : "",
             accessControl: ACCESS_LABELS[s.accessControl] || "No Restrictions",
             systemUsers: assignRes.success ? staffBySession.get(String(id)) ?? 0 : null,
-            invitesCount: invitedBySession.get(String(id)) ?? 0,
+            invitesCount: null as number | null,
             validateAgainstOtherSessions: s.validateAgainstOtherSessions || false,
           };
         });
         setSessions(mapped);
+        loadedFor.current = eventId;
       } else {
         setSessions([]);
         setLoadError(res?.message || "Failed to load sessions.");
@@ -313,7 +319,7 @@ export default function EventSessionsPage() {
                         {sess.startTime} {sess.endTime ? `to ${sess.endTime}` : ''}
                       </td>
                       <td className="h-[46px] p-2.5">
-                        {sess.invitesCount ?? sess.totalInvitees ?? sess.maxAttendees ?? 0}
+                        {sess.invitesCount === null ? <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" /> : sess.invitesCount ?? sess.totalInvitees ?? sess.maxAttendees ?? 0}
                       </td>
                       <td className="h-[46px] p-2.5">{sess.systemUsers === null || sess.systemUsers === undefined ? "—" : String(sess.systemUsers).padStart(2, "0")}</td>
                       <td className="h-[46px] p-2.5">{sess.accessControl || "No Restriction"}</td>

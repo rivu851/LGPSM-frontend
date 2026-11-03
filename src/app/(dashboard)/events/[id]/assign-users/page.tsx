@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -48,25 +48,35 @@ export default function EventAssignUsersPage() {
   // null = all sessions of this event
   const [sessionScope, setSessionScope] = useState<string[] | null>(null);
   // staff who are already on another of this organizer's events running at the same time, by user id
-  const [overlaps, setOverlaps] = useState<Record<string, { eventId: string; title: string; start: string; end: string }[]>>({});
+  // Every assignment each person holds on the organizer's OTHER events, with whether it overlaps this event in time. The count,
+  // the expanded list and the "already on … at the same time" note all come from this one source, so they cannot disagree.
+  const [elsewhere, setElsewhere] = useState<Record<string, { eventId: string; title: string; start: string; end: string; sessionIds: string[]; overlaps: boolean }[]>>({});
   const [submittingAssign, setSubmittingAssign] = useState(false);
 
+  // The skeleton is for the first load of an event; a refresh after an assign/unassign keeps the rows on screen
+  const loadedFor = useRef<string | null>(null);
+  // the overlap lookup that is still running (a submit waits for it, so a warning is never skipped) and its latest result
+  const overlapsPending = useRef<Promise<unknown> | null>(null);
+  const overlapsLatest = useRef<typeof elsewhere>({});
   const fetchAssignmentsAndSessions = async () => {
     try {
-      setIsLoading(true);
+      if (loadedFor.current !== eventId) setIsLoading(true);
       setErrorFeedback(null);
 
       // These resources are independent; load them together instead of serializing four network round trips.
-      const [sessionsRes, eventRes, usersRes, assignRes, overlapRes] = await Promise.all([
+      const [sessionsRes, eventRes, usersRes, assignRes] = await Promise.all([
         sessionService.getSessions(eventId),
         eventService.getEvent(eventId),
         userService.getUsers("SYSTEM_USER"),
         assignmentService.getAssignmentsByEvent(eventId),
-        assignmentService.getOverlaps(eventId).catch(() => null),
       ]);
-      const overlapMap: typeof overlaps = {};
-      (overlapRes && overlapRes.success && Array.isArray(overlapRes.data) ? overlapRes.data : []).forEach((o) => { (overlapMap[o.userId] ||= []).push(o); });
-      setOverlaps(overlapMap);
+      // The overlap warnings are advisory and need several lookups on the server: they appear when ready, the list does not wait for them
+      overlapsPending.current = assignmentService.getOverlaps(eventId, true).catch(() => null).then((overlapRes) => {
+        const overlapMap: typeof elsewhere = {};
+        (overlapRes && overlapRes.success && Array.isArray(overlapRes.data) ? overlapRes.data : []).forEach((o) => { (overlapMap[o.userId] ||= []).push(o); });
+        overlapsLatest.current = overlapMap;
+        setElsewhere(overlapMap);
+      });
       const sessionList = Array.isArray(sessionsRes?.data) ? sessionsRes.data : [];
       setSessions(sessionList);
       if (eventRes.success && eventRes.data) setEventTitle(eventRes.data.title || "");
@@ -122,6 +132,7 @@ export default function EventAssignUsersPage() {
       }));
 
       setUsers(formattedUserRows);
+      loadedFor.current = eventId;
     } catch (err: any) {
       console.error("Error fetching event system user assignments:", err);
       setErrorFeedback(err.message || "Failed to load system user assignments.");
@@ -223,7 +234,8 @@ export default function EventAssignUsersPage() {
     }
 
     // Putting someone on two events that run at the same time is allowed, but never by accident
-    const clashes = selectedUserIds.flatMap((id) => (overlaps[id] || []).map((o) => `${users.find((x) => x.id === id)?.name || "A user"}: "${o.title}" (${formatDateTime(o.start)} – ${formatDateTime(o.end)})`));
+    await overlapsPending.current;
+    const clashes = selectedUserIds.flatMap((id) => (overlapsLatest.current[id] || []).filter((o) => o.overlaps).map((o) => `${users.find((x) => x.id === id)?.name || "A user"}: "${o.title}" (${formatDateTime(o.start)} – ${formatDateTime(o.end)})`));
     if (clashes.length > 0 && !(await confirm({ title: "Overlapping events", message: `Already assigned to another event at the same time:\n${clashes.join("\n")}\n\nAssign anyway?`, confirmText: "Assign anyway" }))) return;
 
     try {
@@ -351,7 +363,7 @@ export default function EventAssignUsersPage() {
             id="selectAll"
             checked={isAllSelected}
             onChange={handleSelectAll}
-            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer"
+            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
           />
           <label htmlFor="selectAll" className="cursor-pointer">
             Select All ({selectedUserIds.length} selected)
@@ -401,7 +413,12 @@ export default function EventAssignUsersPage() {
                 pageUsers.map((u) => {
                   const isSelected = selectedUserIds.includes(u.id);
                   const isExpanded = expandedUserIds.includes(u.id);
-                  const countText = getAssignedCountText(u.assignments);
+                  const otherEvents = elsewhere[u.id] || [];
+                  // this event's assignment plus every other event the person is on, so the count matches the note below the name
+                  const countText = getAssignedCountText([
+                    ...u.assignments,
+                    ...otherEvents.map((o) => ({ assignmentId: `elsewhere-${o.eventId}`, eventId: o.eventId, eventName: o.title, sessions: o.sessionIds.map((id) => ({ id, name: "" })) })),
+                  ]);
 
                   return (
                     <tr key={u.id} className="hover:bg-gray-50/80 transition-colors align-top">
@@ -410,7 +427,7 @@ export default function EventAssignUsersPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
-                          className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer mt-0.5"
+                          className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer mt-0.5 check-orange"
                         />
                       </td>
 
@@ -419,7 +436,7 @@ export default function EventAssignUsersPage() {
                         <span className="text-[10px] font-mono text-[#FF5B22] bg-[#FF5B22]/10 px-1.5 py-0.5 rounded">
                           SYSTEM_USER
                         </span>
-                        {(overlaps[u.id] || []).map((o) => (
+                        {otherEvents.filter((o) => o.overlaps).map((o) => (
                           <p key={o.eventId} className="mt-1.5 text-[11px] leading-snug font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 max-w-[260px] whitespace-normal break-words">
                             Already on &quot;{o.title}&quot; at the same time ({formatDateTime(o.start)} – {formatDateTime(o.end)})
                           </p>
@@ -490,6 +507,21 @@ export default function EventAssignUsersPage() {
                             ))}
                           </div>
                         )}
+                        {/* The person's assignments on the organizer's other events: read-only here (unassign from that event) */}
+                        {isExpanded && otherEvents.length > 0 && (
+                          <div className="mt-3 space-y-2 max-w-sm text-left">
+                            {otherEvents.map((o) => (
+                              <div key={o.eventId} className="bg-gray-50 border border-gray-200 rounded-md p-3 space-y-1 whitespace-normal">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="text-sm font-medium text-[#15191C] break-words min-w-0">{o.title}</div>
+                                  <span className="shrink-0 text-[10px] font-semibold text-gray-600 bg-white border border-gray-200 rounded px-1.5 py-0.5">Other event</span>
+                                </div>
+                                <div className="text-[11px] text-gray-500">{formatDateTime(o.start)} – {formatDateTime(o.end)}</div>
+                                <div className="text-[11px] font-medium text-gray-700">{o.sessionIds.length === 0 ? "All sessions" : `${o.sessionIds.length} ${o.sessionIds.length === 1 ? "session" : "sessions"}`}{o.overlaps ? " · overlaps this event" : ""}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </td>
 
                       <td className="py-4 px-4 text-gray-600">{u.email}</td>
@@ -544,7 +576,7 @@ export default function EventAssignUsersPage() {
       {/* ── Assign Sessions Modal ── */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-hidden animate-modal">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
               <h3 className="text-base font-medium text-[#15191C]">{allAlreadyOnEvent ? "Change Sessions for Selected System Users" : "Assign Sessions to Selected System Users"}</h3>
               <button
@@ -606,7 +638,7 @@ export default function EventAssignUsersPage() {
       {/* Success Modal */}
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

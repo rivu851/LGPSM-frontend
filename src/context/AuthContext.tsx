@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserData, tokenStorage } from "@/services/tokenStorage";
 import { authService, LoginPayload, RegisterPayload, AuthResponseData } from "@/services/authService";
 import { userService, UpdateProfilePayload } from "@/services/userService";
-import { ApiResponse } from "@/services/apiClient";
+import { ApiResponse, API_BASE_URL } from "@/services/apiClient";
 import { rememberPortal } from "@/components/auth/authPortal";
 
 interface AuthContextType {
@@ -47,8 +47,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // A returning visitor already has a stored session: open the app at once with it and confirm it with the server in the
+    // background, instead of showing a loader for a whole round trip (tens of seconds when the server is asleep). If the
+    // server says otherwise, refreshUser / the 401 handler end the session as before.
     // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (tokenStorage.getAccessToken() && tokenStorage.getUser()) setIsLoading(false);
     void refreshUser();
+  }, []);
+
+  // The API server sleeps when idle and takes a long time to wake. Poke it as soon as the app opens (so it wakes while the
+  // person is still looking at the page) and now and then while the tab is open and visible (so it does not go back to sleep
+  // mid-session). A no-cors fire-and-forget request: nothing is read and nothing can fail loudly.
+  useEffect(() => {
+    const ping = () => {
+      if (document.visibilityState === "hidden") return;
+      fetch(`${API_BASE_URL}/api/health`, { mode: "no-cors", cache: "no-store" }).catch(() => undefined);
+    };
+    ping();
+    const timer = setInterval(ping, 8 * 60 * 1000);
+    return () => clearInterval(timer);
   }, []);
 
   // A page restored from the back/forward cache (e.g. Back after logout) or a logout in another tab

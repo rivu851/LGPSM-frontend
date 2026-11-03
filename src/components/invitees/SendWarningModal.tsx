@@ -26,7 +26,7 @@ export default function SendWarningModal({ eventId, eventTitle, onCancel, onConf
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="send-warning-title">
-      <div className="w-full max-w-[648px] bg-white border border-[#E5E5E5] rounded-lg overflow-hidden">
+      <div className="w-full max-w-[648px] bg-white border border-[#E5E5E5] rounded-lg overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div className="flex items-end gap-5 px-6 py-5 border-b border-[#E0E0E0]">
           <p className="flex-1 min-w-0 text-base font-medium text-[#15191C] break-words">Send Invitations for {eventTitle}</p>
           <button type="button" onClick={onCancel} aria-label="Close" className="shrink-0 cursor-pointer">

@@ -93,7 +93,9 @@ export default function CustomDropdown({
       const below = Math.max(0, window.innerHeight - rect.bottom - 8);
       const above = Math.max(0, rect.top - 8);
       const openAbove = portalPlacement === "top" || (portalPlacement === "auto" && below < Math.min(desiredHeight, 120) && above > below);
-      const maxHeight = Math.max(48, Math.min(desiredHeight, openAbove ? above : below));
+      // a ceiling, not an estimate: options that wrap onto two lines are taller than the 42px assumed above, so the list sizes to its
+      // content up to this height and scrolls beyond it
+      const maxHeight = Math.max(48, Math.min(320, openAbove ? above : below));
       setPortalPosition({
         position: "fixed",
         left: rect.left,
@@ -152,7 +154,7 @@ export default function CustomDropdown({
 
       {isOpen && !disabled && (() => {
         const menu = (
-        <div ref={menuRef} style={portal ? portalPosition || { position: "fixed", visibility: "hidden", zIndex: 10000 } : undefined} className={`${portal ? "fixed" : "absolute top-full mt-1.5 z-50"} bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden animate-dropdown ${plain ? "right-0 w-max min-w-[180px] max-w-[300px]" : portal ? "" : "left-0 right-0"}`}>
+        <div ref={menuRef} style={portal ? portalPosition || { position: "fixed", visibility: "hidden", zIndex: 10000 } : undefined} className={`${portal ? "fixed flex flex-col" : "absolute top-full mt-1.5 z-50"} bg-white border border-gray-200 rounded-md shadow-xl overflow-hidden animate-dropdown ${plain ? "right-0 w-max min-w-[180px] max-w-[300px]" : portal ? "" : "left-0 right-0"}`}>
           {topAction && (
             <button
               type="button"
@@ -168,7 +170,7 @@ export default function CustomDropdown({
               <span>{topAction.label}</span>
             </button>
           )}
-          <div id={listId} role="listbox" className={`${portal ? "h-full" : "max-h-56"} overflow-y-auto py-1`}>
+          <div id={listId} role="listbox" className={`${portal ? "min-h-0" : "max-h-56"} overflow-y-auto pt-1 pb-2`}>
             {options.length === 0 ? (
               <div className="px-3.5 py-3 text-sm text-gray-400 text-center">{emptyMessage}</div>
             ) : (

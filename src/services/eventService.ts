@@ -166,6 +166,16 @@ export const eventService = {
   },
 
   /**
+   * The three totals on an event's tab strip (sessions, invitees, assigned staff) in one request.
+   * GET /api/v1/events/:eventId/counts
+   */
+  async getEventCounts(eventId: string): Promise<ApiResponse<{ sessions: number; invitees: number; assignments: number }>> {
+    return apiClient<{ sessions: number; invitees: number; assignments: number }>(`/api/v1/events/${eventId}/counts`, {
+      method: "GET",
+    }, true);
+  },
+
+  /**
    * Update an existing event
    * PATCH /api/v1/events/:eventId
    */

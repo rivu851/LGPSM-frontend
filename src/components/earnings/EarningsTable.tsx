@@ -148,7 +148,7 @@ export default function EarningsTable({
             id="selectAllEarnings"
             checked={selectedIds.length === records.length && records.length > 0}
             onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer"
+            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
           />
           <label htmlFor="selectAllEarnings" className="cursor-pointer">
             Select All
@@ -196,7 +196,7 @@ export default function EarningsTable({
                     type="checkbox"
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
-                    className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer"
+                    className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
                   />
                 </td>
                 <td className="py-4 px-4 font-semibold text-gray-900">

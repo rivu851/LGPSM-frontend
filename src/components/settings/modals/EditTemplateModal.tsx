@@ -82,7 +82,7 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
               <span className="block text-sm font-medium text-gray-900 mb-1.5">
                 Invitation Card Design<span className="text-[#FF651D] ml-0.5">*</span>
               </span>
-              <CustomDropdown ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
+              <CustomDropdown portal ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
               <p className="mt-1 text-xs text-[#828282]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image above.</p>
             </div>
             )}

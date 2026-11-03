@@ -17,7 +17,7 @@ export default function SampleReminderModal({ columns, onDownload, onContinue, o
   const overlayClose = useOverlayClose(onCancel);
   return (
     <div className="fixed inset-0 z-[65] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="sample-reminder-title" {...overlayClose}>
-      <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <h2 id="sample-reminder-title" className="text-lg font-semibold text-[#15191C]">Use this event&apos;s Excel sample</h2>
         <p className="text-sm text-[#4B4F52]">
           The columns depend on this event&apos;s settings, so the file must use exactly these headings. Download the sample, fill it in, then upload it. A file with different columns will be refused.

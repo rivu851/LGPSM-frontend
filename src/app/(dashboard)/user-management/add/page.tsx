@@ -234,7 +234,7 @@ function AddUserContent() {
       {/* Add User Modal (Image 2) */}
       {isAddUserModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-hidden animate-modal">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
               <h3 className="text-base font-medium text-[#15191C]">Add User</h3>

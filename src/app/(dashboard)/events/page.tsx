@@ -248,12 +248,14 @@ export default function EventListingPage() {
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<EventRow | null>(null);
 
+  // The skeleton is for the first load; a refresh after cancelling or editing an event keeps the list on screen
+  const loadedOnce = useRef(false);
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!loadedOnce.current) setLoading(true);
     setLoadError(null);
     const res = await eventService.getEvents();
     const list = Array.isArray(res.data) ? (res.data as unknown as RawEvent[]) : [];
-    if (res.success) setRows(list.map(toRow));
+    if (res.success) { setRows(list.map(toRow)); loadedOnce.current = true; }
     else setLoadError(res.message || "Failed to load events.");
     setLoading(false);
   }, []);
@@ -356,7 +358,7 @@ export default function EventListingPage() {
   const filterDrawer = filterOpen && (
           <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="filter-title">
             <div className="absolute inset-0 bg-black/40" onClick={() => setFilterOpen(false)} />
-            <div className="relative w-full max-w-[279px] bg-white h-full px-6 pt-[19.5px] pb-6 flex flex-col">
+            <div className="relative w-full max-w-[279px] bg-white h-full px-6 pt-[19.5px] pb-6 flex flex-col overflow-y-auto">
               <div className="flex items-center justify-between">
                 <h2 id="filter-title" className="flex items-center gap-2 text-base font-medium text-[#15191C]">
                   <Icon name="events/filter-dark" width={20} height={20} />

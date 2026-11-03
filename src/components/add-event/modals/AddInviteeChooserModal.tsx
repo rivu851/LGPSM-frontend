@@ -53,7 +53,7 @@ export default function AddInviteeChooserModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-lg border border-gray-200 shadow-2xl w-full max-w-sm overflow-hidden"
+        className="bg-white rounded-lg border border-gray-200 shadow-2xl w-full max-w-sm overflow-y-auto max-h-[calc(100dvh-2rem)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-invitee-chooser-title"

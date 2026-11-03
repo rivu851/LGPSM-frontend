@@ -2,7 +2,7 @@
 
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import PageHeader from "@/components/common/PageHeader";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/userService";
@@ -48,9 +48,11 @@ export default function AllUsersPage() {
   const [submittingAssign, setSubmittingAssign] = useState(false);
   const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
 
+  // The skeleton is for the first load; a refresh after assigning, adding or removing keeps the rows on screen
+  const loadedOnce = useRef(false);
   const fetchUsersAndAssignments = async () => {
     try {
-      setIsLoading(true);
+      if (!loadedOnce.current) setIsLoading(true);
       setErrorFeedback(null);
 
       // 1. Fetch system users only (role === SYSTEM_USER)
@@ -129,6 +131,7 @@ export default function AllUsersPage() {
       }));
 
       setUsers(formattedUserRows);
+      loadedOnce.current = true;
     } catch (err: any) {
       console.error("Error loading system users:", err);
       setErrorFeedback(err.message || "Failed to load system users.");
@@ -545,7 +548,7 @@ export default function AllUsersPage() {
       {/* ── Edit User Modal ── */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-hidden animate-modal">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
               <h3 className="text-base font-medium text-[#15191C]">Edit System User</h3>
               <button
@@ -620,7 +623,7 @@ export default function AllUsersPage() {
       {/* ── Assign User Modal ── */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-hidden animate-modal">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
               <h3 className="text-base font-medium text-[#15191C]">Assign System User</h3>
               <button
@@ -643,7 +646,7 @@ export default function AllUsersPage() {
                 <label className="text-sm font-medium text-[#15191C]">
                   Event<span className="text-[#FF5B22]">*</span>
                 </label>
-                <CustomDropdown
+                <CustomDropdown portal
                   value={selectedEventId}
                   onChange={(v) => { setSelectedEventId(v); setSessionScope(null); }}
                   options={assignableEvents(eventsList).map((evt) => ({ value: evt.id, label: evt.name }))}
@@ -687,7 +690,7 @@ export default function AllUsersPage() {
       {/* Success Modal */}
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />

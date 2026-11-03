@@ -18,7 +18,7 @@ interface AddInviteeManualModalProps {
   /** The title of a second custom detail, when both card lines carry one */
   identity2Label?: string;
   /** Sessions that keep their own invitee list (offered only when there is more than one) */
-  sessionOptions?: { id: string; name: string }[];
+  sessionOptions?: { id: string; name: string; /** the session that owns the guest list (what is saved); defaults to `id` */ listId?: string }[];
   sessionId?: string;
   onSessionChange?: (id: string) => void;
   onClose: () => void;
@@ -130,7 +130,7 @@ export default function AddInviteeManualModal({
         ? identityValue.trim() && { professionalIdentity: identityValue.trim() }
         : identityType && identityValue.trim() && { professionalIdentity: `${identityType}: ${identityValue.trim()}` }),
       ...(identity2Value.trim() && { secondaryIdentity: identity2Value.trim() }),
-      ...(sessionId && { sessionAccess: [{ sessionId, allowed: true }] }),
+      ...(sessionId && { sessionAccess: [{ sessionId: sessionOptions.find((o) => o.id === sessionId)?.listId ?? sessionId, allowed: true }] }),
     };
 
     setSubmitting(true);

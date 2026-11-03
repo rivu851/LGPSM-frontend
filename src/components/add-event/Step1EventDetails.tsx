@@ -221,7 +221,7 @@ function OrganizerSelectField({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {}}
-                        className="w-4 h-4 rounded border-gray-300 accent-[#FF651D] cursor-pointer"
+                        className="w-4 h-4 rounded border-gray-300 cursor-pointer check-orange"
                       />
                       <div className="truncate">
                         <div className="text-xs font-semibold text-gray-900 truncate">{organizationName}</div>

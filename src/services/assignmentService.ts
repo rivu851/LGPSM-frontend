@@ -74,9 +74,13 @@ export const assignmentService = {
     );
   },
 
-  /** Staff already assigned to another event of the same organizer that runs at the same time as this one */
-  async getOverlaps(eventId: string): Promise<ApiResponse<{ userId: string; eventId: string; title: string; start: string; end: string }[]>> {
-    return apiClient(`/api/v1/events/${eventId}/assignments/overlaps`, { method: "GET" }, true);
+  /**
+   * Staff already assigned to another event of the same organizer that runs at the same time as this one.
+   * With `includeAll`, every assignment those staff hold on the organizer's other events, each marked `overlaps` or not
+   * (`sessionIds` empty = all sessions of that event).
+   */
+  async getOverlaps(eventId: string, includeAll = false): Promise<ApiResponse<{ userId: string; eventId: string; title: string; start: string; end: string; sessionIds: string[]; overlaps: boolean }[]>> {
+    return apiClient(`/api/v1/events/${eventId}/assignments/overlaps${includeAll ? "?all=1" : ""}`, { method: "GET" }, true);
   },
 
   /** Alias for getAssignmentsByEvent */

@@ -57,7 +57,7 @@ export default function CustomAlertModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-xl border border-gray-100 shadow-2xl max-w-sm w-full p-6 text-center space-y-4 overflow-hidden relative"
+        className="bg-white rounded-xl border border-gray-100 shadow-2xl max-w-sm w-full p-6 text-center space-y-4 overflow-y-auto relative max-h-[calc(100dvh-2rem)]"
       >
         {/* Top Icon Badge */}
         {type === "success" && (

@@ -57,7 +57,7 @@ export default function AdmissionWindowModal({ isOpen, onClose, eventId, start, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true" aria-labelledby="admission-title">
-      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 space-y-4">
+      <div className="bg-white rounded-lg shadow-2xl max-w-md w-full p-6 space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <h3 id="admission-title" className="text-base font-medium text-gray-900">Check-in window</h3>
         <p className="text-sm text-[#4B4F52]">
           The event runs {formatDateTime(start)} – {formatDateTime(end)}. Guests can only be checked in while this window is open; once it closes their passes stop working. Times are in {browserTimeZone()}.

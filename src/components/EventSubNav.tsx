@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { eventService } from "@/services/eventService";
 import { sessionService } from "@/services/sessionService";
 import { inviteeService } from "@/services/inviteeService";
 import { assignmentService } from "@/services/assignmentService";
@@ -36,9 +37,12 @@ export default function EventSubNav({
   assignmentsCount: propAssignmentsCount,
 }: EventSubNavProps) {
   const cached = countsCache.get(eventId);
-  const [sessionsCount, setSessionsCount] = useState<number>(propSessionsCount ?? cached?.sessions ?? 0);
-  const [inviteesCount, setInviteesCount] = useState<number>(propInviteesCount ?? cached?.invitees ?? 0);
-  const [assignmentsCount, setAssignmentsCount] = useState<number>(propAssignmentsCount ?? cached?.assignments ?? 0);
+  // null = not known yet: shown as a small placeholder, never as a made-up "00". A count already seen on another tab of this
+  // event is shown at once.
+  const known = (n: number | undefined) => (n !== undefined && n >= 0 ? n : null);
+  const [sessionsCount, setSessionsCount] = useState<number | null>(propSessionsCount ?? known(cached?.sessions));
+  const [inviteesCount, setInviteesCount] = useState<number | null>(propInviteesCount ?? known(cached?.invitees));
+  const [assignmentsCount, setAssignmentsCount] = useState<number | null>(propAssignmentsCount ?? known(cached?.assignments));
   // The clicked tab lights up at once instead of waiting for the next page to render
   const [pendingTab, setPendingTab] = useState<TabId | null>(null);
   const shownTab = pendingTab ?? activeTab;
@@ -98,18 +102,29 @@ export default function EventSubNav({
     if (!request) {
       request = (async () => {
         try {
-          const [sessRes, invRes, assignRes] = await Promise.all([
-            known.sessions < 0 ? sessionService.getSessions(eventId) : Promise.resolve(null),
-            known.invitees < 0 ? inviteeService.getInvitees(eventId, { limit: 1 }) : Promise.resolve(null),
-            known.assignments < 0 ? assignmentService.getEventAssignments(eventId) : Promise.resolve(null),
-          ]);
           const cachedCounts = countsCache.get(eventId);
-          const inviteeMeta = (invRes as (typeof invRes & { meta?: { total?: number } }) | null)?.meta;
-          const next: Counts = {
-            sessions: known.sessions >= 0 ? known.sessions : sessRes?.success ? (sessRes as any).meta?.total ?? (Array.isArray(sessRes.data) ? sessRes.data.length : 0) : cachedCounts?.sessions ?? -1,
-            invitees: known.invitees >= 0 ? known.invitees : invRes?.success ? inviteeMeta?.total ?? (Array.isArray(invRes.data) && invRes.data.length < 1 ? 0 : cachedCounts?.invitees ?? -1) : cachedCounts?.invitees ?? -1,
-            assignments: known.assignments >= 0 ? known.assignments : assignRes?.success ? (Array.isArray(assignRes.data) ? assignRes.data.length : 0) : cachedCounts?.assignments ?? -1,
-          };
+          // One request for all three totals. If it is not available (an older server), fall back to the three list calls.
+          const single = await eventService.getEventCounts(eventId);
+          let next: Counts;
+          if (single.success && single.data) {
+            next = {
+              sessions: known.sessions >= 0 ? known.sessions : single.data.sessions,
+              invitees: known.invitees >= 0 ? known.invitees : single.data.invitees,
+              assignments: known.assignments >= 0 ? known.assignments : single.data.assignments,
+            };
+          } else {
+            const [sessRes, invRes, assignRes] = await Promise.all([
+              known.sessions < 0 ? sessionService.getSessions(eventId) : Promise.resolve(null),
+              known.invitees < 0 ? inviteeService.getInvitees(eventId, { limit: 1 }) : Promise.resolve(null),
+              known.assignments < 0 ? assignmentService.getEventAssignments(eventId) : Promise.resolve(null),
+            ]);
+            const inviteeMeta = (invRes as (typeof invRes & { meta?: { total?: number } }) | null)?.meta;
+            next = {
+              sessions: known.sessions >= 0 ? known.sessions : sessRes?.success ? (sessRes as any).meta?.total ?? (Array.isArray(sessRes.data) ? sessRes.data.length : 0) : cachedCounts?.sessions ?? -1,
+              invitees: known.invitees >= 0 ? known.invitees : invRes?.success ? inviteeMeta?.total ?? (Array.isArray(invRes.data) && invRes.data.length < 1 ? 0 : cachedCounts?.invitees ?? -1) : cachedCounts?.invitees ?? -1,
+              assignments: known.assignments >= 0 ? known.assignments : assignRes?.success ? (Array.isArray(assignRes.data) ? assignRes.data.length : 0) : cachedCounts?.assignments ?? -1,
+            };
+          }
           // The page may have finished loading while this request ran: what it reports now wins over the value seen at the start
           const live = fallbackCounts.current;
           if (live.propSessionsCount !== undefined) next.sessions = live.propSessionsCount;
@@ -156,13 +171,17 @@ export default function EventSubNav({
     };
   }, [fetchUnifiedCounts]);
 
-  const formatCount = (count: number) => count.toString().padStart(2, "0");
+  const withCount = (name: string, count: number | null) => (
+    <>
+      {name} ({count === null ? <span role="status" aria-label="Loading count" className="inline-block align-middle w-4 h-3 rounded bg-gray-200 animate-pulse" /> : count.toString().padStart(2, "0")})
+    </>
+  );
 
-  const tabs: { id: TabId; href: string; label: string; icon: string }[] = [
+  const tabs: { id: TabId; href: string; label: React.ReactNode; icon: string }[] = [
     { id: "overview", href: `/events/${eventId}`, label: "Overview", icon: "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
-    { id: "sessions", href: `/events/${eventId}/sessions`, label: `Sessions (${formatCount(sessionsCount)})`, icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-    { id: "invitees", href: `/events/${eventId}/invitees`, label: `Invitees List (${formatCount(inviteesCount)})`, icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
-    { id: "assign-users", href: `/events/${eventId}/assign-users`, label: `Assign System Users (${formatCount(assignmentsCount)})`, icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
+    { id: "sessions", href: `/events/${eventId}/sessions`, label: withCount("Sessions", sessionsCount), icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
+    { id: "invitees", href: `/events/${eventId}/invitees`, label: withCount("Invitees List", inviteesCount), icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
+    { id: "assign-users", href: `/events/${eventId}/assign-users`, label: withCount("Assign System Users", assignmentsCount), icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" },
   ];
 
   return (

@@ -76,7 +76,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
         <div className="px-6 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Category</span>
-            <CustomDropdown
+            <CustomDropdown portal
               value={filterCategory}
               onChange={(v) => {
                 setFilterCategory(v);
@@ -88,7 +88,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
           </div>
           <div>
             <span className="block text-sm font-medium text-gray-900 mb-1.5">Event Subcategory</span>
-            <CustomDropdown
+            <CustomDropdown portal
               value={filterSub}
               onChange={setFilterSub}
               disabled={!filterCategory}

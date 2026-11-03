@@ -454,7 +454,7 @@ export default function OrganizerDetailsPage() {
       {/* Deactivate Organizer Modal (Image 4) */}
       {isDeactivateModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-hidden animate-modal">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
             {/* Modal Header */}
             <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
               <h3 className="text-base font-medium text-[#15191C]">Deactivate Organizer</h3>
@@ -475,7 +475,7 @@ export default function OrganizerDetailsPage() {
                 <label className="text-sm font-medium text-[#15191C]">
                   Reason<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <CustomDropdown
+                <CustomDropdown portal
                   value={deactivateReason}
                   onChange={setDeactivateReason}
                   options={[

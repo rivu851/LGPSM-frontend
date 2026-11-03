@@ -138,7 +138,7 @@ export default function LogoSettingsPage() {
 
       {previewOpen && shownUrl && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logo-preview-title" onClick={() => setPreviewOpen(false)}>
-          <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]" onClick={(e) => e.stopPropagation()}>
             <h3 id="logo-preview-title" className="text-base font-medium text-[#15191C]">Organiser logo preview</h3>
             <div className="border border-[#E0E0E0] rounded-md py-6 flex justify-center bg-[#FAFAFA]">
               <span className="relative block w-[240px] h-[50px]">

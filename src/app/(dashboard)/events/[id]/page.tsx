@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
 import { sessionService, SessionData } from "@/services/sessionService";
@@ -43,6 +43,18 @@ interface EventDetail {
 
 const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
+// A whole summary card opens its page on click, not just the small arrow. A click that lands on a real link, button or field,
+// or that ends a text selection, is left alone. The arrow link stays for keyboard users and for open-in-new-tab.
+const linkedCardCls = "cursor-pointer transition-shadow hover:shadow-md hover:border-[#FFB08A]";
+function useCardNav() {
+  const router = useRouter();
+  return (href: string) => (e: React.MouseEvent<HTMLElement>) => {
+    if ((e.target as HTMLElement).closest("a, button, input, select, textarea, label")) return;
+    if (window.getSelection()?.toString()) return;
+    router.push(href);
+  };
+}
+
 function ArrowLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} aria-label={label} title={label} className="p-1 -m-1 text-gray-900 hover:text-[#FF651D]">
@@ -54,16 +66,17 @@ function ArrowLink({ href, label }: { href: string; label: string }) {
 }
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
-function MetricCard({ value, label, href, tone, icon }: { value: number; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
+function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
+  const cardNav = useCardNav();
   const tones = { peach: "bg-[#FFDCCF] text-[#FF651D]", mint: "bg-[#C9F6E6] text-[#16A34A]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   return (
-    <div className={`${card} p-4 flex flex-col gap-3`}>
+    <div onClick={cardNav(href)} className={`${card} ${linkedCardCls} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
         <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
         <ArrowLink href={href} label={`Open ${label}`} />
       </div>
       <div>
-        <p className="text-3xl font-medium text-black leading-none">{String(value).padStart(2, "0")}</p>
+        <p className="text-3xl font-medium text-black leading-none">{value === null ? <span role="status" aria-label="Loading" className="inline-block h-[30px] w-12 rounded bg-gray-200 animate-pulse align-top" /> : String(value).padStart(2, "0")}</p>
         <p className="mt-1.5 text-sm text-[#4B4F52]">{label}</p>
       </div>
     </div>
@@ -142,8 +155,10 @@ export default function EventDetailsPage() {
 
   usePageTitle(event?.title ? event.title : "Event Details");
   const [sessions, setSessions] = useState<SessionData[]>([]);
-  const [assignmentsCount, setAssignmentsCount] = useState(0);
+  const [assignmentsCount, setAssignmentsCount] = useState<number | null>(null); // null = not loaded yet (a placeholder, never a made-up 0)
   const [report, setReport] = useState<EventReportData | null>(null);
+  const [reportLoaded, setReportLoaded] = useState(false);
+  const cardNav = useCardNav();
   const [accessLogs, setAccessLogs] = useState<AccessLogRow[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
   const [cardExpanded, setCardExpanded] = useState(false);
@@ -152,9 +167,11 @@ export default function EventDetailsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const requestIdRef = useRef(0);
 
+  // The skeleton is for the first load of an event; a refresh after cancelling or editing keeps the page on screen
+  const loadedFor = useRef<string | null>(null);
   const load = useCallback(async () => {
     const requestId = ++requestIdRef.current;
-    setLoading(true);
+    if (loadedFor.current !== eventId) setLoading(true);
     setLoadError(null);
     const [evRes, sessRes] = await Promise.all([
       eventService.getEvent(eventId),
@@ -174,19 +191,25 @@ export default function EventDetailsPage() {
     const ss = sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : [];
     setSessions(ss);
     setAnalysisSession((prev) => prev || ss[0]?._id || "");
+    loadedFor.current = eventId;
     setLoading(false);
 
     // The event and its sessions are enough to render the page shell. Load report widgets and audit logs after
     // first paint so a slow analytics/log request cannot hold the whole event page behind a spinner.
-    const [asgRes, repRes, logRes] = await Promise.all([
-      assignmentService.getEventAssignments(eventId),
-      reportService.getEventReport(eventId),
-      checkInService.getCheckIns(eventId, { limit: 10 }),
-    ]);
-    if (requestId !== requestIdRef.current) return;
-    setAssignmentsCount(asgRes.success && Array.isArray(asgRes.data) ? asgRes.data.length : 0);
-    setReport(repRes.success && repRes.data ? repRes.data : null);
-    setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
+    // Each of these fills in the moment it arrives (the tab counters and cards do not wait for the slowest one)
+    void assignmentService.getEventAssignments(eventId).then((asgRes) => {
+      if (requestId !== requestIdRef.current) return;
+      setAssignmentsCount(asgRes.success && Array.isArray(asgRes.data) ? asgRes.data.length : 0);
+    });
+    void reportService.getEventReport(eventId).then((repRes) => {
+      if (requestId !== requestIdRef.current) return;
+      setReport(repRes.success && repRes.data ? repRes.data : null);
+      setReportLoaded(true);
+    });
+    void checkInService.getCheckIns(eventId, { limit: 10 }).then((logRes) => {
+      if (requestId !== requestIdRef.current) return;
+      setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
+    });
 
   }, [eventId]);
 
@@ -234,9 +257,10 @@ export default function EventDetailsPage() {
   // An event is over once its end time has passed (or it was closed earlier): nobody has to close it
   const eventOver = event.status === "COMPLETED" || (event.status === "PUBLISHED" && !!event.schedule?.end && new Date(event.schedule.end).getTime() <= Date.now());
   const editLocked = invitationLifecycleStarted || event.status === "COMPLETED" || event.status === "CANCELLED";
-  const totalInvitees = report?.totalInvitees ?? 0;
+  const totalInvitees = reportLoaded ? report?.totalInvitees ?? 0 : null;
   const timeStatus = event.status === "CANCELLED" ? "Cancelled" : event.status === "COMPLETED" ? "Completed" : getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
-  const status = timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not send" : timeStatus;
+  // Until the report has arrived nothing is known about invitations, so no claim is made about them
+  const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not send" : timeStatus;
   const statusTone: Record<string, string> = {
     "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
     Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
@@ -288,7 +312,15 @@ export default function EventDetailsPage() {
                 <span className="font-medium text-gray-900">End:</span> {formatDateTime(event.schedule?.end, "—")}
               </span>
             </div>
-            {venue && <p className="mt-2 text-xs text-[#828282] break-words">{venue}</p>}
+            {venue && (
+              <p className="mt-2 flex items-start gap-1.5 text-xs text-[#828282]">
+                <svg className="w-4 h-4 shrink-0 text-[#FF651D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
+                  <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
+                  <circle cx="12" cy="9.5" r="2.5" />
+                </svg>
+                <span className="min-w-0 break-words">{venue}</span>
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {(event.status === "PUBLISHED" || event.status === "DRAFT") && (
@@ -302,7 +334,7 @@ export default function EventDetailsPage() {
               </button>
             )}
             {/* After sending, Figma 426:2 keeps Edit visible but faded: the event is locked (the API refuses edits too) */}
-            {!editLocked ? (
+            {!editLocked && reportLoaded ? (
               <Link href={`/events/${eventId}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -310,7 +342,7 @@ export default function EventDetailsPage() {
               Edit
               </Link>
             ) : (
-              <button type="button" disabled title="This event can’t be edited after invitations have been sent" className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <button type="button" disabled title={editLocked ? "This event can’t be edited after invitations have been sent" : "Checking whether this event can still be edited…"} className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -320,7 +352,7 @@ export default function EventDetailsPage() {
           </div>
         </div>
 
-        <EventSubNav eventId={eventId} activeTab="overview" sessionsCount={sessions.length} inviteesCount={totalInvitees} assignmentsCount={assignmentsCount} />
+        <EventSubNav eventId={eventId} activeTab="overview" sessionsCount={loading ? undefined : sessions.length} inviteesCount={totalInvitees ?? undefined} assignmentsCount={assignmentsCount ?? undefined} />
 
         {/* Card Preview stretches to the widgets' height and crops the card (organiser feedback: align with the widgets;
             the enlarge icon opens the full card) */}
@@ -339,15 +371,15 @@ export default function EventDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
-              <section className={`${card} p-4`} aria-labelledby="guest-logs-title">
+              <section onClick={cardNav(`/events/${eventId}/invitees`)} className={`${card} ${linkedCardCls} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
                   <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
                 </div>
-                {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
+                {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>
 
-              <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
+              <section onClick={cardNav(`/events/${eventId}/sessions`)} className={`${card} ${linkedCardCls} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">Sessions</h3>
                   <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
@@ -374,8 +406,8 @@ export default function EventDetailsPage() {
                               <td className="py-2.5 pr-3">{i + 1}</td>
                               <td className="py-2.5 pr-4 text-gray-900">{s.name}</td>
                               <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}{s.schedule?.end ? ` to ${formatTime(s.schedule.end)}` : ""}</td>
-                              <td className="py-2.5 pr-4">{r?.invitedCount ?? 0}</td>
-                              <td className="py-2.5">{r?.attendeeCount ?? 0}</td>
+                              <td className="py-2.5 pr-4">{reportLoaded ? r?.invitedCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
+                              <td className="py-2.5">{reportLoaded ? r?.attendeeCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
                             </tr>
                           );
                         })}

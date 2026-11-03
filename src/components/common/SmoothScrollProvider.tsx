@@ -43,54 +43,22 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
     };
   }, []);
 
-  // 2. Trigger GSAP Smooth Reveal Animations on Route Change
+  // 2. A short entrance on route change. It must never hold content back: the page is already visible at the start, the
+  // fade is quick, and nothing is staggered (a staggered reveal of dozens of blocks kept the last ones hidden for over a second
+  // after every click, before the page data had even arrived). Skipped entirely for people who prefer reduced motion.
   useEffect(() => {
     const mainEl = document.querySelector<HTMLElement>("[data-page-reveal]");
     if (!mainEl) return;
 
     mainEl.scrollTop = 0;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
-      // Animate the page container itself for a full-page entrance on every navigation
       gsap.fromTo(
         mainEl,
-        { opacity: 0, y: 14 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.42,
-          ease: "power2.out",
-          clearProps: "all",
-        }
+        { opacity: 0.6, y: 4 },
+        { opacity: 1, y: 0, duration: 0.16, ease: "power1.out", clearProps: "all" }
       );
-
-      // Stagger-reveal key content blocks for depth — runs in parallel with the container fade
-      const staggerTargets = mainEl.querySelectorAll(
-        "h1, h2, h3, " +
-        "table, " +
-        ".grid > div, " +
-        "[data-reveal], " +
-        "section, " +
-        "form > div, " +
-        "[class*='rounded'] > [class*='border'], " +
-        ".card"
-      );
-
-      if (staggerTargets.length > 0 && staggerTargets.length <= 40) {
-        gsap.fromTo(
-          staggerTargets,
-          { opacity: 0, y: 6 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.3,
-            stagger: 0.025,
-            ease: "power2.out",
-            delay: 0.08,
-            clearProps: "all",
-          }
-        );
-      }
     });
 
     return () => ctx.revert();

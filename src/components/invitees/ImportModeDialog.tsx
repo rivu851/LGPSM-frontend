@@ -26,7 +26,7 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
   if (alreadyUploadedAndSent(previews?.append)) {
     return (
       <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="import-mode-title">
-        <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4">
+        <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
           <h2 id="import-mode-title" className="text-lg font-semibold text-[#15191C]">This list has already been uploaded</h2>
           <p className="text-sm text-[#828282] break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>
           <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{ALREADY_SENT_MESSAGE}</p>
@@ -39,7 +39,7 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
   }
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="import-mode-title">
-      <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div>
           <h2 id="import-mode-title" className="text-lg font-semibold text-[#15191C]">How should this list be imported?</h2>
           <p className="text-sm text-[#828282] mt-1 break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>

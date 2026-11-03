@@ -203,7 +203,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                 <table className="w-full text-left text-sm min-w-[760px]">
                   <thead className="text-[#828282] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 accent-[#FF651D]" /></th>
+                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-orange" /></th>
                       <th className="py-2 pr-3 font-medium">Guest</th>
                       <th className="py-2 pr-3 font-medium">From list</th>
                       <th className="py-2 pr-3 font-medium">Set aside</th>
@@ -214,7 +214,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {aside.guests.map((g) => (
                       <tr key={g.id} className="align-top">
-                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 accent-[#FF651D]" /></td>
+                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-orange" /></td>
                         <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#828282] break-all">{g.email || g.mobile || "—"}</span></td>
                         <td className="py-3 pr-3 max-w-[180px] break-words">{g.fromSet.name}</td>
                         <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#828282]">by {g.setAsideBy.name}</span> : null}</td>
@@ -232,7 +232,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
 
       {confirm && (
         <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="restore-title">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
             <h3 id="restore-title" className="text-base font-semibold text-gray-900">Restore {confirm.length === 1 ? nameOf(confirm[0]) : `${confirm.length} guests`}?</h3>
             <p className="text-sm text-[#4B4F52]">{confirm.length === 1 ? "This guest returns" : "These guests return"} to the active list as <b>Not sent</b>, in the list {confirm.length === 1 ? "they" : "they each"} came from. No invitation will be sent and no access pass will be created. Anyone whose email or mobile number is already on the active list will not be restored.</p>
             <div className="flex justify-end gap-3">
