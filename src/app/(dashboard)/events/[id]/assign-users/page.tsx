@@ -420,7 +420,7 @@ export default function EventAssignUsersPage() {
                           SYSTEM_USER
                         </span>
                         {(overlaps[u.id] || []).map((o) => (
-                          <p key={o.eventId} className="mt-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 max-w-[260px] break-words">
+                          <p key={o.eventId} className="mt-1.5 text-[11px] leading-snug font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 max-w-[260px] whitespace-normal break-words">
                             Already on &quot;{o.title}&quot; at the same time ({formatDateTime(o.start)} – {formatDateTime(o.end)})
                           </p>
                         ))}

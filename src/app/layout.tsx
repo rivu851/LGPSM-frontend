@@ -87,6 +87,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${inter.variable} ${spaceGrotesk.variable} ${caveat.variable} h-full antialiased`}
     >
       {/* Browser extensions (e.g. security/ad-block tools) add attributes to <body> before hydration; ignore those on this element only */}
