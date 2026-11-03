@@ -4,8 +4,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { invitationService } from "@/services/invitationService";
 
 // Each preview is a server-side render, so a long event list only renders the cards that scroll into view,
-// at most two at a time.
-const MAX_CONCURRENT = 2;
+// at most four at a time.
+const MAX_CONCURRENT = 4;
 let running = 0;
 const waiting: (() => void)[] = [];
 async function withSlot<T>(task: () => Promise<T>): Promise<T> {
