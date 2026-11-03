@@ -188,11 +188,14 @@ export default function AddInviteeManualModal({
             {/* Session first, when sessions keep their own invitee lists */}
             {sessionOptions.length > 1 && onSessionChange && (
               <div>
-                <label htmlFor="ai-session" className={labelClass}>Add to session</label>
-                <select id="ai-session" value={sessionId} onChange={(e) => onSessionChange(e.target.value)} className={inputClass}>
-                  <option value="">All sessions (the whole event)</option>
-                  {sessionOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
+                <span className={labelClass}>Add to session</span>
+                <CustomDropdown
+                  portal
+                  ariaLabel="Add to session"
+                  value={sessionId}
+                  onChange={onSessionChange}
+                  options={[{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
+                />
               </div>
             )}
 

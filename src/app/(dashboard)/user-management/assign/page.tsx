@@ -14,6 +14,7 @@ import { assignmentService, AssignmentData } from "@/services/assignmentService"
 import { useAlert } from "@/context/AlertContext";
 import { notifyDbUpdate } from "@/components/EventSubNav";
 import { mapWithConcurrency } from "@/utils/mapWithConcurrency";
+import { formatDateTime } from "@/utils/dateTime";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 
@@ -226,6 +227,17 @@ export default function AssignedSystemUsersPage() {
     if (sessionScope !== null && sessionScope.length === 0) {
       showAlert("Select at least one session, or choose \"All sessions\".", "warning");
       return;
+    }
+
+    // Putting someone on two events that run at the same time is allowed, but never by accident (same check as the event's own Assign tab)
+    try {
+      const overlapRes = await assignmentService.getOverlaps(selectedEventId);
+      const clashes = (overlapRes.success && Array.isArray(overlapRes.data) ? overlapRes.data : [])
+        .filter((o) => selectedIds.includes(o.userId))
+        .map((o) => `${users.find((x) => x.id === o.userId)?.name || "A user"}: "${o.title}" (${formatDateTime(o.start)} – ${formatDateTime(o.end)})`);
+      if (clashes.length > 0 && !(await confirm({ title: "Overlapping events", message: `Already assigned to another event at the same time:\n${clashes.join("\n")}\n\nAssign anyway?`, confirmText: "Assign anyway" }))) return;
+    } catch {
+      // the warning is advisory: if it cannot be checked, the assignment itself is still validated by the server
     }
 
     try {

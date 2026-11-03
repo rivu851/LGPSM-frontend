@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
+import CustomDropdown from "@/components/common/CustomDropdown";
 
 interface AddInviteeChooserModalProps {
   isOpen: boolean;
@@ -78,16 +79,14 @@ export default function AddInviteeChooserModal({
         <div className="p-6 space-y-3">
           {sessionOptions.length > 1 && onSessionChange && (
             <div className="mb-4">
-              <label htmlFor="add-invitee-session" className="block text-sm font-medium text-gray-900 mb-1.5">Add to session</label>
-              <select
-                id="add-invitee-session"
+              <span className="block text-sm font-medium text-gray-900 mb-1.5">Add to session</span>
+              <CustomDropdown
+                portal
+                ariaLabel="Add to session"
                 value={sessionId}
-                onChange={(e) => onSessionChange(e.target.value)}
-                className="w-full h-[42px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#FF651D]"
-              >
-                <option value="">All sessions (the whole event)</option>
-                {sessionOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+                onChange={onSessionChange}
+                options={[{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
+              />
               <p className="mt-1 text-xs text-gray-500">Choose a session when it has its own invitee list. The guests you add can then enter that session.</p>
             </div>
           )}
@@ -99,15 +98,19 @@ export default function AddInviteeChooserModal({
           <button
             type="button"
             onClick={() => { onClose(); onChooseExcel(); }}
-            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/60 transition-all group text-left cursor-pointer"
+            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left cursor-pointer"
           >
-            <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center transition-colors">
-              <svg className="w-5 h-5 text-[#FF651D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-[#E8F5EE] flex items-center justify-center">
+              {/* Microsoft Excel mark in its own greens */}
+              <svg className="w-6 h-6" viewBox="0 0 24 24" aria-hidden>
+                <path fill="#21A366" d="M14 2l6 6v12a2 2 0 01-2 2H8a2 2 0 01-2-2V4a2 2 0 012-2h6z" />
+                <path fill="#107C41" d="M14 2l6 6h-4a2 2 0 01-2-2V2z" />
+                <rect x="1" y="7" width="12" height="12" rx="1.5" fill="#185C37" />
+                <path fill="#fff" d="M4.2 9.5h1.9l1 1.8 1-1.8h1.9L8.1 13l2 3.5H8.2l-1.1-2-1.1 2H4.1L6.1 13l-1.9-3.5z" />
               </svg>
             </span>
             <span>
-              <span className="block text-sm font-semibold text-gray-900 group-hover:text-[#E5520F]">
+              <span className="block text-sm font-semibold text-gray-900">
                 Upload via Excel
               </span>
               <span className="block text-xs text-gray-500 mt-0.5">
@@ -120,15 +123,17 @@ export default function AddInviteeChooserModal({
           <button
             type="button"
             onClick={() => { onClose(); onChooseManual(); }}
-            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/60 transition-all group text-left cursor-pointer"
+            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left cursor-pointer"
           >
-            <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center transition-colors">
-              <svg className="w-5 h-5 text-[#FF651D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center">
+              {/* Standard profile glyph in neutral grey */}
+              <svg className="w-6 h-6" viewBox="0 0 24 24" aria-hidden>
+                <circle cx="12" cy="8" r="4" fill="#5F6368" />
+                <path fill="#5F6368" d="M4 20a8 8 0 0116 0v1H4v-1z" />
               </svg>
             </span>
             <span>
-              <span className="block text-sm font-semibold text-gray-900 group-hover:text-[#E5520F]">
+              <span className="block text-sm font-semibold text-gray-900">
                 Add Manually
               </span>
               <span className="block text-xs text-gray-500 mt-0.5">
