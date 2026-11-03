@@ -9,6 +9,8 @@ export function getActiveItemFromPathname(pathname: string, role: WebRole): stri
   const within = (p: string) => pathname === p || pathname.startsWith(p + "/");
 
   if (role === "ORGANIZER") {
+    // The Add Event button above the menu is the active item here, not Event Management
+    if (within("/events/add")) return "add-event";
     if (within("/events/select")) return "invitees-management";
     if (within("/events")) {
       if (pathname.includes("/invitees")) return "invitees-management";
