@@ -18,6 +18,8 @@ import { EventFeatureSettings, platformSettingsService } from "@/services/platfo
 import { templateService } from "@/services/templateService";
 import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion";
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
+import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
+import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
 import { DraftErrors, EventDraft, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
@@ -34,6 +36,8 @@ export interface EventWizardSubmit {
 
 interface EventWizardProps {
   heading: string;
+  /** Set when editing a saved event */
+  eventId?: string;
   draft: EventDraft;
   setDraft: (updater: (prev: EventDraft) => EventDraft) => void;
   draftStatus: DraftStatus;
@@ -57,6 +61,7 @@ const scrollPageTo = (top: number) =>
 
 export default function EventWizard({
   heading,
+  eventId,
   draft,
   setDraft,
   draftStatus,
@@ -85,6 +90,16 @@ export default function EventWizard({
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   // Set while "Customize Information" is open: the payload the card preview was rendering
+  // The columns of the Excel sample when it was last downloaded here: changing a custom title afterwards earns a warning
+  const [downloadedColumns, setDownloadedColumns] = useState<string[] | null>(null);
+  // Editing: invitee lists the event already has
+  const [existingLists, setExistingLists] = useState<InviteeSetInfo[]>([]);
+  useEffect(() => {
+    if (!eventId) return;
+    let live = true;
+    inviteeService.getInviteeSets(eventId).then((res) => { if (live && res.success && res.data) setExistingLists(res.data.sets.filter((x) => x.total > 0)); }).catch(() => {});
+    return () => { live = false; };
+  }, [eventId]);
   const [sessionFiles, setSessionFiles] = useState<Record<string, SessionInviteeFile | undefined>>({});
   const [previewKey, setPreviewKey] = useState<string | null>(null);
 
@@ -339,12 +354,14 @@ export default function EventWizard({
                   onCancel={onCancel}
                 />
               ) : currentStep === 2 ? (
-                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
+                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
               ) : (
                 <Step3Sessions
                   sessions={draft.sessions}
                   onSessionsChange={(sessions) => patch({ sessions })}
                   sessionFiles={sessionFiles}
+                  existingLists={existingLists}
+                  onSampleDownloaded={() => setDownloadedColumns(excelColumnsFor(inviteeConfig))}
                   onSessionFileChange={(key, file) => setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }))}
                   skipInvitees={draft.skipInvitees}
                   templateColumns={inviteeConfig}
@@ -408,6 +425,8 @@ export default function EventWizard({
           subtitle={`${previewSession?.name || "Session"} · ${previewFile.name}`}
           rows={previewFile.rows}
           showCompany={!!inviteeConfig.company || previewFile.rows.some((r) => r.company)}
+          identityLabel={inviteeConfig.identityLabel}
+          identity2Label={inviteeConfig.identity2 ? headerFor("identity2", inviteeConfig) : undefined}
           showIdentity={!!inviteeConfig.identity || previewFile.rows.some((r) => r.identity)}
           onClose={() => setPreviewKey(null)}
           onSave={(rows) => {

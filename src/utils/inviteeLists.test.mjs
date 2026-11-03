@@ -91,3 +91,11 @@ test("a list is shown by its file name without the spreadsheet extension", () =>
   assert.equal(listDisplayName("a.b.XLS"), "a.b");
   assert.equal(listDisplayName("Earlier invitees"), "Earlier invitees");
 });
+
+test("the Replace preview tells already-invited guests apart from not-yet-invited guests of a sent list, in the same words as the header", () => {
+  const l = previewLines({ ...PREVIEW, wouldSetAside: 1, lockedGuestsKept: 3, lockedInvitedKept: 1, lockedNotInvitedKept: 2 }, "REPLACE");
+  assert.ok(l.includes("1 guest who was never invited will be set aside"));
+  assert.ok(l.includes("1 guest already invited stays exactly as it is"));
+  assert.ok(l.includes("2 guests not yet invited in an already-sent list also stay (a sent list is kept whole)"));
+  assert.ok(!l.some((x) => x.includes("in already-sent lists stay")));
+});

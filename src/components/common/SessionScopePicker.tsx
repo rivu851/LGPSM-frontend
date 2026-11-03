@@ -15,8 +15,7 @@ interface SessionScopePickerProps {
   label?: string;
 }
 
-// Dropdown for a staff member's session access: All Sessions (default) or one session.
-// An older assignment covering several sessions is kept as-is until the organizer picks something else.
+// A staff member's session access as checkboxes: "All Sessions" (the default) or any combination of the event's sessions.
 export default function SessionScopePicker({
   sessions,
   loading = false,
@@ -25,41 +24,43 @@ export default function SessionScopePicker({
   onChange,
   label = "Session access",
 }: SessionScopePickerProps) {
-  const valid = (value || []).filter((id) => sessions.some((s) => s.id === id));
-  const multi = value !== null && valid.length > 1;
-  const current = value === null ? "all" : multi ? "multi" : valid[0] || "none";
+  const allIds = sessions.map((s) => s.id);
+  const valid = (value || []).filter((id) => allIds.includes(id));
+  const checked = (id: string) => value === null || valid.includes(id);
+  const toggleAll = () => onChange(value === null ? [] : null);
+  const toggle = (id: string) => {
+    const base = value === null ? allIds : valid;
+    const next = base.includes(id) ? base.filter((x) => x !== id) : [...base, id];
+    // every session ticked is the same thing as "All Sessions"
+    onChange(next.length === allIds.length ? null : next);
+  };
+  const box = "size-4 rounded border-gray-300 accent-[#FF651D] cursor-pointer";
 
   return (
-    <div className="space-y-1.5">
-      <label htmlFor="session-scope" className="block text-xs font-semibold text-gray-800">{label}</label>
+    <fieldset className="space-y-1.5">
+      <legend className="block text-xs font-semibold text-gray-800 mb-1.5">{label}</legend>
       {loading ? (
         <SkeletonRegion label="Loading sessions" className="space-y-2"><Skeleton className="h-9" /></SkeletonRegion>
       ) : error ? (
         <p className="text-xs text-rose-600 break-words">{error}</p>
       ) : (
         <>
-          <select
-            id="session-scope"
-            value={current}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "all") onChange(null);
-              else if (v === "multi") onChange(valid);
-              else onChange([v]);
-            }}
-            className="w-full h-10 px-3 bg-white border border-gray-200 rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF5B22]"
-          >
-            <option value="all">All Sessions{sessions.length ? ` (${sessions.length})` : ""}</option>
-            {multi && <option value="multi">{valid.length} sessions (current)</option>}
-            {current === "none" && <option value="none" disabled>Select a session</option>}
+          <div className="border border-gray-200 rounded-md divide-y divide-gray-100 max-h-56 overflow-auto bg-white">
+            <label className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-900 cursor-pointer">
+              <input type="checkbox" checked={value === null} onChange={toggleAll} className={box} />
+              All Sessions{sessions.length ? ` (${sessions.length})` : ""}
+            </label>
             {sessions.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <label key={s.id} className="flex items-center gap-2.5 px-3 py-2 pl-8 text-sm text-gray-800 cursor-pointer">
+                <input type="checkbox" checked={checked(s.id)} onChange={() => toggle(s.id)} className={box} />
+                <span className="min-w-0 break-words">{s.name}</span>
+              </label>
             ))}
-          </select>
-          {current === "none" && <p className="text-[11px] text-amber-700">Select a session, or choose &quot;All Sessions&quot;.</p>}
+          </div>
+          {value !== null && valid.length === 0 && sessions.length > 0 && <p className="text-[11px] text-amber-700">Tick at least one session, or choose &quot;All Sessions&quot;.</p>}
           {sessions.length === 0 && <p className="text-[11px] text-gray-400">This event has no sessions yet; staff can check guests in at the event entry.</p>}
         </>
       )}
-    </div>
+    </fieldset>
   );
 }

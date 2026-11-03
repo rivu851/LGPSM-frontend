@@ -475,6 +475,9 @@ export default function AllUsersPage() {
                                 )}
 
                                 <div className="space-y-1.5 pt-1">
+                                  {asn.sessions.length === 0 && (
+                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
+                                  )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
                                       <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">

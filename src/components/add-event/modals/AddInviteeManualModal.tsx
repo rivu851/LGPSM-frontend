@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useOverlayClose } from "@/hooks/useOverlayClose";
 import { inviteeService, CreateInviteePayload } from "@/services/inviteeService";
 import CustomDropdown, { CustomDropdownOption } from "@/components/common/CustomDropdown";
 import type { InviteeFieldKey } from "@/utils/inviteeFields";
@@ -14,6 +15,12 @@ interface AddInviteeManualModalProps {
   fields?: InviteeFieldKey[];
   /** The organizer's own title for the custom detail; with one, the field is a plain box carrying that title */
   identityLabel?: string;
+  /** The title of a second custom detail, when both card lines carry one */
+  identity2Label?: string;
+  /** Sessions that keep their own invitee list (offered only when there is more than one) */
+  sessionOptions?: { id: string; name: string }[];
+  sessionId?: string;
+  onSessionChange?: (id: string) => void;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -37,6 +44,10 @@ export default function AddInviteeManualModal({
   existingInvitees = [],
   fields = ["name", "email", "mobile"],
   identityLabel,
+  identity2Label,
+  sessionOptions = [],
+  sessionId = "",
+  onSessionChange,
   onClose,
   onSaved,
 }: AddInviteeManualModalProps) {
@@ -50,6 +61,7 @@ export default function AddInviteeManualModal({
   const [companyName, setCompanyName] = useState("");
   const [identityType, setIdentityType] = useState("");
   const [identityValue, setIdentityValue] = useState("");
+  const [identity2Value, setIdentity2Value] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const submitInFlight = useRef(false);
@@ -61,9 +73,11 @@ export default function AddInviteeManualModal({
     setCompanyName("");
     setIdentityType("");
     setIdentityValue("");
+    setIdentity2Value("");
     setError(null);
     onClose();
   };
+  const overlayClose = useOverlayClose(closeModal, submitting);
 
   useEffect(() => {
     if (isOpen && overlayRef.current && modalRef.current) {
@@ -115,6 +129,8 @@ export default function AddInviteeManualModal({
       ...(identityLabel
         ? identityValue.trim() && { professionalIdentity: identityValue.trim() }
         : identityType && identityValue.trim() && { professionalIdentity: `${identityType}: ${identityValue.trim()}` }),
+      ...(identity2Value.trim() && { secondaryIdentity: identity2Value.trim() }),
+      ...(sessionId && { sessionAccess: [{ sessionId, allowed: true }] }),
     };
 
     setSubmitting(true);
@@ -139,7 +155,7 @@ export default function AddInviteeManualModal({
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto font-sans"
-      onClick={(e) => { if (e.target === e.currentTarget && !submitting) closeModal(); }}
+      {...overlayClose}
     >
       <div
         ref={modalRef}
@@ -169,6 +185,17 @@ export default function AddInviteeManualModal({
         {/* Form */}
         <form onSubmit={handleSubmit} noValidate>
           <div className="px-6 py-5 space-y-4">
+            {/* Session first, when sessions keep their own invitee lists */}
+            {sessionOptions.length > 1 && onSessionChange && (
+              <div>
+                <label htmlFor="ai-session" className={labelClass}>Add to session</label>
+                <select id="ai-session" value={sessionId} onChange={(e) => onSessionChange(e.target.value)} className={inputClass}>
+                  <option value="">All sessions (the whole event)</option>
+                  {sessionOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
+
             {/* Name */}
             <div>
               <label htmlFor="ai-name" className={labelClass}>
@@ -220,24 +247,6 @@ export default function AddInviteeManualModal({
               />
             </div>
 
-            {/* Company: corporate events only (or when chosen for the card); never required */}
-            {has("company") && (
-              <div>
-                <label htmlFor="ai-company" className={labelClass}>
-                  Company Name <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
-                </label>
-                <input
-                  id="ai-company"
-                  type="text"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g. Acme Corp"
-                  className={inputClass}
-                  autoComplete="off"
-                />
-              </div>
-            )}
-
             {/* Professional identity: only when the event's card uses it (same condition as the Excel sample) */}
             {has("identity") && (
             identityLabel ? (
@@ -245,7 +254,7 @@ export default function AddInviteeManualModal({
               <label htmlFor="ai-identity" className={labelClass}>
                 {identityLabel} <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
               </label>
-              <input id="ai-identity" type="text" value={identityValue} maxLength={100} onChange={(e) => setIdentityValue(e.target.value)} placeholder={`Enter ${identityLabel.toLowerCase()}`} className={inputClass} autoComplete="off" />
+              <input id="ai-identity" type="text" value={identityValue} maxLength={100} onChange={(e) => setIdentityValue(e.target.value)} placeholder={`Enter ${identityLabel}`} className={inputClass} autoComplete="off" />
             </div>
             ) : (
             <div>
@@ -272,6 +281,33 @@ export default function AddInviteeManualModal({
               )}
             </div>
             )
+            )}
+
+            {has("identity2") && (
+              <div>
+                <label htmlFor="ai-identity2" className={labelClass}>
+                  {identity2Label || "Second Identity"} <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                </label>
+                <input id="ai-identity2" type="text" value={identity2Value} maxLength={100} onChange={(e) => setIdentity2Value(e.target.value)} placeholder={`Enter ${identity2Label || "second identity"}`} className={inputClass} autoComplete="off" />
+              </div>
+            )}
+
+            {/* Company: corporate events only (or when chosen for the card); never required */}
+            {has("company") && (
+              <div>
+                <label htmlFor="ai-company" className={labelClass}>
+                  Company Name <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                </label>
+                <input
+                  id="ai-company"
+                  type="text"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  className={inputClass}
+                  autoComplete="off"
+                />
+              </div>
             )}
 
             {/* Error */}

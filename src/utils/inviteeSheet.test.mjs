@@ -37,7 +37,7 @@ test("a sheet is checked against the columns the event's settings ask for", asyn
   const basic = fileOf([["Name", "Email", "Mobile"], ["Pia Roy", "pia@x.com", ""]]);
   assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor(plain))).missingColumns, []);
   assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor({ identity: true }))).missingColumns, ["Professional Identity"]);
-  assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor(withExtras))).missingColumns, ["Company Name", "Professional Identity"]);
+  assert.deepEqual((await parseInviteeSheet(basic, [], expectedColumnsFor(withExtras))).missingColumns, ["Professional Identity", "Company Name"]);
   // no heading row at all: every column counts as missing; with no settings given nothing is checked
   const noHeader = fileOf([["Pia Roy", "pia@x.com", "98765"]]);
   assert.equal((await parseInviteeSheet(noHeader, [], expectedColumnsFor(plain))).missingColumns.length, 3);
@@ -50,4 +50,13 @@ test("a sheet with the organizer's own title for the custom detail is read into 
   assert.deepEqual(parsed.missingColumns, []);
   assert.equal(parsed.rows[0].identity, "BC-9");
   assert.deepEqual((await parseInviteeSheet(fileOf([["Name", "Email", "Mobile"], ["Pia Roy", "pia@x.com", ""]]), [], expected)).missingColumns, ["Badge Code"]);
+});
+
+test("two custom details are read into their own fields, and survive being rebuilt into a file", async () => {
+  const expected = expectedColumnsFor({ identity: true, identityLabel: "Badge", identity2: true, identity2Label: "Table" });
+  const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Badge", "Table"], ["Pia Roy", "pia@x.com", "", "B1", "T9"]]), [], expected);
+  assert.deepEqual(parsed.missingColumns, []);
+  assert.deepEqual([parsed.rows[0].identity, parsed.rows[0].identity2], ["B1", "T9"]);
+  const again = await parseInviteeSheet(rowsToSheetFile(parsed.rows, "list.xlsx"));
+  assert.deepEqual([again.rows[0].identity, again.rows[0].identity2], ["B1", "T9"]);
 });

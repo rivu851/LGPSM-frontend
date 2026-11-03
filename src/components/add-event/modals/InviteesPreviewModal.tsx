@@ -9,6 +9,9 @@ interface InviteesPreviewModalProps {
   rows: InviteeSheetRow[];
   showCompany?: boolean;
   showIdentity?: boolean;
+  /** Column titles of the custom details; a second column appears when `identity2Label` is given */
+  identityLabel?: string;
+  identity2Label?: string;
   // When provided the list is editable and Save returns the edited rows; otherwise it is read-only
   onSave?: (rows: InviteeSheetRow[]) => void;
   onClose: () => void;
@@ -18,7 +21,7 @@ const inputClass = "w-full px-2.5 py-1.5 text-sm border border-[#E0E0E0] rounded
 
 // "Invitees List Quick Preview": what an uploaded sheet (or the current list) contains, row by row.
 // Mounted only while open, so its local edits start from the rows passed in.
-export default function InviteesPreviewModal({ title = "Invitees List Preview", subtitle, rows, showCompany = true, showIdentity = false, onSave, onClose }: InviteesPreviewModalProps) {
+export default function InviteesPreviewModal({ title = "Invitees List Preview", subtitle, rows, showCompany = true, showIdentity = false, identityLabel, identity2Label, onSave, onClose }: InviteesPreviewModalProps) {
   const [list, setList] = useState<InviteeSheetRow[]>(rows);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<InviteeSheetRow | null>(null);
@@ -32,7 +35,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
 
   const commitEdit = () => {
     if (!editing) return;
-    setList((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, name: editing.name.trim(), email: editing.email.trim().toLowerCase(), phone: editing.phone.trim(), company: editing.company.trim(), identity: (editing.identity || "").trim() } : r)));
+    setList((prev) => prev.map((r) => (r.id === editing.id ? { ...editing, name: editing.name.trim(), email: editing.email.trim().toLowerCase(), phone: editing.phone.trim(), company: editing.company.trim(), identity: (editing.identity || "").trim(), identity2: (editing.identity2 || "").trim() } : r)));
     setEditing(null);
   };
 
@@ -81,8 +84,9 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                   <th className="py-2.5 pr-3 font-medium">Name</th>
                   <th className="py-2.5 pr-3 font-medium">Email</th>
                   <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
+                  {showIdentity && <th className="py-2.5 pr-3 font-medium">{identityLabel || "Professional Identity"}</th>}
+                  {identity2Label && <th className="py-2.5 pr-3 font-medium">{identity2Label}</th>}
                   {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
-                  {showIdentity && <th className="py-2.5 pr-3 font-medium">Professional Identity</th>}
                   {editable && <th className="py-2.5 font-medium text-right">Action</th>}
                 </tr>
               </thead>
@@ -98,7 +102,8 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                           <td className="py-2 pr-2"><input aria-label="Name" className={inputClass} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} /></td>
                           <td className="py-2 pr-2"><input aria-label="Email" className={inputClass} value={editing.email} onChange={(e) => setEditing({ ...editing, email: e.target.value })} /></td>
                           <td className="py-2 pr-2"><input aria-label="Mobile" className={inputClass} value={editing.phone} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} /></td>
-                          {showIdentity && <td className="py-2 pr-2"><input aria-label="Professional identity" className={inputClass} value={editing.identity || ""} onChange={(e) => setEditing({ ...editing, identity: e.target.value })} /></td>}
+                          {showIdentity && <td className="py-2 pr-2"><input aria-label={identityLabel || "Professional identity"} className={inputClass} value={editing.identity || ""} onChange={(e) => setEditing({ ...editing, identity: e.target.value })} /></td>}
+                          {identity2Label && <td className="py-2 pr-2"><input aria-label={identity2Label} className={inputClass} value={editing.identity2 || ""} onChange={(e) => setEditing({ ...editing, identity2: e.target.value })} /></td>}
                           {showCompany && <td className="py-2 pr-2"><input aria-label="Company" className={inputClass} value={editing.company} onChange={(e) => setEditing({ ...editing, company: e.target.value })} /></td>}
                           <td className="py-2 text-right whitespace-nowrap">
                             <button type="button" onClick={commitEdit} className="text-sm font-medium text-[#E5520F] hover:underline cursor-pointer mr-2">Done</button>
@@ -113,8 +118,9 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                           </td>
                           <td className="py-2.5 pr-3 break-all">{row.email || "—"}</td>
                           <td className="py-2.5 pr-3 whitespace-nowrap">{row.phone || "—"}</td>
-                          {showCompany && <td className="py-2.5 pr-3 break-words">{row.company || "—"}</td>}
                           {showIdentity && <td className="py-2.5 pr-3 break-words">{row.identity || "—"}</td>}
+                          {identity2Label && <td className="py-2.5 pr-3 break-words">{row.identity2 || "—"}</td>}
+                          {showCompany && <td className="py-2.5 pr-3 break-words">{row.company || "—"}</td>}
                           {editable && (
                             <td className="py-2.5 text-right whitespace-nowrap">
                               <button type="button" aria-label={`Edit ${row.name || "row " + row.id}`} onClick={() => setEditing(row)} className="p-1.5 text-[#E5520F] border border-[#FFD2BF] rounded bg-[#FFF3EC] hover:bg-[#FFE3D7] cursor-pointer mr-1.5">
@@ -132,7 +138,7 @@ export default function InviteesPreviewModal({ title = "Invitees List Preview", 
                 })}
                 {visible.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-[#828282]">No invitees match your search.</td>
+                    <td colSpan={7} className="py-8 text-center text-[#828282]">No invitees match your search.</td>
                   </tr>
                 )}
               </tbody>

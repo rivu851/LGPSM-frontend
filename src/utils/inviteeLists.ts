@@ -56,7 +56,7 @@ export function restoreErrorMessage(message?: string): string {
 
 export interface PreviewLike {
   totalRows: number; validNew: number; duplicateRows: number; matchedExistingGuests: number; existingActive: number;
-  lockedGuestsKept: number; failedKept: number; unknownKept: number; wouldSetAside: number; rejectedRows: number;
+  lockedGuestsKept: number; lockedInvitedKept?: number; lockedNotInvitedKept?: number; failedKept: number; unknownKept: number; wouldSetAside: number; rejectedRows: number;
   errors: { row: number; error: string }[];
 }
 
@@ -71,8 +71,12 @@ export function previewLines(p: PreviewLike, mode: "REPLACE" | "APPEND"): string
   }
   if (p.rejectedRows - p.duplicateRows > 0) out.push(`${p.rejectedRows - p.duplicateRows} ${p.rejectedRows - p.duplicateRows === 1 ? "row has" : "rows have"} a problem and will be skipped`);
   if (mode === "REPLACE") {
-    out.push(p.wouldSetAside ? `${guests(p.wouldSetAside)} who were never invited will be set aside` : "No one will be set aside");
-    if (p.lockedGuestsKept) out.push(`${guests(p.lockedGuestsKept)} in already-sent lists ${p.lockedGuestsKept === 1 ? "stays" : "stay"} exactly as ${p.lockedGuestsKept === 1 ? "it is" : "they are"}`);
+    out.push(p.wouldSetAside ? `${guests(p.wouldSetAside)} ${p.wouldSetAside === 1 ? "who was" : "who were"} never invited will be set aside` : "No one will be set aside");
+    if (p.lockedInvitedKept !== undefined) {
+      // already-invited guests and the not-yet-invited guests of a sent list are different people: say so, so the numbers match the header
+      if (p.lockedInvitedKept) out.push(`${guests(p.lockedInvitedKept)} already invited stay${p.lockedInvitedKept === 1 ? "s" : ""} exactly as ${p.lockedInvitedKept === 1 ? "it is" : "they are"}`);
+      if (p.lockedNotInvitedKept) out.push(`${guests(p.lockedNotInvitedKept)} not yet invited in an already-sent list also stay${p.lockedNotInvitedKept === 1 ? "s" : ""} (a sent list is kept whole)`);
+    } else if (p.lockedGuestsKept) out.push(`${guests(p.lockedGuestsKept)} in already-sent lists ${p.lockedGuestsKept === 1 ? "stays" : "stay"} exactly as ${p.lockedGuestsKept === 1 ? "it is" : "they are"}`);
     if (p.failedKept) out.push(`${guests(p.failedKept)} with a failed send ${p.failedKept === 1 ? "stays" : "stay"} and can be retried`);
     if (p.unknownKept) out.push(`${guests(p.unknownKept)} with an unresolved delivery ${p.unknownKept === 1 ? "stays" : "stay"} (${p.unknownKept === 1 ? "they may" : "they may"} have received it)`);
   } else {

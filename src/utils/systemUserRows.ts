@@ -36,12 +36,16 @@ export interface SystemUserRow {
 export const getAssignedCountText = (assignments: SystemUserRow["assignments"] = []): string => {
   const eventCount = assignments.length;
   let sessionCount = 0;
+  // an assignment with no sessions listed covers every session of its event
+  let allSessionEvents = 0;
   assignments.forEach((a) => {
-    sessionCount += a.sessions?.length || 0;
+    if (a.sessions?.length) sessionCount += a.sessions.length;
+    else allSessionEvents += 1;
   });
 
   const eventLabel = eventCount === 1 ? "1 Event" : `${eventCount} Events`;
-  const sessionLabel = sessionCount === 1 ? "1 Session" : `${sessionCount} Sessions`;
+  const counted = sessionCount === 1 ? "1 Session" : `${sessionCount} Sessions`;
+  const sessionLabel = allSessionEvents === 0 ? counted : sessionCount === 0 ? "All Sessions" : `${counted} + All Sessions`;
   return `${eventLabel} & ${sessionLabel}`;
 };
 

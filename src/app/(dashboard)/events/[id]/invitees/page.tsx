@@ -25,10 +25,13 @@ import { formatPhoneNumber } from "@/utils/eventUtils";
 import { formatDateTime } from "@/utils/dateTime";
 import { downloadInviteeTemplate } from "@/utils/inviteeTemplate";
 import { InviteeSheetRow, missingColumnsMessage, parseInviteeSheet, rowsToSheetFile } from "@/utils/inviteeSheet";
+import SampleReminderModal from "@/components/invitees/SampleReminderModal";
+import { acknowledgeSampleReminder, sampleReminderAcknowledged } from "@/utils/sampleReminder";
 import ImportModeDialog from "@/components/invitees/ImportModeDialog";
 import InviteeListsModal from "@/components/invitees/InviteeListsModal";
 import { canManageInviteeLists, previewDiscrepancy } from "@/utils/inviteeLists";
-import { expectedColumnsFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
+import { excelColumnsFor, expectedColumnsFor, headerFor, inviteeConfigFor, inviteeFieldsFor } from "@/utils/inviteeFields";
+import { dietaryAnswer, dietaryQuestionTitles } from "@/utils/dietaryAnswers";
 import { summarizeDelivery, type DeliveryOutcome } from "@/utils/deliverySummary.mjs";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import Icon from "@/components/icons/Icon";
@@ -44,6 +47,7 @@ interface Invitee {
   companyName?: string;
   company?: string;
   dietaryPreference?: string;
+  dietarySelections?: { title: string; value: string }[];
   invitationStatus: "PENDING" | "SENT" | "FAILED";
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   sessionAccess?: { sessionId: string; allowed: boolean }[];
@@ -57,7 +61,7 @@ const INVITEE_PAGE_SIZE = 50;
 type Channel = "EMAIL" | "WHATSAPP" | "BOTH";
 type Feedback = { type: "success" | "error" | "info"; message: string; details?: string[] } | null;
 
-const pill = (cls: string, text: string) => <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${cls}`}>{text}</span>;
+const pill = (cls: string, text: string) => <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${cls}`}>{text}</span>;
 
 // Access follows the source session for sessions that keep another session's invitees
 function allowedIn(inv: Invitee, session: SessionData): boolean {
@@ -146,7 +150,7 @@ export default function InviteesManagementPage() {
   const isAdmin = user?.role === "ADMIN";
 
   const [eventsOptions, setEventsOptions] = useState<{ value: string; label: string }[]>([]);
-  const [event, setEvent] = useState<{ title?: string; status?: string; schedule?: { start?: string; end?: string }; categoryId?: { name?: string } | string; dietaryPreference?: { enabled?: boolean }; cardInfo?: { primary?: string | null; secondary?: string | null } } | null>(null);
+  const [event, setEvent] = useState<{ title?: string; status?: string; schedule?: { start?: string; end?: string }; categoryId?: { name?: string } | string; dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] }; cardInfo?: { primary?: string | null; secondary?: string | null } } | null>(null);
   const [sessions, setSessions] = useState<SessionData[]>([]);
   const [invitees, setInvitees] = useState<Invitee[]>([]);
   const [history, setHistory] = useState<InvitationData[]>([]);
@@ -176,6 +180,9 @@ export default function InviteesManagementPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showChooser, setShowChooser] = useState(false);
   const [showManualAdd, setShowManualAdd] = useState(false);
+  // Which session the guests being added belong to ("" = the whole event); only asked when sessions keep their own lists
+  const [targetSessionId, setTargetSessionId] = useState("");
+  const [sampleReminder, setSampleReminder] = useState(false);
   const [confirmFirstSend, setConfirmFirstSend] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const sendInFlight = useRef(false);
@@ -257,6 +264,8 @@ export default function InviteesManagementPage() {
   const selected = invitees.filter((i) => selectedIds.includes(i._id));
   const resendTargets = selected.map((i) => historyByInvitee.get(i._id)).filter((h): h is InvitationData => !!h?._id);
   const ownListSessions = sessions.filter((s) => s.inviteeSource !== "COPY_SESSION");
+  // the choice of session is only needed when more than one session has its own invitee list
+  const sessionPickOptions = ownListSessions.length > 1 ? ownListSessions.map((s) => ({ id: String(s._id), name: s.name })) : [];
 
   const filterSession = sessions.find((s) => s._id === sessionFilter);
   const term = search.trim().toLowerCase();
@@ -280,10 +289,12 @@ export default function InviteesManagementPage() {
 
   const summarize = (results: DeliveryOutcome[], verb: string): Feedback => summarizeDelivery(results, verb, channel);
 
+  // Who "Send Invitation" goes to: the ticked guests, or everyone shown by the "Not sent" filter. Guests already invited are always left out.
+  const sendTargets = (selected.length ? selected : invitationFilter === "NOT_SENT" ? filteredInvitees : []).filter((i) => i.invitationStatus === "PENDING");
+
   const handleSend = async () => {
     if (sendInFlight.current) return;
-    // Selected guests who were never invited, or every not-yet-invited guest when nothing is selected
-    const targets = (selected.length ? selected : notInvited).filter((i) => i.invitationStatus === "PENDING");
+    const targets = sendTargets;
     if (targets.length === 0) {
       showAlert(selected.length ? "The selected guests were already invited. Use Resend Invitation." : "Everyone on the list has been invited.", "info");
       return;
@@ -390,8 +401,8 @@ export default function InviteesManagementPage() {
     try {
       const file = rowsToSheetFile(rows, upload.file.name, ownListSessions.map((session) => session.name));
       const [rep, app] = await Promise.all([
-        inviteeService.importExcel(eventId, file, undefined, "REPLACE", { dryRun: true }),
-        inviteeService.importExcel(eventId, file, undefined, "APPEND", { dryRun: true }),
+        inviteeService.importExcel(eventId, file, targetSessionId || undefined, "REPLACE", { dryRun: true }),
+        inviteeService.importExcel(eventId, file, targetSessionId || undefined, "APPEND", { dryRun: true }),
       ]);
       setImportChoice((cur) => (cur ? { ...cur, previews: rep.success && app.success && rep.data?.preview && app.data?.preview ? { replace: rep.data.preview, append: app.data.preview } : null, previewError: rep.success && app.success ? null : "The preview is not available right now; the import will still check everything before changing anything." } : cur));
     } catch {
@@ -406,7 +417,7 @@ export default function InviteesManagementPage() {
     setFeedback(null);
     let res: Awaited<ReturnType<typeof inviteeService.importExcel>>;
     try {
-      res = await inviteeService.importExcel(eventId, rowsToSheetFile(rows, fileName, ownListSessions.map((session) => session.name)), undefined, mode);
+      res = await inviteeService.importExcel(eventId, rowsToSheetFile(rows, fileName, ownListSessions.map((session) => session.name)), targetSessionId || undefined, mode);
     } catch {
       setFeedback({ type: "error", message: "The import request could not reach the server. Existing invitees are unchanged; please retry." });
       return;
@@ -483,8 +494,10 @@ export default function InviteesManagementPage() {
   const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#FF651D] text-[#FF651D] bg-white hover:bg-orange-50 text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
+  const sampleColumns = excelColumnsFor(fieldConfig);
   const showCompany = fieldConfig.company;
-  const showDietary = lifecycleStarted && !!event?.dietaryPreference?.enabled;
+  // One column per question asked on the digital access card, filled from what each guest chose there
+  const dietaryTitles = lifecycleStarted ? dietaryQuestionTitles(event?.dietaryPreference) : [];
 
   return (
     <div className="w-full min-h-full bg-white">
@@ -553,7 +566,7 @@ export default function InviteesManagementPage() {
           <>
             {/* Controls (Figma 217:21076 / 217:20587): Invitees + search, event, session, Add Invitees, then Send — or Resend
                 once everyone has been invited */}
-            <div className="flex flex-col xl:flex-row xl:items-center gap-3">
+            <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-3">
               <div className="flex flex-1 items-center gap-2.5 min-w-0">
                 <label htmlFor="invitee-search" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
@@ -593,9 +606,9 @@ export default function InviteesManagementPage() {
                   Add Invitees
                 </button>
                 {notInvited.length > 0 || !lifecycleStarted ? (
-                  <button type="button" onClick={requestSend} disabled={busy !== null || notInvited.length === 0} className={`${primaryOutline}`}>
+                  <button type="button" onClick={requestSend} disabled={busy !== null || sendTargets.length === 0} title={sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={`${primaryOutline}`}>
                     <ButtonIcon name={busy === "send" ? "spinner" : "send"} />
-                    {busy === "send" ? "Sending..." : selected.some((i) => i.invitationStatus === "PENDING") ? `Send Invitation (${selected.filter((i) => i.invitationStatus === "PENDING").length})` : "Send Invitation"}
+                    {busy === "send" ? "Sending..." : sendTargets.length ? `Send Invitation (${sendTargets.length})` : "Send Invitation"}
                   </button>
                 ) : (
                   <button
@@ -715,6 +728,7 @@ export default function InviteesManagementPage() {
                 <button type="button" onClick={() => setShowChooser(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer">Add Invitees</button>
               </div>
             ) : (
+              <div>
               <div className="overflow-x-auto">
                 {/* Figma 217:20587: one Status pill (delivery, or the guest's RSVP once given), Dietary, a ✓/✗ column per
                     session and a "⋯" menu */}
@@ -724,14 +738,14 @@ export default function InviteesManagementPage() {
                       <th className="h-[46px] px-2.5 w-10" aria-label="Selection" />
                       <th className="h-[46px] px-2.5 font-medium">Name</th>
                       <th className="h-[46px] px-2.5 font-medium">Email</th>
-                      <th className="h-[46px] px-2.5 font-medium">Phone Number</th>
-                      {showCompany && <th className="h-[46px] px-2.5 font-medium">Company Name</th>}
+                      <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Phone Number</th>
+                      {showCompany && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Company Name</th>}
                       <th className="h-[46px] px-2.5 font-medium">Status</th>
                       {isAdmin && <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">RSVP Status</th>}
                       <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Access Pass</th>
-                      {showDietary && <th className="h-[46px] px-2.5 font-medium">Dietary Preference</th>}
+                      {dietaryTitles.map((title) => <th key={title} className="h-[46px] px-2.5 font-medium text-center min-w-[96px] max-w-[130px] leading-tight break-words">{title}</th>)}
                       {sessions.map((sess) => <th key={sess._id} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{sess.name.replace(/\s+session$/i, "")}</th>)}
-                      <th className="h-[46px] px-2.5 font-medium text-right">Action</th>
+                      <th className="h-[46px] px-2.5 font-medium text-right sticky right-0 bg-white shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#D3D3D3] text-[#15191C] border-b border-[#D3D3D3]">
@@ -739,7 +753,7 @@ export default function InviteesManagementPage() {
                       const failure = historyByInvitee.get(i._id)?.failureReason;
                       const sentRecord = historyByInvitee.get(i._id);
                       return (
-                        <tr key={i._id} className="hover:bg-gray-50/70">
+                        <tr key={i._id} className="group hover:bg-gray-50/70">
                           <td className="py-3 px-2.5">
                             <input
                               type="checkbox"
@@ -749,10 +763,10 @@ export default function InviteesManagementPage() {
                               className="size-4 accent-[#FF651D] cursor-pointer"
                             />
                           </td>
-                          <td className="py-3 px-2.5 break-words max-w-[200px]">{i.name}</td>
-                          <td className="py-3 px-2.5 break-all max-w-[240px]">{i.email || "—"}</td>
+                          <td className="py-3 px-2.5 whitespace-nowrap">{i.name}</td>
+                          <td className="py-3 px-2.5 whitespace-nowrap">{i.email || "—"}</td>
                           <td className="py-3 px-2.5 whitespace-nowrap">{formatPhoneNumber(i.mobile) || "—"}</td>
-                          {showCompany && <td className="py-3 px-2.5 break-words">{i.companyName || i.company || "—"}</td>}
+                          {showCompany && <td className="py-3 px-2.5 whitespace-nowrap">{i.companyName || i.company || "—"}</td>}
                           <td className="py-3 px-2.5">
                             <span className="flex flex-col gap-0.5 items-start">
                               <InviteeStatusPill invitationStatus={i.invitationStatus} rsvpStatus={isAdmin ? "PENDING" : i.rsvpStatus} />
@@ -773,11 +787,14 @@ export default function InviteesManagementPage() {
                               ? <span title={i.credentialStatus === "REVOKED" ? `Revoked: ${reasonLabel(i.credentialRevocation?.category)}` : undefined}>{pill(STATUS_PILL[i.credentialStatus].cls, STATUS_PILL[i.credentialStatus].label)}</span>
                               : <span className="text-[#828282]">—</span>}
                           </td>
-                          {showDietary && (
-                            <td className="py-3 px-2.5 text-center">
-                              {i.dietaryPreference ? <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-[#D3D3D3] rounded-full text-xs"><span className="size-1 rounded-full bg-[#15191C]" />{i.dietaryPreference}</span> : "--"}
-                            </td>
-                          )}
+                          {dietaryTitles.map((title) => {
+                            const answer = dietaryAnswer(i, title, dietaryTitles);
+                            return (
+                              <td key={title} className="py-3 px-2.5 text-center whitespace-nowrap">
+                                {answer ? <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-[#D3D3D3] rounded-full text-xs"><span className="size-1 rounded-full bg-[#15191C]" />{answer}</span> : "--"}
+                              </td>
+                            );
+                          })}
                           {sessions.map((sess) => (
                             <td key={sess._id} className="py-3 px-2.5">
                               {allowedIn(i, sess)
@@ -785,7 +802,7 @@ export default function InviteesManagementPage() {
                                 : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#FF651D] font-bold">✕</span>}
                             </td>
                           ))}
-                          <td className="py-3 px-2.5 text-right">
+                          <td className="py-3 px-2.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                             <InviteeRowMenu
                               name={i.name}
                               onEdit={() => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "" })}
@@ -801,10 +818,11 @@ export default function InviteesManagementPage() {
                       );
                     })}
                     {visible.length === 0 && (
-                      <tr><td colSpan={10 + sessions.length} className="py-10 text-center text-[#828282]">No invitees match the current filters.</td></tr>
+                      <tr><td colSpan={10 + sessions.length + dietaryTitles.length} className="py-10 text-center text-[#828282]">No invitees match the current filters.</td></tr>
                     )}
                   </tbody>
                 </table>
+              </div>
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E0E0E0] px-3 py-2.5 text-xs text-[#4B4F52]">
                   <span>
                     {filteredInvitees.length === 0 ? "No matching invitees" : `Showing ${(inviteePage - 1) * INVITEE_PAGE_SIZE + 1}–${Math.min(inviteePage * INVITEE_PAGE_SIZE, filteredInvitees.length)} of ${filteredInvitees.length}`}
@@ -840,6 +858,8 @@ export default function InviteesManagementPage() {
           rows={upload.rows}
           showCompany={fieldConfig.company || upload.rows.some((r) => r.company)}
           showIdentity={fieldConfig.identity || upload.rows.some((r) => r.identity)}
+          identityLabel={fieldConfig.identityLabel}
+          identity2Label={fieldConfig.identity2 ? headerFor("identity2", fieldConfig) : undefined}
           onClose={() => setUpload(null)}
           onSave={handleImport}
         />
@@ -867,10 +887,21 @@ export default function InviteesManagementPage() {
       )}
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={saveEdit} />
       <DeleteInviteeModal isOpen={!!deletingId} onClose={() => setDeletingId(null)} onConfirm={confirmDelete} />
+      {sampleReminder && (
+        <SampleReminderModal
+          columns={sampleColumns}
+          onCancel={() => setSampleReminder(false)}
+          onDownload={() => downloadInviteeTemplate(fieldConfig)}
+          onContinue={() => { acknowledgeSampleReminder(eventId, sampleColumns); setSampleReminder(false); fileInput.current?.click(); }}
+        />
+      )}
       <AddInviteeChooserModal
         isOpen={showChooser}
         onClose={() => setShowChooser(false)}
-        onChooseExcel={() => { setShowChooser(false); fileInput.current?.click(); }}
+        sessionOptions={sessionPickOptions}
+        sessionId={targetSessionId}
+        onSessionChange={setTargetSessionId}
+        onChooseExcel={() => { setShowChooser(false); if (sampleReminderAcknowledged(eventId, sampleColumns)) fileInput.current?.click(); else setSampleReminder(true); }}
         onChooseManual={() => { setShowChooser(false); setShowManualAdd(true); }}
       />
       <AddInviteeManualModal
@@ -878,7 +909,11 @@ export default function InviteesManagementPage() {
         eventId={eventId}
         existingInvitees={invitees}
         fields={inviteeFieldsFor(fieldConfig)}
+        sessionOptions={sessionPickOptions}
+        sessionId={targetSessionId}
+        onSessionChange={setTargetSessionId}
         identityLabel={fieldConfig.identityLabel}
+        identity2Label={fieldConfig.identity2 ? headerFor("identity2", fieldConfig) : undefined}
         onClose={() => setShowManualAdd(false)}
         onSaved={async () => { await load(); notifyDbUpdate(); }}
       />

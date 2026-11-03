@@ -117,7 +117,7 @@ export default function ConfirmModal({
         </div>
 
         <h3 id={titleId} className="text-base font-bold text-gray-900">{title}</h3>
-        <p id={messageId} className="text-xs text-gray-600 leading-relaxed font-medium px-2">{message}</p>
+        <p id={messageId} className="text-xs text-gray-600 leading-relaxed font-medium px-2 whitespace-pre-line">{message}</p>
 
         <div className="pt-2 flex items-center gap-3">
           <button

@@ -68,7 +68,7 @@ export interface TemplatePreviewPayload {
   /** an uploaded image only ("media:<id>") */
   logoKey?: string;
   /** "Additional Info": which guest details fill the card's two guest lines (sample labels in previews) */
-  cardInfo?: { primary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | null; secondary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | null; identityLabel?: string | null };
+  cardInfo?: { primary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; secondary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null };
 }
 
 export const templateService = {

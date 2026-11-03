@@ -63,3 +63,10 @@ test("the organizer's own title for the custom detail becomes its column title a
   assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: "PROFESSIONAL_IDENTITY" } })).slice(-1), ["Professional Identity"]);
   assert.equal(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null, identityLabel: "Designation" } }).identityLabel, undefined);
 });
+
+test("custom details come straight after the three standard columns, before Company Name", () => {
+  const cfg = inviteeConfigFor({ corporate: true, cardInfo: { primary: "PROFESSIONAL_IDENTITY", secondary: "SECONDARY_IDENTITY", identityLabel: "MTG-B4000", secondaryIdentityLabel: "Table No" } });
+  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "MTG-B4000", "Table No", "Company Name"]);
+  assert.equal(templateRow(cfg)["MTG-B4000"], "Sample value");
+  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.key), ["name", "email", "mobile", "identity", "identity2", "company"]);
+});

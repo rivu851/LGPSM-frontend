@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { reportService } from "@/services/reportService";
@@ -13,6 +13,9 @@ import { addHours, formatCompactDateTime, formatDateTime, formatTime, isAfter, n
 
 const sameDay = (a?: string, b?: string) => !!a && !!b && new Date(a).toDateString() === new Date(b).toDateString();
 import { expectedColumnsFor } from "@/utils/inviteeFields";
+import SampleReminderModal from "@/components/invitees/SampleReminderModal";
+import { acknowledgeSampleReminder, sampleReminderAcknowledged } from "@/utils/sampleReminder";
+import { excelColumnsFor } from "@/utils/inviteeFields";
 import { missingColumnsMessage, parseInviteeSheet } from "@/utils/inviteeSheet";
 import { downloadInviteeTemplate, templateColumnsFor, type TemplateColumns } from "@/utils/inviteeTemplate";
 import DateTimePickerModal from "@/components/add-event/modals/DateTimePickerModal";
@@ -111,6 +114,8 @@ export default function EventSessionsPage() {
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   // "Keep same invitees as": the new session shares another session's guest list instead of getting its own
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [sampleReminder, setSampleReminder] = useState(false);
   const [copyOn, setCopyOn] = useState(false);
   const [copySourceId, setCopySourceId] = useState("");
   const copyOptions = sessions
@@ -161,6 +166,13 @@ export default function EventSessionsPage() {
     }
     setUploadedFileName(file.name);
     setUploadedFile(file);
+  };
+
+  // The columns are specific to this event, so remind the organizer to start from its sample before choosing a file
+  const sampleColumnNames = excelColumnsFor(sampleColumns);
+  const askForFile = () => {
+    if (sampleReminderAcknowledged(eventId, sampleColumnNames)) fileInput.current?.click();
+    else setSampleReminder(true);
   };
 
   const handleCreateSession = async (e: React.FormEvent) => {
@@ -435,10 +447,10 @@ export default function EventSessionsPage() {
                 <div>
                   <label className="block text-sm font-medium text-[#15191C] mb-1.5">Add Invitees List</label>
                   <div className="border border-[#E0E0E0] rounded-md flex items-center bg-[#FAFAFA] overflow-hidden min-h-[47px]">
-                    <label className="self-stretch flex items-center px-4 bg-[#EDEDED] hover:bg-[#E3E3E3] text-[#4B4F52] text-xs font-medium cursor-pointer transition-colors border-r border-[#E0E0E0]">
+                    <button type="button" onClick={askForFile} className="self-stretch flex items-center px-4 bg-[#EDEDED] hover:bg-[#E3E3E3] text-[#4B4F52] text-xs font-medium cursor-pointer transition-colors border-r border-[#E0E0E0]">
                       Choose File
-                      <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
-                    </label>
+                    </button>
+                    <input ref={fileInput} type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
                     <span className="px-3 text-xs text-[#828282] truncate">{uploadedFileName || "No file chosen"}</span>
                   </div>
                   <p className="mt-1.5 text-xs text-[#828282]">The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again.</p>
@@ -470,6 +482,15 @@ export default function EventSessionsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {sampleReminder && (
+        <SampleReminderModal
+          columns={sampleColumnNames}
+          onCancel={() => setSampleReminder(false)}
+          onDownload={() => downloadInviteeTemplate(sampleColumns)}
+          onContinue={() => { acknowledgeSampleReminder(eventId, sampleColumnNames); setSampleReminder(false); fileInput.current?.click(); }}
+        />
       )}
 
       {/* DateTime Picker Modal */}

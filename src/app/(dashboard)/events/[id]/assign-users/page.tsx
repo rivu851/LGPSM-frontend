@@ -19,6 +19,7 @@ import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
 import Pagination from "@/components/common/Pagination";
 import { paginate } from "@/utils/pagination.mjs";
+import { formatDateTime } from "@/utils/dateTime";
 
 export default function EventAssignUsersPage() {
   const { confirm } = useAlert();
@@ -46,6 +47,8 @@ export default function EventAssignUsersPage() {
   const [isAssignSuccessModalOpen, setIsAssignSuccessModalOpen] = useState(false);
   // null = all sessions of this event
   const [sessionScope, setSessionScope] = useState<string[] | null>(null);
+  // staff who are already on another of this organizer's events running at the same time, by user id
+  const [overlaps, setOverlaps] = useState<Record<string, { eventId: string; title: string; start: string; end: string }[]>>({});
   const [submittingAssign, setSubmittingAssign] = useState(false);
 
   const fetchAssignmentsAndSessions = async () => {
@@ -54,12 +57,16 @@ export default function EventAssignUsersPage() {
       setErrorFeedback(null);
 
       // These resources are independent; load them together instead of serializing four network round trips.
-      const [sessionsRes, eventRes, usersRes, assignRes] = await Promise.all([
+      const [sessionsRes, eventRes, usersRes, assignRes, overlapRes] = await Promise.all([
         sessionService.getSessions(eventId),
         eventService.getEvent(eventId),
         userService.getUsers("SYSTEM_USER"),
         assignmentService.getAssignmentsByEvent(eventId),
+        assignmentService.getOverlaps(eventId).catch(() => null),
       ]);
+      const overlapMap: typeof overlaps = {};
+      (overlapRes && overlapRes.success && Array.isArray(overlapRes.data) ? overlapRes.data : []).forEach((o) => { (overlapMap[o.userId] ||= []).push(o); });
+      setOverlaps(overlapMap);
       const sessionList = Array.isArray(sessionsRes?.data) ? sessionsRes.data : [];
       setSessions(sessionList);
       if (eventRes.success && eventRes.data) setEventTitle(eventRes.data.title || "");
@@ -214,6 +221,10 @@ export default function EventAssignUsersPage() {
       setErrorFeedback("Select at least one session, or choose \"All sessions\".");
       return;
     }
+
+    // Putting someone on two events that run at the same time is allowed, but never by accident
+    const clashes = selectedUserIds.flatMap((id) => (overlaps[id] || []).map((o) => `${users.find((x) => x.id === id)?.name || "A user"}: "${o.title}" (${formatDateTime(o.start)} – ${formatDateTime(o.end)})`));
+    if (clashes.length > 0 && !(await confirm({ title: "Overlapping events", message: `Already assigned to another event at the same time:\n${clashes.join("\n")}\n\nAssign anyway?`, confirmText: "Assign anyway" }))) return;
 
     try {
       setSubmittingAssign(true);
@@ -408,6 +419,11 @@ export default function EventAssignUsersPage() {
                         <span className="text-[10px] font-mono text-[#FF5B22] bg-[#FF5B22]/10 px-1.5 py-0.5 rounded">
                           SYSTEM_USER
                         </span>
+                        {(overlaps[u.id] || []).map((o) => (
+                          <p key={o.eventId} className="mt-1.5 text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 max-w-[260px] break-words">
+                            Already on &quot;{o.title}&quot; at the same time ({formatDateTime(o.start)} – {formatDateTime(o.end)})
+                          </p>
+                        ))}
                       </td>
 
                       {/* Assigned Sessions */}
@@ -459,6 +475,9 @@ export default function EventAssignUsersPage() {
                                 )}
 
                                 <div className="space-y-1.5 pt-1">
+                                  {asn.sessions.length === 0 && (
+                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
+                                  )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
                                       <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">

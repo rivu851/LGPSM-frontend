@@ -41,18 +41,26 @@ export interface SelectedTemplate {
 }
 
 // "Additional Info" (Figma Event_Add event-5): guest details printed on the card's two guest lines
-export type CardInfoField = "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY";
+export type CardInfoField = "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY";
 export interface CardInfo {
   primary: CardInfoField | null;
   secondary: CardInfoField | null;
   /** The organizer's own title for the custom detail ("Designation"); empty uses the standard title */
   identityLabel?: string | null;
+  /** The same for a second custom detail, when both lines carry one */
+  secondaryIdentityLabel?: string | null;
 }
-export const CARD_INFO_OPTIONS: { value: CardInfoField; label: string }[] = [
+export const CUSTOM_DETAIL = "CUSTOM";
+export const CARD_INFO_OPTIONS: { value: string; label: string }[] = [
   { value: "INVITEE_NAME", label: "Invitee Name" },
   { value: "COMPANY_NAME", label: "Company Name" },
-  { value: "PROFESSIONAL_IDENTITY", label: "Custom detail (add your own title)" },
+  { value: CUSTOM_DETAIL, label: "Custom detail (add your own title)" },
 ];
+
+export const isCustomDetail = (f: CardInfoField | null | undefined): boolean => f === "PROFESSIONAL_IDENTITY" || f === "SECONDARY_IDENTITY";
+/** Each card line that carries a custom detail keeps its own field, title and Excel column */
+export const customFieldFor = (other: CardInfoField | null): CardInfoField => (other === "PROFESSIONAL_IDENTITY" ? "SECONDARY_IDENTITY" : "PROFESSIONAL_IDENTITY");
+export const customTitleKey = (f: CardInfoField | null | undefined): "identityLabel" | "secondaryIdentityLabel" => (f === "SECONDARY_IDENTITY" ? "secondaryIdentityLabel" : "identityLabel");
 
 export interface EventDraft {
   organizerIds: string[];
@@ -210,6 +218,12 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
     if (hasMissingOptions) errors.dietaryPreference = "Add at least one dietary option for each question before continuing.";
   }
 
+  if (draft.cardInfo) {
+    const titles = [draft.cardInfo.primary, draft.cardInfo.secondary].filter(isCustomDetail).map((f) => (draft.cardInfo![customTitleKey(f)] || "").trim());
+    if (titles.some((t) => !t)) errors.cardInfo = "Enter a title for each custom detail.";
+    else if (titles.length === 2 && titles[0].toLowerCase() === titles[1].toLowerCase()) errors.cardInfo = "The two custom details need different titles: each one becomes its own Excel column.";
+  }
+
   const start = parseIso(draft.start);
   const end = parseIso(draft.end);
   draft.sessions.forEach((s, index) => {
@@ -233,7 +247,7 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
 
 export function stepOfError(key: string): 1 | 2 | 3 {
   if (key.startsWith("session:")) return 3;
-  if (key === "dietaryPreference") return 2;
+  if (key === "dietaryPreference" || key === "cardInfo") return 2;
   return 1;
 }
 
@@ -315,7 +329,7 @@ export interface ServerEvent {
   attendeeSettings?: { thresholdLimit?: number };
   dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] };
   templateId?: string | { _id: string; name: string; previewImageKey?: string } | null;
-  cardInfo?: { primary?: CardInfoField | null; secondary?: CardInfoField | null; identityLabel?: string | null };
+  cardInfo?: { primary?: CardInfoField | null; secondary?: CardInfoField | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null };
   media?: { logoKey?: string };
   updatedAt?: string;
 }
@@ -380,7 +394,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     dietaryEnabled: event?.dietaryPreference?.enabled ?? false,
     preferenceCategories,
     cardInfo: event?.cardInfo && (event.cardInfo.primary !== undefined || event.cardInfo.secondary !== undefined)
-      ? { primary: event.cardInfo.primary ?? null, secondary: event.cardInfo.secondary ?? null, identityLabel: event.cardInfo.identityLabel ?? null }
+      ? { primary: event.cardInfo.primary ?? null, secondary: event.cardInfo.secondary ?? null, identityLabel: event.cardInfo.identityLabel ?? null, secondaryIdentityLabel: event.cardInfo.secondaryIdentityLabel ?? null }
       : null,
     template,
     logoKey: event?.media?.logoKey || null,

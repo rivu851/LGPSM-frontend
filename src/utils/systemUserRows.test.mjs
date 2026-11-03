@@ -1,7 +1,7 @@
 // Run with: npm test
 import test from "node:test";
 import assert from "node:assert/strict";
-import { filterSystemUsers, USERS_ON_EVENT, ALL_SYSTEM_USERS } from "./systemUserRows.ts";
+import { filterSystemUsers, getAssignedCountText, USERS_ON_EVENT, ALL_SYSTEM_USERS } from "./systemUserRows.ts";
 
 const asn = (eventId, ids) => ({ assignmentId: "a", eventId, eventName: "E", sessions: ids.map((id) => ({ id, name: id })) });
 const users = [
@@ -21,3 +21,10 @@ test("one session: people assigned to it, plus people who cover the whole event"
 });
 test("a person assigned to another event never shows under this event's sessions", () => assert.ok(!ids(filterSystemUsers(users, "ev", "k")).includes("elsewhere")));
 test("all system users includes people with no assignment", () => assert.equal(filterSystemUsers(users, "ev", ALL_SYSTEM_USERS).length, 5));
+
+test("an assignment with no sessions listed reads as All Sessions, never 0 Sessions", () => {
+  assert.equal(getAssignedCountText([]), "0 Events & 0 Sessions");
+  assert.equal(getAssignedCountText([{ sessions: [] }]), "1 Event & All Sessions");
+  assert.equal(getAssignedCountText([{ sessions: [{ id: "a" }, { id: "b" }] }]), "1 Event & 2 Sessions");
+  assert.equal(getAssignedCountText([{ sessions: [] }, { sessions: [{ id: "a" }] }]), "2 Events & 1 Session + All Sessions");
+});

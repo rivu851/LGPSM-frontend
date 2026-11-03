@@ -2,12 +2,17 @@
 
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { useOverlayClose } from "@/hooks/useOverlayClose";
 
 interface AddInviteeChooserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onChooseExcel: () => void;
   onChooseManual: () => void;
+  /** Sessions that keep their own invitee list; the choice is only offered when there is more than one */
+  sessionOptions?: { id: string; name: string }[];
+  sessionId?: string;
+  onSessionChange?: (id: string) => void;
 }
 
 export default function AddInviteeChooserModal({
@@ -15,7 +20,11 @@ export default function AddInviteeChooserModal({
   onClose,
   onChooseExcel,
   onChooseManual,
+  sessionOptions = [],
+  sessionId = "",
+  onSessionChange,
 }: AddInviteeChooserModalProps) {
+  const overlayClose = useOverlayClose(onClose);
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -39,7 +48,7 @@ export default function AddInviteeChooserModal({
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 font-sans"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      {...overlayClose}
     >
       <div
         ref={modalRef}
@@ -67,6 +76,21 @@ export default function AddInviteeChooserModal({
 
         {/* Body */}
         <div className="p-6 space-y-3">
+          {sessionOptions.length > 1 && onSessionChange && (
+            <div className="mb-4">
+              <label htmlFor="add-invitee-session" className="block text-sm font-medium text-gray-900 mb-1.5">Add to session</label>
+              <select
+                id="add-invitee-session"
+                value={sessionId}
+                onChange={(e) => onSessionChange(e.target.value)}
+                className="w-full h-[42px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#FF651D]"
+              >
+                <option value="">All sessions (the whole event)</option>
+                {sessionOptions.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <p className="mt-1 text-xs text-gray-500">Choose a session when it has its own invitee list. The guests you add can then enter that session.</p>
+            </div>
+          )}
           <p className="text-sm text-gray-500 mb-4">
             How would you like to add invitees?
           </p>

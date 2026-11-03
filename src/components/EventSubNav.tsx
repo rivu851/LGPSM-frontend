@@ -110,6 +110,11 @@ export default function EventSubNav({
             invitees: known.invitees >= 0 ? known.invitees : invRes?.success ? inviteeMeta?.total ?? (Array.isArray(invRes.data) && invRes.data.length < 1 ? 0 : cachedCounts?.invitees ?? -1) : cachedCounts?.invitees ?? -1,
             assignments: known.assignments >= 0 ? known.assignments : assignRes?.success ? (Array.isArray(assignRes.data) ? assignRes.data.length : 0) : cachedCounts?.assignments ?? -1,
           };
+          // The page may have finished loading while this request ran: what it reports now wins over the value seen at the start
+          const live = fallbackCounts.current;
+          if (live.propSessionsCount !== undefined) next.sessions = live.propSessionsCount;
+          if (live.propInviteesCount !== undefined) next.invitees = live.propInviteesCount;
+          if (live.propAssignmentsCount !== undefined) next.assignments = live.propAssignmentsCount;
           countsCache.set(eventId, next);
           return next;
         } catch (err) {
@@ -124,6 +129,10 @@ export default function EventSubNav({
 
     const counts = await request;
     if (!counts) return;
+    const latest = fallbackCounts.current;
+    if (latest.propSessionsCount !== undefined) counts.sessions = latest.propSessionsCount;
+    if (latest.propInviteesCount !== undefined) counts.invitees = latest.propInviteesCount;
+    if (latest.propAssignmentsCount !== undefined) counts.assignments = latest.propAssignmentsCount;
     // -1 marks a count the server did not return: keep what the page passed in
     if (counts.sessions >= 0) setSessionsCount(counts.sessions);
     else if (propSessionsCount !== undefined) setSessionsCount(propSessionsCount);

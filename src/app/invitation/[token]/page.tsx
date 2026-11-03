@@ -329,6 +329,9 @@ export default function PublicInvitationPage() {
                   PENDING
                 </span>
               )}
+              {rsvpEnabled && !eventCancelled && closesAt && !Number.isNaN(closesAt.getTime()) && (
+                <p className="mt-1 text-[11px] text-slate-500">{rsvpClosed ? "Responses closed" : "Respond by"} {formatDateTime(closesAt)}</p>
+              )}
             </div>
           </div>
 
@@ -516,7 +519,7 @@ export default function PublicInvitationPage() {
                   <span>Saving RSVP...</span>
                 </>
               ) : (
-                <span>Submit Response</span>
+                <span>{rsvpSaved ? "Response saved" : "Submit Response"}</span>
               )}
             </button>
           </form>

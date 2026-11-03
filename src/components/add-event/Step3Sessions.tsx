@@ -6,6 +6,8 @@ import { AccessControl, DraftErrors, DraftSession, createSessionDraft } from "./
 import { formatDateTime } from "@/utils/dateTime";
 import { downloadInviteeTemplate, type TemplateColumns } from "@/utils/inviteeTemplate";
 import { expectedColumnsFor } from "@/utils/inviteeFields";
+import type { InviteeSetInfo } from "@/services/inviteeService";
+import { listDisplayName } from "@/utils/inviteeLists";
 import { InviteeSheetRow, missingColumnsMessage, parseInviteeSheet } from "@/utils/inviteeSheet";
 import InfoTip from "@/components/common/InfoTip";
 
@@ -23,6 +25,9 @@ interface Step3SessionsProps {
   sessionFiles: Record<string, SessionInviteeFile | undefined>;
   onSessionFileChange: (sessionKey: string, file: SessionInviteeFile | null) => void;
   skipInvitees: boolean;
+  /** Editing: invitee lists the event already has */
+  existingLists?: InviteeSetInfo[];
+  onSampleDownloaded?: () => void;
   templateColumns?: TemplateColumns;
   onSkipInviteesChange: (value: boolean) => void;
   eventStart: string;
@@ -71,6 +76,8 @@ export default function Step3Sessions({
   sessionFiles,
   onSessionFileChange,
   skipInvitees,
+  existingLists = [],
+  onSampleDownloaded,
   templateColumns,
   onSkipInviteesChange,
   eventStart,
@@ -294,6 +301,20 @@ export default function Step3Sessions({
                   </div>
                 </div>
                 {fileInfo && <p className="mt-1 text-xs text-[#828282]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
+                {(() => {
+                  // A list uploaded for this session; lists without a session (the whole event) show on the primary session
+                  const lists = existingLists.filter((l) => (l.sessionId ? l.sessionId === sess.backendId : isPrimary));
+                  return lists.length > 0 && (
+                    <div className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900 space-y-0.5">
+                      {lists.map((l) => (
+                        <p key={l.id} className="break-words">
+                          Already uploaded: <span className="font-medium">{listDisplayName(l.name)}</span> ({l.total} {l.total === 1 ? "invitee" : "invitees"}){l.createdAt ? `, ${formatDateTime(l.createdAt, "")}` : ""}
+                        </p>
+                      ))}
+                      <p className="text-emerald-800">Choose a file only if you want to add more invitees.</p>
+                    </div>
+                  );
+                })()}
                 {fileError[sess.key] && <p role="alert" className="mt-1 text-xs font-medium text-rose-600">{fileError[sess.key]}</p>}
                 {fileInfo && fileInfo.problemCount > 0 && (
                   <p className="mt-1 text-xs font-medium text-amber-700">{fileInfo.problemCount} row(s) need attention — open the preview to fix them.</p>
@@ -301,7 +322,7 @@ export default function Step3Sessions({
                 <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
                   <p className="text-xs text-[#828282]">Imported when you save. Files are not kept in the saved draft.</p>
                   <span className="inline-flex items-center gap-2">
-                    <button type="button" onClick={() => downloadInviteeTemplate(templateColumns)} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#E5520F] cursor-pointer">
+                    <button type="button" onClick={() => { if (downloadInviteeTemplate(templateColumns)) onSampleDownloaded?.(); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#E5520F] cursor-pointer">
                       <ExcelLogo /> Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
@@ -322,7 +343,7 @@ export default function Step3Sessions({
       </button>
 
       <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-end gap-3">
-        {!Object.values(sessionFiles).some(Boolean) && (
+        {!Object.values(sessionFiles).some(Boolean) && existingLists.length === 0 && (
           <Checkbox id="skip-invitees" checked={skipInvitees} onChange={onSkipInviteesChange}>
             I don&apos;t have any invitees list yet, skip for later
           </Checkbox>

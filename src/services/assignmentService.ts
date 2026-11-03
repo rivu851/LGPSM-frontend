@@ -74,6 +74,11 @@ export const assignmentService = {
     );
   },
 
+  /** Staff already assigned to another event of the same organizer that runs at the same time as this one */
+  async getOverlaps(eventId: string): Promise<ApiResponse<{ userId: string; eventId: string; title: string; start: string; end: string }[]>> {
+    return apiClient(`/api/v1/events/${eventId}/assignments/overlaps`, { method: "GET" }, true);
+  },
+
   /** Alias for getAssignmentsByEvent */
   async getEventAssignments(eventId: string): Promise<ApiResponse<AssignmentData[]>> {
     return this.getAssignmentsByEvent(eventId);

@@ -147,6 +147,7 @@ export default function EditEventPage() {
   return (
     <EventWizard
       heading="Edit Event"
+      eventId={eventId}
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}

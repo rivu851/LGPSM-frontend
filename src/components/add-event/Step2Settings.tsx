@@ -1,6 +1,6 @@
 "use client";
 
-import { CARD_INFO_OPTIONS, type CardInfo, type CardInfoField } from "./eventDraft";
+import { CARD_INFO_OPTIONS, CUSTOM_DETAIL, customFieldFor, customTitleKey, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { CheckInPolicy, POLICY_FLAGS, POLICY_LABEL, policyOf, policyOptions } from "@/utils/checkInPolicy";
 import React, { useEffect, useRef } from "react";
@@ -14,13 +14,14 @@ interface Step2SettingsProps {
   errors: DraftErrors;
   // Options the platform administrator switched off are not offered
   features: EventFeatureSettings;
-  /** Opens the card-information dialog (Additional Information lives in this step now) */
+  /** The Excel sample was downloaded and the columns have changed since (a custom title was edited) */
+  sampleColumnsChanged?: boolean;
   onNext: () => void;
   onBack: () => void;
 }
 
 // Controlled step: values live in the wizard draft owned by the page
-export default function Step2Settings({ draft, onChange, errors, features, onNext, onBack }: Step2SettingsProps) {
+export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
   // Until the organizer touches it, the card keeps its long-standing lines (guest name, then company); the first change makes the choice explicit
   const cardInfo: CardInfo = draft.cardInfo ?? { primary: "INVITEE_NAME", secondary: "COMPANY_NAME" };
   const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next });
@@ -70,11 +71,16 @@ export default function Step2Settings({ draft, onChange, errors, features, onNex
           <span className="text-sm font-medium text-gray-900">Additional Information</span>
           <InfoTip label="About additional information" text="Choose which guest details are printed under the event name on each guest's card. A guest without that detail gets an empty line. This also decides the extra columns in the invitee Excel sample." />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {(["primary", "secondary"] as const).map((slot) => {
             const info = cardInfo;
-            const on = info[slot] !== null;
+            const field = info[slot];
+            const other = info[slot === "primary" ? "secondary" : "primary"];
+            const on = field !== null;
+            const custom = isCustomDetail(field);
             const label = slot === "primary" ? "Primary additional information" : "Secondary additional information";
+            const titleKey = customTitleKey(field);
+            const pick = (v: string) => setCardInfo({ ...info, [slot]: v === CUSTOM_DETAIL ? customFieldFor(other) : (v as CardInfoField) });
             return (
               <div key={slot} className="border border-[#E0E0E0] rounded-md p-4 flex flex-col gap-3">
                 <label htmlFor={`card-info-${slot}`} className="inline-flex items-center gap-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
@@ -89,31 +95,40 @@ export default function Step2Settings({ draft, onChange, errors, features, onNex
                 </label>
                 <div className={on ? "" : "opacity-50 pointer-events-none"} aria-disabled={!on}>
                   <CustomDropdown
-                    value={info[slot] ?? ""}
-                    onChange={(v) => setCardInfo({ ...info, [slot]: v as CardInfoField })}
+                    value={custom ? CUSTOM_DETAIL : field ?? ""}
+                    onChange={pick}
                     options={CARD_INFO_OPTIONS}
                     placeholder="Choose a detail"
                     ariaLabel={label}
                   />
                 </div>
+                {custom && (
+                  <div>
+                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-[#FF651D] ml-0.5">*</span></label>
+                    <input
+                      id={`card-info-title-${slot}`}
+                      type="text"
+                      value={info[titleKey] ?? ""}
+                      maxLength={40}
+                      onChange={(e) => setCardInfo({ ...info, [titleKey]: e.target.value })}
+                      placeholder="e.g. Designation, Employee ID, Badge No."
+                      aria-invalid={!!errors.cardInfo}
+                      className={`w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] ${errors.cardInfo ? "border-rose-400" : "border-[#E0E0E0]"}`}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
-        {(cardInfo.primary === "PROFESSIONAL_IDENTITY" || cardInfo.secondary === "PROFESSIONAL_IDENTITY") && (
-          <div className="max-w-md">
-            <label htmlFor="card-info-title" className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
-            <input
-              id="card-info-title"
-              type="text"
-              value={cardInfo.identityLabel ?? ""}
-              maxLength={40}
-              onChange={(e) => setCardInfo({ ...cardInfo, identityLabel: e.target.value })}
-              placeholder="e.g. Designation, Employee ID, Badge No."
-              className="w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
-            />
-            <p className="mt-1 text-xs text-[#828282]">This becomes the column title in the Excel sample and the field name when adding an invitee. Without one it is called Professional Identity.</p>
-          </div>
+        {(isCustomDetail(cardInfo.primary) || isCustomDetail(cardInfo.secondary)) && (
+          <p className="text-xs text-[#828282]">The title becomes the column heading in the Excel sample and the field name when adding an invitee.</p>
+        )}
+        {errors.cardInfo && <p role="alert" className="text-xs font-medium text-rose-600">{errors.cardInfo}</p>}
+        {sampleColumnsChanged && (
+          <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            You already downloaded the Excel sample with the earlier columns. These changes alter the columns, so download the sample again; a file with the old headings will be refused.
+          </p>
         )}
       </div>
 

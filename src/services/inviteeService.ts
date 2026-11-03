@@ -32,6 +32,7 @@ export interface CreateInviteePayload {
   company?: string;
   companyName?: string;
   professionalIdentity?: string;
+  secondaryIdentity?: string;
   category?: string;
   dietaryPreference?: string;
   dietarySelections?: { title: string; value: string }[];
@@ -51,6 +52,8 @@ export interface InviteeSetInfo {
   id: string;
   name: string;
   source: "EXCEL" | "MANUAL";
+  /** The session the list was uploaded for; null for the whole event */
+  sessionId?: string | null;
   mode: ImportMode;
   createdAt: string | null;
   uploadedBy: { id: string; name: string; role: string } | null;
@@ -126,6 +129,9 @@ export interface ImportPreview {
   alreadyInvited?: number;
   existingActive: number;
   lockedGuestsKept: number;
+  /** Of those, guests who were actually invited / not yet invited but in an already-sent (locked) list */
+  lockedInvitedKept?: number;
+  lockedNotInvitedKept?: number;
   failedKept: number;
   unknownKept: number;
   wouldSetAside: number;
