@@ -142,7 +142,7 @@ export default function FeaturesPage() {
         <TopBanner />
         <Navbar />
 
-        <main className="flex-1">
+        <main className="flex-1 overflow-x-clip">
           {/* ─── Hero Title ─── */}
           <section className="pt-12 pb-6 lg:pt-20 lg:pb-10">
             <div

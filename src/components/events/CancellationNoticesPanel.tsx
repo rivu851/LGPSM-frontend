@@ -20,12 +20,16 @@ export default function CancellationNoticesPanel({ eventId }: { eventId: string 
     }
   }, [eventId]);
 
+  // Loaded once per event. Depending on `data` here would reload forever, because every load replaces it.
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
+
+  // Messages are sent a moment after cancelling: look again only while some are still waiting
+  const waiting = !!data && data.channels.email.PENDING + data.channels.email.SENDING + data.channels.whatsapp.PENDING + data.channels.whatsapp.SENDING > 0;
   useEffect(() => {
-    void Promise.resolve().then(load);
-    // messages are sent a moment after cancelling: look again while any are still waiting
-    const timer = setInterval(() => { if (data && data.channels.email.PENDING + data.channels.email.SENDING + data.channels.whatsapp.PENDING + data.channels.whatsapp.SENDING > 0) load(); }, 4000);
+    if (!waiting) return;
+    const timer = setInterval(() => void load(), 4000);
     return () => clearInterval(timer);
-  }, [load, data]);
+  }, [waiting, load]);
 
   const retry = async (includeUnknown = false) => {
     setRetrying(true);

@@ -4,6 +4,7 @@ import PageHeader from "@/components/common/PageHeader";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { userService } from '@/services/userService';
+import { ACCEPTED_IMAGE_TYPES, mediaService } from '@/services/mediaService';
 import DashedBorder from "@/components/common/DashedBorder";
 
 export default function AddEventOrganizerPage() {
@@ -18,13 +19,13 @@ export default function AddEventOrganizerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const [logoFile, setLogoFile] = useState<{ name: string; url: string } | null>(null);
+  const [logoFile, setLogoFile] = useState<{ name: string; url: string; file: File } | null>(null);
   const logoInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleLogoSelect = (file: File) => {
     if (file) {
       const url = URL.createObjectURL(file);
-      setLogoFile({ name: file.name, url });
+      setLogoFile({ name: file.name, url, file });
     }
   };
 
@@ -47,6 +48,18 @@ export default function AddEventOrganizerPage() {
     setError('');
     setIsSuccess(false);
 
+    // The logo is stored first: an organizer is only created with the logo that was chosen, never silently without it
+    let logoKey: string | undefined;
+    if (logoFile) {
+      const upload = await mediaService.uploadImage(logoFile.file, 'ORGANIZATION_LOGO');
+      if (!upload.success || !upload.data?.key) {
+        setIsSubmitting(false);
+        setError(upload.message || 'The logo could not be uploaded, so the organizer was not created.');
+        return;
+      }
+      logoKey = upload.data.key;
+    }
+
     const res = await userService.createUser({
       // The API requires fullName for the user account; use the organization name as
       // the account's displayed name and store it in the dedicated organization field.
@@ -55,7 +68,7 @@ export default function AddEventOrganizerPage() {
       phone: formData.phone.trim() || undefined,
       password: formData.password,
       role: 'ORGANIZER',
-      profile: { organizationName: formData.organizationName.trim() },
+      profile: { organizationName: formData.organizationName.trim(), ...(logoKey ? { logoKey } : {}) },
     });
 
     setIsSubmitting(false);
@@ -76,7 +89,7 @@ export default function AddEventOrganizerPage() {
         <PageHeader title="Add Event Organizer" />
 
         {/* Form Container */}
-        <main className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-6">
+        <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-6">
           <form onSubmit={handleSubmit} className="bg-white border border-[#E0E0E0] rounded-lg p-5 md:p-6 space-y-5">
             <h2 className="text-xl font-medium text-[#15191C]">Event Organizer</h2>
 
@@ -136,9 +149,9 @@ export default function AddEventOrganizerPage() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   autoComplete="new-password"
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
@@ -151,7 +164,7 @@ export default function AddEventOrganizerPage() {
                 <input
                   ref={logoInputRef}
                   type="file"
-                  accept="image/*,.pdf"
+                  accept={ACCEPTED_IMAGE_TYPES}
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -178,6 +191,7 @@ export default function AddEventOrganizerPage() {
                     <button
                       type="button"
                       onClick={() => setLogoFile(null)}
+                      aria-label="Remove logo"
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors cursor-pointer shrink-0"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -196,7 +210,7 @@ export default function AddEventOrganizerPage() {
                     <span className="text-[11px] text-gray-400 max-w-[200px] leading-tight">
                       Drag and drop a photo here or <span className="text-[#FF5B22] font-semibold underline">click to open file</span>
                     </span>
-                    <span className="text-[10px] text-gray-400 mt-1">Preview only - logo storage is not configured yet</span>
+                    <span className="text-[10px] text-gray-400 mt-1">JPG, PNG or WEBP, up to 5 MB</span>
                   </div>
                 )}
               </div>
@@ -225,7 +239,7 @@ export default function AddEventOrganizerPage() {
               Organizer added successfully! Redirecting to list...
             </div>
           )}
-        </main>
+        </div>
     </div>
   );
 }

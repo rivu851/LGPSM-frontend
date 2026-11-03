@@ -19,7 +19,7 @@ test("the preview reads the Professional Identity column", async () => {
 
 test("an edited preview row keeps its Professional Identity when it is turned back into a file", async () => {
   const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Professional Identity"], ["Pia Roy", "pia@x.com", "Licence 77"]]));
-  const again = await parseInviteeSheet(rowsToSheetFile(parsed.rows, "list.xlsx"));
+  const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"));
   assert.equal(again.rows[0].identity, "Licence 77");
 });
 
@@ -57,6 +57,6 @@ test("two custom details are read into their own fields, and survive being rebui
   const parsed = await parseInviteeSheet(fileOf([["Name", "Email", "Mobile", "Badge", "Table"], ["Pia Roy", "pia@x.com", "", "B1", "T9"]]), [], expected);
   assert.deepEqual(parsed.missingColumns, []);
   assert.deepEqual([parsed.rows[0].identity, parsed.rows[0].identity2], ["B1", "T9"]);
-  const again = await parseInviteeSheet(rowsToSheetFile(parsed.rows, "list.xlsx"));
+  const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"));
   assert.deepEqual([again.rows[0].identity, again.rows[0].identity2], ["B1", "T9"]);
 });

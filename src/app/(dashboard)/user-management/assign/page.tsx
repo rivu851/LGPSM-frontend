@@ -147,8 +147,8 @@ export default function AssignedSystemUsersPage() {
   const handleAddUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addUserData.userName || !addUserData.email) return;
-    if (!addUserData.password || addUserData.password.length < 6) {
-      setErrorFeedback("Please set a password of at least 6 characters for the new user.");
+    if (!addUserData.password || addUserData.password.length < 8) {
+      setErrorFeedback("Please set a password of at least 8 characters for the new user.");
       return;
     }
 
@@ -372,7 +372,7 @@ export default function AssignedSystemUsersPage() {
       <PageHeader title="Assign System Users" />
 
       {/* Page Content */}
-      <main className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
+      <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
         {/* Error Feedback Banner */}
         {errorFeedback && (
           <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
@@ -400,6 +400,9 @@ export default function AssignedSystemUsersPage() {
           <button
             type="button"
             onClick={toggleSelectAll}
+role="checkbox"
+aria-checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
+aria-label="Select all"
             className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
               selectedIds.length === filteredUsers.length && filteredUsers.length > 0
                 ? "bg-[#10B981] border-[#10B981] text-white"
@@ -455,6 +458,9 @@ export default function AssignedSystemUsersPage() {
                         <button
                           type="button"
                           onClick={() => toggleSelectRow(u.id)}
+role="checkbox"
+aria-checked={isSelected}
+aria-label={`Select ${u.name}`}
                           className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
                             isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
                           }`}
@@ -581,7 +587,7 @@ export default function AssignedSystemUsersPage() {
             </svg>
           </button>
         </div>
-      </main>
+      </div>
 
       {/* ── Edit User Modal ── */}
       {isEditModalOpen && (

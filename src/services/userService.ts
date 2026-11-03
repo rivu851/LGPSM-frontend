@@ -1,3 +1,4 @@
+import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse } from "./apiClient";
 import { UserData, tokenStorage } from "./tokenStorage";
 
@@ -75,11 +76,12 @@ export const userService = {
 
   /** `organizerId` (admin only) narrows the list to the staff of that one organizer */
   async getUsers(role?: string, organizerId?: string): Promise<ApiResponse<UserData[]>> {
-    const params = new URLSearchParams();
-    if (role) params.set("role", role);
-    if (organizerId) params.set("organizerId", organizerId);
-    const url = params.toString() ? `/api/users?${params.toString()}` : "/api/users/";
-    return apiClient<UserData[]>(url, { method: "GET" }, true);
+    return listAllPages((page) => {
+      const params = new URLSearchParams({ page: String(page), limit: "100" });
+      if (role) params.set("role", role);
+      if (organizerId) params.set("organizerId", organizerId);
+      return apiClient<UserData[]>(`/api/users?${params.toString()}`, { method: "GET" }, true);
+    });
   },
 
   async deleteUser(userId: string): Promise<ApiResponse<any>> {

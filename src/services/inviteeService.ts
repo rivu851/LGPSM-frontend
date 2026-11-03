@@ -1,3 +1,4 @@
+import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse } from "./apiClient";
 
 export interface SessionAccessItem {
@@ -182,10 +183,13 @@ export const inviteeService = {
    * GET /api/v1/events/:eventId/invitees
    */
   async getInvitees(eventId: string, options: { page?: number; limit?: number } = {}): Promise<ApiResponse<InviteeData[]>> {
-    const params = new URLSearchParams({ page: String(options.page ?? 1), limit: String(options.limit ?? 1000) });
-    return apiClient<InviteeData[]>(`/api/v1/events/${eventId}/invitees?${params}`, {
-      method: "GET",
-    }, true);
+    const onePage = (page: number, limit: number) => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      return apiClient<InviteeData[]>(`/api/v1/events/${eventId}/invitees?${params}`, { method: "GET" }, true);
+    };
+    // No page asked for: the whole list (screens that filter, count and select in the browser need every guest)
+    if (options.page === undefined && options.limit === undefined) return listAllPages((page) => onePage(page, 100));
+    return onePage(options.page ?? 1, options.limit ?? 100);
   },
 
   /**

@@ -87,12 +87,12 @@ export function AdminAuthLayout({ children }: { children: React.ReactNode }) {
     <div
       className="min-h-screen bg-[#F5F5F5] flex items-center justify-center font-[family-name:var(--font-inter)] p-4"
     >
-      <div
+      <main
         ref={cardRef}
         className="w-full max-w-[420px] bg-white rounded-2xl shadow-[0_4px_32px_rgba(0,0,0,0.09)] px-8 sm:px-10 py-10"
       >
         {children}
-      </div>
+      </main>
     </div>
   );
 }

@@ -3,10 +3,12 @@
 import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Footer() {
+  const router = useRouter();
   const footerRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
 
@@ -62,11 +64,17 @@ export default function Footer() {
 
           {/* Email Subscription Form */}
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const email = String(new FormData(e.currentTarget).get("email") || "").trim();
+              router.push(`/signup${email ? `?email=${encodeURIComponent(email)}` : ""}`);
+            }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto mt-6"
           >
             <input
               type="email"
+              name="email"
+              aria-label="Email address"
               placeholder="hello@example.com"
               className="w-full sm:w-72 px-4 py-2.5 rounded-md text-xs sm:text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none shadow-md font-[family-name:var(--font-space-grotesk)]"
             />

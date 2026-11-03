@@ -1,3 +1,4 @@
+import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse, API_BASE_URL } from "./apiClient";
 import { tokenStorage } from "./tokenStorage";
 
@@ -101,12 +102,13 @@ export const templateService = {
   },
 
   async getTemplates(categoryId?: string, options: { scope?: "mine"; kind?: TemplateKind } = {}): Promise<ApiResponse<Template[]>> {
-    const params = new URLSearchParams();
-    if (categoryId) params.set("categoryId", categoryId);
-    if (options.scope) params.set("scope", options.scope);
-    if (options.kind) params.set("kind", options.kind);
-    const query = params.toString();
-    return apiClient<Template[]>(`/api/v1/templates${query ? `?${query}` : ""}`, { method: "GET" }, true);
+    return listAllPages((page) => {
+      const params = new URLSearchParams({ page: String(page), limit: "100" });
+      if (categoryId) params.set("categoryId", categoryId);
+      if (options.scope) params.set("scope", options.scope);
+      if (options.kind) params.set("kind", options.kind);
+      return apiClient<Template[]>(`/api/v1/templates?${params.toString()}`, { method: "GET" }, true);
+    });
   },
 
   /**

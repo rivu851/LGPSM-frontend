@@ -4,7 +4,8 @@ export interface EarningsRecord {
   eventName: string;
   dateOfPayment: string;
   invites: number;
-  rate: number;
+  /** null when no rate was in force for this event */
+  rate: number | null;
   amount: number;
   // ISO start of the event, used for the date-range filter
   eventStart?: string;

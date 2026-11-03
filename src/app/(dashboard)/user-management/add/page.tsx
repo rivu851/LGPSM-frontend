@@ -141,7 +141,7 @@ function AddUserContent() {
         <PageHeader title="Add User" />
 
         {/* Page Content */}
-        <main className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
+        <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
               <label className="block text-sm font-medium text-[#15191C]">Organizer</label>
@@ -229,7 +229,7 @@ function AddUserContent() {
               </table>
             </div>
           )}
-        </main>
+        </div>
 
       {/* Add User Modal (Image 2) */}
       {isAddUserModalOpen && (
@@ -303,9 +303,9 @@ function AddUserContent() {
                 <input
                   type="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   autoComplete="new-password"
-                  placeholder="At least 6 characters"
+                  placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"

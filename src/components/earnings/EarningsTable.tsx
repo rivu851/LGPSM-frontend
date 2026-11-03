@@ -102,6 +102,7 @@ export default function EarningsTable({
           <input
             type="text"
             placeholder="Search..."
+            aria-label="Search earnings"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
@@ -196,6 +197,7 @@ export default function EarningsTable({
                     type="checkbox"
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
+                    aria-label="Select this row"
                     className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
                   />
                 </td>
@@ -207,7 +209,7 @@ export default function EarningsTable({
                 </td>
                 <td className="py-4 px-4 text-gray-600">{r.dateOfPayment}</td>
                 <td className="py-4 px-4 text-gray-900 font-semibold">{r.invites}</td>
-                <td className="py-4 px-4 text-gray-600">${r.rate}</td>
+                <td className="py-4 px-4 text-gray-600">{r.rate === null ? "Not set" : `$${r.rate}`}</td>
                 <td className="py-4 px-4 text-emerald-600 font-bold">${r.amount}</td>
                 <td className="py-4 px-4 text-right">
                   {/* was an inert "⋯"; event rows can open their event, and any row can be hidden from this view */}

@@ -314,7 +314,7 @@ export default function AllUsersPage() {
       <PageHeader title={user?.role === "ORGANIZER" ? "User Management" : "All Users"} />
 
       {/* Page Content */}
-      <main className="px-4 sm:px-6 pt-[30px] w-full space-y-6 bg-white pb-24">
+      <div className="px-4 sm:px-6 pt-[30px] w-full space-y-6 bg-white pb-24">
         {errorFeedback && (
           <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
             <span>{errorFeedback}</span>
@@ -341,6 +341,9 @@ export default function AllUsersPage() {
           <button
             type="button"
             onClick={toggleSelectAll}
+role="checkbox"
+aria-checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
+aria-label="Select all"
             className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
               selectedIds.length === filteredUsers.length && filteredUsers.length > 0
                 ? "bg-[#10B981] border-[#10B981] text-white"
@@ -412,6 +415,9 @@ export default function AllUsersPage() {
                         <button
                           type="button"
                           onClick={() => toggleSelectRow(u.id)}
+role="checkbox"
+aria-checked={isSelected}
+aria-label={`Select ${u.name}`}
                           className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
                             isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
                           }`}
@@ -543,7 +549,7 @@ export default function AllUsersPage() {
             </button>
           </div>
         )}
-      </main>
+      </div>
 
       {/* ── Edit User Modal ── */}
       {isEditModalOpen && (

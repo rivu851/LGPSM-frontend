@@ -1,3 +1,4 @@
+import DialogKeyboardSupport from "@/components/common/DialogKeyboardSupport";
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
 import { Inter, Space_Grotesk, Caveat } from "next/font/google";
@@ -92,6 +93,7 @@ export default function RootLayout({
     >
       {/* Browser extensions (e.g. security/ad-block tools) add attributes to <body> before hydration; ignore those on this element only */}
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-gray-900 selection:bg-[#FF5B22] selection:text-white">
+        <DialogKeyboardSupport />
         <AuthProvider>
           <AlertProvider>
             <PageTitleProvider>

@@ -1,3 +1,4 @@
+import { mapWithConcurrency } from "@/utils/mapWithConcurrency";
 import { apiClient, ApiResponse, API_BASE_URL } from "./apiClient";
 import { tokenStorage } from "./tokenStorage";
 
@@ -163,6 +164,18 @@ export const invitationService = {
    * Get invitation history for an event
    * GET /api/v1/events/:eventId/invitations
    */
+  /** Every delivery record of an event. Resend works from these ids, so a record left out would be a guest who cannot be re-sent to. */
+  async getAllInvitations(eventId: string): Promise<ApiResponse<GetInvitationsResponse>> {
+    const first = await this.getInvitations(eventId, 1, 200);
+    if (!first.success || !first.data) return first;
+    const pages = first.data.totalPages ?? 1;
+    if (pages <= 1) return first;
+    const rest = await mapWithConcurrency(Array.from({ length: pages - 1 }, (_, i) => i + 2), 4, (page) => this.getInvitations(eventId, page, 200));
+    const failed = rest.find((r) => !r.success || !r.data);
+    if (failed) return { success: false, message: failed.message || "The delivery history could not be loaded.", status: failed.status };
+    return { ...first, data: { ...first.data, invitations: [...first.data.invitations, ...rest.flatMap((r) => r.data!.invitations)] } };
+  },
+
   async getInvitations(
     eventId: string,
     page = 1,

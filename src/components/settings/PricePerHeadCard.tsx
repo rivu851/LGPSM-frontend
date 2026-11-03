@@ -3,15 +3,20 @@
 import React, { useState } from "react";
 
 interface PricePerHeadCardProps {
-  currentRate: number;
+  /** null until a rate has been set for the first time */
+  currentRate: number | null;
+  saving?: boolean;
   onSaveRate: (newRate: number) => void;
 }
 
 export default function PricePerHeadCard({
   currentRate,
+  saving = false,
   onSaveRate,
 }: PricePerHeadCardProps) {
-  const [sliderVal, setSliderVal] = useState<number>(currentRate);
+  const [sliderVal, setSliderVal] = useState<number>(currentRate ?? 1);
+  const rateText = currentRate === null ? "Not set" : `$${currentRate.toFixed(2)}`;
+  const rateLine = currentRate === null ? "No rate has been set yet, so events created now have no per-head price" : `Per-head billing · ${rateText} / invitee (current rate)`;
 
   const handleSave = () => {
     onSaveRate(sliderVal);
@@ -23,7 +28,7 @@ export default function PricePerHeadCard({
       <div>
         <h2 className="text-xl font-medium text-[#15191C]">Price Per-Head</h2>
         <p className="text-xs text-[#4B4F52] mt-0.5">
-          Per-head billing · ${currentRate.toFixed(2)} / invitee (current rate)
+          {rateLine}
         </p>
       </div>
 
@@ -33,13 +38,11 @@ export default function PricePerHeadCard({
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <span className="text-5xl font-semibold text-[#FF651D]">
-              ${currentRate.toFixed(2)}
+              {rateText}
             </span>
             <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
           </div>
-          <p className="text-xs text-gray-500">
-            Per-head billing · ${currentRate.toFixed(2)} / invitee (current rate)
-          </p>
+          <p className="text-xs text-gray-500">{rateLine}</p>
         </div>
 
         {/* Right Side Slider Adjuster */}
@@ -58,6 +61,7 @@ export default function PricePerHeadCard({
                 max={20}
                 step={1}
                 value={sliderVal}
+                aria-label="Price per invitee"
                 onChange={(e) => setSliderVal(parseFloat(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FF5B22]"
               />
@@ -71,9 +75,10 @@ export default function PricePerHeadCard({
             <button
               type="button"
               onClick={handleSave}
-              className="px-5 py-2.5 bg-[#FF651D] text-white text-sm font-semibold rounded-md hover:bg-[#E5520F] transition-colors shrink-0"
+              disabled={saving || sliderVal === currentRate}
+              className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#FF651D] text-white text-sm font-semibold rounded-md hover:bg-[#E5520F] transition-colors shrink-0"
             >
-              Save
+              {saving ? "Saving..." : "Save"}
             </button>
           </div>
         </div>

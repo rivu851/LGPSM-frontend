@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
 import { reportService } from "@/services/reportService";
 import { userService } from "@/services/userService";
-import { getDynamicEventStatus } from "@/utils/eventUtils";
+import { eventDisplayStatus } from "@/utils/eventUtils";
 import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 import { Skeleton, TableSkeletonRows } from "@/components/common/Skeleton";
 
@@ -68,10 +68,7 @@ export default function DashboardPage() {
         const events: any[] = eventsRes?.success && Array.isArray(eventsRes.data) ? (eventsRes.data as any[]) : [];
         if (!eventsRes?.success) setMetricsError(eventsRes?.message || "Failed to load events.");
 
-        const statusOf = (e: any) =>
-          String(e.status || "").toUpperCase() === "CANCELLED"
-            ? "Cancelled"
-            : getDynamicEventStatus(e.schedule?.start || e.startDate, e.schedule?.end || e.endDate, e.status);
+        const statusOf = (e: any) => eventDisplayStatus({ status: String(e.status || "").toUpperCase(), schedule: { start: e.schedule?.start || e.startDate, end: e.schedule?.end || e.endDate } });
 
         setTotalEvents(statsRes?.success && statsRes.data ? statsRes.data.totalEvents : events.length);
         setTotalInvitees(statsRes?.success && statsRes.data ? statsRes.data.totalInvitees : 0);

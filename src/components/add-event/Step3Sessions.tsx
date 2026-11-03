@@ -322,7 +322,7 @@ export default function Step3Sessions({
                 <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
                   <p className="text-xs text-[#828282]">Imported when you save. Files are not kept in the saved draft.</p>
                   <span className="inline-flex items-center gap-2">
-                    <button type="button" onClick={() => { if (downloadInviteeTemplate(templateColumns)) onSampleDownloaded?.(); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#E5520F] cursor-pointer">
+                    <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#E5520F] cursor-pointer">
                       <ExcelLogo /> Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />

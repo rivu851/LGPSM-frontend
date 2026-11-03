@@ -1,5 +1,6 @@
 "use client";
 
+import { csvCell } from "@/utils/csv";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
@@ -29,10 +30,6 @@ const ROLE_LABELS: Record<string, string> = {
   ORGANIZER: "Event Organizer",
   SYSTEM_USER: "System User",
 };
-
-function csvCell(value: unknown): string {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
-}
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -224,7 +221,7 @@ export default function ReportsPage() {
       setLoadingInviteeDetails(true);
       const [inviteesRes, allCheckInsRes] = await Promise.all([
         inviteeService.getInvitees(selectedEventId),
-        checkInService.getCheckIns(selectedEventId, { page: 1, limit: 1000 }),
+        checkInService.getAllCheckIns(selectedEventId),
       ]);
       if (cancelled) return;
 

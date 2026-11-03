@@ -1,4 +1,3 @@
-import * as XLSX from "xlsx";
 import { inviteeConfigFor, templateRow, type InviteeFieldConfig } from "@/utils/inviteeFields";
 
 // Column layout accepted by POST /api/v1/events/:eventId/invitees/import.
@@ -7,8 +6,9 @@ export type TemplateColumns = InviteeFieldConfig;
 export const templateColumnsFor = inviteeConfigFor;
 
 // Downloads an .xlsx template with the expected invitee columns; returns false if generation failed
-export function downloadInviteeTemplate(cols: TemplateColumns = {}): boolean {
+export async function downloadInviteeTemplate(cols: TemplateColumns = {}): Promise<boolean> {
   try {
+    const XLSX = await import("xlsx");
     const worksheet = XLSX.utils.json_to_sheet([templateRow(cols)]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Invitees");

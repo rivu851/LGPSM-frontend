@@ -429,13 +429,16 @@ export default function EventWizard({
           identity2Label={inviteeConfig.identity2 ? headerFor("identity2", inviteeConfig) : undefined}
           showIdentity={!!inviteeConfig.identity || previewFile.rows.some((r) => r.identity)}
           onClose={() => setPreviewKey(null)}
-          onSave={(rows) => {
+          onSave={async (rows) => {
             // Edits replace the uploaded file, so the import receives exactly what was previewed
             const key = previewKey;
+            const name = sessionFiles[key]?.name;
+            if (!name) return;
+            const file = await rowsToSheetFile(rows, name);
             setSessionFiles((prev) => {
               const current = prev[key];
               if (!current) return prev;
-              return { ...prev, [key]: { ...current, rows, file: rowsToSheetFile(rows, current.name), problemCount: rows.filter((r) => rowProblem(r)).length } };
+              return { ...prev, [key]: { ...current, rows, file, problemCount: rows.filter((r) => rowProblem(r)).length } };
             });
           }}
         />

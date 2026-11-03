@@ -1,5 +1,8 @@
 "use client";
 
+import { useAlert } from "@/context/AlertContext";
+import { isHistoricalEvent } from "@/utils/eventUtils";
+import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -32,6 +35,7 @@ export default function EventSessionsPage() {
   const params = useParams();
   const eventId = (params?.id as string) || "";
   const { user } = useAuth();
+  const { confirm, showAlert } = useAlert();
 
   const [sessions, setSessions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +43,8 @@ export default function EventSessionsPage() {
   const [assignedUsers, setAssignedUsers] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [eventStatus, setEventStatus] = useState<string | undefined>();
+  const historical = isHistoricalEvent(eventStatus);
 
   // DatePicker Modal State
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -51,10 +57,12 @@ export default function EventSessionsPage() {
     if (loadedFor.current !== eventId) setIsLoading(true);
     setLoadError(null);
     try {
-      const [res, assignRes] = await Promise.all([
+      const [res, assignRes, eventRes] = await Promise.all([
         sessionService.getSessions(eventId),
         assignmentService.getEventAssignments(eventId),
+        eventService.getEvent(eventId),
       ]);
+      setEventStatus((eventRes.data as { status?: string } | undefined)?.status);
       // "System Users" column (Figma 217:22014): staff assigned to each session
       const assignments = assignRes.success && Array.isArray(assignRes.data) ? assignRes.data : [];
       setAssignedUsers(assignments.length);
@@ -203,9 +211,9 @@ export default function EventSessionsPage() {
         if (uploadedFile && !copyOn) {
           const importRes = await inviteeService.importExcel(eventId, uploadedFile, undefined, "APPEND");
           if (!importRes.success) {
-            alert(`Session created, but the invitee file could not be imported: ${importRes.message || "unknown error"}`);
+            showAlert(`Session created, but the invitee file could not be imported: ${importRes.message || "unknown error"}`);
           } else if (importRes.data && importRes.data.rejected > 0) {
-            alert(`Session created. ${importRes.data.imported} invitee(s) imported, ${importRes.data.rejected} row(s) rejected.`);
+            showAlert(`Session created. ${importRes.data.imported} invitee(s) imported, ${importRes.data.rejected} row(s) rejected.`);
           }
         }
         setSessionName("");
@@ -219,20 +227,21 @@ export default function EventSessionsPage() {
         setFormError(res.message || "Failed to create session on server.");
       }
     } catch (error: any) {
-      alert(error.message || "Error creating session.");
+      showAlert(error.message || "Error creating session.");
     }
   };
 
-  const handleDeleteSession = async (sessionId: string) => {
+  const handleDeleteSession = async (sessionId: string, name?: string) => {
+    if (!(await confirm({ title: "Delete session?", message: `"${name || "This session"}" will be removed from the event and from every guest's access. This cannot be undone.`, confirmText: "Delete Session", tone: "danger" }))) return;
     try {
       const res = await sessionService.deleteSession(sessionId);
       if (res.success) {
         await fetchSessions();
       } else {
-        alert(res.message || "Failed to delete session.");
+        showAlert(res.message || "Failed to delete session.");
       }
     } catch (e: any) {
-      alert(e.message || "Failed to delete session.");
+      showAlert(e.message || "Failed to delete session.");
     }
   };
 
@@ -274,12 +283,16 @@ export default function EventSessionsPage() {
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
+              disabled={historical}
+              title={historical ? "This event can no longer be changed" : undefined}
+              className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
             >
               <Icon name="events/add-white" width={24} height={24} />
               Add Session
             </button>
           </div>
+
+          <ClosedEventNotice status={eventStatus} />
 
           {/* Sessions Data Table matching Image 2 */}
           <div className="overflow-x-auto">
@@ -324,14 +337,17 @@ export default function EventSessionsPage() {
                       <td className="h-[46px] p-2.5">{sess.systemUsers === null || sess.systemUsers === undefined ? "—" : String(sess.systemUsers).padStart(2, "0")}</td>
                       <td className="h-[46px] p-2.5">{sess.accessControl || "No Restriction"}</td>
                       <td className="h-[46px] p-2.5 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteSession(sess._id || sess.id)}
-                          className="text-rose-500 hover:text-rose-700 font-semibold cursor-pointer text-sm"
-                          title="Delete Session"
-                        >
-                          Delete
-                        </button>
+                        {!historical && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSession(sess._id || sess.id, sess.name)}
+                            className="text-rose-500 hover:text-rose-700 font-semibold cursor-pointer text-sm"
+                            title="Delete Session"
+                            aria-label={`Delete session ${sess.name}`}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))

@@ -1,5 +1,6 @@
 import { tokenStorage } from "./tokenStorage";
 import { loginRedirectPath } from "@/components/auth/authPortal";
+import { refreshOutcome, type RefreshOutcome } from "./refreshOutcome";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
 export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
@@ -28,50 +29,68 @@ interface RawResponseBody {
 }
 
 let isRefreshing = false;
-let refreshSubscribers: ((newToken: string | null) => void)[] = [];
 
-function subscribeTokenRefresh(cb: (newToken: string | null) => void) {
+interface RefreshResult {
+  outcome: RefreshOutcome;
+  token: string | null;
+}
+
+const SERVER_UNAVAILABLE_MESSAGE = "The server could not be reached. Your work is safe; please try again in a moment.";
+
+let refreshSubscribers: ((result: RefreshResult) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (result: RefreshResult) => void) {
   refreshSubscribers.push(cb);
 }
 
-// Always settle queued requests, including when the refresh failed (null),
+// Always settle queued requests, including when the refresh failed,
 // otherwise they would wait forever and leave screens stuck on a spinner.
-function onRefreshed(newToken: string | null) {
-  refreshSubscribers.forEach((cb) => cb(newToken));
+function onRefreshed(result: RefreshResult) {
+  refreshSubscribers.forEach((cb) => cb(result));
   refreshSubscribers = [];
 }
 
-async function performTokenRefresh(): Promise<string | null> {
+async function exchangeRefreshToken(expiredAccessToken: string | null): Promise<RefreshResult> {
+  // Another tab may have renewed the session while this one waited for its turn: the tokens in storage are already new
+  const storedAccessToken = tokenStorage.getAccessToken();
+  if (storedAccessToken && storedAccessToken !== expiredAccessToken) return { outcome: "ok", token: storedAccessToken };
+
   const currentRefreshToken = tokenStorage.getRefreshToken();
   if (!currentRefreshToken) {
     tokenStorage.clearTokens();
-    return null;
+    return { outcome: "ended", token: null };
   }
 
+  let status: number | null = null;
+  let data: ApiResponse<{ accessToken?: string; refreshToken?: string }> = {};
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken: currentRefreshToken }),
     });
-
-    const data: ApiResponse<{ accessToken?: string; refreshToken?: string }> = await res.json();
-    if (res.ok && data.success && data.data?.accessToken) {
-      const newAccessToken = data.data.accessToken;
-      const newRefreshToken = data.data.refreshToken || currentRefreshToken;
-
-      tokenStorage.setAccessToken(newAccessToken);
-      tokenStorage.setRefreshToken(newRefreshToken);
-
-      return newAccessToken;
-    } else {
-      tokenStorage.clearTokens();
-      return null;
-    }
+    status = res.status;
+    data = await res.json().catch(() => ({}));
   } catch {
-    tokenStorage.clearTokens();
-    return null;
+    return { outcome: "unavailable", token: null };
   }
+
+  const outcome = refreshOutcome(status, !!data.data?.accessToken);
+  if (outcome === "ok") {
+    const newAccessToken = data.data!.accessToken!;
+    tokenStorage.setAccessToken(newAccessToken);
+    tokenStorage.setRefreshToken(data.data?.refreshToken || currentRefreshToken);
+    return { outcome, token: newAccessToken };
+  }
+  if (outcome === "ended") tokenStorage.clearTokens();
+  return { outcome, token: null };
+}
+
+// A refresh token works once and every tab shares one, so tabs take turns (where the browser supports it)
+async function performTokenRefresh(expiredAccessToken: string | null): Promise<RefreshResult> {
+  const locks = typeof navigator !== "undefined" ? navigator.locks : undefined;
+  if (locks) return locks.request("lgpsm-token-refresh", () => exchangeRefreshToken(expiredAccessToken));
+  return exchangeRefreshToken(expiredAccessToken);
 }
 
 // Identical GETs that are already on their way are shared: several parts of a page (the page itself, the tab strip, the page
@@ -121,20 +140,23 @@ async function requestApi<T = unknown>(
   };
 
   try {
+    const accessTokenUsed = headers["Authorization"]?.replace(/^Bearer /, "") ?? null;
     let response = await fetch(url, config);
 
     // Single-flight refresh token interceptor on 401
     if (response.status === 401 && requiresAuth) {
       if (!isRefreshing) {
         isRefreshing = true;
-        const newAccessToken = await performTokenRefresh();
+        const refreshed = await performTokenRefresh(accessTokenUsed);
         isRefreshing = false;
-        onRefreshed(newAccessToken);
+        onRefreshed(refreshed);
 
-        if (newAccessToken) {
+        if (refreshed.token) {
           // Retry original request once
-          headers["Authorization"] = `Bearer ${newAccessToken}`;
+          headers["Authorization"] = `Bearer ${refreshed.token}`;
           response = await fetch(url, { ...config, headers });
+        } else if (refreshed.outcome === "unavailable") {
+          return { success: false, message: SERVER_UNAVAILABLE_MESSAGE, status: 0 };
         } else {
           if (typeof window !== "undefined" && !window.location.pathname.includes("/signin")) {
             window.location.href = loginRedirectPath(window.location.pathname + window.location.search);
@@ -143,13 +165,15 @@ async function requestApi<T = unknown>(
         }
       } else {
         // Queue pending request until refresh finishes
-        const newToken = await new Promise<string | null>((resolve) => {
-          subscribeTokenRefresh((token) => resolve(token));
+        const refreshed = await new Promise<RefreshResult>((resolve) => {
+          subscribeTokenRefresh(resolve);
         });
 
-        if (newToken) {
-          headers["Authorization"] = `Bearer ${newToken}`;
+        if (refreshed.token) {
+          headers["Authorization"] = `Bearer ${refreshed.token}`;
           response = await fetch(url, { ...config, headers });
+        } else if (refreshed.outcome === "unavailable") {
+          return { success: false, message: SERVER_UNAVAILABLE_MESSAGE, status: 0 };
         } else {
           return { success: false, message: "Session expired. Please log in again." };
         }

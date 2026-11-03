@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { shouldOpenDashboardInstead } from "./src/utils/homeRedirect";
+import { shouldOpenDashboardInstead } from "./utils/homeRedirect";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // `lgpsm_access_token` is the legacy cookie name; accepted so sessions started before the change keep working
   const token = request.cookies.get("lgpsm_session")?.value || request.cookies.get("lgpsm_access_token")?.value;
   const { pathname } = request.nextUrl;

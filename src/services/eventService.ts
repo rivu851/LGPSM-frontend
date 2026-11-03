@@ -7,6 +7,7 @@
  * - Rate Locking: New event creation triggers backend price rate locking for the event.
  */
 
+import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse } from "./apiClient";
 
 // ─────────────────────────────────────────────
@@ -139,20 +140,15 @@ export const eventService = {
    * GET /api/v1/events
    */
   async getEvents(params?: { page?: number; limit?: number; organizerId?: string }): Promise<ApiResponse<EventsListData>> {
-    // Backend defaults to 10 per page; callers here render full lists/dropdowns
-    const effectiveParams = { limit: 100, ...(params || {}) };
-    const queryString = effectiveParams
-      ? `?${new URLSearchParams(
-          Object.fromEntries(
-            Object.entries(effectiveParams)
-              .filter(([, v]) => v !== undefined)
-              .map(([k, v]) => [k, String(v)])
-          )
-        ).toString()}`
-      : "";
-    return apiClient<EventsListData>(`/api/v1/events${queryString}`, {
-      method: "GET",
-    }, true);
+    const onePage = (query: Record<string, unknown>) => {
+      const queryString = new URLSearchParams(
+        Object.fromEntries(Object.entries(query).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)]))
+      ).toString();
+      return apiClient<EventsListData>(`/api/v1/events?${queryString}`, { method: "GET" }, true);
+    };
+    if (params?.page !== undefined) return onePage({ limit: 100, ...params });
+    // Callers here render full lists and dropdowns, so every page is fetched
+    return listAllPages<unknown>((page) => onePage({ limit: 100, ...params, page }) as unknown as Promise<ApiResponse<unknown[]>>) as unknown as Promise<ApiResponse<EventsListData>>;
   },
 
   /**

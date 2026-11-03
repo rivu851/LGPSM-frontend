@@ -1,3 +1,4 @@
+import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse } from "./apiClient";
 
 export interface ScanCheckInPayload {
@@ -104,5 +105,10 @@ export const checkInService = {
     const endpoint = `/api/v1/events/${eventId}/checkins${queryString ? `?${queryString}` : ""}`;
 
     return apiClient<CheckInRecord[]>(endpoint, { method: "GET" }, true);
+  },
+
+  /** Every attendance record of an event, for screens that work out each guest's check-in status in the browser. */
+  async getAllCheckIns(eventId: string): Promise<ApiResponse<CheckInRecord[]>> {
+    return listAllPages((page) => this.getCheckIns(eventId, { page, limit: 1000 }));
   },
 };

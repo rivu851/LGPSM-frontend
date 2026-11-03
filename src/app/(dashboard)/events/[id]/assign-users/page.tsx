@@ -1,5 +1,7 @@
 "use client";
 
+import { isHistoricalEvent } from "@/utils/eventUtils";
+import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -30,6 +32,8 @@ export default function EventAssignUsersPage() {
   const [users, setUsers] = useState<SystemUserRow[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [eventTitle, setEventTitle] = useState("");
+  const [eventStatus, setEventStatus] = useState<string | undefined>();
+  const historical = isHistoricalEvent(eventStatus);
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -79,7 +83,10 @@ export default function EventAssignUsersPage() {
       });
       const sessionList = Array.isArray(sessionsRes?.data) ? sessionsRes.data : [];
       setSessions(sessionList);
-      if (eventRes.success && eventRes.data) setEventTitle(eventRes.data.title || "");
+      if (eventRes.success && eventRes.data) {
+        setEventTitle(eventRes.data.title || "");
+        setEventStatus((eventRes.data as { status?: string }).status);
+      }
 
       // System users only (role === SYSTEM_USER)
       if (!usersRes.success) throw new Error(usersRes.message || "Failed to load system users.");
@@ -307,6 +314,8 @@ export default function EventAssignUsersPage() {
           sessionsCount={isLoading ? undefined : sessions.length}
         />
 
+        <ClosedEventNotice status={eventStatus} />
+
         {/* Error Notification Banner */}
         {errorFeedback && (
           <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
@@ -427,6 +436,7 @@ export default function EventAssignUsersPage() {
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
+                          aria-label={`Select ${u.name}`}
                           className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer mt-0.5 check-orange"
                         />
                       </td>
@@ -531,7 +541,7 @@ export default function EventAssignUsersPage() {
                         {(() => {
                           const onThisEvent = u.assignments.find((a) => a.eventId === eventId);
                           return (
-                            <RowMenu
+                            historical ? null : <RowMenu
                               label={`Actions for ${u.name}`}
                               items={[
                                 { label: onThisEvent ? "Change sessions" : "Assign to this event", icon: EditIcon, onClick: () => openAssignFor(u.id) },
@@ -556,7 +566,7 @@ export default function EventAssignUsersPage() {
           </div>
 
           {/* Nothing ticked, nothing to act on: the button appears once someone is selected */}
-          {selectedUserIds.length > 0 && (
+          {selectedUserIds.length > 0 && !historical && (
             <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
               <button
                 type="button"

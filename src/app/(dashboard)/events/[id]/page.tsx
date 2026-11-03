@@ -487,7 +487,7 @@ export default function EventDetailsPage() {
             </div>
             <div className="border border-[#E0E0E0] rounded-lg p-4 min-w-0">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Access Logs</h4>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
                 <table className="w-full text-left text-sm min-w-[520px]">
                   <thead className="text-[#828282] border-b border-[#D3D3D3]">
                     <tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">Session</th><th className="py-2 pr-3 font-medium">Entry Time</th><th className="py-2 pr-3 font-medium">Exit Time</th><th className="py-2 font-medium">Staff</th></tr>

@@ -1,28 +1,21 @@
 "use client";
 
+import { csvRow } from "@/utils/csv";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
 import { EarningsRecord } from "@/types/earnings";
 import EarningsOverviewCard from "@/components/earnings/EarningsOverviewCard";
 import EarningsStatsRow from "@/components/earnings/EarningsStatsRow";
 import EarningsTable from "@/components/earnings/EarningsTable";
-import { eventService } from "@/services/eventService";
-import { reportService } from "@/services/reportService";
+import { EarningsData, platformSettingsService } from "@/services/platformSettingsService";
 import { parseEventDate } from "@/utils/eventUtils";
-
-interface EventInviteSummary {
-  id: string;
-  eventName: string;
-  organizer: string;
-  invites: number;
-  eventStart?: string;
-}
 
 export default function EarningsPage() {
   const [activeTab, setActiveTab] = useState<"organizer" | "event">("organizer");
-  // The billing rate is not persisted by the backend yet; amounts below are estimates at this rate
-  const [rate, setRate] = useState<number>(3.0);
-  const [tempRate, setTempRate] = useState<number>(3.0);
+  // The rate in force for new events. Each row below uses the rate locked on that event when it was created.
+  const [rate, setRate] = useState<number | null>(null);
+  const [tempRate, setTempRate] = useState<number>(1);
+  const [savingRate, setSavingRate] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -30,45 +23,24 @@ export default function EarningsPage() {
   const [hiddenIds, setHiddenIds] = useState<string[]>([]);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
 
-  const [eventSummaries, setEventSummaries] = useState<EventInviteSummary[]>([]);
+  const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Invitations actually sent per event, read from the event reports
+  // Worked out on the server: invitations actually sent x the rate locked on each event
   useEffect(() => {
     let cancelled = false;
-    async function loadEarnings() {
-      setLoading(true);
-      setLoadError(null);
-      const res = await eventService.getEvents();
+    platformSettingsService.getEarnings().then((res) => {
       if (cancelled) return;
-      if (!res.success || !Array.isArray(res.data)) {
-        setLoadError(res.message || "Failed to load events.");
-        setEventSummaries([]);
-        setLoading(false);
-        return;
+      if (res.success && res.data) {
+        setEarnings(res.data);
+        setRate(res.data.currentRate);
+        if (res.data.currentRate !== null) setTempRate(res.data.currentRate);
+      } else {
+        setLoadError(res.message || "Failed to load earnings.");
       }
-
-      const events = res.data as any[];
-      const summaries = await Promise.all(
-        events.map(async (ev) => {
-          const id = ev._id || ev.id;
-          const report = await reportService.getEventReport(id);
-          return {
-            id,
-            eventName: ev.title || "Untitled Event",
-            organizer: ev.organizerId?.profile?.organizationName || "Organisation not set",
-            invites: report.success && report.data ? report.data.deliverySummary?.SENT ?? 0 : 0,
-            eventStart: ev.schedule?.start,
-          };
-        })
-      );
-      if (cancelled) return;
-      setEventSummaries(summaries);
       setLoading(false);
-    }
-
-    loadEarnings();
+    });
     return () => {
       cancelled = true;
     };
@@ -84,16 +56,16 @@ export default function EarningsPage() {
     return (!fromDate || d >= fromDate) && (!toDate || d <= toDate);
   };
 
-  const eventRecords: EarningsRecord[] = eventSummaries
+  const eventRecords: EarningsRecord[] = (earnings?.events ?? [])
     .filter((ev) => inRange(ev.eventStart))
     .map((ev) => ({
-      id: `evt_${ev.id}`,
+      id: `evt_${ev.eventId}`,
       eventName: ev.eventName,
-      organizer: ev.organizer,
+      organizer: ev.organizerName || "Organisation not set",
       dateOfPayment: "—",
-      invites: ev.invites,
-      rate,
-      amount: ev.invites * rate,
+      invites: ev.invitesSent,
+      rate: ev.ratePerInvitee,
+      amount: ev.amount ?? 0,
       eventStart: ev.eventStart,
     }));
 
@@ -116,8 +88,16 @@ export default function EarningsPage() {
   const estimatedTotal = eventRecords.reduce((sum, r) => sum + r.amount, 0);
   const organizersBilled = organizerRecords.filter((r) => r.invites > 0).length;
 
-  const handleSaveRate = () => {
-    setRate(tempRate);
+  const handleSaveRate = async () => {
+    if (savingRate || tempRate === rate) return;
+    setSavingRate(true);
+    const res = await platformSettingsService.updateRate(tempRate);
+    setSavingRate(false);
+    if (!res.success || !res.data) {
+      setLoadError(res.message || "The rate could not be saved, so it is unchanged.");
+      return;
+    }
+    setRate(res.data.ratePerInvitee);
     setIsSavedNotice(true);
     setTimeout(() => setIsSavedNotice(false), 2500);
   };
@@ -152,8 +132,8 @@ export default function EarningsPage() {
     const rows = currentRecords
       .map((r) =>
         activeTab === "organizer"
-          ? `"${r.organizer}","${r.eventName}","${r.dateOfPayment}",${r.invites},$${r.rate},$${r.amount}`
-          : `"${r.eventName}","${r.organizer}","${r.dateOfPayment}",${r.invites},$${r.rate},$${r.amount}`
+          ? csvRow([r.organizer, r.eventName, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : `$${r.rate}`, `$${r.amount}`])
+          : csvRow([r.eventName, r.organizer, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : `$${r.rate}`, `$${r.amount}`])
       )
       .join("\n");
 
@@ -180,12 +160,13 @@ export default function EarningsPage() {
           tempRate={tempRate}
           setTempRate={setTempRate}
           onSaveRate={handleSaveRate}
+          saving={savingRate}
           isSavedNotice={isSavedNotice}
         />
 
         <p className="text-[11px] text-gray-500 font-medium -mt-2">
-          Invite counts are the invitations actually sent for each event. Online payments and a saved billing rate are not configured yet,
-          so amounts are estimates at the rate above.
+          Invite counts are the invitations actually sent for each event, at the rate locked on that event when it was created.
+          These are amounts due, not payments: online payments are not configured.
         </p>
 
         {loadError && (

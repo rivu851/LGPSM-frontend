@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
@@ -29,6 +29,7 @@ export default function DashboardLayout({
     return () => clearTimeout(timer);
   }, [welcoming]);
   const allowed = !!user && !isSystemUser && canAccessRoute(user.role, pathname);
+  const leavingAsStaff = useRef(false);
 
   // The client router does not run in a document restored from the back/forward cache, so leave with
   // a full navigation when such a page comes back without a session
@@ -44,6 +45,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (isLoading) return;
+    // A staff account being signed out below: its redirect carries the explanation, so this effect must not race it to the plain sign-in page
+    if (!isAuthenticated && leavingAsStaff.current) return;
     if (!isAuthenticated) {
       // Drop a leftover "signed in" marker (storage cleared, session ended elsewhere) so it stops redirecting the home page here
       if (!tokenStorage.getAccessToken()) tokenStorage.clearTokens();
@@ -53,6 +56,7 @@ export default function DashboardLayout({
     }
     // Assigned users work only in the mobile app; end any web session they still hold
     if (isSystemUser) {
+      leavingAsStaff.current = true;
       logout().then(() => router.replace("/signin?mode=organizer&notice=mobile-only"));
       return;
     }

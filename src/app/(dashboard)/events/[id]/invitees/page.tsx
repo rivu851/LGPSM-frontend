@@ -1,5 +1,7 @@
 "use client";
 
+import { eventCanIssuePasses, isHistoricalEvent } from "@/utils/eventUtils";
+import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -82,7 +84,7 @@ function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus:
 }
 
 // "⋯" row menu (Figma 217:20587: dark panel with a pointer). Edit and Resend as designed; card preview and remove kept.
-function InviteeRowMenu({ name, onEdit, onResend, onReplace, onRevoke, replaceNote, revokeNote, onRemove }: { name: string; onEdit: () => void; onResend?: () => void; onReplace?: () => void; onRevoke?: () => void; replaceNote?: string; revokeNote?: string; onRemove: () => void }) {
+function InviteeRowMenu({ name, onEdit, onResend, onReplace, onRevoke, replaceNote, revokeNote, onRemove }: { name: string; onEdit?: () => void; onResend?: () => void; onReplace?: () => void; onRevoke?: () => void; replaceNote?: string; revokeNote?: string; onRemove?: () => void }) {
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -116,7 +118,7 @@ function InviteeRowMenu({ name, onEdit, onResend, onReplace, onRevoke, replaceNo
         <div ref={menuRef} style={{ position: "fixed", ...position, width: MENU_WIDTH }} className="z-[9999] flex flex-col items-center">
           <Icon name="events/menu-arrow" width={16} height={8} />
           <div className="w-full bg-[#15191C] rounded-xl px-4 py-3 flex flex-col gap-[3px]" role="menu">
-            <button type="button" role="menuitem" onClick={run(onEdit)} className={item}><Icon name="events/edit" width={16} height={16} />Edit</button>
+            {onEdit && <button type="button" role="menuitem" onClick={run(onEdit)} className={item}><Icon name="events/edit" width={16} height={16} />Edit</button>}
             {onResend && <button type="button" role="menuitem" onClick={run(onResend)} className={item}><Icon name="events/send" width={16} height={16} />Resend Invitation</button>}
             {onReplace
               ? <button type="button" role="menuitem" onClick={run(onReplace)} className={item}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 12a9 9 0 0 0-15-6.7L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"/><path d="M21 21v-5h-5"/></svg>Replace Access Pass</button>
@@ -124,7 +126,7 @@ function InviteeRowMenu({ name, onEdit, onResend, onReplace, onRevoke, replaceNo
             {onRevoke
               ? <button type="button" role="menuitem" onClick={run(onRevoke)} className={item}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>Revoke Access Pass</button>
               : <span role="menuitem" aria-disabled="true" title={revokeNote} className={off}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>Revoke Access Pass</span>}
-            <button type="button" role="menuitem" onClick={run(onRemove)} className={`${base} text-rose-300 hover:text-rose-200`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>Remove</button>
+            {onRemove && <button type="button" role="menuitem" onClick={run(onRemove)} className={`${base} text-rose-300 hover:text-rose-200`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5"/></svg>Remove</button>}
           </div>
         </div>,
         document.body
@@ -206,7 +208,7 @@ export default function InviteesManagementPage() {
     setLoadError(null);
     // The delivery history only adds retry buttons and failure reasons: it is requested together with the rest, but the guest list
     // is shown as soon as the guests themselves arrive instead of waiting for it.
-    const historyRequest = invitationService.getInvitations(eventId);
+    const historyRequest = invitationService.getAllInvitations(eventId);
     const [evtRes, sessRes, invRes] = await Promise.all([
       eventService.getEvent(eventId),
       sessionService.getSessions(eventId),
@@ -262,6 +264,8 @@ export default function InviteesManagementPage() {
   const lifecycleStarted = invitees.some((i) => i.invitationStatus !== "PENDING") || history.length > 0;
   // Cleared entries stay in `history` (Resend needs their ids) but are not shown in the delivery history
   const visibleHistory = history.filter((h) => !h.clearedAt);
+  const historical = isHistoricalEvent(event?.status);
+  const canIssue = eventCanIssuePasses(event);
   const notInvited = invitees.filter((i) => i.invitationStatus === "PENDING");
   // The list is newest-first, so keep the first record seen per guest: the latest delivery is the one to resend
   // and the one whose failure reason is shown
@@ -410,7 +414,7 @@ export default function InviteesManagementPage() {
     setImportChoice((cur) => (cur ? { ...cur, sentSets: sets?.success && sets.data ? sets.data.sets.filter((x) => x.locked).length : 0 } : cur));
     // what each choice would do, from the server (writes nothing); the real import checks everything again
     try {
-      const file = rowsToSheetFile(rows, upload.file.name, ownLists.map((session) => session.name));
+      const file = await rowsToSheetFile(rows, upload.file.name, ownLists.map((session) => session.name));
       const [rep, app] = await Promise.all([
         inviteeService.importExcel(eventId, file, targetListId || undefined, "REPLACE", { dryRun: true }),
         inviteeService.importExcel(eventId, file, targetListId || undefined, "APPEND", { dryRun: true }),
@@ -428,7 +432,7 @@ export default function InviteesManagementPage() {
     setFeedback(null);
     let res: Awaited<ReturnType<typeof inviteeService.importExcel>>;
     try {
-      res = await inviteeService.importExcel(eventId, rowsToSheetFile(rows, fileName, ownLists.map((session) => session.name)), targetListId || undefined, mode);
+      res = await inviteeService.importExcel(eventId, await rowsToSheetFile(rows, fileName, ownLists.map((session) => session.name)), targetListId || undefined, mode);
     } catch {
       setFeedback({ type: "error", message: "The import request could not reach the server. Existing invitees are unchanged; please retry." });
       return;
@@ -575,6 +579,7 @@ export default function InviteesManagementPage() {
           </div>
         ) : (
           <>
+            <ClosedEventNotice status={event?.status} />
             {/* Controls (Figma 217:21076 / 217:20587): Invitees + search, event, session, Add Invitees, then Send — or Resend
                 once everyone has been invited */}
             <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-3">
@@ -612,12 +617,14 @@ export default function InviteesManagementPage() {
                 )}
                 <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={[{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
+                {!historical && (
                 <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
+                )}
                 {notInvited.length > 0 || !lifecycleStarted ? (
-                  <button type="button" onClick={requestSend} disabled={busy !== null || sendTargets.length === 0} title={sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={`${primaryOutline}`}>
+                  <button type="button" onClick={requestSend} disabled={!canIssue || busy !== null || sendTargets.length === 0} title={!canIssue ? "This event is over, so invitations can no longer be sent" : sendTargets.length ? undefined : "Tick the guests to invite, or filter by Not Sent"} className={`${primaryOutline}`}>
                     <ButtonIcon name={busy === "send" ? "spinner" : "send"} />
                     {busy === "send" ? "Sending..." : sendTargets.length ? `Send Invitation (${sendTargets.length})` : "Send Invitation"}
                   </button>
@@ -625,8 +632,8 @@ export default function InviteesManagementPage() {
                   <button
                     type="button"
                     onClick={() => handleResend()}
-                    disabled={busy !== null || resendTargets.length === 0}
-                    title={resendTargets.length ? undefined : "Select guests to resend to"}
+                    disabled={!canIssue || busy !== null || resendTargets.length === 0}
+                    title={!canIssue ? "This event is over, so invitations can no longer be sent" : resendTargets.length ? undefined : "Select guests to resend to"}
                     className={`${primaryOutline}`}
                   >
                     <ButtonIcon name={busy === "resend" ? "spinner" : "resend"} />
@@ -638,7 +645,7 @@ export default function InviteesManagementPage() {
 
             {/* Working tools the frames do not show are kept in a secondary row */}
             <div className="flex flex-wrap items-center gap-2.5">
-              <input ref={fileInput} type="file" accept=".xlsx,.xls" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
+              <input ref={fileInput} type="file" accept=".xlsx,.xls" aria-label="Upload invitee Excel file" className="sr-only" onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ""; }} />
               <div className="w-[230px]">
                 <CustomDropdown
                   value={channel}
@@ -687,8 +694,8 @@ export default function InviteesManagementPage() {
                 <button
                   type="button"
                   onClick={() => handleResend()}
-                  disabled={busy !== null || resendTargets.length === 0}
-                  title={lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent"}
+                  disabled={!canIssue || busy !== null || resendTargets.length === 0}
+                  title={!canIssue ? "This event is over, so invitations can no longer be sent" : lifecycleStarted ? (resendTargets.length ? undefined : "Select guests who were already invited") : "Available after invitations have been sent"}
                   className={`${btn} border border-[#E0E0E0] text-gray-800 hover:bg-gray-50`}
                 >
                   <ButtonIcon name={busy === "resend" ? "spinner" : "resend"} />
@@ -736,7 +743,7 @@ export default function InviteesManagementPage() {
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
                 <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
-                <button type="button" onClick={() => setShowChooser(true)} disabled={!event} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -816,13 +823,13 @@ export default function InviteesManagementPage() {
                           <td className="py-3 px-2.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
                             <InviteeRowMenu
                               name={i.name}
-                              onEdit={() => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "" })}
-                              onResend={sentRecord?._id && i.invitationStatus !== "PENDING" ? () => handleResend([sentRecord]) : undefined}
+                              onEdit={historical ? undefined : () => setEditing({ id: i._id, name: i.name, email: i.email || "", phone: i.mobile || "" })}
+                              onResend={canIssue && sentRecord?._id && i.invitationStatus !== "PENDING" ? () => handleResend([sentRecord]) : undefined}
                               onReplace={replaceAvailability(i, event?.status).allowed ? () => setPassAction({ action: "REPLACE", invitee: i, needsReview: replaceAvailability(i, event?.status).needsReview }) : undefined}
                               onRevoke={revokeAvailability(i, event?.status).allowed ? () => setPassAction({ action: "REVOKE", invitee: i }) : undefined}
                               replaceNote={replaceAvailability(i, event?.status).why}
                               revokeNote={revokeAvailability(i, event?.status).why}
-                              onRemove={() => setDeletingId(i._id)}
+                              onRemove={historical ? undefined : () => setDeletingId(i._id)}
                             />
                           </td>
                         </tr>

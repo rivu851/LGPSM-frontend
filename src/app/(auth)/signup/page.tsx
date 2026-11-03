@@ -41,8 +41,15 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState(() => {
     if (typeof window === "undefined") return "";
+    // the "Sign Up Free" forms on the marketing pages pass the address along
     return sessionStorage.getItem("lgpsm_pending_verification_email") || "";
   });
+  // The "Sign Up Free" forms on the marketing pages pass the address along. Read after mounting: during an in-app navigation the
+  // browser's address is only updated once the page has rendered.
+  useEffect(() => {
+    const passedAlong = new URLSearchParams(window.location.search).get("email");
+    if (passedAlong) void Promise.resolve().then(() => setEmail((current) => current || passedAlong));
+  }, []);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

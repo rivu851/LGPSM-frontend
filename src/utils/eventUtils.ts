@@ -76,6 +76,26 @@ export function getDynamicEventStatus(
   return "Upcoming";
 }
 
+/**
+ * What a list shows for an event: what happened to it comes first (closed early, or cancelled), and only an event still running is judged
+ * by its dates. A closed event must never read "Ongoing" just because its end time has not come yet.
+ */
+export function eventDisplayStatus(event: { status?: string; schedule?: { start?: unknown; end?: unknown } | null }): EventStatusType | "Cancelled" {
+  if (event.status === "CANCELLED") return "Cancelled";
+  if (event.status === "COMPLETED") return "Completed";
+  return getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
+}
+
+/** A closed or cancelled event is a record: its guests, sessions and staff no longer change (the server enforces this). */
+export const isHistoricalEvent = (status?: string): boolean => status === "COMPLETED" || status === "CANCELLED";
+
+/** No new pass is issued once an event is over: the server refuses to send for it. */
+export function eventCanIssuePasses(event?: { status?: string; schedule?: { end?: unknown } | null; admission?: { closesAt?: unknown } | null } | null): boolean {
+  if (!event || isHistoricalEvent(event.status)) return false;
+  const closes = parseEventDate(event.admission?.closesAt) ?? parseEventDate(event.schedule?.end);
+  return !closes || closes.getTime() > Date.now();
+}
+
 export function formatPhoneNumber(phone?: string): string {
   if (!phone || typeof phone !== "string") return "";
 

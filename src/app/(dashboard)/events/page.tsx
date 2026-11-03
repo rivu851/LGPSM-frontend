@@ -8,7 +8,7 @@ import EventCancelModal from "@/components/events/EventCancelModal";
 import { eventService } from "@/services/eventService";
 import { sessionService } from "@/services/sessionService";
 import { useCategories } from "@/hooks/useCategories";
-import { getDynamicEventStatus } from "@/utils/eventUtils";
+import { eventDisplayStatus } from "@/utils/eventUtils";
 import { formatEventId } from "@/utils/formatId";
 import { formatCompactDateTime } from "@/utils/dateTime";
 import PageHeader from "@/components/common/PageHeader";
@@ -69,7 +69,7 @@ interface RawEvent {
 
 function toRow(e: RawEvent): EventRow {
   const id = String(e._id || e.id);
-  const timeStatus = getDynamicEventStatus(e.schedule?.start, e.schedule?.end, "Upcoming") as RowStatus;
+  const timeStatus = eventDisplayStatus(e) as RowStatus;
   const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not send" : timeStatus;
   const cat = typeof e.categoryId === "object" ? e.categoryId : null;
   const org = typeof e.organizerId === "object" ? e.organizerId : null;

@@ -2,13 +2,15 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function HeroSection() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
+  // Starts the real sign-up with the address already filled in
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Signing up with: ${email}`);
-    setEmail("");
+    router.push(`/signup?email=${encodeURIComponent(email.trim())}`);
   };
 
   return (

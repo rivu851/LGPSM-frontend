@@ -13,7 +13,7 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
     const rows = history
       .map(
         (r) =>
-          `"${r.dateTime}",$${r.previousRate},$${r.newRate},${r.changeType},${r.status}`
+          `"${r.dateTime}",${r.previousRate === null ? "Not set" : `$${r.previousRate}`},$${r.newRate},${r.changeType},${r.status}`
       )
       .join("\n");
     const blob = new Blob([headers + rows], { type: "text/csv" });
@@ -66,7 +66,7 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
                   <td className="py-3.5 px-4 font-medium text-gray-800">
                     {item.dateTime}
                   </td>
-                  <td className="py-3.5 px-4 text-gray-600">${item.previousRate}</td>
+                  <td className="py-3.5 px-4 text-gray-600">{item.previousRate === null ? "Not set" : `$${item.previousRate}`}</td>
                   <td className="py-3.5 px-4 font-semibold text-gray-800">
                     ${item.newRate}
                   </td>

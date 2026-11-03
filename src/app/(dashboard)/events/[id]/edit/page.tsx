@@ -122,7 +122,7 @@ export default function EditEventPage() {
     return (
       <div className="w-full min-h-full flex items-center justify-center bg-[#F4F5F8] p-6">
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">Event unavailable</h2>
+          <h1 className="text-lg font-bold text-gray-900">Event unavailable</h1>
           <p className="text-xs text-gray-500 break-words">{loadError}</p>
           <Link href="/events" className="inline-block px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white rounded-md text-xs font-semibold">
             Back to Events
@@ -136,7 +136,7 @@ export default function EditEventPage() {
     return (
       <div className="w-full min-h-full flex items-center justify-center bg-[#F4F5F8] p-6">
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
-          <h2 className="text-lg font-bold text-gray-900">Event details are locked</h2>
+          <h1 className="text-lg font-bold text-gray-900">Event details are locked</h1>
           <p className="text-sm text-gray-600">This event can’t be edited after invitations have been sent.</p>
           <Link href={`/events/${eventId}`} className="inline-block px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-semibold">Back to Event</Link>
         </div>

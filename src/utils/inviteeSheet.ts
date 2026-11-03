@@ -1,4 +1,5 @@
-import * as XLSX from "xlsx";
+// The spreadsheet library is by far the largest thing these screens use (500 KB), and most visits never touch a spreadsheet: it loads when needed
+const loadXlsx = () => import("xlsx");
 import type { ExpectedColumn, InviteeFieldKey } from "@/utils/inviteeFields";
 
 // Parses an invitee sheet with the same header rules as the backend import
@@ -29,6 +30,7 @@ export const missingColumnsMessage = (missing: string[]): string =>
 const clean = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
 
 export async function parseInviteeSheet(file: File, sessionNames: string[] = [], expected?: ExpectedColumn[]): Promise<ParsedInviteeSheet> {
+  const XLSX = await loadXlsx();
   const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const raw = sheet ? XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 }) : [];
@@ -86,7 +88,8 @@ export function rowProblem(row: Pick<InviteeSheetRow, "name" | "email" | "phone"
 }
 
 // Rebuilds a sheet from (edited) rows so edits go through the same import as an uploaded file
-export function rowsToSheetFile(rows: InviteeSheetRow[], fileName: string, sessionNames: string[] = []): File {
+export async function rowsToSheetFile(rows: InviteeSheetRow[], fileName: string, sessionNames: string[] = []): Promise<File> {
+  const XLSX = await loadXlsx();
   const sheet = XLSX.utils.json_to_sheet(rows.map((r) => ({
     Name: r.name, Email: r.email, Mobile: r.phone, "Company Name": r.company, ...(r.identity ? { "Professional Identity": r.identity } : {}), ...(r.identity2 ? { "Second Identity": r.identity2 } : {}),
     ...Object.fromEntries(sessionNames.map((name) => [name, r.sessions?.[name] === false ? "N" : "Y"])),

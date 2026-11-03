@@ -158,7 +158,7 @@ export default function NotificationsPage() {
       <PageHeader title="Notification" />
 
       {/* Content */}
-      <main className="px-4 sm:px-6 pt-[35px] w-full space-y-4 pb-24">
+      <div className="px-4 sm:px-6 pt-[35px] w-full space-y-4 pb-24">
         {notifications.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-gray-500">
@@ -236,7 +236,7 @@ export default function NotificationsPage() {
             <p className="text-[11px] text-gray-400">You&apos;re all caught up.</p>
           </div>
         ) : null}
-      </main>
+      </div>
     </div>
   );
 }

@@ -33,25 +33,16 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
   // Unread cards stay white with a dot; read ones take the design's grey fill. Mark read and clear stay available.
   return (
     <div
-      role={unread && onMarkRead ? "button" : undefined}
-      tabIndex={unread && onMarkRead ? 0 : undefined}
       onClick={handleOpen}
-      onKeyDown={(e) => {
-        if ((e.key === "Enter" || e.key === " ") && unread) {
-          e.preventDefault();
-          handleOpen();
-        }
-      }}
-      aria-label={unread ? `Unread: ${notification.title}` : undefined}
       className={`rounded-md border border-[#E0E0E0] px-5 pt-[22px] pb-5 flex gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5B22]/40 ${
         unread ? "bg-white cursor-pointer hover:border-[#FFB08A]" : "bg-[#F8F8F8]"
       }`}
     >
       <div className="flex-1 min-w-0">
-        <h3 className="flex items-center gap-2 text-base font-medium text-[#15191C] break-words">
-          {unread && <span aria-hidden className="size-2 rounded-full bg-[#FF651D] shrink-0" />}
+        <h2 className="flex items-center gap-2 text-base font-medium text-[#15191C] break-words">
+          {unread && <><span aria-hidden className="size-2 rounded-full bg-[#FF651D] shrink-0" /><span className="sr-only">Unread: </span></>}
           {notification.title}
-        </h3>
+        </h2>
         <p className="mt-3 text-xs text-[#828282] leading-[1.25] break-words">{notification.message}</p>
         {notification.timestamp && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-[#A0A0A0]" title={notification.timeAgo}>

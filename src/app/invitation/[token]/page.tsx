@@ -184,17 +184,17 @@ export default function PublicInvitationPage() {
 
   if (error && !invitationData) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
           <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-slate-800">Invitation Not Found</h2>
+          <h1 className="text-xl font-bold text-slate-800">Invitation Not Found</h1>
           <p className="text-sm text-slate-600">{error}</p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -205,7 +205,7 @@ export default function PublicInvitationPage() {
   // An old link whose pass was replaced: say so and point to the new message. Nothing about the new pass is shown here.
   if (passStatus === "REPLACED") {
     return (
-      <div style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
+      <main style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
         <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden">
           <div className="px-7 pt-7 pb-8 text-center text-[color:var(--inv-on-primary)]" style={{ background: "linear-gradient(135deg, var(--inv-primary) 0%, color-mix(in srgb, var(--inv-primary) 72%, var(--inv-accent)) 100%)" }}>
             <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] mb-3 border border-current/30 bg-white/15">Access pass replaced</span>
@@ -219,7 +219,7 @@ export default function PublicInvitationPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
     );
   }
   const locationText = event.format === "VIRTUAL"
@@ -232,7 +232,8 @@ export default function PublicInvitationPage() {
   const eventCancelled = event.status?.toUpperCase() === "CANCELLED";
   const canRespond = rsvpEnabled && !rsvpClosed && !eventCancelled;
   // No RSVP for this event but guests are asked for food: the choice is made here, on the access card (the first option is pre-selected)
-  const foodOnly = !rsvpEnabled && dietaryPrompts.length > 0 && !eventCancelled;
+  const eventOver = passStatus === "EXPIRED" && !eventCancelled;
+  const foodOnly = !rsvpEnabled && dietaryPrompts.length > 0 && !eventCancelled && !eventOver;
   const foodChoice = (index: number) => dietaryChoices[String(index)] || dietaryPrompts[index]?.options[0] || "";
   // What is already saved for this guest, to keep "Save" off until something is changed
   const storedChoices = restoreDietaryChoices(dietaryPrompts, invitee.dietarySelections, invitee.dietaryPreference);
@@ -256,7 +257,7 @@ export default function PublicInvitationPage() {
   ].filter(Boolean).join(" · ");
 
   return (
-    <div style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
+    <main style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
       <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden">
         {/* Header: the colours and character of the invitation card the guest was sent */}
         <div
@@ -293,7 +294,14 @@ export default function PublicInvitationPage() {
             </div>
           )}
 
-          {!cardImageFailed && !eventCancelled && passStatus !== "REVOKED" && (
+          {eventOver && (
+            <div role="status" className="rounded-xl border border-[#E0E0E0] bg-[#F4F4F4] p-4 space-y-2 text-sm text-[color:var(--inv-ink)]">
+              <p className="font-semibold">This event has ended.</p>
+              <p>Your access pass is no longer valid for entry.</p>
+            </div>
+          )}
+
+          {!cardImageFailed && !eventCancelled && !eventOver && passStatus !== "REVOKED" && (
             <figure className="mx-auto flex max-w-[220px] flex-col items-center gap-2">
               <img
                 src={invitationService.publicInvitationCardUrl(token)}
@@ -558,6 +566,6 @@ export default function PublicInvitationPage() {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

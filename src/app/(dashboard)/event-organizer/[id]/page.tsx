@@ -7,7 +7,7 @@ import { addButtonClass } from "@/components/common/ListControls";
 import { useParams, useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
-import { getDynamicEventStatus } from "@/utils/eventUtils";
+import { eventDisplayStatus } from "@/utils/eventUtils";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { formatEventId } from "@/utils/formatId";
 import { usePageTitle } from "@/context/PageTitleContext";
@@ -113,7 +113,7 @@ export default function OrganizerDetailsPage() {
           startDate: start ? new Date(start).toLocaleString() : "TBD",
           startTs: start && !Number.isNaN(new Date(start).getTime()) ? new Date(start).getTime() : null,
           endDate: end ? new Date(end).toLocaleString() : "TBD",
-          status: rawStatus === "CANCELLED" ? "Cancelled" : getDynamicEventStatus(start, end, ev.status) as EventRow["status"],
+          status: eventDisplayStatus({ status: rawStatus, schedule: { start, end } }) as EventRow["status"],
         };
       });
 
@@ -209,7 +209,7 @@ export default function OrganizerDetailsPage() {
         <PageHeader title="Event Organizer" />
 
         {/* Page Content */}
-        <main className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Organizer Detail Banner Card */}
           <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
@@ -449,7 +449,7 @@ export default function OrganizerDetailsPage() {
               </table>
             </div>
           </div>
-        </main>
+        </div>
 
       {/* Deactivate Organizer Modal (Image 4) */}
       {isDeactivateModalOpen && (

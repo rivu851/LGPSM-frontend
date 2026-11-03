@@ -101,7 +101,7 @@ export default function AllOrganizersPage() {
         <PageHeader title="Event Organizer" />
 
         {/* Page Content */}
-        <main className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-6">
+        <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-6">
           {/* Controls (Figma 462:10218) */}
           <ListControls label="Organizer" searchId="organizer-search" placeholder="Search organizers" value={searchQuery} onChange={(v) => { setSearchQuery(v); setPage(1); }}>
             <Link href="/event-organizer/add" className={addButtonClass}>
@@ -166,6 +166,9 @@ export default function AllOrganizersPage() {
                       <button
                         type="button"
                         onClick={toggleSelectAll}
+role="checkbox"
+aria-checked={selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0}
+aria-label="Select all"
                         className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
                           selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0
                             ? "bg-[#10B981] border-[#10B981] text-white"
@@ -214,6 +217,9 @@ export default function AllOrganizersPage() {
                           <button
                             type="button"
                             onClick={() => toggleSelectRow(org.id)}
+role="checkbox"
+aria-checked={isSelected}
+aria-label={`Select ${org.name}`}
                             className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
                               isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
                             }`}
@@ -277,7 +283,7 @@ export default function AllOrganizersPage() {
               </div>
             )}
           </div>
-        </main>
+        </div>
     </div>
   );
 }
