@@ -17,6 +17,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Skeleton, SkeletonRegion, TableSkeletonRows } from "@/components/common/Skeleton";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import Icon from "@/components/icons/Icon";
+import { userService } from "@/services/userService";
 
 type RowStatus = "Upcoming" | "Ongoing" | "Completed" | "Invitation not send" | "Cancelled";
 
@@ -239,6 +240,9 @@ export default function EventListingPage() {
   const [rows, setRows] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [organizerOptions, setOrganizerOptions] = useState<{ value: string; label: string }[]>([]);
+  const [selectedOrganizerId, setSelectedOrganizerId] = useState("");
+  const [organizerError, setOrganizerError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({ eventId: "", name: "", organizer: "", category: "", sessions: "", status: "", from: "", to: "" });
@@ -250,19 +254,57 @@ export default function EventListingPage() {
 
   // The skeleton is for the first load; a refresh after cancelling or editing an event keeps the list on screen
   const loadedOnce = useRef(false);
+  const loadOrganizers = useCallback(async () => {
+    setOrganizerError(null);
+    try {
+      const res = await userService.getUsers("ORGANIZER");
+      if (!res.success || !Array.isArray(res.data)) {
+        setOrganizerError(res.message || "Failed to load organizers.");
+        return;
+      }
+      setOrganizerOptions(
+        res.data
+          .filter((organizer) => organizer.role === "ORGANIZER")
+          .map((organizer) => ({
+            value: organizer._id,
+            label: `${organizer.profile?.organizationName || organizer.fullName || organizer.email}${organizer.profile?.organizationName && organizer.fullName ? ` · ${organizer.fullName}` : ""}`,
+          }))
+      );
+    } catch (error) {
+      setOrganizerError(error instanceof Error ? error.message : "Failed to load organizers.");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isOrganizer) return;
+    const timeoutId = window.setTimeout(() => {
+      void loadOrganizers();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [isOrganizer, loadOrganizers]);
+
   const load = useCallback(async () => {
     if (!loadedOnce.current) setLoading(true);
     setLoadError(null);
-    const res = await eventService.getEvents();
+    const res = await eventService.getEvents(selectedOrganizerId ? { organizerId: selectedOrganizerId } : undefined);
     const list = Array.isArray(res.data) ? (res.data as unknown as RawEvent[]) : [];
     if (res.success) { setRows(list.map(toRow)); loadedOnce.current = true; }
     else setLoadError(res.message || "Failed to load events.");
     setLoading(false);
-  }, []);
+  }, [selectedOrganizerId]);
 
   useEffect(() => {
-    load();
+    const timeoutId = window.setTimeout(() => {
+      void load();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [load]);
+
+  const selectOrganizer = (organizerId: string) => {
+    setSelectedOrganizerId(organizerId);
+    setFilters((current) => ({ ...current, eventId: "", organizer: "" }));
+    setDraftFilters((current) => ({ ...current, eventId: "", organizer: "" }));
+  };
 
   const term = search.trim().toLowerCase();
   const fromDate = filters.from ? new Date(`${filters.from}T00:00:00`) : null;
@@ -523,6 +565,15 @@ export default function EventListingPage() {
             />
           </div>
           <div className="flex items-center gap-3 shrink-0 w-fit">
+            <div className="w-52">
+              <CustomDropdown
+                value={selectedOrganizerId}
+                onChange={selectOrganizer}
+                options={[{ value: "", label: "All Events" }, ...organizerOptions]}
+                ariaLabel="Filter events by organizer"
+                placeholder="All Events"
+              />
+            </div>
             <button
               type="button"
               onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}
@@ -543,6 +594,12 @@ export default function EventListingPage() {
           <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-sm flex items-center justify-between gap-3">
             <span className="break-words">{loadError}</span>
             <button type="button" onClick={load} className="font-medium underline shrink-0 cursor-pointer">Retry</button>
+          </div>
+        )}
+        {organizerError && (
+          <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-sm flex items-center justify-between gap-3">
+            <span className="break-words">{organizerError}</span>
+            <button type="button" onClick={loadOrganizers} className="font-medium underline shrink-0 cursor-pointer">Retry</button>
           </div>
         )}
 

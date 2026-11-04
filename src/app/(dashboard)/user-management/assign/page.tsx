@@ -2,7 +2,7 @@
 
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -19,11 +19,15 @@ import { TableSkeleton } from "@/components/common/Skeleton";
 import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 
 import { SystemUserRow, getAssignedCountText } from "@/utils/systemUserRows";
+import { UserData } from "@/services/tokenStorage";
 
 export default function AssignedSystemUsersPage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const { showAlert, confirm } = useAlert();
   const [users, setUsers] = useState<SystemUserRow[]>([]);
+  const [organizers, setOrganizers] = useState<UserData[]>([]);
+  const [selectedOrganizerId, setSelectedOrganizerId] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
   const [expandedUserIds, setExpandedUserIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -38,6 +42,8 @@ export default function AssignedSystemUsersPage() {
   const [editingUser, setEditingUser] = useState<SystemUserRow | null>(null);
   const [editFormData, setEditFormData] = useState({ name: "", email: "", phone: "" });
   const [submittingEdit, setSubmittingEdit] = useState(false);
+  const [addUserOrganizerId, setAddUserOrganizerId] = useState("");
+  const [addUserFormError, setAddUserFormError] = useState<string | null>(null);
 
   // Form states
   const [addUserData, setAddUserData] = useState({ userName: "", contactNo: "", email: "", password: "" });
@@ -50,17 +56,27 @@ export default function AssignedSystemUsersPage() {
   const [submittingUser, setSubmittingUser] = useState(false);
 
   // Fetch real SYSTEM_USER accounts and their MongoDB assignments
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setErrorFeedback(null);
 
       // 1. Fetch system users only (role === SYSTEM_USER)
-      const [usersRes, eventsRes] = await Promise.all([
-        userService.getUsers("SYSTEM_USER"),
+      const [usersRes, eventsRes, organizersRes] = await Promise.all([
+        userService.getUsers("SYSTEM_USER", selectedOrganizerId === "all" ? undefined : selectedOrganizerId),
         eventService.getEvents(),
+        userService.getUsers("ORGANIZER"),
       ]);
+      if (!usersRes.success) {
+        setUsers([]);
+        throw new Error(usersRes.message || "Failed to load system users.");
+      }
       const rawUsers = Array.isArray(usersRes?.data) ? usersRes.data : [];
+      if (organizersRes.success && Array.isArray(organizersRes.data)) {
+        setOrganizers(organizersRes.data.filter((organizer) => organizer.role === "ORGANIZER"));
+      } else {
+        setErrorFeedback(organizersRes.message || "Failed to load organizers.");
+      }
 
       // Filter out ADMIN & ORGANIZER strictly as UX defense
       const systemUsersOnly = rawUsers.filter((u) => u.role === "SYSTEM_USER");
@@ -72,8 +88,8 @@ export default function AssignedSystemUsersPage() {
         title: ev.title || ev.eventName || "Untitled Event",
       }));
       setEventsList(formattedEvents);
-      if (formattedEvents.length > 0 && !selectedEventId) {
-        setSelectedEventId(formattedEvents[0].id);
+      if (formattedEvents.length > 0) {
+        setSelectedEventId((current) => current || formattedEvents[0].id);
       }
 
       // 3. Collect assignments across events
@@ -137,24 +153,32 @@ export default function AssignedSystemUsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedOrganizerId]);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadData();
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [loadData]);
 
   // Handle adding new SYSTEM_USER account via backend API
   const handleAddUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!addUserData.userName || !addUserData.email) return;
+    if (isAdmin && !addUserOrganizerId) {
+      setAddUserFormError("Choose the organizer this system user belongs to.");
+      return;
+    }
     if (!addUserData.password || addUserData.password.length < 8) {
-      setErrorFeedback("Please set a password of at least 8 characters for the new user.");
+      setAddUserFormError("Please set a password of at least 8 characters for the new user.");
       return;
     }
 
     try {
       setSubmittingUser(true);
       setErrorFeedback(null);
+      setAddUserFormError(null);
 
       const res = await userService.createUser({
         fullName: addUserData.userName,
@@ -162,17 +186,23 @@ export default function AssignedSystemUsersPage() {
         phone: addUserData.contactNo || undefined,
         password: addUserData.password,
         role: "SYSTEM_USER",
+        ...(isAdmin ? { organizerId: addUserOrganizerId } : {}),
       });
 
       if (res.success) {
         setIsAddUserModalOpen(false);
         setAddUserData({ userName: "", contactNo: "", email: "", password: "" });
+        setAddUserOrganizerId("");
         await loadData();
       } else {
-        setErrorFeedback(res.message || "Failed to create system user account.");
+        const message = res.message || "Failed to create system user account.";
+        setErrorFeedback(message);
+        setAddUserFormError(message);
       }
     } catch (err: any) {
-      setErrorFeedback(err.message || "Error creating system user.");
+      const message = err.message || "Error creating system user.";
+      setErrorFeedback(message);
+      setAddUserFormError(message);
     } finally {
       setSubmittingUser(false);
     }
@@ -386,8 +416,35 @@ export default function AssignedSystemUsersPage() {
           </div>
         )}
 
+        <div className="max-w-sm space-y-1.5">
+          <label className="block text-sm font-medium text-[#15191C]">Organizer</label>
+          <CustomDropdown
+            value={selectedOrganizerId}
+            onChange={(value) => {
+              setSelectedIds([]);
+              setSelectedOrganizerId(value);
+            }}
+            options={[
+              { value: "all", label: "All System Users" },
+              ...organizers.map((organizer) => ({
+                value: organizer._id,
+                label: `${organizer.fullName}${organizer.profile?.organizationName ? ` · ${organizer.profile.organizationName}` : ""}`,
+              })),
+            ]}
+            ariaLabel="Filter system users by organizer"
+          />
+        </div>
+
         <ListControls label="System Users" searchId="assign-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
-          <button type="button" onClick={() => setIsAddUserModalOpen(true)} className={`${addButtonClass} cursor-pointer`}>
+          <button
+            type="button"
+            onClick={() => {
+              setAddUserOrganizerId(selectedOrganizerId === "all" ? "" : selectedOrganizerId);
+              setAddUserFormError(null);
+              setIsAddUserModalOpen(true);
+            }}
+            className={`${addButtonClass} cursor-pointer`}
+          >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -682,6 +739,30 @@ aria-label={`Select ${u.name}`}
             </div>
 
             <form onSubmit={handleAddUserSubmit} className="px-6 space-y-4">
+              {isAdmin && (
+                <div className="space-y-1.5 pt-4">
+                  <label className="text-sm font-medium text-[#15191C]">
+                    Organizer<span className="text-[#FF651D] ml-0.5">*</span>
+                  </label>
+                  <CustomDropdown
+                    portal
+                    value={addUserOrganizerId}
+                    onChange={(value) => {
+                      setAddUserOrganizerId(value);
+                      setAddUserFormError(null);
+                    }}
+                    options={organizers.map((organizer) => ({
+                      value: organizer._id,
+                      label: `${organizer.profile?.organizationName || organizer.fullName || organizer.email}${organizer.profile?.organizationName && organizer.fullName ? ` · ${organizer.fullName}` : ""}`,
+                    }))}
+                    placeholder="Select an organizer"
+                    emptyMessage="No organizers available"
+                    ariaLabel="Organizer for the new system user"
+                    disabled={organizers.length === 0}
+                  />
+                </div>
+              )}
+              {addUserFormError && <p role="alert" className="text-xs text-rose-700">{addUserFormError}</p>}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
                   User Name<span className="text-[#FF651D] ml-0.5">*</span>
