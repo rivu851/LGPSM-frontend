@@ -140,7 +140,8 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
-    cardInfo: null,
+    // A new event starts with nothing printed under the title: the guest lines stay blank until Additional Information is chosen in Settings
+    cardInfo: { primary: null, secondary: null },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
     skipInvitees: true,

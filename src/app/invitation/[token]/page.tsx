@@ -256,9 +256,14 @@ export default function PublicInvitationPage() {
     admissionCloses && endDate && !sameInstant(admissionCloses, endDate) ? `Check-in closes ${formatDateTime(admissionCloses)}` : null,
   ].filter(Boolean).join(" · ");
 
+  // The guest's pass image is the top of the page card; without it (cancelled, over, withdrawn, or it failed to load) the plain banner is used
+  const showPass = !cardImageFailed && !eventCancelled && !eventOver && passStatus !== "REVOKED";
+
   return (
     <main style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
-      <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden">
+      <div className={`${showPass ? "max-w-[400px]" : "max-w-lg"} w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden`}>
+        {!showPass && (
+          <>
         {/* Header: the colours and character of the invitation card the guest was sent */}
         <div
           className="px-7 pt-7 pb-8 text-center relative text-[color:var(--inv-on-primary)]"
@@ -276,8 +281,29 @@ export default function PublicInvitationPage() {
         </div>
         <div aria-hidden className="h-1.5 bg-[color:var(--inv-accent)]" />
 
+          </>
+        )}
+
+        {/* The invitation card itself is the top of this page: the guest's pass as designed, then the card extends downward with everything the guest needs */}
+        {showPass && (
+          <>
+            <img
+              src={invitationService.publicInvitationCardUrl(token)}
+              alt={`${event.title} digital access pass for ${invitee.name}`}
+              onError={() => setCardImageFailed(true)}
+              className="block w-full bg-[color:var(--inv-soft)] object-contain"
+            />
+            {/* tear line between the pass and the rest of the ticket */}
+            <div className="relative h-7 bg-white" role="separator" aria-label="Digital access pass">
+              <span aria-hidden className="absolute -left-3.5 top-0 size-7 rounded-full bg-[color:var(--inv-bg)] shadow-[inset_-2px_0_3px_rgba(0,0,0,0.06)]" />
+              <span aria-hidden className="absolute -right-3.5 top-0 size-7 rounded-full bg-[color:var(--inv-bg)] shadow-[inset_2px_0_3px_rgba(0,0,0,0.06)]" />
+              <span aria-hidden className="absolute inset-x-6 top-3.5 border-t-2 border-dashed border-[color:var(--inv-line)]" />
+            </div>
+          </>
+        )}
+
         {/* Card Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-5 sm:p-6 space-y-5">
           {eventCancelled && (
             <div role="alert" className="rounded-xl border border-[#E0E0E0] bg-[#F4F4F4] p-4 space-y-2 text-sm text-[color:var(--inv-ink)]">
               <p className="font-semibold">This event has been cancelled and is no longer taking place.</p>
@@ -301,26 +327,17 @@ export default function PublicInvitationPage() {
             </div>
           )}
 
-          {!cardImageFailed && !eventCancelled && !eventOver && passStatus !== "REVOKED" && (
-            <figure className="mx-auto flex max-w-[220px] flex-col items-center gap-2">
-              <img
-                src={invitationService.publicInvitationCardUrl(token)}
-                alt={`${event.title} digital access pass for ${invitee.name}`}
-                onError={() => setCardImageFailed(true)}
-                className="block w-full rounded-xl border-2 border-[color:var(--inv-line)] bg-white object-contain shadow-lg ring-4 ring-[color:var(--inv-soft)]"
-              />
-              <figcaption className="text-[11px] font-semibold tracking-[0.18em] text-[color:var(--inv-accent-text)]">DIGITAL ACCESS PASS</figcaption>
-            </figure>
-          )}
-
           {/* Invitee Welcome */}
-          <div className="bg-[color:var(--inv-soft)] rounded-xl p-4 border border-[color:var(--inv-line)] flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs text-slate-500 font-medium">Invited Guest</p>
-              <h2 className="text-base font-bold text-[color:var(--inv-ink)] break-words">{invitee.name}</h2>
+          <div className="rounded-2xl p-4 border-2 border-[color:var(--inv-line)] bg-gradient-to-br from-[color:var(--inv-soft)] to-white shadow-sm flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-lg font-bold text-[color:var(--inv-on-primary)] shadow-md">{(invitee.name || "?").trim().charAt(0).toUpperCase()}</span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Invited Guest</p>
+                <h2 className="text-lg font-bold leading-snug text-[color:var(--inv-ink)] break-words">{invitee.name}</h2>
+              </div>
             </div>
             <div>
-              <p className="text-xs text-slate-500 font-medium mb-0.5">RSVP Status</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)] mb-1">RSVP Status</p>
               {!rsvpEnabled ? (
                 // RSVP not set up for this event: the same "--" placeholder used for an empty dietary preference
                 <span className="text-xs font-semibold text-slate-400" aria-label="RSVP not requested">--</span>
@@ -338,7 +355,7 @@ export default function PublicInvitationPage() {
                 </span>
               )}
               {rsvpEnabled && !eventCancelled && closesAt && !Number.isNaN(closesAt.getTime()) && (
-                <p className="mt-1 text-[11px] text-slate-500">{rsvpClosed ? "Responses closed" : "Respond by"} {formatDateTime(closesAt)}</p>
+                <p className="mt-1 text-[11px] font-medium text-slate-600">{rsvpClosed ? "Responses closed" : "Respond by"} {formatDateTime(closesAt)}</p>
               )}
             </div>
           </div>
@@ -346,82 +363,85 @@ export default function PublicInvitationPage() {
           {/* Event Details */}
           <div className="space-y-3">
             {event.description && (
-              <p className="text-xs text-slate-600 leading-relaxed break-words whitespace-pre-line">{event.description}</p>
+              <p className="text-sm text-[color:var(--inv-ink)]/80 leading-relaxed break-words whitespace-pre-line">{event.description}</p>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+            <div className="rounded-2xl border border-[color:var(--inv-line)] bg-white shadow-sm divide-y divide-[color:var(--inv-line)] overflow-hidden text-sm">
               {event.organizerName && (
-                <div className="flex items-start gap-2 bg-[color:var(--inv-soft)] p-3 rounded-lg border border-[color:var(--inv-line)]">
-                  <svg className="w-4 h-4 text-[color:var(--inv-accent-text)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <div className="flex items-start gap-3.5 px-4 py-3.5">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-sm"><svg className="size-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" />
-                  </svg>
+                  </svg></span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-[color:var(--inv-ink)]">Hosted by</p>
-                    <p className="text-slate-500 break-words">{event.organizerName}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Hosted by</p>
+                    <p className="font-medium text-[color:var(--inv-ink)] break-words">{event.organizerName}</p>
                   </div>
                 </div>
               )}
 
               {locationText && (
-                <div className="flex items-start gap-2 bg-[color:var(--inv-soft)] p-3 rounded-lg border border-[color:var(--inv-line)]">
-                  <svg className="w-4 h-4 text-[color:var(--inv-accent-text)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-3.5 px-4 py-3.5">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-sm"><svg className="size-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  </svg></span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-[color:var(--inv-ink)]">Location</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Location</p>
                     {event.format === "VIRTUAL" ? (
-                      <p className="text-slate-500 break-words">{locationText}</p>
+                      <p className="font-medium text-[color:var(--inv-ink)] break-words">{locationText}</p>
                     ) : (
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`} target="_blank" rel="noreferrer" className="text-slate-500 break-words underline decoration-slate-300 underline-offset-2 hover:text-[color:var(--inv-accent-text)]">
+                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationText)}`} target="_blank" rel="noreferrer" className="font-medium text-[color:var(--inv-ink)] break-words underline decoration-slate-300 underline-offset-2 hover:text-[color:var(--inv-accent-text)]">
                         {locationText}
                       </a>
                     )}
-                    {addressDetails && <p className="text-slate-500 break-words whitespace-pre-line mt-0.5">{addressDetails}</p>}
+                    {addressDetails && <p className="font-medium text-[color:var(--inv-ink)] break-words whitespace-pre-line mt-0.5">{addressDetails}</p>}
                   </div>
                 </div>
               )}
 
               {event.schedule && (
-                <div className="flex items-start gap-2 bg-[color:var(--inv-soft)] p-3 rounded-lg border border-[color:var(--inv-line)]">
-                  <svg className="w-4 h-4 text-[color:var(--inv-accent-text)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-start gap-3.5 px-4 py-3.5">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-sm"><svg className="size-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
+                  </svg></span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-[color:var(--inv-ink)]">Date & Time</p>
-                    <p className="text-slate-500 break-words">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Date & Time</p>
+                    <p className="font-medium text-[color:var(--inv-ink)] break-words">
                       {formatDateTime(startDate)}
                       {endDate && !isNaN(endDate.getTime()) ? ` – ${formatDateTime(endDate)}` : ""}
                     </p>
                     {admissionNote && <p className="mt-1 text-xs font-medium text-[color:var(--inv-accent-text)]">{admissionNote}</p>}
-                    {event.timeZone && <p className="mt-0.5 text-[10px] text-slate-400">Times shown in {event.timeZone}</p>}
+                    {event.timeZone && <p className="mt-0.5 text-[11px] text-slate-500">Times shown in {event.timeZone}</p>}
                   </div>
                 </div>
               )}
 
               {event.contactNumber && (
-                <div className="flex items-start gap-2 bg-[color:var(--inv-soft)] p-3 rounded-lg border border-[color:var(--inv-line)]">
-                  <svg className="w-4 h-4 text-[color:var(--inv-accent-text)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <div className="flex items-start gap-3.5 px-4 py-3.5">
+                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-sm"><svg className="size-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.95.68l1.2 3.6a1 1 0 01-.5 1.2l-2.1 1.05a11.04 11.04 0 005.12 5.12l1.05-2.1a1 1 0 011.2-.5l3.6 1.2a1 1 0 01.68.95V19a2 2 0 01-2 2h-1C9.16 21 3 14.84 3 7V5z" />
-                  </svg>
+                  </svg></span>
                   <div className="min-w-0">
-                    <p className="font-semibold text-[color:var(--inv-ink)]">Event contact</p>
-                    <a href={`tel:${event.contactNumber.replace(/[^+\d]/g, "")}`} className="text-slate-500 break-words hover:text-[color:var(--inv-accent-text)]">{event.contactNumber}</a>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Event contact</p>
+                    <a href={`tel:${event.contactNumber.replace(/[^+\d]/g, "")}`} className="font-medium text-[color:var(--inv-ink)] break-words hover:text-[color:var(--inv-accent-text)]">{event.contactNumber}</a>
                   </div>
                 </div>
               )}
             </div>
 
             {!!event.sessions?.length && (
-              <section aria-labelledby="invitation-sessions-title" className="rounded-lg border border-[color:var(--inv-line)] bg-[color:var(--inv-soft)] p-3">
-                <h3 id="invitation-sessions-title" className="text-xs font-semibold text-[color:var(--inv-ink)]">Your event sessions</h3>
-                <ul className="mt-2 divide-y divide-[color:var(--inv-line)]">
+              <section aria-labelledby="invitation-sessions-title" className="rounded-2xl border border-[color:var(--inv-line)] bg-white shadow-sm overflow-hidden">
+                <h3 id="invitation-sessions-title" className="px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)]">Your event sessions</h3>
+                <ul className="divide-y divide-[color:var(--inv-line)]">
                   {event.sessions.map((session, index) => (
-                    <li key={`${session.name}-${session.start || index}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 py-2 first:pt-0 last:pb-0 text-xs">
-                      <span className="font-medium text-[color:var(--inv-ink)] break-words">{session.name}</span>
-                      <span className="text-slate-500">
-                        {session.start ? formatDateTime(new Date(session.start)) : "Time TBD"}
-                        {session.end ? ` – ${formatDateTime(new Date(session.end))}` : ""}
+                    <li key={`${session.name}-${session.start || index}`} className="flex items-start gap-3 px-4 py-3 text-sm">
+                      <span aria-hidden className="mt-1.5 size-2.5 shrink-0 rounded-full bg-[color:var(--inv-accent)] ring-4 ring-[color:var(--inv-soft)]" />
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-[color:var(--inv-ink)] break-words">{session.name}</span>
+                        <span className="block text-xs font-medium text-slate-600">
+                          {session.start ? formatDateTime(new Date(session.start)) : "Time TBD"}
+                          {session.end ? ` – ${formatDateTime(new Date(session.end))}` : ""}
+                        </span>
                       </span>
                     </li>
                   ))}
