@@ -8,6 +8,7 @@ import CardFullscreen from "@/components/invitation/CardFullscreen";
 import BrandLoader from "@/components/common/BrandLoader";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { resolveInvitationTheme, themeCssVars } from "@/utils/invitationTheme";
+import { contactWithCountryCode } from "@/utils/eventUtils";
 
 interface DietaryPrompt {
   title: string;
@@ -328,14 +329,14 @@ export default function PublicInvitationPage() {
               <p className="font-semibold">This event has been cancelled and is no longer taking place.</p>
               <p><strong className="font-semibold">Your access pass is no longer valid</strong> and cannot be used for entry. You do not need to do anything.</p>
               {event.cancellation?.reason && <p className="break-words"><span className="font-semibold">Message from the organizer:</span> {event.cancellation.reason}</p>}
-              {event.contactNumber && <p>Questions? Contact the organizer on <a href={`tel:${event.contactNumber.replace(/[^+\d]/g, "")}`} className="underline">{event.contactNumber}</a>.</p>}
+              {event.contactNumber && <p>Questions? Contact the organizer on <a href={`tel:${contactWithCountryCode(event.contactNumber).replace(/[^+\d]/g, "")}`} className="underline">{contactWithCountryCode(event.contactNumber)}</a>.</p>}
             </div>
           )}
 
           {passStatus === "REVOKED" && !eventCancelled && (
             <div role="alert" className="rounded-xl border border-[#E0E0E0] bg-[#F4F4F4] p-4 space-y-2 text-sm text-[color:var(--inv-ink)]">
               <p className="font-semibold">Your access pass has been withdrawn.</p>
-              <p><strong className="font-semibold">The QR code no longer works for entry.</strong> This page still shows your event details and lets you answer your invitation. If you think this is a mistake, please contact the organizer{event.contactNumber ? <> on <a href={`tel:${event.contactNumber.replace(/[^+\d]/g, "")}`} className="underline">{event.contactNumber}</a></> : null}.</p>
+              <p><strong className="font-semibold">The QR code no longer works for entry.</strong> This page still shows your event details and lets you answer your invitation. If you think this is a mistake, please contact the organizer{event.contactNumber ? <> on <a href={`tel:${contactWithCountryCode(event.contactNumber).replace(/[^+\d]/g, "")}`} className="underline">{contactWithCountryCode(event.contactNumber)}</a></> : null}.</p>
             </div>
           )}
 
@@ -442,7 +443,7 @@ export default function PublicInvitationPage() {
                   </svg></span>
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Event contact</p>
-                    <a href={`tel:${event.contactNumber.replace(/[^+\d]/g, "")}`} className="font-medium text-[color:var(--inv-ink)] break-words hover:text-[color:var(--inv-accent-text)]">{event.contactNumber}</a>
+                    <a href={`tel:${contactWithCountryCode(event.contactNumber).replace(/[^+\d]/g, "")}`} className="font-medium text-[color:var(--inv-ink)] break-words hover:text-[color:var(--inv-accent-text)]">{contactWithCountryCode(event.contactNumber)}</a>
                   </div>
                 </div>
               )}

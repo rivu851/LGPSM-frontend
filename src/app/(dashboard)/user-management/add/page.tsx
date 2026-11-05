@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import React, { Suspense, useState, useEffect, useCallback } from "react";
@@ -300,8 +301,7 @@ function AddUserContent() {
                 <label className="text-sm font-medium text-[#15191C]">
                   Temporary Password<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="password"
+                <PasswordField
                   required
                   minLength={8}
                   autoComplete="new-password"

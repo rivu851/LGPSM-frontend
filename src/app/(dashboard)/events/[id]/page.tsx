@@ -260,9 +260,9 @@ export default function EventDetailsPage() {
   const totalInvitees = reportLoaded ? report?.totalInvitees ?? 0 : null;
   const timeStatus = event.status === "CANCELLED" ? "Cancelled" : event.status === "COMPLETED" ? "Completed" : getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
   // Until the report has arrived nothing is known about invitations, so no claim is made about them
-  const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not send" : timeStatus;
+  const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not sent" : timeStatus;
   const statusTone: Record<string, string> = {
-    "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+    "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
     Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
     Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
     Completed: "bg-[#FFE3D7] text-[#FF651D]",

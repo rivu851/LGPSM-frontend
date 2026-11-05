@@ -55,7 +55,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
         </div>
         <form onSubmit={save} noValidate className="px-6 py-5 space-y-5">
           <p className="text-sm text-[#4B4F52]">
-            Upload your finished invitation design. Your artwork is the card; each guest&apos;s own QR code and name are placed at the bottom of it, so leave that area calm. Only you can use this template.
+            Upload your finished invitation design. Your artwork is the card; each guest&apos;s own QR code and name are placed at the bottom of it, so leave that area calm. {categories.isOrganizer ? "Only you can use this template." : "Only you can pick this template; an organizer you create an event for gets their own copy of it."}
           </p>
           <div>
             <label htmlFor="own-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">Template name<span className="text-[#FF651D] ml-0.5">*</span></label>

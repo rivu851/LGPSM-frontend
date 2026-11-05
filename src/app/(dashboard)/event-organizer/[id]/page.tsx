@@ -23,7 +23,7 @@ interface EventRow {
   startDate: string;
   startTs: number | null;
   endDate: string;
-  status: "Upcoming" | "Completed" | "Ongoing" | "Invitation not send" | "Cancelled";
+  status: "Upcoming" | "Completed" | "Ongoing" | "Invitation not sent" | "Cancelled";
 }
 
 interface OrganizerDetail {
@@ -362,7 +362,7 @@ export default function OrganizerDetailsPage() {
                         ariaLabel="Status"
                         value={draftFilters.status}
                         onChange={(v) => setDraftFilters((f) => ({ ...f, status: v }))}
-                        options={[{ value: "", label: "All statuses" }, ...["Upcoming", "Ongoing", "Completed", "Invitation not send", "Cancelled"].map((st) => ({ value: st, label: st }))]}
+                        options={[{ value: "", label: "All statuses" }, ...["Upcoming", "Ongoing", "Completed", "Invitation not sent", "Cancelled"].map((st) => ({ value: st, label: st }))]}
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-xs font-medium text-[#4B4F52]">
@@ -437,9 +437,9 @@ export default function OrganizerDetailsPage() {
                             Ongoing
                           </span>
                         )}
-                        {ev.status === "Invitation not send" && (
+                        {ev.status === "Invitation not sent" && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
-                            Invitation not send
+                            Invitation not sent
                           </span>
                         )}
                       </td>

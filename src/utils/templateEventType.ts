@@ -39,7 +39,10 @@ export function eventTypeForTemplate(
   }
   const words = DESIGN_WORDS[t.cardDesign || ""];
   if (!words) return null;
-  const match = words.map((w) => categories.find((c) => c.label.toLowerCase().includes(w))).find(Boolean);
+  // the platform's own categories first; an organizer's custom one only when none of those fits
+  const isCustom = (c: CategoryOption) => /\(custom\)$/.test(c.label);
+  const inGroup = (group: CategoryOption[]) => words.map((w) => group.find((c) => c.label.toLowerCase().includes(w))).find(Boolean);
+  const match = inGroup(categories.filter((c) => !isCustom(c))) ?? inGroup(categories.filter(isCustom));
   return match ? { categoryId: match.value, subcategoryId: "" } : null;
 }
 

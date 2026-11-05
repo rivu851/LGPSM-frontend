@@ -44,3 +44,10 @@ test("the picker's own filters decide the event type; a subcategory left on All 
   assert.deepEqual(eventTypeForChoice(own, "", ""), own);
   assert.equal(eventTypeForChoice(null, "", ""), null);
 });
+
+test("a template with no event type prefers the platform's category over an organizer's custom one", () => {
+  const cats = [{ value: "c1", label: "Wedding Expo (custom)" }, { value: "p1", label: "Wedding" }];
+  assert.deepEqual(eventTypeForTemplate({ cardDesign: "WEDDING" }, cats), { categoryId: "p1", subcategoryId: "" });
+  // ...and only falls back to the custom one when nothing else fits
+  assert.deepEqual(eventTypeForTemplate({ cardDesign: "WEDDING" }, [{ value: "c1", label: "Wedding Expo (custom)" }]), { categoryId: "c1", subcategoryId: "" });
+});

@@ -25,6 +25,8 @@ interface Step1EventDetailsProps {
   categories: CategoriesApi;
   canManageCategories: boolean;
   isAdmin?: boolean;
+  /** An existing event keeps its organizer, so the "create for which organizer" field is only for new events */
+  isEditing?: boolean;
   // Admin event settings: RSVP can be switched off platform-wide
   rsvpAllowed: boolean;
   errors: DraftErrors;
@@ -261,7 +263,7 @@ function DateButton({ label, value, placeholder, onClick, error }: { label: stri
 }
 
 // Controlled step: all values live in the wizard draft owned by the page
-export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
   return (
     <form
       onSubmit={(e) => {
@@ -271,7 +273,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       noValidate
       className="p-4 sm:p-6 space-y-5"
     >
-      {isAdmin && (
+      {isAdmin && !isEditing && (
         <OrganizerSelectField
           selectedIds={draft.organizerIds}
           onChange={(organizerIds) => onChange({ organizerIds })}

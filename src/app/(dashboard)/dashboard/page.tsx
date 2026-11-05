@@ -3,6 +3,7 @@
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
 import { reportService } from "@/services/reportService";
@@ -22,7 +23,7 @@ interface OrganizerSummary {
   pastEvents: number;
 }
 
-interface UpcomingEvent {
+interface DashboardEvent {
   id: string;
   title: string;
   start: string;
@@ -31,7 +32,55 @@ interface UpcomingEvent {
   category: string;
 }
 
-const UPCOMING_LIMIT = 8;
+const EVENT_LIST_LIMIT = 8;
+
+/** One of the organizer's lists of events. The whole row opens the event; the title is a real link, so keyboards and "open in new tab" work too. */
+function EventListCard({ title, events, total, loading, empty }: { title: string; events: DashboardEvent[]; total: number; loading: boolean; empty: React.ReactNode }) {
+  const router = useRouter();
+  return (
+    <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-base font-bold text-gray-900">{title}{!loading && total > 0 ? <span className="ml-2 text-xs font-medium text-gray-500">({total})</span> : null}</h3>
+        <Link href="/events" className="text-xs font-semibold text-[#FF5B22] hover:underline whitespace-nowrap">View all events</Link>
+      </div>
+      <div className="overflow-x-auto">
+        {/* fixed columns, so the lists on this page line up with each other whatever they hold */}
+        <table className="w-full min-w-[760px] table-fixed text-left text-xs">
+          <thead>
+            <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
+              <th className="w-[28%] py-3 px-4 font-medium">Event</th>
+              <th className="w-[17%] py-3 px-4 font-medium whitespace-nowrap">Starts</th>
+              <th className="w-[17%] py-3 px-4 font-medium whitespace-nowrap">Ends</th>
+              <th className="w-[24%] py-3 px-4 font-medium">Location</th>
+              <th className="w-[14%] py-3 px-4 font-medium">Category</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 text-gray-800">
+            {loading ? (
+              <TableSkeletonRows rows={3} cols={5} />
+            ) : events.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-gray-500 font-medium">{empty}</td>
+              </tr>
+            ) : (
+              events.map((ev) => (
+                <tr key={ev.id} onClick={() => router.push(`/events/${ev.id}`)} className="cursor-pointer hover:bg-gray-50/80 transition-colors">
+                  <td className="py-4 px-4 font-semibold text-gray-900 truncate" title={ev.title}>
+                    <Link href={`/events/${ev.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#FF5B22]">{ev.title}</Link>
+                  </td>
+                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.start, "—")}</td>
+                  <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.end, "—")}</td>
+                  <td className="py-4 px-4 text-gray-600 truncate" title={ev.where}>{ev.where}</td>
+                  <td className="py-4 px-4 text-gray-600 truncate" title={ev.category}>{ev.category || "—"}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -44,8 +93,10 @@ export default function DashboardPage() {
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState<boolean>(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
-  // The organizer's next events, soonest first
-  const [upcoming, setUpcoming] = useState<UpcomingEvent[]>([]);
+  // The organizer's events running now (ending soonest first) and coming up (starting soonest first)
+  const [ongoing, setOngoing] = useState<DashboardEvent[]>([]);
+  const [ongoingTotal, setOngoingTotal] = useState(0);
+  const [upcoming, setUpcoming] = useState<DashboardEvent[]>([]);
   const [upcomingTotal, setUpcomingTotal] = useState(0);
 
 
@@ -89,20 +140,22 @@ export default function DashboardPage() {
         setTotalInvitees(statsRes?.success && statsRes.data ? statsRes.data.totalInvitees : 0);
         setActiveEvents(events.filter((e) => ["Upcoming", "Ongoing"].includes(statusOf(e))).length);
 
-        if (!isAdmin) {
-          const next = events
-            .filter((e) => statusOf(e) === "Upcoming")
-            .map((e) => ({
-              id: String(e._id || e.id),
-              title: String(e.title || "Untitled event"),
-              start: String(e.schedule?.start || e.startDate || ""),
-              end: String(e.schedule?.end || e.endDate || ""),
-              where: e.format === "VIRTUAL" ? "Online event" : String(e.location?.address || e.venue || "—"),
-              category: String(e.categoryId?.name || ""),
-            }))
-            .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+        if (user?.role === "ORGANIZER") {
+          const toRow = (e: (typeof events)[number]): DashboardEvent => ({
+            id: String(e._id || e.id),
+            title: String(e.title || "Untitled event"),
+            start: String(e.schedule?.start || e.startDate || ""),
+            end: String(e.schedule?.end || e.endDate || ""),
+            where: e.format === "VIRTUAL" ? "Online event" : String(e.location?.address || "—"),
+            category: String(e.categoryId?.name || ""),
+          });
+          const time = (v: string) => new Date(v).getTime();
+          const running = events.filter((e) => statusOf(e) === "Ongoing").map(toRow).sort((x, y) => time(x.end) - time(y.end));
+          const next = events.filter((e) => statusOf(e) === "Upcoming").map(toRow).sort((x, y) => time(x.start) - time(y.start));
+          setOngoingTotal(running.length);
+          setOngoing(running.slice(0, EVENT_LIST_LIMIT));
           setUpcomingTotal(next.length);
-          setUpcoming(next.slice(0, UPCOMING_LIMIT));
+          setUpcoming(next.slice(0, EVENT_LIST_LIMIT));
         }
 
         if (isAdmin && organizersRes) {
@@ -219,52 +272,18 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Organizers: what is coming up next */}
-        {!isAdmin && (
-          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-base font-bold text-gray-900">Upcoming Events{!loadingMetrics && upcomingTotal > 0 ? <span className="ml-2 text-xs font-medium text-gray-500">({upcomingTotal})</span> : null}</h3>
-              <Link href="/events" className="text-xs font-semibold text-[#FF5B22] hover:underline">View all events</Link>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
-                    <th className="py-3 px-4 font-medium">Event</th>
-                    <th className="py-3 px-4 font-medium whitespace-nowrap">Starts</th>
-                    <th className="py-3 px-4 font-medium whitespace-nowrap">Ends</th>
-                    <th className="py-3 px-4 font-medium">Location</th>
-                    <th className="py-3 px-4 font-medium">Category</th>
-                    <th className="py-3 px-2 text-right font-medium"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 text-gray-800">
-                  {loadingMetrics ? (
-                    <TableSkeletonRows rows={4} cols={6} />
-                  ) : upcoming.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="py-8 text-center text-gray-500 font-medium">
-                        No upcoming events. <Link href="/events/add" className="text-[#FF5B22] font-semibold hover:underline">Create one</Link>
-                      </td>
-                    </tr>
-                  ) : (
-                    upcoming.map((ev) => (
-                      <tr key={ev.id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="py-4 px-4 font-semibold text-gray-900 max-w-[240px] truncate" title={ev.title}>{ev.title}</td>
-                        <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.start, "—")}</td>
-                        <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.end, "—")}</td>
-                        <td className="py-4 px-4 text-gray-600 max-w-[260px] truncate" title={ev.where}>{ev.where}</td>
-                        <td className="py-4 px-4 text-gray-600 max-w-[160px] truncate" title={ev.category}>{ev.category || "—"}</td>
-                        <td className="py-4 px-2 text-right whitespace-nowrap">
-                          <Link href={`/events/${ev.id}`} className="text-[#FF5B22] font-semibold hover:underline">View</Link>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        {/* Organizers: what is running now and what is coming up next */}
+        {user?.role === "ORGANIZER" && (
+          <>
+            <EventListCard title="Ongoing Events" events={ongoing} total={ongoingTotal} loading={loadingMetrics} empty="No events are running right now." />
+            <EventListCard
+              title="Upcoming Events"
+              events={upcoming}
+              total={upcomingTotal}
+              loading={loadingMetrics}
+              empty={<>No upcoming events. <Link href="/events/add" className="text-[#FF5B22] font-semibold hover:underline">Create one</Link></>}
+            />
+          </>
         )}
 
         {/* Bottom Section: Top Organizers Table Card Container */}

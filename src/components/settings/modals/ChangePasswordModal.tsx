@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordField from "@/components/common/PasswordField";
 import React, { useState } from "react";
 
 interface ChangePasswordModalProps {
@@ -71,36 +72,36 @@ export default function ChangePasswordModal({
 
           <div>
             <label className="block text-sm font-medium text-[#15191C] mb-2 px-6">Old Password</label>
-            <input
-              type="password"
+            <PasswordField
               placeholder="••••••••••••••••"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="mx-6 w-[calc(100%-48px)] h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              wrapperClassName="mx-6"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#15191C] mb-2 px-6">New Password</label>
-            <input
-              type="password"
+            <PasswordField
               placeholder="••••••••••••••••"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="mx-6 w-[calc(100%-48px)] h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              wrapperClassName="mx-6"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#15191C] mb-2 px-6">Confirm New Password</label>
-            <input
-              type="password"
+            <PasswordField
               placeholder="••••••••••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mx-6 w-[calc(100%-48px)] h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              wrapperClassName="mx-6"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
               required
             />
           </div>

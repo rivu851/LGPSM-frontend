@@ -37,7 +37,7 @@ function formatEventDateRange(start: string, end: string): string | null {
     month: "short",
     year: "numeric",
   }).format(date);
-  return `${format(startDate)} – ${format(endDate)}`;
+  return format(startDate) === format(endDate) ? format(startDate) : `${format(startDate)} – ${format(endDate)}`;
 }
 
 export default function MobileCardPreview({

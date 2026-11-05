@@ -19,7 +19,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import Icon from "@/components/icons/Icon";
 import { userService } from "@/services/userService";
 
-type RowStatus = "Upcoming" | "Ongoing" | "Completed" | "Invitation not send" | "Cancelled";
+type RowStatus = "Upcoming" | "Ongoing" | "Completed" | "Invitation not sent" | "Cancelled";
 
 interface EventRow {
   id: string;
@@ -42,7 +42,7 @@ const STATUS_STYLE: Record<RowStatus, string> = {
   Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
   Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
   Completed: "bg-[#FFE3D7] text-[#FF651D]",
-  "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+  "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
   Cancelled: "bg-gray-200 text-gray-700",
 };
 
@@ -71,7 +71,7 @@ interface RawEvent {
 function toRow(e: RawEvent): EventRow {
   const id = String(e._id || e.id);
   const timeStatus = eventDisplayStatus(e) as RowStatus;
-  const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not send" : timeStatus;
+  const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not sent" : timeStatus;
   const cat = typeof e.categoryId === "object" ? e.categoryId : null;
   const org = typeof e.organizerId === "object" ? e.organizerId : null;
   return {

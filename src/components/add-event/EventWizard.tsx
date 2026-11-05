@@ -13,7 +13,7 @@ import DateTimePickerModal from "./modals/DateTimePickerModal";
 import InviteesPreviewModal from "./modals/InviteesPreviewModal";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, ExtraCategory } from "@/hooks/useCategories";
 import { EventFeatureSettings, platformSettingsService } from "@/services/platformSettingsService";
 import { templateService } from "@/services/templateService";
 import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion";
@@ -37,6 +37,8 @@ interface EventWizardProps {
   heading: string;
   /** Set when editing a saved event */
   eventId?: string;
+  /** The event's own category, for an account whose list does not include it */
+  extraCategory?: ExtraCategory | null;
   /** Add Event: whether the saved draft has been read back yet, so the template dialog does not open over a draft that already has one */
   draftHydrated?: boolean;
   draft: EventDraft;
@@ -63,6 +65,7 @@ const scrollPageTo = (top: number) =>
 export default function EventWizard({
   heading,
   eventId,
+  extraCategory,
   draftHydrated = true,
   draft,
   setDraft,
@@ -79,7 +82,7 @@ export default function EventWizard({
 }: EventWizardProps) {
   const { confirm } = useAlert();
   const { user } = useAuth();
-  const categories = useCategories();
+  const categories = useCategories(extraCategory);
   const stepContentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showErrors, setShowErrors] = useState(false);
@@ -156,6 +159,15 @@ export default function EventWizard({
   // the same field definition the Excel sample, the preview and the manual Add Invitee form use
   const inviteeConfig = templateColumnsFor({ cardInfo: draft.cardInfo, dietaryEnabled: draft.dietaryEnabled, corporate: /corporate/i.test(categories.categoryName(draft.categoryId) || "") });
   const subcategoryRequired = !!draft.categoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0;
+  // A restored draft, or a template, can name a category or subcategory that is no longer offered (deleted or deactivated since). The
+  // field would look empty yet count as filled in, so it is cleared and the person is asked to choose again.
+  const listReady = !categories.loading && !categories.error;
+  const categoryGone = listReady && !!draft.categoryId && !categories.categoryOptions.some((o) => o.value === draft.categoryId);
+  const subcategoryGone = listReady && !categoryGone && !!draft.subcategoryId && !categories.subcategoryOptionsFor(draft.categoryId).some((o) => o.value === draft.subcategoryId);
+  useEffect(() => {
+    if (categoryGone) setDraft((prev) => ({ ...prev, categoryId: "", subcategoryId: "" }));
+    else if (subcategoryGone) setDraft((prev) => ({ ...prev, subcategoryId: "" }));
+  }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
   const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId }), [draft, subcategoryRequired, eventId]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
@@ -372,6 +384,7 @@ export default function EventWizard({
                   categories={categories}
                   canManageCategories={isAdmin || user?.role === "ORGANIZER"}
                   isAdmin={isAdmin}
+                  isEditing={!!eventId}
                   rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
                   onNext={() => handleStepChange(2)}
@@ -441,6 +454,8 @@ export default function EventWizard({
         required={mustPickTemplate}
         onClose={() => setIsTemplateModalOpen(false)}
         onSelectTemplate={chooseTemplate}
+        onLeave={onCancel}
+        extraCategory={extraCategory}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
         subcategoryId={draft.subcategoryId || undefined}

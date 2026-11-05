@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -146,8 +147,7 @@ export default function AddEventOrganizerPage() {
                 <label className="block text-sm font-medium text-[#15191C]">
                   Temporary Password<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
+                <PasswordField
                   required
                   minLength={8}
                   autoComplete="new-password"

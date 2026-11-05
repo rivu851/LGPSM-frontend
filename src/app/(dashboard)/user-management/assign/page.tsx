@@ -1,5 +1,6 @@
 "use client";
 
+import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import React, { useState, useEffect, useCallback } from "react";
@@ -809,8 +810,7 @@ aria-label={`Select ${u.name}`}
                 <label className="text-sm font-medium text-[#15191C]">
                   Password<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="password"
+                <PasswordField
                   required
                   placeholder="Enter Initial Password"
                   value={addUserData.password}
