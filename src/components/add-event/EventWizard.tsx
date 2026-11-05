@@ -20,10 +20,9 @@ import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { DraftErrors, EventDraft, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
-import type { TemplatePreviewPayload } from "@/services/templateService";
 
 type PickerTarget =
   | { kind: "event"; field: EventDateField }
@@ -38,6 +37,8 @@ interface EventWizardProps {
   heading: string;
   /** Set when editing a saved event */
   eventId?: string;
+  /** Add Event: whether the saved draft has been read back yet, so the template dialog does not open over a draft that already has one */
+  draftHydrated?: boolean;
   draft: EventDraft;
   setDraft: (updater: (prev: EventDraft) => EventDraft) => void;
   draftStatus: DraftStatus;
@@ -62,6 +63,7 @@ const scrollPageTo = (top: number) =>
 export default function EventWizard({
   heading,
   eventId,
+  draftHydrated = true,
   draft,
   setDraft,
   draftStatus,
@@ -155,7 +157,7 @@ export default function EventWizard({
   const inviteeConfig = templateColumnsFor({ cardInfo: draft.cardInfo, dietaryEnabled: draft.dietaryEnabled, corporate: /corporate/i.test(categories.categoryName(draft.categoryId) || "") });
   const subcategoryRequired = !!draft.categoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0;
   const isAdmin = user?.role === "ADMIN";
-  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired }), [draft, subcategoryRequired]);
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId }), [draft, subcategoryRequired, eventId]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
@@ -188,6 +190,23 @@ export default function EventWizard({
     }
     setDraft((prev) => ({ ...prev, ...p, ...templatePatch }));
   };
+
+  // A new event starts by choosing a template (the dialog cannot be closed until one is chosen); the template then
+  // sets the event category and subcategory. Editing a saved event does not ask again.
+  const mustPickTemplate = !eventId && draftHydrated && !draft.template;
+  const chooseTemplate = (template: SelectedTemplate | null, suggested?: { categoryId: string; subcategoryId: string }) => {
+    // an explicit choice is never swapped out by the automatic suggestion that follows a category change
+    autoTemplateId.current = null;
+    setDraft((prev) => ({
+      ...prev,
+      template,
+      // the template's event type fills the category and subcategory; a general template leaves what is there
+      ...(suggested?.categoryId ? { categoryId: suggested.categoryId, subcategoryId: suggested.subcategoryId } : {}),
+    }));
+  };
+
+  // Invitee files cannot be kept in a saved draft: after a restore, name the ones that have to be attached again (none, no mention)
+  const missingFiles = Object.entries(draft.inviteeFileNames || {}).filter(([key, name]) => !!name && !sessionFiles[key]).map(([, name]) => name);
 
   const handleStepChange = (targetStep: number) => {
     if (targetStep === currentStep) return;
@@ -292,7 +311,12 @@ export default function EventWizard({
           )}
           {draftStatus === "restored" && (
             <div role="status" className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-sm flex flex-wrap items-center justify-between gap-2">
-              <span>Your unsaved draft was restored. Uploaded invitee files need to be attached again.</span>
+              <span>
+                Your unsaved draft was restored.
+                {missingFiles.length > 0 && (
+                  <> The invitee file {missingFiles.length === 1 ? <>&ldquo;{missingFiles[0]}&rdquo; needs</> : <>{missingFiles.map((n) => `“${n}”`).join(", ")} need</>} to be attached again.</>
+                )}
+              </span>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer">OK</button>
                 {canDiscard && (
@@ -346,7 +370,7 @@ export default function EventWizard({
                   onChange={patch}
                   onOpenDatePicker={(field) => setPickerTarget({ kind: "event", field })}
                   categories={categories}
-                  canManageCategories={isAdmin}
+                  canManageCategories={isAdmin || user?.role === "ORGANIZER"}
                   isAdmin={isAdmin}
                   rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
@@ -362,7 +386,15 @@ export default function EventWizard({
                   sessionFiles={sessionFiles}
                   existingLists={existingLists}
                   onSampleDownloaded={() => setDownloadedColumns(excelColumnsFor(inviteeConfig))}
-                  onSessionFileChange={(key, file) => setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }))}
+                  onSessionFileChange={(key, file) => {
+                    setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }));
+                    // remembered in the draft so a restore can say exactly which file has to be attached again
+                    setDraft((prev) => {
+                      const names = { ...(prev.inviteeFileNames || {}) };
+                      if (file) names[key] = file.name; else delete names[key];
+                      return { ...prev, inviteeFileNames: names };
+                    });
+                  }}
                   skipInvitees={draft.skipInvitees}
                   templateColumns={inviteeConfig}
                   onSkipInviteesChange={(skipInvitees) => patch({ skipInvitees })}
@@ -380,20 +412,23 @@ export default function EventWizard({
             </div>
           </div>
           {/* The column runs the full height of the form; only its contents stick, 16px below the 68px sticky page
-              header, so the preview stays in view however long the current step is (admin feedback: sticky preview) */}
+              header, so the preview stays in view however long the current step is (admin feedback: sticky preview). It never scrolls itself:
+              the card is sized to fit the space below the header, so the form is the only thing that scrolls. */}
           <div className="w-full xl:w-[38%] shrink-0 border-t xl:border-t-0 xl:border-l border-[#E0E0E0] bg-[#F7F3F0]">
-            <div className="xl:sticky xl:top-[84px] xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto">
+            <div className="xl:sticky xl:top-[84px]">
             <MobileCardPreview
               template={draft.template}
               eventTitle={draft.title}
               eventStart={draft.start}
               eventEnd={draft.end}
               venue={draft.venue}
+              contactNumber={draft.contactNumber}
               logoKey={draft.logoKey}
               categoryName={categories.categoryName(draft.categoryId)}
               subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}
               onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
               cardInfo={draft.cardInfo ?? null}
+              awaitingTemplate={!eventId && !draft.template}
             />
             </div>
           </div>
@@ -401,10 +436,11 @@ export default function EventWizard({
       </div>
 
       <SelectTemplateModal
-        key={isTemplateModalOpen ? "template-open" : "template-closed"}
-        isOpen={isTemplateModalOpen}
+        key={isTemplateModalOpen || mustPickTemplate ? "template-open" : "template-closed"}
+        isOpen={isTemplateModalOpen || mustPickTemplate}
+        required={mustPickTemplate}
         onClose={() => setIsTemplateModalOpen(false)}
-        onSelectTemplate={(template) => patch({ template })}
+        onSelectTemplate={chooseTemplate}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
         subcategoryId={draft.subcategoryId || undefined}

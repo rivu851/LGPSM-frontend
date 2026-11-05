@@ -6,6 +6,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
 import { eventService } from "@/services/eventService";
 import { templateService } from "@/services/templateService";
+import { useCategories } from "@/hooks/useCategories";
+import { eventTypeForTemplate } from "@/utils/templateEventType";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import EventWizard, { EventWizardSubmit } from "@/components/add-event/EventWizard";
 import {
@@ -38,16 +40,23 @@ function AddEventContent() {
   // "Create an Event" from the Templates page preselects that template (applied once the draft is loaded)
   const templateParam = searchParams.get("template");
   const appliedTemplate = useRef<string | null>(null);
+  // true while a template named in the address is still being fetched: the "choose a template" dialog waits for it
+  const categories = useCategories();
+  const [templateLoading, setTemplateLoading] = useState(!!templateParam);
   useEffect(() => {
-    if (!hydrated || !templateParam || appliedTemplate.current === templateParam) return;
+    // wait for the event categories too: a template with no event type of its own is matched to one of them
+    if (!hydrated || categories.loading || !templateParam || appliedTemplate.current === templateParam) return;
     appliedTemplate.current = templateParam;
     templateService.getTemplateById(templateParam).then((res) => {
       if (res.success && res.data && res.data.isPublished !== false) {
         const t = res.data;
-        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null } }));
+        const found = eventTypeForTemplate(t, categories.categoryOptions, categories.subcategoryOptionsFor);
+        const cat = found?.categoryId || "";
+        // the template also sets the event category and subcategory (a general template leaves them as they are)
+        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null }, ...(cat ? { categoryId: cat, subcategoryId: found?.subcategoryId || "" } : {}) }));
       }
-    });
-  }, [hydrated, templateParam, update]);
+    }).finally(() => setTemplateLoading(false));
+  }, [hydrated, templateParam, update, categories.loading, categories.categoryOptions]);
 
   const handleSubmit = async ({ draft, sessionFiles }: EventWizardSubmit) => {
     setSubmitting(true);
@@ -81,6 +90,7 @@ function AddEventContent() {
   return (
     <EventWizard
       heading="Add Event"
+      draftHydrated={draftState.hydrated && !templateLoading}
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}

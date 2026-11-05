@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { DietarySelection, invitationService, PublicInvitationData } from "@/services/invitationService";
 import { usePageTitle } from "@/context/PageTitleContext";
+import CardFullscreen from "@/components/invitation/CardFullscreen";
 import BrandLoader from "@/components/common/BrandLoader";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { resolveInvitationTheme, themeCssVars } from "@/utils/invitationTheme";
@@ -53,6 +54,12 @@ export default function PublicInvitationPage() {
   const [error, setError] = useState<string | null>(null);
   const [invitationData, setInvitationData] = useState<PublicInvitationData | null>(null);
   const [cardImageFailed, setCardImageFailed] = useState(false);
+  const [cardFullscreen, setCardFullscreen] = useState(false);
+  const [linkDismissed, setLinkDismissed] = useState(false);
+  const closeCardFullscreen = useCallback(() => { setCardFullscreen(false); setLinkDismissed(true); }, []);
+  // the link in the invitation email ("?view=card") opens the card full screen straight away. Read once at load; nothing is shown
+  // until the invitation has loaded, so the server/client difference of this initial value is never rendered.
+  const [openedByLink] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "card");
 
   const eventTitle = invitationData?.event?.title;
   const rsvpEnabled = invitationData?.event?.rsvp?.enabled !== false;
@@ -287,12 +294,24 @@ export default function PublicInvitationPage() {
         {/* The invitation card itself is the top of this page: the guest's pass as designed, then the card extends downward with everything the guest needs */}
         {showPass && (
           <>
-            <img
-              src={invitationService.publicInvitationCardUrl(token)}
-              alt={`${event.title} digital access pass for ${invitee.name}`}
-              onError={() => setCardImageFailed(true)}
-              className="block w-full bg-[color:var(--inv-soft)] object-contain"
-            />
+            <div className="relative">
+              <img
+                src={invitationService.publicInvitationCardUrl(token)}
+                alt={`${event.title} digital access pass for ${invitee.name}`}
+                onError={() => setCardImageFailed(true)}
+                onClick={() => setCardFullscreen(true)}
+                className="block w-full cursor-zoom-in bg-[color:var(--inv-soft)] object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => setCardFullscreen(true)}
+                className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/75 px-3.5 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur hover:bg-black/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+                Full screen to scan
+              </button>
+            </div>
+            {(cardFullscreen || (openedByLink && !linkDismissed)) && <CardFullscreen src={invitationService.publicInvitationCardUrl(token)} alt={`${event.title} digital access pass for ${invitee.name}`} onClose={closeCardFullscreen} />}
             {/* tear line between the pass and the rest of the ticket */}
             <div className="relative h-7 bg-white" role="separator" aria-label="Digital access pass">
               <span aria-hidden className="absolute -left-3.5 top-0 size-7 rounded-full bg-[color:var(--inv-bg)] shadow-[inset_-2px_0_3px_rgba(0,0,0,0.06)]" />

@@ -53,7 +53,9 @@ export const NAV_ENTRIES: NavEntry[] = [
     children: [
       { key: "event-management", label: "Event Management", href: "/events", roles: ["ORGANIZER"] },
       { key: "invitees-management", label: "Invitees Management", href: "/events/select/invitees?from=sidebar", roles: ["ORGANIZER"] },
-      { key: "org-templates", label: "Templates", href: "/templates", roles: ["ORGANIZER"] },
+      // Hidden for now: organizers choose, upload and delete their templates in the template window while creating an event.
+      // Uncomment to bring the page back.
+      // { key: "org-templates", label: "Templates", href: "/templates", roles: ["ORGANIZER"] },
     ],
   },
   // ORGANIZER shell — flat top-level item (no chevron in Figma). The existing /user-management

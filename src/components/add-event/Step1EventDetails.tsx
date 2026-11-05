@@ -314,6 +314,17 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <Err msg={errors.description} />
       </div>
 
+      {draft.template && draft.categoryId && !draft.subcategoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0 && (
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          The template &ldquo;{draft.template.name}&rdquo; set the category, but its subcategory is not set or has since been changed, so choose the subcategory that fits your event.
+        </p>
+      )}
+      {draft.template && !draft.categoryId && (
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          The template &ldquo;{draft.template.name}&rdquo; is not tied to one event type, so choose the category and subcategory that fit your event.
+        </p>
+      )}
+
       <CategoryFields
         api={categories}
         categoryId={draft.categoryId}

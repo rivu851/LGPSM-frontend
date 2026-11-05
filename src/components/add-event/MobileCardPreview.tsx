@@ -5,7 +5,6 @@ import Link from "next/link";
 import { SelectedTemplate } from "./eventDraft";
 import { templateService, TemplatePreviewPayload } from "@/services/templateService";
 import CustomDropdown from "@/components/common/CustomDropdown";
-import InvitationCardImage from "@/components/events/InvitationCardImage";
 
 interface MobileCardPreviewProps {
   template: SelectedTemplate | null;
@@ -13,6 +12,7 @@ interface MobileCardPreviewProps {
   eventStart: string;
   eventEnd: string;
   venue: string;
+  contactNumber?: string;
   logoKey: string | null;
   categoryName: string;
   subcategoryName: string;
@@ -21,6 +21,8 @@ interface MobileCardPreviewProps {
   cardInfo?: TemplatePreviewPayload["cardInfo"] | null;
   /** Opens "Customize Information" with the payload this preview renders */
   onOpenAdditionalInfo?: (payload: TemplatePreviewPayload) => void;
+  /** Add Event before a template is chosen: nothing is drawn, a "selecting template" loader stands in */
+  awaitingTemplate?: boolean;
 }
 
 const ZOOM_SCALE: Record<string, number> = { "100%": 1, "75%": 0.75, "50%": 0.5 };
@@ -44,12 +46,14 @@ export default function MobileCardPreview({
   eventStart,
   eventEnd,
   venue,
+  contactNumber,
   logoKey,
   categoryName,
   subcategoryName,
   onOpenTemplateModal,
   cardInfo,
   onOpenAdditionalInfo,
+  awaitingTemplate = false,
 }: MobileCardPreviewProps) {
   const [zoomLevel, setZoomLevel] = useState("100%");
 
@@ -62,12 +66,13 @@ export default function MobileCardPreview({
       startIso: eventStart || undefined,
       endIso: eventEnd || undefined,
       venue: venue.trim() || undefined,
+      contactNumber: contactNumber?.trim() || undefined,
       categoryName: categoryName || undefined,
       subcategoryName: subcategoryName || undefined,
       logoKey: logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined,
       ...(cardInfo ? { cardInfo } : {}),
     }),
-    [eventTitle, eventStart, eventEnd, venue, categoryName, subcategoryName, logoKey, cardInfo]
+    [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo]
   );
   const [live, setLive] = useState<{ key: string; url: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,6 +82,8 @@ export default function MobileCardPreview({
 
   useEffect(() => {
     // No template chosen: the card is still shown, in the design that suits the event type
+    // nothing is drawn until the template has been chosen: no stand-in design is shown meanwhile
+    if (awaitingTemplate) return;
     const templateId = template?.id ?? null;
     const key = templateId ?? "by-event-type";
     const controller = new AbortController();
@@ -102,7 +109,7 @@ export default function MobileCardPreview({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [template?.id, payload, attempt]);
+  }, [template?.id, payload, attempt, awaitingTemplate]);
 
   useEffect(
     () => () => {
@@ -111,7 +118,7 @@ export default function MobileCardPreview({
     []
   );
 
-  const showLive = live?.key === (template?.id ?? "by-event-type");
+  const showLive = !awaitingTemplate && live?.key === (template?.id ?? "by-event-type");
   const usesSamplePhoto = !payload.logoKey;
   const eventDateRange = formatEventDateRange(eventStart, eventEnd);
 
@@ -131,15 +138,18 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className="relative w-[230px] sm:w-[250px] aspect-[9/18.5] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform"
+          className={`relative ${showLive && live ? "w-fit max-w-full" : "w-[230px] sm:w-[250px] aspect-[9/18.5]"} bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
           style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
           aria-label="Invitation card preview"
         >
-          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-[#EFEFEF]">
+          <div className={`relative w-full ${showLive && live ? "" : "h-full"} rounded-[30px] overflow-hidden bg-[#EFEFEF]`}>
+            {/* the phone takes the card's own proportions (it is taller when the guest name band and details are added) and the card is
+                sized to the space available, so all of it is visible without any scrolling */}
             {showLive && live && (
-              <InvitationCardImage src={live.url} alt={`${template?.name || "Template"} invitation card`} imageClassName="object-cover" />
+              // eslint-disable-next-line @next/next/no-img-element -- invitation card is a blob URL rendered by the API
+              <img src={live.url} alt={`${template?.name || "Template"} invitation card`} className="block h-auto w-auto max-w-[234px] max-h-[max(380px,calc(100vh-340px))] mx-auto" />
             )}
-            {loading && (
+            {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
                 <svg className="h-4 w-4 animate-spin text-[#FF5B22]" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
@@ -147,8 +157,18 @@ export default function MobileCardPreview({
                 </svg>
               </div>
             )}
-            {!showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
-            {!showLive && failed && (
+            {awaitingTemplate && (
+              <div role="status" aria-live="polite" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]">
+                <svg className="h-9 w-9 animate-spin text-[#FF5B22]" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                  <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                </svg>
+                <p className="text-xs font-medium text-[#4B4F52]">Selecting template…</p>
+                <p className="text-[11px] text-[#828282]">Your card appears here once you choose one.</p>
+              </div>
+            )}
+            {!awaitingTemplate && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
+            {!awaitingTemplate && !showLive && failed && (
               <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center">
                 <p className="text-xs text-[#4B4F52]">The card preview could not be loaded.</p>
                 <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">
@@ -179,7 +199,9 @@ export default function MobileCardPreview({
           )}
         </div>
         <p className="mt-2 text-xs text-[#4B4F52] text-center break-words">
-          {template
+          {awaitingTemplate
+            ? "Choose a template to see your invitation card."
+            : template
             ? `Template: ${template.name}`
             : categoryName
               ? `No template chosen: the design follows the event type (${[categoryName, subcategoryName].filter(Boolean).join(" › ")}).`

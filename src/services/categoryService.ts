@@ -4,6 +4,8 @@ export interface Subcategory {
   _id?: string;
   name: string;
   isActive?: boolean;
+  /** the signed-in organizer's own subcategory (nobody else sees it) */
+  isCustom?: boolean;
 }
 
 export interface Category {
@@ -13,13 +15,15 @@ export interface Category {
   description?: string;
   subcategories: Subcategory[];
   isActive: boolean;
+  /** the signed-in organizer's own category (nobody else sees it) */
+  isCustom?: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
 export const categoryService = {
   async getCategories(activeOnly: boolean = true): Promise<ApiResponse<Category[]>> {
-    return apiClient<Category[]>(`/api/v1/categories?activeOnly=${activeOnly}`, { method: "GET" }, false);
+    return apiClient<Category[]>(`/api/v1/categories?activeOnly=${activeOnly}`, { method: "GET" }, true);
   },
 
   async getCategoryById(id: string): Promise<ApiResponse<Category>> {
@@ -59,6 +63,15 @@ export const categoryService = {
       },
       true
     );
+  },
+
+  // An organizer's own category / subcategory: only they see and can use it
+  async createCustomCategory(name: string): Promise<ApiResponse<Category>> {
+    return apiClient<Category>("/api/v1/categories/custom", { method: "POST", body: JSON.stringify({ name }) }, true);
+  },
+
+  async addCustomSubcategory(categoryId: string, name: string): Promise<ApiResponse<Category>> {
+    return apiClient<Category>(`/api/v1/categories/${categoryId}/custom-subcategories`, { method: "POST", body: JSON.stringify({ name }) }, true);
   },
 
   // Appends a subcategory without touching existing ones (their ids stay stable)

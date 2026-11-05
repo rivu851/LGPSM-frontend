@@ -62,7 +62,7 @@ export default function CategoryFields({
             onChange={(v) => onChange({ categoryId: v, subcategoryId: "" })}
             options={api.categoryOptions}
             placeholder={api.loading ? "Loading..." : api.categoryOptions.length ? "- Category -" : "No categories yet"}
-            topAction={canManage ? { label: "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
+            topAction={canManage ? { label: api.isOrganizer ? "Add custom category" : "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
             invalid={!!categoryError}
           />
           {api.error && <p className="mt-1 text-xs font-medium text-rose-600">{api.error}</p>}
@@ -80,7 +80,7 @@ export default function CategoryFields({
             options={subOptions}
             disabled={!categoryId}
             placeholder={!categoryId ? "Select a category first" : subOptions.length ? "- Subcategory -" : "No subcategories yet"}
-            topAction={canManage && categoryId ? { label: "Add New Subcategory", onClick: () => setModal({ kind: "subcategory", categoryId }) } : undefined}
+            topAction={canManage && categoryId ? { label: api.isOrganizer ? "Add custom subcategory" : "Add New Subcategory", onClick: () => setModal({ kind: "subcategory", categoryId }) } : undefined}
             emptyMessage={canManage ? "No subcategories yet — add one above" : "No subcategories for this category"}
             invalid={!!subcategoryError}
           />
@@ -155,7 +155,7 @@ export function CategoryModal({
       <div className="w-full max-w-[486px] bg-white rounded-lg shadow-xl">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 id="category-modal-title" className="text-base font-medium text-[#15191C]">
-            {isSub ? "Add Subcategory" : "Add Category"}
+            {api.isOrganizer ? (isSub ? "Add Custom Subcategory" : "Add Custom Category") : isSub ? "Add Subcategory" : "Add Category"}
           </h3>
           <button type="button" onClick={onClose} aria-label="Close" className="text-[#15191C] hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -165,6 +165,7 @@ export function CategoryModal({
         </div>
         <form onSubmit={submit} noValidate>
           <div className="px-6 pt-5 pb-6 space-y-5">
+            {api.isOrganizer && <p className="text-xs text-[#828282]">Only you will see this {isSub ? "subcategory" : "category"}. It will not appear for other organizers.</p>}
             {error && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-sm text-rose-700">{error}</p>}
             {isSub && (
               <div>
@@ -180,7 +181,7 @@ export function CategoryModal({
                 id="category-modal-name"
                 autoFocus
                 type="text"
-                maxLength={100}
+                maxLength={api.isOrganizer ? 60 : 100}
                 placeholder="Type"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
