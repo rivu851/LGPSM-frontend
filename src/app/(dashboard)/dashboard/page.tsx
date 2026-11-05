@@ -10,6 +10,7 @@ import { userService } from "@/services/userService";
 import { eventDisplayStatus } from "@/utils/eventUtils";
 import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 import { Skeleton, TableSkeletonRows } from "@/components/common/Skeleton";
+import { formatDateTime } from "@/utils/dateTime";
 
 interface OrganizerSummary {
   id: string;
@@ -20,6 +21,17 @@ interface OrganizerSummary {
   ongoingEvents: number;
   pastEvents: number;
 }
+
+interface UpcomingEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  where: string;
+  category: string;
+}
+
+const UPCOMING_LIMIT = 8;
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -32,6 +44,9 @@ export default function DashboardPage() {
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
   const [loadingMetrics, setLoadingMetrics] = useState<boolean>(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
+  // The organizer's next events, soonest first
+  const [upcoming, setUpcoming] = useState<UpcomingEvent[]>([]);
+  const [upcomingTotal, setUpcomingTotal] = useState(0);
 
 
   // Welcome Popup modal (06-Popup.pdf)
@@ -73,6 +88,22 @@ export default function DashboardPage() {
         setTotalEvents(statsRes?.success && statsRes.data ? statsRes.data.totalEvents : events.length);
         setTotalInvitees(statsRes?.success && statsRes.data ? statsRes.data.totalInvitees : 0);
         setActiveEvents(events.filter((e) => ["Upcoming", "Ongoing"].includes(statusOf(e))).length);
+
+        if (!isAdmin) {
+          const next = events
+            .filter((e) => statusOf(e) === "Upcoming")
+            .map((e) => ({
+              id: String(e._id || e.id),
+              title: String(e.title || "Untitled event"),
+              start: String(e.schedule?.start || e.startDate || ""),
+              end: String(e.schedule?.end || e.endDate || ""),
+              where: e.format === "VIRTUAL" ? "Online event" : String(e.location?.address || e.venue || "—"),
+              category: String(e.categoryId?.name || ""),
+            }))
+            .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+          setUpcomingTotal(next.length);
+          setUpcoming(next.slice(0, UPCOMING_LIMIT));
+        }
 
         if (isAdmin && organizersRes) {
           const organizers = organizersRes.success && Array.isArray(organizersRes.data)
@@ -187,6 +218,54 @@ export default function DashboardPage() {
           </div>
           )}
         </div>
+
+        {/* Organizers: what is coming up next */}
+        {!isAdmin && (
+          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-base font-bold text-gray-900">Upcoming Events{!loadingMetrics && upcomingTotal > 0 ? <span className="ml-2 text-xs font-medium text-gray-500">({upcomingTotal})</span> : null}</h3>
+              <Link href="/events" className="text-xs font-semibold text-[#FF5B22] hover:underline">View all events</Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
+                    <th className="py-3 px-4 font-medium">Event</th>
+                    <th className="py-3 px-4 font-medium whitespace-nowrap">Starts</th>
+                    <th className="py-3 px-4 font-medium whitespace-nowrap">Ends</th>
+                    <th className="py-3 px-4 font-medium">Location</th>
+                    <th className="py-3 px-4 font-medium">Category</th>
+                    <th className="py-3 px-2 text-right font-medium"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 text-gray-800">
+                  {loadingMetrics ? (
+                    <TableSkeletonRows rows={4} cols={6} />
+                  ) : upcoming.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-gray-500 font-medium">
+                        No upcoming events. <Link href="/events/add" className="text-[#FF5B22] font-semibold hover:underline">Create one</Link>
+                      </td>
+                    </tr>
+                  ) : (
+                    upcoming.map((ev) => (
+                      <tr key={ev.id} className="hover:bg-gray-50/80 transition-colors">
+                        <td className="py-4 px-4 font-semibold text-gray-900 max-w-[240px] truncate" title={ev.title}>{ev.title}</td>
+                        <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.start, "—")}</td>
+                        <td className="py-4 px-4 text-gray-600 whitespace-nowrap">{formatDateTime(ev.end, "—")}</td>
+                        <td className="py-4 px-4 text-gray-600 max-w-[260px] truncate" title={ev.where}>{ev.where}</td>
+                        <td className="py-4 px-4 text-gray-600 max-w-[160px] truncate" title={ev.category}>{ev.category || "—"}</td>
+                        <td className="py-4 px-2 text-right whitespace-nowrap">
+                          <Link href={`/events/${ev.id}`} className="text-[#FF5B22] font-semibold hover:underline">View</Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Bottom Section: Top Organizers Table Card Container */}
         {user?.role === "ADMIN" && (
