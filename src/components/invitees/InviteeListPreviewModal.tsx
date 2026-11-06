@@ -24,8 +24,9 @@ const ALL = "all";
 const PAGE_SIZE = 50;
 
 // Who is on the event's list, one dataset (uploaded list) or all of them, fetched one page at a time so an event with thousands of
-// invitees never loads them all at once. Guests can be edited or deleted here; the server decides what is allowed (a guest who was
-// invited, answered or attended, or who sits in a list that was already sent, is kept), and the buttons follow the same rule.
+// invitees never loads them all at once. Guests can be edited or deleted here. Deleting a guest nothing has happened to erases them;
+// a guest who was already invited, answered or attended is set aside instead (their history is kept, their pass stops working, and
+// they can be restored from Uploaded Lists > Set-aside guests). The confirmation says which of the two will happen.
 export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false }: Props) {
   const { confirm, showAlert } = useAlert();
   const [selected, setSelected] = useState<string[]>([]);
@@ -87,31 +88,35 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
   }, [onClose]);
 
   const options = [
-    ...(sets && sets.length > 1 ? [{ value: ALL, label: `All (${sets.reduce((n, x) => n + x.total, 0)})` }] : []),
+    // "All" is always offered, even when there is only one dataset
+    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.reduce((n, x) => n + x.total, 0)})` }] : []),
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
-  // which guests can still be removed / edited: the same rule the server applies
-  const lockedSets = new Set((sets || []).filter((x) => x.locked).map((x) => x.id));
-  const setLocked = setId !== ALL && !!setId && lockedSets.has(setId);
+  // every guest can be edited and deleted (unless the page is read-only); a guest something has happened to is set aside, not erased
   const untouched = (m: InviteeSetMember) => m.delivery === "NOT_SENT" && m.rsvpStatus === "PENDING" && !m.checkedIn;
-  const canDelete = (m: InviteeSetMember) => !readOnly && !setLocked && untouched(m);
-  const canEdit = () => !readOnly && !setLocked;
+  const canDelete = (m: InviteeSetMember) => !readOnly && !!m.id;
+  const canEdit = () => !readOnly;
   const deletable = members.filter(canDelete);
   const allOnPage = deletable.length > 0 && deletable.every((m) => selected.includes(m.id));
   const refresh = () => { setSelected([]); setTick((t) => t + 1); onChanged?.(); };
 
   const removeOne = async (m: InviteeSetMember) => {
-    if (!(await confirm({ title: "Delete invitee", message: `Delete ${m.name} from this event?`, confirmText: "Delete", tone: "danger" }))) return;
+    const message = untouched(m)
+      ? `Delete ${m.name} from this event?`
+      : `${m.name} has already been invited. Deleting removes them from the guest list and their QR pass stops working. Their invitation history is kept under Set-aside guests, where they can be restored.`;
+    if (!(await confirm({ title: "Delete invitee", message, confirmText: "Delete", tone: "danger" }))) return;
     const res = await inviteeService.deleteInvitee(m.id);
     if (!res.success) return showAlert(res.message || "The invitee could not be deleted.", "error");
-    showAlert("Invitee deleted.", "success");
+    showAlert(untouched(m) ? "Invitee deleted." : `${m.name} removed. Their history is kept under Set-aside guests.`, "success");
     refresh();
   };
 
   const removeSelected = async () => {
     const ids = selected.slice();
     if (!ids.length) return;
-    if (!(await confirm({ title: "Delete selected invitees", message: `Delete ${ids.length} selected ${ids.length === 1 ? "invitee" : "invitees"} from this event?`, confirmText: "Delete all", tone: "danger" }))) return;
+    const invited = members.filter((m) => ids.includes(m.id) && !untouched(m)).length;
+    const note = invited ? ` ${invited} of them ${invited === 1 ? "has" : "have"} already been invited: their QR ${invited === 1 ? "pass stops" : "passes stop"} working and their history is kept under Set-aside guests.` : "";
+    if (!(await confirm({ title: "Delete selected invitees", message: `Delete ${ids.length} selected ${ids.length === 1 ? "invitee" : "invitees"} from this event?${note}`, confirmText: "Delete all", tone: "danger" }))) return;
     setBusy(true);
     let failed = 0;
     for (const id of ids) {
@@ -119,7 +124,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
       if (!res.success) failed += 1;
     }
     setBusy(false);
-    if (failed) showAlert(`${ids.length - failed} deleted; ${failed} could not be deleted (already invited or in a sent list).`, "warning");
+    if (failed) showAlert(`${ids.length - failed} deleted; ${failed} could not be deleted. Please try again.`, "warning");
     else showAlert(`${ids.length} ${ids.length === 1 ? "invitee" : "invitees"} deleted.`, "success");
     refresh();
   };
@@ -170,7 +175,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="text-xs text-[#828282]">{setLocked ? "Invitations were sent to this list, so its guests can't be changed." : "Select invitees to delete them together. Guests already invited are kept."}</p>
+                <p className="text-xs text-[#828282]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
                 <button type="button" onClick={() => void removeSelected()} disabled={!selected.length || busy} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                   {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
@@ -198,7 +203,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   <tr key={m.id} className={selected.includes(m.id) ? "bg-orange-50/60" : undefined}>
                     {!readOnly && (
                       <td className="py-2.5 pr-2">
-                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)} title={canDelete(m) ? undefined : "Already invited, answered or checked in: this guest is kept"} onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 accent-[#FF651D] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
+                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 accent-[#FF651D] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
                       </td>
                     )}
                     <td className="py-2.5 pr-3 text-[#828282]">{(page - 1) * PAGE_SIZE + i + 1}</td>
@@ -211,7 +216,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                         <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit()} aria-label={`Edit ${m.name}`} title="Edit" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.5 2.5 0 00-3.536-3.536L4.5 16.5V20z" /></svg>
                         </button>
-                        <button type="button" onClick={() => void removeOne(m)} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title={canDelete(m) ? "Delete" : "Already invited, answered or checked in: this guest is kept"} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => void removeOne(m)} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                         </button>
                       </td>

@@ -398,14 +398,14 @@ export default function EventDetailsPage() {
                   <p className="text-sm text-[#828282] py-6 text-center">No sessions yet.</p>
                 ) : (
                   <HorizontalScroll>
-                    {/* fits the card: names and times wrap instead of forcing a scroll bar; it only scrolls on very narrow screens */}
-                    <table className="w-full text-left text-sm min-w-[360px]">
+                    {/* fits the card at any width: names, times and headings wrap (no fixed minimum width), so no scroll bar appears */}
+                    <table className="w-full text-left text-sm">
                       <thead className="text-[#828282] border-b border-[#D3D3D3]">
                         <tr>
-                          <th className="py-2 pr-3 font-medium">#</th>
-                          <th className="py-2 pr-4 font-medium">Session Name</th>
-                          <th className="py-2 pr-4 font-medium">Date &amp; Time</th>
-                          <th className="py-2 pr-4 font-medium">No. of Guests</th>
+                          <th className="py-2 pr-2 font-medium">#</th>
+                          <th className="py-2 pr-3 font-medium">Session Name</th>
+                          <th className="py-2 pr-3 font-medium">Date &amp; Time</th>
+                          <th className="py-2 pr-3 font-medium">No. of Guests</th>
                           <th className="py-2 font-medium">Checked in</th>
                         </tr>
                       </thead>
