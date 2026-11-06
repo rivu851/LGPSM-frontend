@@ -305,14 +305,6 @@ export default function PublicInvitationPage() {
                 onClick={() => setCardFullscreen(true)}
                 className="block w-full cursor-zoom-in bg-[color:var(--inv-soft)] object-contain"
               />
-              <button
-                type="button"
-                onClick={() => setCardFullscreen(true)}
-                className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/75 px-3.5 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur hover:bg-black/85 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <svg aria-hidden width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
-                Full screen to scan
-              </button>
             </div>
             {/* the organizer chose cards without a QR: the guest's entry QR is shown here on its own */}
             {invitationData?.cardShowsQr === false && (
@@ -330,11 +322,22 @@ export default function PublicInvitationPage() {
               <span aria-hidden className="absolute -right-3.5 top-0 size-7 rounded-full bg-[color:var(--inv-bg)] shadow-[inset_2px_0_3px_rgba(0,0,0,0.06)]" />
               <span aria-hidden className="absolute inset-x-6 top-3.5 border-t-2 border-dashed border-[color:var(--inv-line)]" />
             </div>
+            {/* its own row, so it never covers anything printed on the card */}
+            <div className="px-5 pt-1 sm:px-6">
+              <button
+                type="button"
+                onClick={() => setCardFullscreen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-full border-2 border-[color:var(--inv-line)] bg-[color:var(--inv-soft)] px-4 py-2.5 text-sm font-semibold text-[color:var(--inv-accent-text)] transition hover:border-[color:var(--inv-accent)] focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--inv-line)]"
+              >
+                <svg aria-hidden width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+                Full screen to scan
+              </button>
+            </div>
           </>
         )}
 
         {/* Card Content */}
-        <div className="p-5 sm:p-6 space-y-5">
+        <div className="space-y-4 p-3.5 min-[400px]:space-y-5 min-[400px]:p-5 sm:p-6">
           {eventCancelled && (
             <div role="alert" className="rounded-xl border border-[#E0E0E0] bg-[#F4F4F4] p-4 space-y-2 text-sm text-[color:var(--inv-ink)]">
               <p className="font-semibold">This event has been cancelled and is no longer taking place.</p>
