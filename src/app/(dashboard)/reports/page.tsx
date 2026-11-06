@@ -317,8 +317,8 @@ export default function ReportsPage() {
           ...sessionColumns.map((c) => (i.sessionCheckIns[c.id] ? "Yes" : "No")),
         ].map(csvCell).join(",")).join("\n");
     } else if (activeTab === "access") {
-      content = "User Type,Organizer / Organisation,Organizer ID,Date & Time,Action,Status\n" +
-        accessLogs.map(a => [a.userType, a.organizerName, a.organizerCode, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
+      content = "Organizer ID,Organizer / Organisation,User Type,Date & Time,Action,Status\n" +
+        accessLogs.map(a => [a.organizerCode, a.organizerName, a.userType, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
     } else {
       content = "#,Session Name,Date & Time,Invitees,Attendees,Access Control,System Users\n" +
         sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");

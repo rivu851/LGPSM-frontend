@@ -233,12 +233,23 @@ export default function DashboardPage() {
     return list.sort((a, b) => (tab === "Past" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
   }, [rows, tab, from, to]);
 
+  // The table keeps one height whichever tab is open: room for as many rows as the fullest tab shows (at most a page), plus the
+  // pagination bar if any tab needs one. Switching tabs then never makes the card, or the column beside it, jump.
+  const tabCounts = useMemo(() => {
+    const lo = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
+    const hi = to ? new Date(`${to}T23:59:59`).getTime() : Infinity;
+    const inRange = rows.filter((r) => { const t = new Date(r.start).getTime(); return t >= lo && t <= hi; });
+    return (["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length);
+  }, [rows, from, to]);
+  const reservedRows = Math.min(PAGE_SIZE, Math.max(1, ...tabCounts));
+  const reservePager = tabCounts.some((c) => c > PAGE_SIZE);
+
   const pageCount = Math.max(1, Math.ceil(overview.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pageRows = overview.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  // events still to come (or running) whose invitations have / have not gone out
-  const active = rows.filter((r) => r.phase === "Upcoming" || r.phase === "Ongoing");
-  const sentCount = active.filter((r) => r.invited).length;
+  // events still to come (or running) whose invitations have / have not gone out (used by the Invitation Status card, hidden for now)
+  // const active = rows.filter((r) => r.phase === "Upcoming" || r.phase === "Ongoing");
+  // const sentCount = active.filter((r) => r.invited).length;
 
   const currency = earnings?.currency || "INR";
   const thisMonth = (earnings?.events || []).filter((e) => sameMonth(e.createdAt)).reduce((n, e) => n + (e.amount || 0), 0);
@@ -332,11 +343,11 @@ export default function DashboardPage() {
                       <th className="w-[6%] py-3" aria-label="Open" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#E0E0E0] text-[#15191C]">
+                  <tbody className="divide-y divide-[#E0E0E0] text-[#15191C] [&>tr]:h-12">
                     {loading ? (
                       <TableSkeletonRows rows={4} cols={isAdmin ? 6 : 5} />
                     ) : overview.length === 0 ? (
-                      <tr><td colSpan={isAdmin ? 6 : 5} className="py-8 text-center text-sm text-[#828282]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
+                      <tr><td colSpan={isAdmin ? 6 : 5} className="py-3 text-center text-sm text-[#828282]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
                     ) : (
                       pageRows.map((r) => (
                         <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} className="cursor-pointer hover:bg-gray-50/80">
@@ -353,11 +364,16 @@ export default function DashboardPage() {
                         </tr>
                       ))
                     )}
+                    {/* blank rows up to the reserved height (see reservedRows) */}
+                    {!loading && Array.from({ length: Math.max(0, reservedRows - Math.max(1, pageRows.length)) }, (_, i) => (
+                      <tr key={`pad-${i}`} aria-hidden className="!h-[49px] !border-transparent"><td colSpan={isAdmin ? 6 : 5} /></tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-              {!loading && overview.length > PAGE_SIZE && (
-                <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[#4B4F52]">
+              {!loading && (overview.length > PAGE_SIZE || reservePager) && (
+                // kept (invisible) on a tab that fits one page when another tab needs it, so the height stays the same
+                <div aria-hidden={overview.length > PAGE_SIZE ? undefined : true} className={`mt-3 flex items-center justify-between gap-3 text-xs text-[#4B4F52] ${overview.length > PAGE_SIZE ? "" : "invisible"}`}>
                   <span>Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, overview.length)} of {overview.length}</span>
                   <span className="inline-flex items-center gap-2">
                     <button type="button" onClick={() => setPage(currentPage - 1)} disabled={currentPage <= 1} className="px-3 py-1.5 border border-[#E0E0E0] rounded-md disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Previous</button>
@@ -369,15 +385,15 @@ export default function DashboardPage() {
             </section>
           </div>
 
-          {/* Right: recent notifications, the last event's attendance and invitation status. The column is as tall as the left one
-              (grid rows stretch) and its last card takes up what is left, so the two sides always end together. */}
+          {/* Right: recent notifications and the last event's attendance. The column is as tall as the left one (grid rows
+              stretch) and the two cards share that height, so the two sides always end together. */}
           <div className="flex flex-col gap-6 min-w-0">
-            <section className={`${card} p-5`} aria-labelledby="recent-notes-title">
+            <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="recent-notes-title">
               <div className="flex items-center justify-between gap-2">
                 <h3 id="recent-notes-title" className="text-base font-medium text-[#15191C]">Recent Notification</h3>
                 <ArrowOut href="/notification" label="Open notifications" />
               </div>
-              <div className="mt-3 max-h-[300px] overflow-y-auto pr-1 divide-y divide-[#E0E0E0]">
+              <div className={`mt-3 max-h-[300px] overflow-y-auto pr-1 divide-y divide-[#E0E0E0] xl:flex-1 ${!loading && notes.length === 0 ? "flex flex-col justify-center" : ""}`}>
                 {loading ? (
                   <div className="space-y-3 py-2"><Skeleton className="h-4 w-40" /><Skeleton className="h-8 w-full" /></div>
                 ) : notes.length === 0 ? (
@@ -394,7 +410,7 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            <section className={`${card} p-5`} aria-labelledby="last-report-title">
+            <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="last-report-title">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="size-11 rounded-full bg-[#FFE9DE] text-[#FF651D] flex items-center justify-center shrink-0" aria-hidden>
@@ -407,12 +423,13 @@ export default function DashboardPage() {
                 </div>
                 <ArrowOut href="/reports" label="Open reports" />
               </div>
-              <div className="mt-5">
+              <div className="mt-5 xl:flex-1 flex flex-col justify-center">
                 {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#828282]">Attendance appears here once an event has taken place.</p>}
               </div>
             </section>
 
-            {/* Invitation Status: of the events still to come or running, how many have sent their invitations */}
+            {/* Hidden for now (not needed on the dashboard); the two cards above share the column's height instead.
+            (Invitation Status: of the events still to come or running, how many have sent their invitations)
             <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="invite-status-title">
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -441,6 +458,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </section>
+            */}
           </div>
         </div>
 
