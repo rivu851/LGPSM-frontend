@@ -1,5 +1,6 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
@@ -116,9 +117,10 @@ export default function EditInviteeModal({
             </label>
             <input
               type="tel"
+              maxLength={10}
               required
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(limitPhone(e.target.value))}
               className="w-full px-3.5 py-2.5 bg-[#F9FAFB] border border-gray-200 rounded-md text-xs font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#FF5B22] focus:border-[#FF5B22]"
             />
           </div>

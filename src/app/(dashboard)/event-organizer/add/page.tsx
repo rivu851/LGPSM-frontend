@@ -1,5 +1,9 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
+import type { InvitationChannel } from "@/utils/invitationChannel";
+// import { INVITATION_CHANNEL_OPTIONS } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
+// import CustomDropdown from "@/components/common/CustomDropdown"; (only used by the hidden invitation channel field)
 import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState } from "react";
@@ -15,6 +19,7 @@ export default function AddEventOrganizerPage() {
     email: "",
     phone: "",
     password: "",
+    invitationChannel: "BOTH" as InvitationChannel,
   });
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -132,10 +137,11 @@ export default function AddEventOrganizerPage() {
                 </label>
                 <input
                   type="tel"
+                  maxLength={10}
                   required
                   placeholder="Type Phone Number"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, phone: limitPhone(e.target.value) })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
                 />
               </div>
@@ -157,6 +163,14 @@ export default function AddEventOrganizerPage() {
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
                 />
               </div>
+
+              {/* Invitation channel: hidden until the client confirms what it should be. Uncomment to bring it back.
+              {/ * How this organizer will send invitations (the same choice organizers make at signup) * /}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-[#15191C]">Invitation channel<span className="text-red-500">*</span></label>
+                <CustomDropdown value={formData.invitationChannel} onChange={(v) => setFormData({ ...formData, invitationChannel: v as InvitationChannel })} options={INVITATION_CHANNEL_OPTIONS.map((o) => ({ value: o.value, label: o.label }))} ariaLabel="Invitation channel" />
+              </div>
+              */}
 
               {/* Organizer Logo Box */}
               <div className="space-y-2">

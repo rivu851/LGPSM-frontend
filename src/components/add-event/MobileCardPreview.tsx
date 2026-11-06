@@ -13,6 +13,7 @@ interface MobileCardPreviewProps {
   eventEnd: string;
   venue: string;
   contactNumber?: string;
+  cardDisplay?: TemplatePreviewPayload["cardDisplay"];
   logoKey: string | null;
   categoryName: string;
   subcategoryName: string;
@@ -47,6 +48,7 @@ export default function MobileCardPreview({
   eventEnd,
   venue,
   contactNumber,
+  cardDisplay,
   logoKey,
   categoryName,
   subcategoryName,
@@ -71,8 +73,9 @@ export default function MobileCardPreview({
       subcategoryName: subcategoryName || undefined,
       logoKey: logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined,
       ...(cardInfo ? { cardInfo } : {}),
+      ...(cardDisplay ? { cardDisplay } : {}),
     }),
-    [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo]
+    [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
   );
   const [live, setLive] = useState<{ key: string; url: string } | null>(null);
   const [loading, setLoading] = useState(false);

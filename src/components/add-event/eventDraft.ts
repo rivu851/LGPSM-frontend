@@ -62,6 +62,21 @@ export const isCustomDetail = (f: CardInfoField | null | undefined): boolean => 
 export const customFieldFor = (other: CardInfoField | null): CardInfoField => (other === "PROFESSIONAL_IDENTITY" ? "SECONDARY_IDENTITY" : "PROFESSIONAL_IDENTITY");
 export const customTitleKey = (f: CardInfoField | null | undefined): "identityLabel" | "secondaryIdentityLabel" => (f === "SECONDARY_IDENTITY" ? "secondaryIdentityLabel" : "identityLabel");
 
+/** Which of the event's own details every guest's card prints. Everything is on until the organizer unticks it. */
+export interface CardDisplay {
+  title: boolean;
+  qr: boolean;
+  dateTime: boolean;
+  location: boolean;
+}
+export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true };
+export const CARD_DISPLAY_OPTIONS: { key: keyof CardDisplay; label: string }[] = [
+  { key: "title", label: "Event Title" },
+  { key: "qr", label: "Event QR" },
+  { key: "dateTime", label: "Event Date & Time" },
+  { key: "location", label: "Event Location" },
+];
+
 export interface EventDraft {
   organizerIds: string[];
   title: string;
@@ -89,12 +104,16 @@ export interface EventDraft {
   template: SelectedTemplate | null;
   /** null until the organiser saves a choice; the card then keeps guest name, then company */
   cardInfo?: CardInfo | null;
+  /** "Select data to show on card": which event details every card prints (all by default) */
+  cardDisplay?: CardDisplay;
   // Uploaded event logo ("media:<id>"), shown on the card preview
   logoKey: string | null;
   sessions: DraftSession[];
   skipInvitees: boolean;
   /** Names of the invitee files attached by session. The files themselves are never kept in the saved draft, so after a restore this says which ones are missing. */
   inviteeFileNames?: Record<string, string>;
+  /** The Excel sample was downloaded for this draft: changing the card's guest details afterwards asks first, because the lists were filled in for the old columns */
+  sampleDownloaded?: boolean;
 }
 
 export const EVENT_DRAFT_VERSION = 1;
@@ -144,6 +163,7 @@ export function createEmptyEventDraft(): EventDraft {
     template: null,
     // A new event starts with nothing printed under the title: the guest lines stay blank until Additional Information is chosen in Settings
     cardInfo: { primary: null, secondary: null },
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
     skipInvitees: true,
@@ -210,7 +230,8 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   else if (options.subcategoryRequired && !draft.subcategoryId) errors.subcategoryId = "Choose a subcategory.";
   const contactDigits = draft.contactNumber.replace(/\D/g, "");
   if (!contactDigits) errors.contactNumber = "Contact number is required.";
-  else if (contactDigits.length < 7 || contactDigits.length > 15) errors.contactNumber = "Enter a valid contact number.";
+  // phone numbers are 10 digits (an older saved number with +91 or a leading 0 still counts)
+  else if ((contactDigits.length > 10 && /^(91|0)/.test(contactDigits) ? contactDigits.replace(/^(91|0)/, "") : contactDigits).length !== 10) errors.contactNumber = "Enter a 10-digit contact number.";
   if (!draft.venue.trim()) errors.venue = "Event location is required.";
   else if (draft.venue.trim().length > EVENT_LOCATION_MAX_LENGTH) errors.venue = `Event location cannot exceed ${EVENT_LOCATION_MAX_LENGTH} characters.`;
   if (!isValidIso(draft.start)) errors.start = "Choose a start date and time.";
@@ -293,6 +314,7 @@ function commonPayload(draft: EventDraft) {
     dietaryPreference: buildDietaryPreference(draft),
     ...(draft.template ? { templateId: draft.template.id } : {}),
     ...(draft.cardInfo ? { cardInfo: draft.cardInfo } : {}),
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) },
     // An empty key clears a previously saved logo
     media: { logoKey: draft.logoKey || "" },
   };
@@ -335,6 +357,7 @@ export interface ServerEvent {
   attendeeSettings?: { thresholdLimit?: number };
   dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] };
   templateId?: string | { _id: string; name: string; previewImageKey?: string } | null;
+  cardDisplay?: Partial<CardDisplay>;
   cardInfo?: { primary?: CardInfoField | null; secondary?: CardInfoField | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null };
   media?: { logoKey?: string };
   updatedAt?: string;
@@ -402,6 +425,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     cardInfo: event?.cardInfo && (event.cardInfo.primary !== undefined || event.cardInfo.secondary !== undefined)
       ? { primary: event.cardInfo.primary ?? null, secondary: event.cardInfo.secondary ?? null, identityLabel: event.cardInfo.identityLabel ?? null, secondaryIdentityLabel: event.cardInfo.secondaryIdentityLabel ?? null }
       : null,
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(event?.cardDisplay || {}) },
     template,
     logoKey: event?.media?.logoKey || null,
     sessions: draftSessionsFromServer(sessions || [], start, end),

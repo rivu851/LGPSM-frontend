@@ -7,6 +7,7 @@ export interface RegisterPayload {
   password: string;
   phone?: string;
   role?: string;
+  invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH";
 }
 
 export interface LoginPayload {

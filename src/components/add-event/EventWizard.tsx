@@ -10,6 +10,7 @@ import Step3Sessions, { SessionInviteeFile } from "./Step3Sessions";
 import MobileCardPreview from "./MobileCardPreview";
 import SelectTemplateModal from "./modals/SelectTemplateModal";
 import DateTimePickerModal from "./modals/DateTimePickerModal";
+import ListResetWarningModal from "./modals/ListResetWarningModal";
 import InviteesPreviewModal from "./modals/InviteesPreviewModal";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
@@ -20,7 +21,7 @@ import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
 
@@ -97,6 +98,10 @@ export default function EventWizard({
   // Set while "Customize Information" is open: the payload the card preview was rendering
   // The columns of the Excel sample when it was last downloaded here: changing a custom title afterwards earns a warning
   const [downloadedColumns, setDownloadedColumns] = useState<string[] | null>(null);
+  // "Additional Information" changed after the Excel sample was downloaded: the change waits here until the organizer confirms
+  const [pendingCardInfo, setPendingCardInfo] = useState<EventDraft["cardInfo"] | null>(null);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   // Editing: invitee lists the event already has
   const [existingLists, setExistingLists] = useState<InviteeSetInfo[]>([]);
   useEffect(() => {
@@ -290,6 +295,8 @@ export default function EventWizard({
     if (!target) return;
     if (target.kind === "event") {
       if (target.field === "rsvpDeadline") patch({ rsvpDeadline: iso });
+      // choosing the start sets the end to the same time the next day; the end can still be changed afterwards
+      else if (target.field === "start") setDraft((prev) => applyEventWindow(prev, { start: iso, end: new Date(new Date(iso).getTime() + 24 * 60 * 60 * 1000).toISOString() }));
       else setDraft((prev) => applyEventWindow(prev, { [target.field]: iso }));
       return;
     }
@@ -298,6 +305,36 @@ export default function EventWizard({
       sessions: prev.sessions.map((s) => (s.key === target.key ? { ...s, [target.field]: iso, timesLinked: false } : s)),
     }));
   };
+
+  // The invitee lists were filled in from the Excel sample: changing the card's guest details afterwards means they no longer fit
+  const listsBuiltFromSample = !!draft.sampleDownloaded || !!downloadedColumns || existingLists.length > 0 || Object.values(sessionFiles).some(Boolean);
+  const step2Change = (p: Partial<EventDraft>) => {
+    if (p.cardInfo !== undefined && listsBuiltFromSample && JSON.stringify(p.cardInfo) !== JSON.stringify(draft.cardInfo)) {
+      setResetError(null);
+      setPendingCardInfo(p.cardInfo);
+      return;
+    }
+    patch(p);
+  };
+  const confirmListReset = async () => {
+    if (pendingCardInfo === null) return;
+    // an event being edited already has its lists on the server: they are deleted first (refused once anything was sent)
+    if (eventId && existingLists.length > 0) {
+      setResetBusy(true);
+      const res = await inviteeService.clearUnusedLists(eventId);
+      setResetBusy(false);
+      if (!res.success) { setResetError(res.message || "The invitee lists could not be deleted."); return; }
+      setExistingLists([]);
+    }
+    setSessionFiles({});
+    setDownloadedColumns(null);
+    setDraft((prev) => ({ ...prev, cardInfo: pendingCardInfo, inviteeFileNames: {}, sampleDownloaded: false }));
+    setPendingCardInfo(null);
+  };
+
+  // one stable object per choice, so the card preview is only redrawn when a tick actually changes
+  const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location }), [cd.title, cd.qr, cd.dateTime, cd.location]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
@@ -391,14 +428,14 @@ export default function EventWizard({
                   onCancel={onCancel}
                 />
               ) : currentStep === 2 ? (
-                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
+                <Step2Settings draft={draft} onChange={step2Change} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
               ) : (
                 <Step3Sessions
                   sessions={draft.sessions}
                   onSessionsChange={(sessions) => patch({ sessions })}
                   sessionFiles={sessionFiles}
                   existingLists={existingLists}
-                  onSampleDownloaded={() => setDownloadedColumns(excelColumnsFor(inviteeConfig))}
+                  onSampleDownloaded={() => { setDownloadedColumns(excelColumnsFor(inviteeConfig)); patch({ sampleDownloaded: true }); }}
                   onSessionFileChange={(key, file) => {
                     setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }));
                     // remembered in the draft so a restore can say exactly which file has to be attached again
@@ -441,6 +478,7 @@ export default function EventWizard({
               subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}
               onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
               cardInfo={draft.cardInfo ?? null}
+              cardDisplay={cardDisplay}
               awaitingTemplate={!eventId && !draft.template}
             />
             </div>
@@ -461,6 +499,10 @@ export default function EventWizard({
         subcategoryId={draft.subcategoryId || undefined}
       />
 
+      {pendingCardInfo !== null && (
+        <ListResetWarningModal busy={resetBusy} error={resetError} onCancel={() => setPendingCardInfo(null)} onConfirm={() => void confirmListReset()} />
+      )}
+
       <DateTimePickerModal
         key={pickerTarget ? `${JSON.stringify(pickerTarget)}-${pickerValue ?? ""}` : "picker-closed"}
         isOpen={!!pickerTarget}
@@ -472,7 +514,7 @@ export default function EventWizard({
 
       {previewKey && previewFile && (
         <InviteesPreviewModal
-          title="Invitees List Preview"
+          title="Invitee Preview List"
           subtitle={`${previewSession?.name || "Session"} · ${previewFile.name}`}
           rows={previewFile.rows}
           showCompany={!!inviteeConfig.company || previewFile.rows.some((r) => r.company)}

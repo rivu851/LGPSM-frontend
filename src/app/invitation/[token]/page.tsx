@@ -312,7 +312,16 @@ export default function PublicInvitationPage() {
                 Full screen to scan
               </button>
             </div>
-            {(cardFullscreen || (openedByLink && !linkDismissed)) && <CardFullscreen src={invitationService.publicInvitationCardUrl(token)} alt={`${event.title} digital access pass for ${invitee.name}`} onClose={closeCardFullscreen} />}
+            {/* the organizer chose cards without a QR: the guest's entry QR is shown here on its own */}
+            {invitationData?.cardShowsQr === false && (
+              <div className="flex flex-col items-center gap-2 px-6 pt-5 text-center">
+                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-accent-text)]">Your entry QR</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={invitationService.publicInvitationQrUrl(token)} alt={`Entry QR code for ${invitee.name}`} className="w-48 h-48 rounded-lg border border-[color:var(--inv-line)] bg-white p-2" />
+                <p className="text-xs opacity-70">Show this QR code at the entrance to check in.</p>
+              </div>
+            )}
+            {(cardFullscreen || (openedByLink && !linkDismissed)) && <CardFullscreen src={invitationData?.cardShowsQr === false ? invitationService.publicInvitationQrUrl(token) : invitationService.publicInvitationCardUrl(token)} alt={invitationData?.cardShowsQr === false ? `Entry QR code for ${invitee.name}` : `${event.title} digital access pass for ${invitee.name}`} onClose={closeCardFullscreen} />}
             {/* tear line between the pass and the rest of the ticket */}
             <div className="relative h-7 bg-white" role="separator" aria-label="Digital access pass">
               <span aria-hidden className="absolute -left-3.5 top-0 size-7 rounded-full bg-[color:var(--inv-bg)] shadow-[inset_-2px_0_3px_rgba(0,0,0,0.06)]" />

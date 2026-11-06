@@ -103,7 +103,7 @@ export default function ReportsLogsTable({
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
-            Access Logs
+            Action Log
           </button>
 
           <button
@@ -371,17 +371,21 @@ export default function ReportsLogsTable({
               <thead>
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                   <th className="py-3 px-4 font-medium">User Type</th>
+                  <th className="py-3 px-4 font-medium">Organizer / Organisation</th>
+                  <th className="py-3 px-4 font-medium">Organizer ID</th>
                   <th className="py-3 px-4 font-medium">Date & Time</th>
                   <th className="py-3 px-4 font-medium">Action</th>
                   <th className="py-3 px-4 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-800">
-                {loadingDetails && statusRow(4, "Loading activity...")}
-                {!loadingDetails && accessLogs.length === 0 && statusRow(4, "No recorded activity for this event yet.")}
+                {loadingDetails && statusRow(6, "Loading activity...")}
+                {!loadingDetails && accessLogs.length === 0 && statusRow(6, "No recorded activity for this event yet.")}
                 {!loadingDetails && accessLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="py-4 px-4 font-semibold text-gray-900">{log.userType}</td>
+                    <td className="py-4 px-4 text-gray-700 max-w-[200px] truncate" title={log.organizerName}>{log.organizerName}</td>
+                    <td className="py-4 px-4 text-gray-600">{log.organizerCode}</td>
                     <td className="py-4 px-4 text-gray-600">{log.dateTime}</td>
                     <td className="py-4 px-4 text-gray-700 font-medium max-w-[280px] truncate" title={log.action}>{log.action}</td>
                     <td className="py-4 px-4">

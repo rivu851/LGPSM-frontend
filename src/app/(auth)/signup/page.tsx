@@ -1,5 +1,7 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
+// import { INVITATION_CHANNEL_OPTIONS, type InvitationChannel } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -51,6 +53,8 @@ export default function SignupPage() {
     if (passedAlong) void Promise.resolve().then(() => setEmail((current) => current || passedAlong));
   }, []);
   const [phone, setPhone] = useState("");
+  // how they will send invitations (the send screen starts with this choice)
+  // const [invitationChannel, setInvitationChannel] = useState<InvitationChannel>("BOTH");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,6 +129,7 @@ export default function SignupPage() {
         email: email.trim(),
         password,
         role: "ORGANIZER",
+        // invitationChannel, (hidden for now, see the commented-out field)
         ...(phone.trim() ? { phone: phone.trim() } : {}),
       });
 
@@ -321,15 +326,30 @@ export default function SignupPage() {
               <input
                 id="signup-phone"
                 type="tel"
+                maxLength={10}
                 required
                 autoComplete="tel"
                 placeholder={INPUT_PLACEHOLDERS.auth.phone}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(limitPhone(e.target.value))}
                 disabled={isSubmitting}
                 className={authInputClass}
               />
             </div>
+            {/* Invitation channel at signup: hidden until the client confirms what "change invitation option during signup" means. Uncomment to bring it back.
+            <fieldset>
+              <legend className={authLabelClass}>How will you send invitations?<span className="text-[#FF651D]">*</span></legend>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup">
+                {INVITATION_CHANNEL_OPTIONS.map((o) => (
+                  <label key={o.value} className={`flex flex-col items-center justify-center gap-0.5 rounded-lg border px-2 py-2.5 text-center cursor-pointer transition-colors ${invitationChannel === o.value ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] bg-white hover:border-gray-400"}`}>
+                    <input type="radio" name="signup-invitation-channel" value={o.value} checked={invitationChannel === o.value} onChange={() => setInvitationChannel(o.value)} disabled={isSubmitting} className="sr-only" />
+                    <span className="text-sm font-semibold text-[#15191C]">{o.label}</span>
+                    <span className="text-[11px] text-[#828282] leading-tight">{o.hint}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            */}
             <div>
               <label htmlFor="signup-password" className={authLabelClass}>
                 Password<span className="text-[#FF651D]">*</span>

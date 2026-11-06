@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
+import { formatOrganizerId } from "@/utils/formatId";
 import { InviteeLog, AccessLog, SessionReport, ReportSessionColumn } from "@/types/reports";
 import ReportsHeaderControls from "@/components/reports/ReportsHeaderControls";
 import ReportsStatsCards from "@/components/reports/ReportsStatsCards";
@@ -281,10 +282,17 @@ export default function ReportsPage() {
         dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
         action: log.action,
         status: log.status === "FAILED" ? "failed" : "Successful",
+        // the organizer on the log, else the event's own organizer
+        ...(() => {
+          const org = (log.organizerId && typeof log.organizerId === "object" ? log.organizerId : null) || (selectedEvent?.organizerId && typeof selectedEvent.organizerId === "object" ? selectedEvent.organizerId : null);
+          const id = org?._id || (typeof log.organizerId === "string" ? log.organizerId : "") || (typeof selectedEvent?.organizerId === "string" ? selectedEvent.organizerId : "");
+          return { organizerName: org?.profile?.organizationName || org?.fullName || "—", organizerCode: id ? formatOrganizerId(id) : "—" };
+        })(),
       })));
       setLoadingAccessDetails(false);
     });
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedEvent follows selectedEventId
   }, [selectedEventId, activeTab, reloadKey]);
 
   const downloadReportCSV = () => {
@@ -309,8 +317,8 @@ export default function ReportsPage() {
           ...sessionColumns.map((c) => (i.sessionCheckIns[c.id] ? "Yes" : "No")),
         ].map(csvCell).join(",")).join("\n");
     } else if (activeTab === "access") {
-      content = "User Type,Date & Time,Action,Status\n" +
-        accessLogs.map(a => [a.userType, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
+      content = "User Type,Organizer / Organisation,Organizer ID,Date & Time,Action,Status\n" +
+        accessLogs.map(a => [a.userType, a.organizerName, a.organizerCode, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
     } else {
       content = "#,Session Name,Date & Time,Invitees,Attendees,Access Control,System Users\n" +
         sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");
@@ -343,7 +351,7 @@ export default function ReportsPage() {
   );
 
   const filteredAccessLogs = accessLogs.filter(a =>
-    a.userType.toLowerCase().includes(tableSearch.toLowerCase()) || a.action.toLowerCase().includes(tableSearch.toLowerCase())
+    [a.userType, a.action, a.organizerName, a.organizerCode].some((v) => v.toLowerCase().includes(tableSearch.toLowerCase()))
   );
 
   const filteredSessions = sessionsReport.filter(s =>

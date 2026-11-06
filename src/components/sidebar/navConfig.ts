@@ -42,22 +42,13 @@ export const NAV_ENTRIES: NavEntry[] = [
     ],
   },
   { key: "templates", label: "Templates", icon: "templates", href: "/templates", roles: ["ADMIN"] },
-  // ORGANIZER shell — Organiser Figma: "Configurations" is a collapsible group (chevron; collapsed on
-  // pages outside it, e.g. Notification 222:34577) containing exactly Event Management / Invitees
-  // Management / Templates. Reuses the existing event/invitee/template routes untouched.
-  {
-    key: "configurations",
-    label: "Configurations",
-    icon: "settings",
-    roles: ["ORGANIZER"],
-    children: [
-      { key: "event-management", label: "Event Management", href: "/events", roles: ["ORGANIZER"] },
-      { key: "invitees-management", label: "Invitees Management", href: "/events/select/invitees?from=sidebar", roles: ["ORGANIZER"] },
-      // Hidden for now: organizers choose, upload and delete their templates in the template window while creating an event.
-      // Uncomment to bring the page back.
-      // { key: "org-templates", label: "Templates", href: "/templates", roles: ["ORGANIZER"] },
-    ],
-  },
+  // ORGANIZER shell: Event Management and Invitees Management are top-level items with their own icons (the "Configurations"
+  // group they used to sit in was removed at the client's request). The keys are unchanged, so active-state matching still works.
+  { key: "event-management", label: "Event Management", icon: "event", href: "/events", roles: ["ORGANIZER"] },
+  { key: "invitees-management", label: "Invitees Management", icon: "people", href: "/events/select/invitees?from=sidebar", roles: ["ORGANIZER"] },
+  // Hidden for now: organizers choose, upload and delete their templates in the template window while creating an event.
+  // Uncomment to bring the page back.
+  // { key: "org-templates", label: "Templates", icon: "templates", href: "/templates", roles: ["ORGANIZER"] },
   // ORGANIZER shell — flat top-level item (no chevron in Figma). The existing /user-management
   // page already has its own Add User button and Assign/Unassign modal, so the add/assign/
   // session-relationship flows are reached from inside that page, not as separate sidebar links.

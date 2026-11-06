@@ -48,9 +48,10 @@ export default function SessionScopePicker({
           <div className="border border-gray-200 rounded-md divide-y divide-gray-100 max-h-56 overflow-auto bg-white">
             <label className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-900 cursor-pointer">
               <input type="checkbox" checked={value === null} onChange={toggleAll} className={box} />
-              All Sessions{sessions.length ? ` (${sessions.length})` : ""}
+              {/* one session is the whole event: its name, not "All Sessions (1)" */}
+              {sessions.length === 1 ? <span className="min-w-0 break-words">{sessions[0].name}</span> : <>All Sessions{sessions.length ? ` (${sessions.length})` : ""}</>}
             </label>
-            {sessions.map((s) => (
+            {sessions.length > 1 && sessions.map((s) => (
               <label key={s.id} className="flex items-center gap-2.5 px-3 py-2 pl-8 text-sm text-gray-800 cursor-pointer">
                 <input type="checkbox" checked={checked(s.id)} onChange={() => toggle(s.id)} className={box} />
                 <span className="min-w-0 break-words">{s.name}</span>

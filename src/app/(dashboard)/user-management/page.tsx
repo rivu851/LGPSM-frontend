@@ -1,5 +1,6 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect, useRef } from "react";
@@ -18,6 +19,8 @@ import { mapWithConcurrency } from "@/utils/mapWithConcurrency";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
+import AddSystemUserModal from "@/components/users/AddSystemUserModal";
+import type { UserData } from "@/services/tokenStorage";
 
 export default function AllUsersPage() {
   const { confirm } = useAlert();
@@ -49,6 +52,16 @@ export default function AllUsersPage() {
   const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
 
   // The skeleton is for the first load; a refresh after assigning, adding or removing keeps the rows on screen
+  // "Add User" opens the form right here; admins choose the organizer in it
+  const [addOpen, setAddOpen] = useState(false);
+  const [organizers, setOrganizers] = useState<UserData[]>([]);
+  const [added, setAdded] = useState<{ name: string; organizerId: string; organizerName: string } | null>(null);
+  useEffect(() => {
+    if (!isAdminView) return;
+    let live = true;
+    userService.getUsers("ORGANIZER").then((r) => { if (live && r.success && Array.isArray(r.data)) setOrganizers(r.data.filter((u) => u.role === "ORGANIZER")); });
+    return () => { live = false; };
+  }, [isAdminView]);
   const loadedOnce = useRef(false);
   const fetchUsersAndAssignments = async () => {
     try {
@@ -315,6 +328,14 @@ export default function AllUsersPage() {
 
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-[30px] w-full space-y-6 bg-white pb-24">
+        {added && (
+          <div role="status" className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex flex-wrap items-center justify-between gap-2">
+            <span className="break-words">User &quot;{added.name}&quot; added{added.organizerName ? ` under ${added.organizerName}` : ""}.</span>
+            {isAdminView && added.organizerId && (
+              <Link href={`/user-management/add?organizer=${added.organizerId}`} className="underline whitespace-nowrap">View {added.organizerName ? `${added.organizerName}'s` : "the organizer's"} system users</Link>
+            )}
+          </div>
+        )}
         {errorFeedback && (
           <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
             <span>{errorFeedback}</span>
@@ -329,10 +350,10 @@ export default function AllUsersPage() {
 
         {/* Controls (Figma 450:6796 / 217:23029) */}
         <ListControls label="System Users" searchId="system-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
-          <Link href="/user-management/add?new=1" className={addButtonClass}>
+          <button type="button" onClick={() => setAddOpen(true)} className={`${addButtonClass} cursor-pointer`}>
             <Icon name="events/add-white" width={24} height={24} />
             Add User
-          </Link>
+          </button>
         </ListControls>
 
         {/* Custom Green/White Tick Select All Checkbox */}
@@ -599,8 +620,9 @@ aria-label={`Select ${u.name}`}
                 <label className="text-sm font-medium text-[#15191C]">Contact No</label>
                 <input
                   type="tel"
+                  maxLength={10}
                   value={editFormData.phone}
-                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                  onChange={(e) => setEditFormData({ ...editFormData, phone: limitPhone(e.target.value) })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
@@ -714,6 +736,19 @@ aria-label={`Select ${u.name}`}
             </button>
           </div>
         </div>
+      )}
+      {addOpen && (
+        <AddSystemUserModal
+          isAdmin={isAdminView}
+          organizers={organizers}
+          onClose={() => setAddOpen(false)}
+          onCreated={async (created, organizerId) => {
+            const org = organizers.find((o) => o._id === organizerId);
+            setAdded({ name: created.fullName, organizerId, organizerName: (org?.profile?.organizationName as string) || org?.fullName || "" });
+            setAddOpen(false);
+            await fetchUsersAndAssignments();
+          }}
+        />
       )}
     </div>
   );

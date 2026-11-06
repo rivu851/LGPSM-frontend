@@ -1,5 +1,6 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
 import React, { useEffect, useRef, useState } from "react";
 import { DraftErrors, EventDraft } from "./eventDraft";
 import { formatDateTime } from "@/utils/dateTime";
@@ -364,9 +365,10 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             <input
               id="event-contact"
               type="tel"
-              inputMode="tel"
+              maxLength={10}
+              inputMode="numeric"
               value={draft.contactNumber}
-              onChange={(e) => onChange({ contactNumber: e.target.value })}
+              onChange={(e) => onChange({ contactNumber: limitPhone(e.target.value) })}
               placeholder="Enter Number"
               aria-invalid={!!errors.contactNumber}
               className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"

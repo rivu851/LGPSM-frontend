@@ -1,5 +1,6 @@
 "use client";
 
+import { limitPhone } from "@/utils/phoneInput";
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
@@ -194,7 +195,7 @@ export default function AddInviteeManualModal({
                   ariaLabel="Add to session"
                   value={sessionId}
                   onChange={onSessionChange}
-                  options={[{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
+                  options={sessionOptions.length === 1 ? [{ value: "", label: sessionOptions[0].name }] : [{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
                 />
               </div>
             )}
@@ -242,8 +243,9 @@ export default function AddInviteeManualModal({
               <input
                 id="ai-mobile"
                 type="tel"
+                maxLength={10}
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
+                onChange={(e) => setMobile(limitPhone(e.target.value))}
                 placeholder="e.g. +91 98765 43210"
                 className={inputClass}
                 autoComplete="off"
