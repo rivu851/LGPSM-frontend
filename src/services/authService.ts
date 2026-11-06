@@ -48,6 +48,14 @@ export const authService = {
     });
   },
 
+  /** "Change email address" on the code page: moves the pending sign-up to the corrected address and sends the new code there */
+  async changePendingEmail(email: string, newEmail: string, password: string): Promise<ApiResponse<{ email: string }>> {
+    return apiClient<{ email: string }>("/api/auth/change-pending-email", {
+      method: "POST",
+      body: JSON.stringify({ email, newEmail, password }),
+    });
+  },
+
   async resendVerificationCode(email: string): Promise<ApiResponse<{ sent: boolean }>> {
     return apiClient<{ sent: boolean }>("/api/auth/resend-verification", {
       method: "POST",

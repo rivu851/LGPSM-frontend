@@ -1,6 +1,6 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput, { PhoneNote } from "@/components/common/PhoneInput";
 import React, { useEffect, useRef, useState } from "react";
 import { DraftErrors, EventDraft } from "./eventDraft";
 import { formatDateTime } from "@/utils/dateTime";
@@ -265,6 +265,8 @@ function DateButton({ label, value, placeholder, onClick, error }: { label: stri
 
 // Controlled step: all values live in the wizard draft owned by the page
 export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+  // what to tell the person when something other than a digit was typed in the contact number
+  const [contactNote, setContactNote] = useState<string | null>(null);
   return (
     <form
       onSubmit={(e) => {
@@ -362,18 +364,17 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           <label htmlFor="event-contact" className={`block ${labelClass} mb-1.5`}>Contact Number<Req /></label>
           <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-[#FF651D] ${border(errors.contactNumber)}`}>
             <span className="px-3 text-sm text-[#828282] border-r border-[#E0E0E0]">+91</span>
-            <input
+            <PhoneInput
               id="event-contact"
-              type="tel"
-              maxLength={10}
-              inputMode="numeric"
               value={draft.contactNumber}
-              onChange={(e) => onChange({ contactNumber: limitPhone(e.target.value) })}
+              onValueChange={(v) => onChange({ contactNumber: v })}
+              onNote={setContactNote}
               placeholder="Enter Number"
               aria-invalid={!!errors.contactNumber}
               className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
             />
           </div>
+          <PhoneNote message={contactNote} />
           <Err msg={errors.contactNumber} />
         </div>
               {rsvpAllowed ? (

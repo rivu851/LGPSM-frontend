@@ -1,12 +1,14 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
+import { NOT_DIGITS_MESSAGE } from "@/utils/phoneInput";
 // import { INVITATION_CHANNEL_OPTIONS, type InvitationChannel } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authService } from "@/services/authService";
+import ChangeEmailForm from "@/components/auth/ChangeEmailForm";
 import {
   AuthAlert,
   AuthHeading,
@@ -64,6 +66,7 @@ export default function SignupPage() {
   // Step 2: Verification state
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [expirySeconds, setExpirySeconds] = useState(600); // 10 minutes
   const [resendCooldown, setResendCooldown] = useState(60); // 60 seconds
@@ -154,8 +157,11 @@ export default function SignupPage() {
   };
 
   // Step 2: Digit inputs handlers
+  // a letter or symbol typed or pasted into the code boxes is not entered; this says why
+  const [digitNote, setDigitNote] = useState<string | null>(null);
   const handleDigitChange = (index: number, value: string) => {
     const cleaned = value.replace(/\D/g, "");
+    setDigitNote(value.trim() && cleaned.length < value.trim().length ? NOT_DIGITS_MESSAGE : null);
     if (!cleaned) {
       const next = [...digits];
       next[index] = "";
@@ -186,7 +192,9 @@ export default function SignupPage() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const raw = e.clipboardData.getData("text");
+    const pasted = raw.replace(/\D/g, "").slice(0, 6);
+    setDigitNote(raw.trim() && raw.replace(/\s/g, "").replace(/\d/g, "").length > 0 ? NOT_DIGITS_MESSAGE : null);
     if (!pasted) return;
 
     const next = [...digits];
@@ -323,15 +331,13 @@ export default function SignupPage() {
               <label htmlFor="signup-phone" className={authLabelClass}>
                 Phone no<span className="text-[#FF651D]">*</span>
               </label>
-              <input
+              <PhoneInput
                 id="signup-phone"
-                type="tel"
-                maxLength={10}
                 required
                 autoComplete="tel"
                 placeholder={INPUT_PLACEHOLDERS.auth.phone}
                 value={phone}
-                onChange={(e) => setPhone(limitPhone(e.target.value))}
+                onValueChange={(v) => setPhone(v)}
                 disabled={isSubmitting}
                 className={authInputClass}
               />
@@ -457,6 +463,7 @@ export default function SignupPage() {
                   />
                 ))}
               </div>
+              {digitNote && <p role="alert" className="mt-2 text-xs font-medium text-rose-600">{digitNote}</p>}
             </div>
 
             <div className="flex items-center justify-between text-xs text-gray-500">
@@ -512,14 +519,33 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => {
-                setStep("details");
+                setChangingEmail((open) => !open);
                 setErrorMessage("");
                 setSuccessMessage("");
               }}
+              aria-expanded={changingEmail}
               className="text-[#FF651D] underline font-medium hover:text-[#C44200]"
             >
               change email address
             </button>
+            {changingEmail && (
+              <ChangeEmailForm
+                currentEmail={email}
+                knownPassword={password}
+                onCancel={() => setChangingEmail(false)}
+                onChanged={(newEmail) => {
+                  sessionStorage.setItem("lgpsm_pending_verification_email", newEmail);
+                  setEmail(newEmail);
+                  setDigits(["", "", "", "", "", ""]);
+                  setExpirySeconds(600);
+                  setResendCooldown(60);
+                  setChangingEmail(false);
+                  setErrorMessage("");
+                  setSuccessMessage(`A new 6-digit verification code has been sent to ${newEmail}`);
+                  setTimeout(() => digitRefs.current[0]?.focus(), 100);
+                }}
+              />
+            )}
           </div>
 
           <p className="text-center mt-6 text-sm leading-5 text-[#4A5568]">

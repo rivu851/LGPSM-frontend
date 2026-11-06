@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import PasswordField from "@/components/common/PasswordField";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { userService } from "@/services/userService";
@@ -101,13 +101,11 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                 <label className="text-sm font-medium text-[#15191C]">
                   Contact No<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="tel"
-                  maxLength={10}
+                <PhoneInput
                   required
                   placeholder="Enter Contact No"
                   value={form.contactNo}
-                  onChange={(e) => setForm({ ...form, contactNo: limitPhone(e.target.value) })}
+                  onValueChange={(v) => setForm({ ...form, contactNo: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>

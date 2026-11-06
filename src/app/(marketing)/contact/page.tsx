@@ -1,6 +1,6 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import TopBanner from "@/components/TopBanner";
@@ -205,10 +205,8 @@ export default function ContactPage() {
                 </div>
 
                 <div>
-                  <input
+                  <PhoneInput
                     id="contact-phone"
-                    type="tel"
-                    maxLength={10}
                     name="phone"
                     autoComplete="tel"
                     placeholder="Phone number (optional)"
@@ -216,7 +214,7 @@ export default function ContactPage() {
                     aria-invalid={!!fieldErrors.phone}
                     aria-describedby={errorId("phone")}
                                         value={values.phone}
-                    onChange={(e) => setField("phone", limitPhone(e.target.value))}
+                    onValueChange={(v) => setField("phone", v)}
                     disabled={sending}
                     className={fieldClass}
                   />

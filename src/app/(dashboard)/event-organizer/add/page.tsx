@@ -1,6 +1,6 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import type { InvitationChannel } from "@/utils/invitationChannel";
 // import { INVITATION_CHANNEL_OPTIONS } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
 // import CustomDropdown from "@/components/common/CustomDropdown"; (only used by the hidden invitation channel field)
@@ -135,13 +135,11 @@ export default function AddEventOrganizerPage() {
                 <label className="block text-sm font-medium text-[#15191C]">
                   Phone Number<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="tel"
-                  maxLength={10}
+                <PhoneInput
                   required
                   placeholder="Type Phone Number"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: limitPhone(e.target.value) })}
+                  onValueChange={(v) => setFormData({ ...formData, phone: v })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
                 />
               </div>

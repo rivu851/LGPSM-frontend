@@ -1,6 +1,6 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
@@ -693,11 +693,9 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">Contact No</label>
-                <input
-                  type="tel"
-                  maxLength={10}
+                <PhoneInput
                   value={editFormData.phone}
-                  onChange={(e) => setEditFormData({ ...editFormData, phone: limitPhone(e.target.value) })}
+                  onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
@@ -783,13 +781,11 @@ aria-label={`Select ${u.name}`}
                 <label className="text-sm font-medium text-[#15191C]">
                   Contact No<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="tel"
-                  maxLength={10}
+                <PhoneInput
                   required
                   placeholder="Enter Contact No"
                   value={addUserData.contactNo}
-                  onChange={(e) => setAddUserData({ ...addUserData, contactNo: limitPhone(e.target.value) })}
+                  onValueChange={(v) => setAddUserData({ ...addUserData, contactNo: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>

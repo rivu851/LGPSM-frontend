@@ -1,6 +1,6 @@
 "use client";
 
-import { limitPhone } from "@/utils/phoneInput";
+import PhoneInput from "@/components/common/PhoneInput";
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
@@ -240,12 +240,10 @@ export default function AddInviteeManualModal({
                 Mobile Number
                 <span className="text-[#828282] font-normal text-xs ml-1">(required if no email)</span>
               </label>
-              <input
+              <PhoneInput
                 id="ai-mobile"
-                type="tel"
-                maxLength={10}
                 value={mobile}
-                onChange={(e) => setMobile(limitPhone(e.target.value))}
+                onValueChange={(v) => setMobile(v)}
                 placeholder="e.g. +91 98765 43210"
                 className={inputClass}
                 autoComplete="off"
