@@ -62,6 +62,10 @@ export default function ReportsPage() {
   const [eventReport, setEventReport] = useState<EventReportData | null>(null);
   const [inviteeLogs, setInviteeLogs] = useState<InviteeLog[]>([]);
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
+  const ACCESS_PAGE_SIZE = 100; // the server's largest page
+  const [accessTotal, setAccessTotal] = useState<number | undefined>(undefined);
+  const [accessPage, setAccessPage] = useState(1);
+  const [loadingMoreAccess, setLoadingMoreAccess] = useState(false);
   const [sessionsReport, setSessionsReport] = useState<SessionReport[]>([]);
   const [sessionColumns, setSessionColumns] = useState<ReportSessionColumn[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -266,6 +270,33 @@ export default function ReportsPage() {
     return () => { cancelled = true; };
   }, [selectedEventId, activeTab, reloadKey, eventReport]);
 
+  // One Action Log row: who did what, for which organizer (the one on the entry, else the event's own organizer)
+  const toAccessRow = (log: any): AccessLog => {
+    const org = (log.organizerId && typeof log.organizerId === "object" ? log.organizerId : null) || (selectedEvent?.organizerId && typeof selectedEvent.organizerId === "object" ? selectedEvent.organizerId : null);
+    const id = org?._id || (typeof log.organizerId === "string" ? log.organizerId : "") || (typeof selectedEvent?.organizerId === "string" ? selectedEvent.organizerId : "");
+    return {
+      id: log._id,
+      userType: ROLE_LABELS[log.actorType] || log.actorType || "—",
+      dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
+      action: log.action,
+      status: log.status === "FAILED" ? "failed" : "Successful",
+      organizerName: org?.profile?.organizationName || org?.fullName || "—",
+      organizerCode: id ? formatOrganizerId(id) : "—",
+    };
+  };
+  const loadOlderAccessLogs = async () => {
+    if (!selectedEventId || loadingMoreAccess) return;
+    setLoadingMoreAccess(true);
+    const res = await auditLogService.getAuditLogs({ eventId: selectedEventId, limit: ACCESS_PAGE_SIZE, page: accessPage + 1 });
+    if (res.success && Array.isArray(res.data)) {
+      const older = (res.data as any[]).map(toAccessRow);
+      setAccessLogs((current) => [...current, ...older.filter((row) => !current.some((c) => c.id === row.id))]);
+      setAccessPage((p) => p + 1);
+      setAccessTotal(res.meta?.total ?? accessTotal);
+    }
+    setLoadingMoreAccess(false);
+  };
+
   useEffect(() => {
     if (!selectedEventId || activeTab !== "access") {
       setAccessLogs([]);
@@ -273,22 +304,12 @@ export default function ReportsPage() {
     }
     let cancelled = false;
     setLoadingAccessDetails(true);
-    auditLogService.getAuditLogs({ eventId: selectedEventId, limit: 100 }).then((auditRes) => {
+    setAccessPage(1);
+    auditLogService.getAuditLogs({ eventId: selectedEventId, limit: ACCESS_PAGE_SIZE }).then((auditRes) => {
       if (cancelled) return;
       const logs: any[] = auditRes.success && Array.isArray(auditRes.data) ? auditRes.data : [];
-      setAccessLogs(logs.map((log) => ({
-        id: log._id,
-        userType: ROLE_LABELS[log.actorType] || log.actorType || "—",
-        dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
-        action: log.action,
-        status: log.status === "FAILED" ? "failed" : "Successful",
-        // the organizer on the log, else the event's own organizer
-        ...(() => {
-          const org = (log.organizerId && typeof log.organizerId === "object" ? log.organizerId : null) || (selectedEvent?.organizerId && typeof selectedEvent.organizerId === "object" ? selectedEvent.organizerId : null);
-          const id = org?._id || (typeof log.organizerId === "string" ? log.organizerId : "") || (typeof selectedEvent?.organizerId === "string" ? selectedEvent.organizerId : "");
-          return { organizerName: org?.profile?.organizationName || org?.fullName || "—", organizerCode: id ? formatOrganizerId(id) : "—" };
-        })(),
-      })));
+      setAccessLogs(logs.map(toAccessRow));
+      setAccessTotal(auditRes.meta?.total ?? logs.length);
       setLoadingAccessDetails(false);
     });
     return () => { cancelled = true; };
@@ -467,6 +488,9 @@ export default function ReportsPage() {
             sessionsReport={filteredSessions}
             sessionColumns={sessionColumns}
             loadingDetails={loadingDetails || (activeTab === "invitees" && loadingInviteeDetails) || (activeTab === "access" && loadingAccessDetails)}
+            accessTotal={accessTotal}
+            loadingMoreAccess={loadingMoreAccess}
+            onLoadMoreAccess={loadOlderAccessLogs}
           />
           </>
         )}

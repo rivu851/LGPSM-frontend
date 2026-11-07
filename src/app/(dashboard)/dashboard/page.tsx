@@ -14,6 +14,7 @@ import { eventDisplayStatus } from "@/utils/eventUtils";
 import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 import { Skeleton, TableSkeletonRows } from "@/components/common/Skeleton";
 import { formatDateTime } from "@/utils/dateTime";
+import { settleRange, startsWithin } from "@/utils/dateRange";
 
 interface OrganizerSummary {
   id: string;
@@ -227,18 +228,14 @@ export default function DashboardPage() {
 
   // Events Overview: the chosen tab, within the chosen dates (by start date); soonest first for what is to come, latest first for the past
   const overview = useMemo(() => {
-    const lo = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
-    const hi = to ? new Date(`${to}T23:59:59`).getTime() : Infinity;
-    const list = rows.filter((r) => r.phase === tab).filter((r) => { const t = new Date(r.start).getTime(); return t >= lo && t <= hi; });
+    const list = rows.filter((r) => r.phase === tab && startsWithin(r.start, from, to));
     return list.sort((a, b) => (tab === "Past" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
   }, [rows, tab, from, to]);
 
   // The table keeps one height whichever tab is open: room for as many rows as the fullest tab shows (at most a page), plus the
   // pagination bar if any tab needs one. Switching tabs then never makes the card, or the column beside it, jump.
   const tabCounts = useMemo(() => {
-    const lo = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
-    const hi = to ? new Date(`${to}T23:59:59`).getTime() : Infinity;
-    const inRange = rows.filter((r) => { const t = new Date(r.start).getTime(); return t >= lo && t <= hi; });
+    const inRange = rows.filter((r) => startsWithin(r.start, from, to));
     return (["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length);
   }, [rows, from, to]);
   const reservedRows = Math.min(PAGE_SIZE, Math.max(1, ...tabCounts));
@@ -315,9 +312,14 @@ export default function DashboardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  <input type="date" aria-label="From date" value={from} max={to || undefined} onChange={(e) => { setFrom(e.target.value); setPage(1); }} className={dateField} />
+                  <input type="date" aria-label="From date" title="Events starting on or after this day" value={from} max={to || undefined} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
                   <span className="text-xs text-[#828282]">To</span>
-                  <input type="date" aria-label="To date" value={to} min={from || undefined} onChange={(e) => { setTo(e.target.value); setPage(1); }} className={dateField} />
+                  <input type="date" aria-label="To date" title="Events starting on or before this day" value={to} min={from || undefined} onChange={(e) => { const r = settleRange({ from, to: e.target.value }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  {(from || to) && (
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#FF651D] cursor-pointer">
+                      Clear dates
+                    </button>
+                  )}
                   <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-semibold rounded-md">
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                     Add Event

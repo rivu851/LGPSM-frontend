@@ -91,7 +91,7 @@ function AddUserContent() {
     let assignNote: string | null = null;
     if (fromEventId && created._id) {
       const assigned = await assignmentService.saveAssignment(fromEventId, created._id, []);
-      if (!assigned.success) assignNote = assigned.message || "The user was added but could not be assigned to the event.";
+      if (!assigned.success) assignNote = `${created.fullName} was added to your system users, but could not be assigned to this event. ${assigned.message || ""}`.trim();
     }
     setAddedUserName(created.fullName);
     setIsAddUserModalOpen(false);
