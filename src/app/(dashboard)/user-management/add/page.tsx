@@ -11,6 +11,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { eventService } from "@/services/eventService";
 import { assignmentService } from "@/services/assignmentService";
+import AddSystemUserModal from "@/components/users/AddSystemUserModal";
 
 // "Add User" buttons elsewhere (User Management, an event's system-user tab) link here with ?new=1 so the form is already open,
 // instead of landing on this list and needing a second click.
@@ -28,11 +29,13 @@ function AddUserContent() {
   const openedByLink = search.get("new") === "1";
   // Opened from an event's Assign System Users tab: the new account goes straight onto that event
   const fromEventId = search.get("event");
+  // Opened from All Users after adding someone: show that organizer's system users
+  const organizerParam = search.get("organizer");
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
   // An admin works on one organizer's staff at a time
   const [organizers, setOrganizers] = useState<UserData[]>([]);
-  const [organizerId, setOrganizerId] = useState("");
+  const [organizerId, setOrganizerId] = useState(organizerParam || "");
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(openedByLink);
   // Cancelling a form that was opened from another page goes back to that page rather than stranding the person on this list
   const cancelModal = () => {
@@ -40,15 +43,8 @@ function AddUserContent() {
     if (openedByLink) router.back();
   };
   const [searchQuery, setSearchQuery] = useState("");
-  const [formData, setFormData] = useState({
-    userName: "",
-    contactNo: "",
-    email: "",
-    password: "",
-  });
   const [addedUserName, setAddedUserName] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [systemUsers, setSystemUsers] = useState<UserData[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -90,37 +86,17 @@ function AddUserContent() {
     loadSystemUsers();
   }, [loadSystemUsers]);
 
-  const handleAddUserSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.userName.trim()) return;
-    if (isAdmin && !organizerId) { setFormError("Choose the organizer this user is being added for."); return; }
-
-    setIsSubmitting(true);
-    setFormError(null);
-    const res = await userService.createUser({
-      fullName: formData.userName.trim(),
-      email: formData.email.trim(),
-      phone: formData.contactNo.trim() || undefined,
-      password: formData.password,
-      role: "SYSTEM_USER",
-      ...(isAdmin ? { organizerId } : {}),
-    });
+  const handleCreated = async (created: UserData, forOrganizerId: string) => {
     // From an event's tab: put the new user on that event (all sessions) so it shows there straight away
     let assignNote: string | null = null;
-    if (res.success && fromEventId && res.data?._id) {
-      const assigned = await assignmentService.saveAssignment(fromEventId, res.data._id, []);
-      if (!assigned.success) assignNote = assigned.message || "The user was added but could not be assigned to the event.";
+    if (fromEventId && created._id) {
+      const assigned = await assignmentService.saveAssignment(fromEventId, created._id, []);
+      if (!assigned.success) assignNote = `${created.fullName} was added to your system users, but could not be assigned to this event. ${assigned.message || ""}`.trim();
     }
-    setIsSubmitting(false);
-
-    if (!res.success) {
-      setFormError(res.message || "Failed to create user.");
-      return;
-    }
-
-    setAddedUserName(formData.userName.trim());
+    setAddedUserName(created.fullName);
     setIsAddUserModalOpen(false);
-    setFormData({ userName: "", contactNo: "", email: "", password: "" });
+    // the list follows the organizer the user was added for
+    if (isAdmin && forOrganizerId && forOrganizerId !== organizerId) setOrganizerId(forOrganizerId);
     // Opened from another page: go back to it, where the new user now shows in the list
     if (assignNote) setFormError(assignNote);
     else if (openedByLink) router.back();
@@ -144,7 +120,7 @@ function AddUserContent() {
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
-              <label className="block text-sm font-medium text-[#15191C]">Organizer</label>
+              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#FF651D] ml-0.5">*</span></label>
               <CustomDropdown
                 value={organizerId}
                 onChange={(v) => setOrganizerId(v)}
@@ -164,6 +140,8 @@ function AddUserContent() {
               Add User
             </button>
           </ListControls>
+
+          {formError && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium break-words">{formError}</p>}
 
           {/* Success Notification Banner */}
           {addedUserName && (
@@ -231,111 +209,16 @@ function AddUserContent() {
           )}
         </div>
 
-      {/* Add User Modal (Image 2) */}
+      {/* Add User form (Image 2): the organizer is required for admins, pre-filled with the one chosen above */}
       {isAddUserModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
-          <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
-            {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
-              <h3 className="text-base font-medium text-[#15191C]">Add User</h3>
-              <button
-                onClick={cancelModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleAddUserSubmit} className="px-6 pt-5 space-y-5">
-              {/* User Name */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#FF651D] ml-0.5">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Enter User Name"
-                  value={formData.userName}
-                  onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
-                />
-              </div>
-
-              {/* Contact No */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#FF651D] ml-0.5">*</span>
-                </label>
-                <input
-                  type="tel"
-                  required
-                  placeholder="Enter Contact No"
-                  value={formData.contactNo}
-                  onChange={(e) => setFormData({ ...formData, contactNo: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#FF651D] ml-0.5">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="Enter Email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
-                />
-              </div>
-
-              {/* Temporary Password */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#15191C]">
-                  Temporary Password<span className="text-[#FF651D] ml-0.5">*</span>
-                </label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  placeholder="At least 8 characters"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
-                />
-              </div>
-
-              {formError && (
-                <p className="text-xs font-medium text-rose-600 break-words">{formError}</p>
-              )}
-
-              {/* Buttons */}
-              <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={cancelModal}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? "Adding..." : "Add"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddSystemUserModal
+          isAdmin={isAdmin}
+          organizers={organizers}
+          initialOrganizerId={organizerId}
+          lockOrganizer={!!fromEventId}
+          onClose={cancelModal}
+          onCreated={handleCreated}
+        />
       )}
     </div>
   );

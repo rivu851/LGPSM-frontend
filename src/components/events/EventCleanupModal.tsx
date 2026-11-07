@@ -9,6 +9,8 @@ interface EventCleanupModalProps {
   eventId: string;
   eventTitle?: string;
   onCleanupSuccess?: () => void;
+  /** "delete" removes the event itself too ("Delete Event" on a past event); "cleanup" keeps the event record (admin) */
+  mode?: "cleanup" | "delete";
 }
 
 export default function EventCleanupModal({
@@ -17,6 +19,7 @@ export default function EventCleanupModal({
   eventId,
   eventTitle,
   onCleanupSuccess,
+  mode = "cleanup",
 }: EventCleanupModalProps) {
   const [clearing, setClearing] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -29,7 +32,7 @@ export default function EventCleanupModal({
     setErrorMessage(null);
     setClearing(true);
     try {
-      const res = await eventService.cleanupEventData(eventId, typed);
+      const res = mode === "delete" ? await eventService.deleteEventPermanently(eventId, typed) : await eventService.cleanupEventData(eventId, typed);
       if (res.success) {
         setClearing(false);
         if (onCleanupSuccess) {
@@ -84,13 +87,13 @@ export default function EventCleanupModal({
               This cannot be undone.
             </h4>
             <p className="text-amber-800 leading-relaxed">
-              This is different from closing an event. Closing keeps everything; this removes it for good.
+              {mode === "delete" ? "The event and all of its data are removed for good." : "This is different from closing an event. Closing keeps everything; this removes it for good."}
             </p>
           </div>
 
           <p className="text-gray-500 leading-normal">
-            Permanently deletes this event&apos;s invitees, invitations (including RSVP answers), sessions, check-in records and staff assignments. The event record, its activity log and all user accounts are kept.
-          </p>
+            {mode === "delete" ? "Permanently deletes this event and everything in it: its invitees, invitations (including RSVP answers), sessions, check-in records, staff assignments and uploaded image. It disappears from every list and report. The activity log of who did what is kept." : <>Permanently deletes this event&apos;s invitees, invitations (including RSVP answers), sessions, check-in records and staff assignments. The event record, its activity log and all user accounts are kept.
+          </>}</p>
 
           <label className="block text-[11px] text-gray-700 space-y-1">
             <span>Type the event title to confirm: <strong className="text-gray-900">{eventTitle}</strong></span>

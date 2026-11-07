@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
-import { usePathname } from "next/navigation";
-import { notificationService, onNotificationsChanged } from "@/services/notificationService";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import NavIcon from "./NavIcon";
 
 interface SidebarFooterProps {
@@ -15,28 +13,7 @@ interface SidebarFooterProps {
 // Figma sidebar footer has no logout entry (logout lives in the header's user-nav dropdown) —
 // this only renders Notification, to avoid a logout control duplicated in two places.
 export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterProps) {
-  const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-
-  // Unread count comes from the backend (meta.unreadCount); refreshed on navigation and whenever notifications change
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let cancelled = false;
-    const refresh = () => {
-      notificationService.getUserNotifications(true, 1, 1).then((res) => {
-        if (cancelled) return;
-        const count = res.meta?.unreadCount;
-        setUnreadCount(res.success && typeof count === "number" ? count : 0);
-      });
-    };
-    refresh();
-    const unsubscribe = onNotificationsChanged(refresh);
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
-  }, [isAuthenticated, pathname]);
+  const unreadCount = useUnreadNotifications();
 
   const active = activeItem === "notification";
 

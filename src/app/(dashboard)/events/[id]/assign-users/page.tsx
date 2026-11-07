@@ -353,8 +353,10 @@ export default function EventAssignUsersPage() {
               value={userFilter}
               onChange={(v) => { setUserFilter(v); setSelectedUserIds([]); setPage(1); }}
               options={[
-                { value: USERS_ON_EVENT, label: "All sessions" },
-                ...sessions.map((sess, idx) => ({ value: String(sess._id || sess.id), label: sess.name || `Session ${idx + 1}` })),
+                // with a single session, "All sessions" and that session are the same choice: show its name once
+                ...(sessions.length === 1
+                  ? [{ value: USERS_ON_EVENT, label: sessions[0].name || "Session 1" }]
+                  : [{ value: USERS_ON_EVENT, label: "All sessions" }, ...sessions.map((sess, idx) => ({ value: String(sess._id || sess.id), label: sess.name || `Session ${idx + 1}` }))]),
                 { value: ALL_SYSTEM_USERS, label: "All system users" },
               ]}
             />
@@ -503,7 +505,7 @@ export default function EventAssignUsersPage() {
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
+                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">

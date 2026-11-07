@@ -8,6 +8,7 @@ import { eventService } from "@/services/eventService";
 import { sessionService } from "@/services/sessionService";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import EventWizard, { EventWizardSubmit } from "@/components/add-event/EventWizard";
+import type { ExtraCategory } from "@/hooks/useCategories";
 import {
   EVENT_DRAFT_VERSION,
   EventDraft,
@@ -46,6 +47,8 @@ export default function EditEventPage() {
   const currentTitle = draftState.value?.title || serverDraftRef.current?.title;
   usePageTitle(currentTitle ? `Edit: ${currentTitle}` : "Edit Event");
 
+  // The event's own category and subcategory, which an admin's list does not hold when they are the organizer's custom ones
+  const [extraCategory, setExtraCategory] = useState<ExtraCategory | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -72,6 +75,14 @@ export default function EditEventPage() {
         return;
       }
       const sessions = sessionsRes.success && Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const serverEvent = eventRes.data as unknown as { categoryId?: { _id?: string; name?: string; ownerId?: string } | string; subcategory?: { _id?: string; name?: string; isCustom?: boolean } | null };
+      const populated = serverEvent.categoryId && typeof serverEvent.categoryId === "object" ? serverEvent.categoryId : null;
+      setExtraCategory(populated?._id ? {
+        id: populated._id,
+        name: populated.name || "",
+        isCustom: !!populated.ownerId,
+        subcategory: serverEvent.subcategory?._id ? { id: serverEvent.subcategory._id, name: serverEvent.subcategory.name || "", isCustom: !!serverEvent.subcategory.isCustom } : null,
+      } : null);
       const serverDraft = eventToDraft(eventRes.data as ServerEvent, sessions);
       serverDraftRef.current = serverDraft;
       if (eventRes.data?.title) {
@@ -148,6 +159,7 @@ export default function EditEventPage() {
     <EventWizard
       heading="Edit Event"
       eventId={eventId}
+      extraCategory={extraCategory}
       draft={draftState.value}
       setDraft={draftState.update}
       draftStatus={draftState.status}

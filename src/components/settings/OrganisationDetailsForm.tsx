@@ -1,5 +1,6 @@
 "use client";
 
+import PhoneInput from "@/components/common/PhoneInput";
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -62,7 +63,7 @@ export default function OrganisationDetailsForm() {
           </div>
           <div>
             <label htmlFor="org-phone" className={label}>Organisation phone <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
-            <input id="org-phone" value={org.phone} onChange={set("phone")} maxLength={30} className={field} />
+            <PhoneInput id="org-phone" value={org.phone} onValueChange={(v) => { setEdits((o) => ({ ...o, phone: v })); setMessage(null); }} className={field} />
           </div>
           <div>
             <label htmlFor="org-email" className={label}>Organisation email <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>

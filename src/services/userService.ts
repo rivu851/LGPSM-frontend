@@ -60,7 +60,7 @@ export const userService = {
     password?: string;
     role?: "ADMIN" | "ORGANIZER" | "SYSTEM_USER";
     phone?: string;
-    profile?: { organizationName?: string };
+    profile?: { organizationName?: string; logoKey?: string; invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH" };
     /** Admin only: the organizer the new staff account is added for */
     organizerId?: string;
   }): Promise<ApiResponse<UserData>> {
@@ -75,11 +75,13 @@ export const userService = {
   },
 
   /** `organizerId` (admin only) narrows the list to the staff of that one organizer */
-  async getUsers(role?: string, organizerId?: string): Promise<ApiResponse<UserData[]>> {
+  async getUsers(role?: string, organizerId?: string, options: { includeInactive?: boolean } = {}): Promise<ApiResponse<UserData[]>> {
     return listAllPages((page) => {
       const params = new URLSearchParams({ page: String(page), limit: "100" });
       if (role) params.set("role", role);
       if (organizerId) params.set("organizerId", organizerId);
+      // admins only: deactivated accounts as well (the server ignores it for anyone else)
+      if (options.includeInactive) params.set("includeInactive", "true");
       return apiClient<UserData[]>(`/api/users?${params.toString()}`, { method: "GET" }, true);
     });
   },

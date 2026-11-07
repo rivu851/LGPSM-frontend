@@ -13,10 +13,10 @@ import { AccessLogRow, EXIT_NOT_RECORDED, toAccessLogRow } from "@/utils/accessL
 import { formatCompactDateTime, formatDateTime, formatTime } from "@/utils/dateTime";
 import EventCardPreview from "@/components/events/EventCardPreview";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
-import { formatEventId } from "@/utils/formatId";
 import PageHeader from "@/components/common/PageHeader";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import EventSubNav from "@/components/EventSubNav";
+import { formatEventId } from "@/utils/formatId";
 import EventCleanupModal from "@/components/events/EventCleanupModal";
 import EventCancelModal from "@/components/events/EventCancelModal";
 import CancellationNoticesPanel from "@/components/events/CancellationNoticesPanel";
@@ -43,21 +43,11 @@ interface EventDetail {
 
 const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
-// A whole summary card opens its page on click, not just the small arrow. A click that lands on a real link, button or field,
-// or that ends a text selection, is left alone. The arrow link stays for keyboard users and for open-in-new-tab.
-const linkedCardCls = "cursor-pointer transition-shadow hover:shadow-md hover:border-[#FFB08A]";
-function useCardNav() {
-  const router = useRouter();
-  return (href: string) => (e: React.MouseEvent<HTMLElement>) => {
-    if ((e.target as HTMLElement).closest("a, button, input, select, textarea, label")) return;
-    if (window.getSelection()?.toString()) return;
-    router.push(href);
-  };
-}
-
+// Only the arrow in a summary card's corner opens its page. The cards themselves are not click targets: they hold things that are
+// dragged or scrolled (the sessions table's scroll bar, text to select), and a drag must never be taken for "open this page".
 function ArrowLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} aria-label={label} title={label} className="p-1 -m-1 text-gray-900 hover:text-[#FF651D]">
+    <Link href={href} aria-label={label} title={label} className="p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#FF651D] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D]">
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
       </svg>
@@ -67,10 +57,9 @@ function ArrowLink({ href, label }: { href: string; label: string }) {
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
-  const cardNav = useCardNav();
   const tones = { peach: "bg-[#FFDCCF] text-[#FF651D]", mint: "bg-[#C9F6E6] text-[#16A34A]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   return (
-    <div onClick={cardNav(href)} className={`${card} ${linkedCardCls} p-4 flex flex-col gap-3`}>
+    <div className={`${card} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
         <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
         <ArrowLink href={href} label={`Open ${label}`} />
@@ -142,6 +131,7 @@ function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: numbe
 }
 
 export default function EventDetailsPage() {
+  const router = useRouter();
   const params = useParams();
   const eventId = (params?.id as string) || "";
   const { user } = useAuth();
@@ -158,11 +148,11 @@ export default function EventDetailsPage() {
   const [assignmentsCount, setAssignmentsCount] = useState<number | null>(null); // null = not loaded yet (a placeholder, never a made-up 0)
   const [report, setReport] = useState<EventReportData | null>(null);
   const [reportLoaded, setReportLoaded] = useState(false);
-  const cardNav = useCardNav();
   const [accessLogs, setAccessLogs] = useState<AccessLogRow[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
   const [cardExpanded, setCardExpanded] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const requestIdRef = useRef(0);
@@ -255,14 +245,16 @@ export default function EventDetailsPage() {
   const invitationLifecycleStarted = delivery.SENT > 0 || delivery.FAILED > 0;
   // The API refuses edits once invitations went out and for closed or cancelled events
   // An event is over once its end time has passed (or it was closed earlier): nobody has to close it
+  // its end time has passed (cancelled or not): a past event is deleted, not cancelled
+  const eventEnded = event.status === "COMPLETED" || (!!event.schedule?.end && new Date(event.schedule.end).getTime() <= Date.now());
   const eventOver = event.status === "COMPLETED" || (event.status === "PUBLISHED" && !!event.schedule?.end && new Date(event.schedule.end).getTime() <= Date.now());
   const editLocked = invitationLifecycleStarted || event.status === "COMPLETED" || event.status === "CANCELLED";
   const totalInvitees = reportLoaded ? report?.totalInvitees ?? 0 : null;
   const timeStatus = event.status === "CANCELLED" ? "Cancelled" : event.status === "COMPLETED" ? "Completed" : getDynamicEventStatus(event.schedule?.start, event.schedule?.end, "Upcoming");
   // Until the report has arrived nothing is known about invitations, so no claim is made about them
-  const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not send" : timeStatus;
+  const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not sent" : timeStatus;
   const statusTone: Record<string, string> = {
-    "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+    "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
     Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
     Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
     Completed: "bg-[#FFE3D7] text-[#FF651D]",
@@ -303,7 +295,8 @@ export default function EventDetailsPage() {
             </div>
             <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap text-xs text-[#4B4F52]">
               <span className={`px-3 py-1 rounded-full font-medium ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
-              <span className="text-[#828282]">{formatEventId(event._id)}</span>
+              {/* the event ID is for administrators; organizers don't see it */}
+              {user?.role === "ADMIN" && <span className="text-[#828282]">{formatEventId(event._id)}</span>}
               {organizer && <span><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
               <span className="text-[#D3D3D3] hidden sm:inline">|</span>
               <span className="whitespace-nowrap">
@@ -323,7 +316,12 @@ export default function EventDetailsPage() {
             )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {(event.status === "PUBLISHED" || event.status === "DRAFT") && (
+            {eventEnded && (
+              <button type="button" onClick={() => setDeleteOpen(true)} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">
+                Delete Event
+              </button>
+            )}
+            {(event.status === "PUBLISHED" || event.status === "DRAFT") && !eventEnded && (
               <button type="button" onClick={() => setCancelOpen(true)} className="px-4 py-2 border border-rose-600 text-rose-700 hover:bg-rose-50 text-sm font-medium rounded-md cursor-pointer">
                 Cancel Event
               </button>
@@ -371,7 +369,7 @@ export default function EventDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
-              <section onClick={cardNav(`/events/${eventId}/invitees`)} className={`${card} ${linkedCardCls} p-4`} aria-labelledby="guest-logs-title">
+              <section className={`${card} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
                   <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
@@ -379,7 +377,7 @@ export default function EventDetailsPage() {
                 {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>
 
-              <section onClick={cardNav(`/events/${eventId}/sessions`)} className={`${card} ${linkedCardCls} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
+              <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">Sessions</h3>
                   <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
@@ -388,13 +386,14 @@ export default function EventDetailsPage() {
                   <p className="text-sm text-[#828282] py-6 text-center">No sessions yet.</p>
                 ) : (
                   <HorizontalScroll>
-                    <table className="w-full text-left text-sm whitespace-nowrap min-w-[520px]">
+                    {/* fits the card at any width: names, times and headings wrap (no fixed minimum width), so no scroll bar appears */}
+                    <table className="w-full text-left text-sm">
                       <thead className="text-[#828282] border-b border-[#D3D3D3]">
                         <tr>
-                          <th className="py-2 pr-3 font-medium">#</th>
-                          <th className="py-2 pr-4 font-medium">Session Name</th>
-                          <th className="py-2 pr-4 font-medium">Date &amp; Time</th>
-                          <th className="py-2 pr-4 font-medium">No. of Guests</th>
+                          <th className="py-2 pr-2 font-medium">#</th>
+                          <th className="py-2 pr-3 font-medium">Session Name</th>
+                          <th className="py-2 pr-3 font-medium">Date &amp; Time</th>
+                          <th className="py-2 pr-3 font-medium">No. of Guests</th>
                           <th className="py-2 font-medium">Checked in</th>
                         </tr>
                       </thead>
@@ -403,8 +402,8 @@ export default function EventDetailsPage() {
                           const r = sessionRow(s._id!);
                           return (
                             <tr key={s._id}>
-                              <td className="py-2.5 pr-3">{i + 1}</td>
-                              <td className="py-2.5 pr-4 text-gray-900">{s.name}</td>
+                              <td className="py-2.5 pr-3 align-top">{i + 1}</td>
+                              <td className="py-2.5 pr-4 text-gray-900 break-words align-top">{s.name}</td>
                               <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}{s.schedule?.end ? ` to ${formatTime(s.schedule.end)}` : ""}</td>
                               <td className="py-2.5 pr-4">{reportLoaded ? r?.invitedCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
                               <td className="py-2.5">{reportLoaded ? r?.attendeeCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
@@ -526,6 +525,14 @@ export default function EventDetailsPage() {
           setNotice(n > 0 ? `Event cancelled. ${n} invited ${n === 1 ? "guest is" : "guests are"} being notified; see Cancellation notices below.` : "Event cancelled. No invitations had been sent, so nobody needed to be notified.");
           await load();
         }}
+      />
+      <EventCleanupModal
+        isOpen={deleteOpen}
+        mode="delete"
+        onClose={() => setDeleteOpen(false)}
+        eventId={eventId}
+        eventTitle={event.title}
+        onCleanupSuccess={() => { setDeleteOpen(false); router.push("/events"); }}
       />
       <EventCleanupModal
         isOpen={cleanupOpen}

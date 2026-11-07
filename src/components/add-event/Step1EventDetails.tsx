@@ -1,5 +1,6 @@
 "use client";
 
+import PhoneInput, { PhoneNote } from "@/components/common/PhoneInput";
 import React, { useEffect, useRef, useState } from "react";
 import { DraftErrors, EventDraft } from "./eventDraft";
 import { formatDateTime } from "@/utils/dateTime";
@@ -25,6 +26,8 @@ interface Step1EventDetailsProps {
   categories: CategoriesApi;
   canManageCategories: boolean;
   isAdmin?: boolean;
+  /** An existing event keeps its organizer, so the "create for which organizer" field is only for new events */
+  isEditing?: boolean;
   // Admin event settings: RSVP can be switched off platform-wide
   rsvpAllowed: boolean;
   errors: DraftErrors;
@@ -261,7 +264,9 @@ function DateButton({ label, value, placeholder, onClick, error }: { label: stri
 }
 
 // Controlled step: all values live in the wizard draft owned by the page
-export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+  // what to tell the person when something other than a digit was typed in the contact number
+  const [contactNote, setContactNote] = useState<string | null>(null);
   return (
     <form
       onSubmit={(e) => {
@@ -271,7 +276,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       noValidate
       className="p-4 sm:p-6 space-y-5"
     >
-      {isAdmin && (
+      {isAdmin && !isEditing && (
         <OrganizerSelectField
           selectedIds={draft.organizerIds}
           onChange={(organizerIds) => onChange({ organizerIds })}
@@ -314,6 +319,17 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <Err msg={errors.description} />
       </div>
 
+      {draft.template && draft.categoryId && !draft.subcategoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0 && (
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          The template &ldquo;{draft.template.name}&rdquo; set the category, but its subcategory is not set or has since been changed, so choose the subcategory that fits your event.
+        </p>
+      )}
+      {draft.template && !draft.categoryId && (
+        <p role="status" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          The template &ldquo;{draft.template.name}&rdquo; is not tied to one event type, so choose the category and subcategory that fit your event.
+        </p>
+      )}
+
       <CategoryFields
         api={categories}
         categoryId={draft.categoryId}
@@ -348,17 +364,17 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           <label htmlFor="event-contact" className={`block ${labelClass} mb-1.5`}>Contact Number<Req /></label>
           <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-[#FF651D] ${border(errors.contactNumber)}`}>
             <span className="px-3 text-sm text-[#828282] border-r border-[#E0E0E0]">+91</span>
-            <input
+            <PhoneInput
               id="event-contact"
-              type="tel"
-              inputMode="tel"
               value={draft.contactNumber}
-              onChange={(e) => onChange({ contactNumber: e.target.value })}
+              onValueChange={(v) => onChange({ contactNumber: v })}
+              onNote={setContactNote}
               placeholder="Enter Number"
               aria-invalid={!!errors.contactNumber}
               className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
             />
           </div>
+          <PhoneNote message={contactNote} />
           <Err msg={errors.contactNumber} />
         </div>
               {rsvpAllowed ? (

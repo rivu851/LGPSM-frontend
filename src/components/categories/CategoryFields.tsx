@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import CustomDropdown from "@/components/common/CustomDropdown";
-import { CategoriesApi } from "@/hooks/useCategories";
+import { CategoriesApi, CategoryOption } from "@/hooks/useCategories";
+import { useAlert } from "@/context/AlertContext";
 
 type ModalState = { kind: "category" } | { kind: "subcategory"; categoryId: string } | null;
 
@@ -43,7 +44,38 @@ export default function CategoryFields({
   gridClassName = "grid grid-cols-1 sm:grid-cols-2 gap-4",
 }: CategoryFieldsProps) {
   const [modal, setModal] = useState<ModalState>(null);
+  const { confirm, showAlert } = useAlert();
   const subOptions = categoryId ? api.subcategoryOptionsFor(categoryId) : [];
+
+  // Organizers can remove their own custom entries from these lists. Nothing that already uses one is harmed: see the message.
+  const removable = canManage && api.isOrganizer;
+  const stripCustom = (label: string) => label.replace(/ \(custom\)$/, "");
+  const deleteCategory = async (option: CategoryOption) => {
+    const yes = await confirm({
+      title: "Delete custom category",
+      message: `Delete "${stripCustom(option.label)}"? It will no longer be offered for new events. Events that already use it keep it, and your templates under it become general templates. Adding the same name again brings it back.`,
+      confirmText: "Delete",
+      tone: "danger",
+    });
+    if (!yes) return;
+    const res = await api.removeCategory(option.value);
+    if (!res.ok) return showAlert(res.message, "error");
+    if (categoryId === option.value) onChange({ categoryId: "", subcategoryId: "" });
+  };
+  const deleteSubcategory = async (option: CategoryOption) => {
+    const yes = await confirm({
+      title: "Delete custom subcategory",
+      message: `Delete "${stripCustom(option.label)}"? It will no longer be offered for new events. Events that already use it keep it, and your templates under it stay in the category. Adding the same name again brings it back.`,
+      confirmText: "Delete",
+      tone: "danger",
+    });
+    if (!yes) return;
+    const res = await api.removeSubcategory(categoryId, option.value);
+    if (!res.ok) return showAlert(res.message, "error");
+    if (subcategoryId === option.value) onChange({ categoryId, subcategoryId: "" });
+  };
+  const withDelete = (options: CategoryOption[], remove: (o: CategoryOption) => Promise<void>) =>
+    removable ? options.map((o) => (o.custom ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
   const starMark = <span className="text-[#FF651D] ml-0.5">*</span>;
   const star = required ? starMark : null;
   // A subcategory can only be required once the chosen category has some; before that (or when it has none) the star would promise a rule that cannot apply
@@ -60,9 +92,9 @@ export default function CategoryFields({
           <CustomDropdown
             value={categoryId}
             onChange={(v) => onChange({ categoryId: v, subcategoryId: "" })}
-            options={api.categoryOptions}
+            options={withDelete(api.categoryOptions, deleteCategory)}
             placeholder={api.loading ? "Loading..." : api.categoryOptions.length ? "- Category -" : "No categories yet"}
-            topAction={canManage ? { label: "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
+            topAction={canManage ? { label: api.isOrganizer ? "Add custom category" : "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
             invalid={!!categoryError}
           />
           {api.error && <p className="mt-1 text-xs font-medium text-rose-600">{api.error}</p>}
@@ -77,10 +109,10 @@ export default function CategoryFields({
           <CustomDropdown
             value={subcategoryId}
             onChange={(v) => onChange({ categoryId, subcategoryId: v })}
-            options={subOptions}
+            options={withDelete(subOptions, deleteSubcategory)}
             disabled={!categoryId}
             placeholder={!categoryId ? "Select a category first" : subOptions.length ? "- Subcategory -" : "No subcategories yet"}
-            topAction={canManage && categoryId ? { label: "Add New Subcategory", onClick: () => setModal({ kind: "subcategory", categoryId }) } : undefined}
+            topAction={canManage && categoryId ? { label: api.isOrganizer ? "Add custom subcategory" : "Add New Subcategory", onClick: () => setModal({ kind: "subcategory", categoryId }) } : undefined}
             emptyMessage={canManage ? "No subcategories yet — add one above" : "No subcategories for this category"}
             invalid={!!subcategoryError}
           />
@@ -151,11 +183,11 @@ export function CategoryModal({
 
   // Figma 2050:2411 / 2050:2142: a 486px card in the upper third, a divider above the footer, 47px field, solid Add button
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 p-4 pt-[14vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
+    <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/50 p-4 pt-[14vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
       <div className="w-full max-w-[486px] bg-white rounded-lg shadow-xl">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 id="category-modal-title" className="text-base font-medium text-[#15191C]">
-            {isSub ? "Add Subcategory" : "Add Category"}
+            {api.isOrganizer ? (isSub ? "Add Custom Subcategory" : "Add Custom Category") : isSub ? "Add Subcategory" : "Add Category"}
           </h3>
           <button type="button" onClick={onClose} aria-label="Close" className="text-[#15191C] hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -165,6 +197,7 @@ export function CategoryModal({
         </div>
         <form onSubmit={submit} noValidate>
           <div className="px-6 pt-5 pb-6 space-y-5">
+            {api.isOrganizer && <p className="text-xs text-[#828282]">Only you will see this {isSub ? "subcategory" : "category"}. It will not appear for other organizers.</p>}
             {error && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-sm text-rose-700">{error}</p>}
             {isSub && (
               <div>
@@ -180,7 +213,7 @@ export function CategoryModal({
                 id="category-modal-name"
                 autoFocus
                 type="text"
-                maxLength={100}
+                maxLength={api.isOrganizer ? 60 : 100}
                 placeholder="Type"
                 value={name}
                 onChange={(e) => setName(e.target.value)}

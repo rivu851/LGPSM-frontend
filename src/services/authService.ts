@@ -7,6 +7,7 @@ export interface RegisterPayload {
   password: string;
   phone?: string;
   role?: string;
+  invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH";
 }
 
 export interface LoginPayload {
@@ -44,6 +45,14 @@ export const authService = {
     return apiClient<{ verified: boolean }>("/api/auth/verify-email", {
       method: "POST",
       body: JSON.stringify({ email, code }),
+    });
+  },
+
+  /** "Change email address" on the code page: moves the pending sign-up to the corrected address and sends the new code there */
+  async changePendingEmail(email: string, newEmail: string, password: string): Promise<ApiResponse<{ email: string }>> {
+    return apiClient<{ email: string }>("/api/auth/change-pending-email", {
+      method: "POST",
+      body: JSON.stringify({ email, newEmail, password }),
     });
   },
 

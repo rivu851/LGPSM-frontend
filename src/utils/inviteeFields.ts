@@ -4,7 +4,7 @@
 export type InviteeFieldKey = "name" | "email" | "mobile" | "company" | "identity" | "identity2";
 
 export interface InviteeFieldConfig {
-  /** The event shows a company (corporate events, or company chosen for the invitation card) */
+  /** Company chosen under Additional Information (the event's category does not add it) */
   company?: boolean;
   /** Professional identity chosen for the invitation card */
   identity?: boolean;
@@ -38,10 +38,10 @@ export const EXCEL_EXAMPLE: Record<InviteeFieldKey, string> = {
 
 interface CardInfoLike { primary?: string | null; secondary?: string | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null }
 
-export function inviteeConfigFor(opts: { cardInfo?: CardInfoLike | null; dietaryEnabled?: boolean; corporate?: boolean }): InviteeFieldConfig {
+export function inviteeConfigFor(opts: { cardInfo?: CardInfoLike | null; dietaryEnabled?: boolean; /** Ignored: kept so callers need no change; the category never adds a column */ corporate?: boolean }): InviteeFieldConfig {
   const chosen = [opts.cardInfo?.primary, opts.cardInfo?.secondary];
   return {
-    company: Boolean(opts.corporate) || chosen.includes("COMPANY_NAME"),
+    company: chosen.includes("COMPANY_NAME"),
     identity: chosen.includes("PROFESSIONAL_IDENTITY"),
     identityLabel: chosen.includes("PROFESSIONAL_IDENTITY") ? (opts.cardInfo?.identityLabel || "").trim() || undefined : undefined,
     identity2: chosen.includes("SECONDARY_IDENTITY"),

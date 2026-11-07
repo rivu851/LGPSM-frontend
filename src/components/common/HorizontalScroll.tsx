@@ -5,11 +5,19 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 // Horizontal scroller with an always-visible track (Figma: 7px #E3E3E3 rounded bar).
 // Native scrollbars are overlay/auto-hiding on many systems, so the bar is drawn explicitly and kept
 // in sync with the scroll position. It only appears when the content is wider than the container.
+// A drag that starts on the scroll bar and ends somewhere else still makes the browser fire a click, on whatever element contains
+// both ends: often a card that opens a page when clicked. That click is not wanted, so the first one after a real drag is swallowed.
+function swallowNextClick() {
+  const stop = (e: MouseEvent) => { e.stopPropagation(); e.preventDefault(); };
+  window.addEventListener("click", stop, { capture: true, once: true });
+  setTimeout(() => window.removeEventListener("click", stop, { capture: true }), 400);
+}
+
 export default function HorizontalScroll({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const scroller = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const [metrics, setMetrics] = useState({ ratio: 1, offset: 0 });
-  const drag = useRef<{ startX: number; startScroll: number } | null>(null);
+  const drag = useRef<{ startX: number; startScroll: number; moved: boolean } | null>(null);
 
   const measure = useCallback(() => {
     const el = scroller.current;
@@ -44,9 +52,13 @@ export default function HorizontalScroll({ children, className = "" }: { childre
       const t = track.current;
       if (!drag.current || !el || !t) return;
       const delta = (e.clientX - drag.current.startX) / t.clientWidth;
+      if (Math.abs(e.clientX - drag.current.startX) > 3) drag.current.moved = true;
       el.scrollLeft = drag.current.startScroll + delta * el.scrollWidth;
     };
-    const up = () => (drag.current = null);
+    const up = () => {
+      if (drag.current?.moved) swallowNextClick();
+      drag.current = null;
+    };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     return () => {
@@ -68,6 +80,8 @@ export default function HorizontalScroll({ children, className = "" }: { childre
         <div
           ref={track}
           data-testid="hscroll-track"
+          // the bar is a control: clicking it never counts as a click on whatever contains it
+          onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => {
             if (e.target === track.current) scrollToTrackX(e.clientX);
           }}
@@ -76,7 +90,7 @@ export default function HorizontalScroll({ children, className = "" }: { childre
           <div
             onPointerDown={(e) => {
               e.preventDefault();
-              drag.current = { startX: e.clientX, startScroll: scroller.current?.scrollLeft || 0 };
+              drag.current = { startX: e.clientX, startScroll: scroller.current?.scrollLeft || 0, moved: false };
             }}
             className="absolute top-0 h-full rounded-full bg-[#B5B5B5] hover:bg-[#9A9A9A] cursor-grab active:cursor-grabbing"
             style={{ width: thumbWidth, left: thumbLeft }}

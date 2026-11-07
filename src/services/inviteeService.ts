@@ -232,6 +232,11 @@ export const inviteeService = {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets`, { method: "GET" }, true);
   },
 
+  /** Deletes all of the event's invitee lists, only while nothing has been sent (the card's guest details changed after the Excel sample was downloaded) */
+  async clearUnusedLists(eventId: string): Promise<ApiResponse<{ deletedInvitees: number; deletedLists: number }>> {
+    return apiClient(`/api/v1/events/${eventId}/invitees/sets/clear`, { method: "POST" }, true);
+  },
+
   /** One page (50) of the guests in a list; setId "all" covers every list. `q` searches name, email, mobile and company on the server. */
   async getSetMembers(eventId: string, setId: string, page = 1, q = ""): Promise<ApiResponse<{ members: InviteeSetMember[]; total: number; page: number; limit: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}/members?page=${page}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`, { method: "GET" }, true);

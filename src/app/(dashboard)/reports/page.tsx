@@ -5,6 +5,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
+import { formatOrganizerId } from "@/utils/formatId";
 import { InviteeLog, AccessLog, SessionReport, ReportSessionColumn } from "@/types/reports";
 import ReportsHeaderControls from "@/components/reports/ReportsHeaderControls";
 import ReportsStatsCards from "@/components/reports/ReportsStatsCards";
@@ -61,6 +62,10 @@ export default function ReportsPage() {
   const [eventReport, setEventReport] = useState<EventReportData | null>(null);
   const [inviteeLogs, setInviteeLogs] = useState<InviteeLog[]>([]);
   const [accessLogs, setAccessLogs] = useState<AccessLog[]>([]);
+  const ACCESS_PAGE_SIZE = 100; // the server's largest page
+  const [accessTotal, setAccessTotal] = useState<number | undefined>(undefined);
+  const [accessPage, setAccessPage] = useState(1);
+  const [loadingMoreAccess, setLoadingMoreAccess] = useState(false);
   const [sessionsReport, setSessionsReport] = useState<SessionReport[]>([]);
   const [sessionColumns, setSessionColumns] = useState<ReportSessionColumn[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -265,6 +270,33 @@ export default function ReportsPage() {
     return () => { cancelled = true; };
   }, [selectedEventId, activeTab, reloadKey, eventReport]);
 
+  // One Action Log row: who did what, for which organizer (the one on the entry, else the event's own organizer)
+  const toAccessRow = (log: any): AccessLog => {
+    const org = (log.organizerId && typeof log.organizerId === "object" ? log.organizerId : null) || (selectedEvent?.organizerId && typeof selectedEvent.organizerId === "object" ? selectedEvent.organizerId : null);
+    const id = org?._id || (typeof log.organizerId === "string" ? log.organizerId : "") || (typeof selectedEvent?.organizerId === "string" ? selectedEvent.organizerId : "");
+    return {
+      id: log._id,
+      userType: ROLE_LABELS[log.actorType] || log.actorType || "—",
+      dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
+      action: log.action,
+      status: log.status === "FAILED" ? "failed" : "Successful",
+      organizerName: org?.profile?.organizationName || org?.fullName || "—",
+      organizerCode: id ? formatOrganizerId(id) : "—",
+    };
+  };
+  const loadOlderAccessLogs = async () => {
+    if (!selectedEventId || loadingMoreAccess) return;
+    setLoadingMoreAccess(true);
+    const res = await auditLogService.getAuditLogs({ eventId: selectedEventId, limit: ACCESS_PAGE_SIZE, page: accessPage + 1 });
+    if (res.success && Array.isArray(res.data)) {
+      const older = (res.data as any[]).map(toAccessRow);
+      setAccessLogs((current) => [...current, ...older.filter((row) => !current.some((c) => c.id === row.id))]);
+      setAccessPage((p) => p + 1);
+      setAccessTotal(res.meta?.total ?? accessTotal);
+    }
+    setLoadingMoreAccess(false);
+  };
+
   useEffect(() => {
     if (!selectedEventId || activeTab !== "access") {
       setAccessLogs([]);
@@ -272,19 +304,16 @@ export default function ReportsPage() {
     }
     let cancelled = false;
     setLoadingAccessDetails(true);
-    auditLogService.getAuditLogs({ eventId: selectedEventId, limit: 100 }).then((auditRes) => {
+    setAccessPage(1);
+    auditLogService.getAuditLogs({ eventId: selectedEventId, limit: ACCESS_PAGE_SIZE }).then((auditRes) => {
       if (cancelled) return;
       const logs: any[] = auditRes.success && Array.isArray(auditRes.data) ? auditRes.data : [];
-      setAccessLogs(logs.map((log) => ({
-        id: log._id,
-        userType: ROLE_LABELS[log.actorType] || log.actorType || "—",
-        dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
-        action: log.action,
-        status: log.status === "FAILED" ? "failed" : "Successful",
-      })));
+      setAccessLogs(logs.map(toAccessRow));
+      setAccessTotal(auditRes.meta?.total ?? logs.length);
       setLoadingAccessDetails(false);
     });
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedEvent follows selectedEventId
   }, [selectedEventId, activeTab, reloadKey]);
 
   const downloadReportCSV = () => {
@@ -309,8 +338,8 @@ export default function ReportsPage() {
           ...sessionColumns.map((c) => (i.sessionCheckIns[c.id] ? "Yes" : "No")),
         ].map(csvCell).join(",")).join("\n");
     } else if (activeTab === "access") {
-      content = "User Type,Date & Time,Action,Status\n" +
-        accessLogs.map(a => [a.userType, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
+      content = "Organizer ID,Organizer / Organisation,User Type,Date & Time,Action,Status\n" +
+        accessLogs.map(a => [a.organizerCode, a.organizerName, a.userType, a.dateTime, a.action, a.status].map(csvCell).join(",")).join("\n");
     } else {
       content = "#,Session Name,Date & Time,Invitees,Attendees,Access Control,System Users\n" +
         sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");
@@ -343,7 +372,7 @@ export default function ReportsPage() {
   );
 
   const filteredAccessLogs = accessLogs.filter(a =>
-    a.userType.toLowerCase().includes(tableSearch.toLowerCase()) || a.action.toLowerCase().includes(tableSearch.toLowerCase())
+    [a.userType, a.action, a.organizerName, a.organizerCode].some((v) => v.toLowerCase().includes(tableSearch.toLowerCase()))
   );
 
   const filteredSessions = sessionsReport.filter(s =>
@@ -459,6 +488,9 @@ export default function ReportsPage() {
             sessionsReport={filteredSessions}
             sessionColumns={sessionColumns}
             loadingDetails={loadingDetails || (activeTab === "invitees" && loadingInviteeDetails) || (activeTab === "access" && loadingAccessDetails)}
+            accessTotal={accessTotal}
+            loadingMoreAccess={loadingMoreAccess}
+            onLoadMoreAccess={loadOlderAccessLogs}
           />
           </>
         )}

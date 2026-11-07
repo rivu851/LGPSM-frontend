@@ -1,5 +1,6 @@
 "use client";
 
+import { formatOrganizerId } from "@/utils/formatId";
 import OrganisationDetailsForm from "@/components/settings/OrganisationDetailsForm";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
@@ -98,6 +99,7 @@ export default function AccountSettingsPage() {
             <div className="min-w-0 space-y-1.5">
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
               <p className="text-xl text-black break-all">{email}</p>
+              {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
               <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] rounded-lg text-base font-semibold text-white cursor-pointer">
                 Edit Profile
               </button>
@@ -122,10 +124,17 @@ export default function AccountSettingsPage() {
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 {/* Not in the frame, but renaming the account is an existing feature */}
-                <div className="md:col-span-2 md:max-w-[calc(50%-10px)]">
+                <div>
                   <label htmlFor="account-name" className="block text-sm font-medium text-[#15191C] mb-2">Account Name</label>
                   <input id="account-name" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} required className={field} />
                 </div>
+                {/* the organizer's ID: shown for reference, never editable */}
+                {isOrganizer && user?._id && (
+                  <div>
+                    <label htmlFor="account-organizer-id" className="block text-sm font-medium text-[#15191C] mb-2">Organizer ID</label>
+                    <input id="account-organizer-id" type="text" value={formatOrganizerId(user._id)} readOnly title="Your organizer ID cannot be changed" className={`${field} text-[#828282] cursor-not-allowed`} />
+                  </div>
+                )}
                 <div>
                   <label htmlFor="account-email" className="block text-sm font-medium text-[#15191C] mb-2">Email</label>
                   <input id="account-email" type="email" value={email} readOnly title="Email changes are not supported yet" className={`${field} text-[#828282] cursor-not-allowed`} />

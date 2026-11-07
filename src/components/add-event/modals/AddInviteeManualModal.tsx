@@ -1,5 +1,6 @@
 "use client";
 
+import PhoneInput from "@/components/common/PhoneInput";
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
@@ -194,7 +195,7 @@ export default function AddInviteeManualModal({
                   ariaLabel="Add to session"
                   value={sessionId}
                   onChange={onSessionChange}
-                  options={[{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
+                  options={sessionOptions.length === 1 ? [{ value: "", label: sessionOptions[0].name }] : [{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
                 />
               </div>
             )}
@@ -239,18 +240,19 @@ export default function AddInviteeManualModal({
                 Mobile Number
                 <span className="text-[#828282] font-normal text-xs ml-1">(required if no email)</span>
               </label>
-              <input
+              <PhoneInput
                 id="ai-mobile"
-                type="tel"
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
+                onValueChange={(v) => setMobile(v)}
                 placeholder="e.g. +91 98765 43210"
                 className={inputClass}
                 autoComplete="off"
               />
             </div>
 
-            {/* Professional identity: only when the event's card uses it (same condition as the Excel sample) */}
+            {/* Hidden for now: the card's additional-information fields are not asked for when a guest is added by hand
+                (they still come in through the Excel upload). Kept here, commented out, so they can be brought back.
+            (Professional identity: only when the event's card uses it, same condition as the Excel sample)
             {has("identity") && (
             identityLabel ? (
             <div>
@@ -295,7 +297,7 @@ export default function AddInviteeManualModal({
               </div>
             )}
 
-            {/* Company: corporate events only (or when chosen for the card); never required */}
+            (Company: corporate events only, or when chosen for the card; never required)
             {has("company") && (
               <div>
                 <label htmlFor="ai-company" className={labelClass}>
@@ -312,6 +314,7 @@ export default function AddInviteeManualModal({
                 />
               </div>
             )}
+            */}
 
             {/* Error */}
             {error && (
