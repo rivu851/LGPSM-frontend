@@ -49,14 +49,13 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
   useEffect(() => {
     let live = true;
-    // the most recently uploaded list is shown first (lists come oldest to newest)
     inviteeService.getInviteeSets(eventId)
       .then((r) => {
         if (!live) return;
         const list = r.success && r.data ? r.data.sets : [];
         setSets(list);
-        // the most recent dataset first; "All" is in the list as well
-        setSetId(list.length ? list[list.length - 1].id : "");
+        // opens on "All" (every guest of the event); a single dataset can be chosen from the dropdown
+        setSetId(list.length ? ALL : "");
       })
       .catch(() => { if (live) { setSets([]); setSetId(""); } });
     return () => { live = false; };

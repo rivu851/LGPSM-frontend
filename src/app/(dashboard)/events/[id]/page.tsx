@@ -43,21 +43,11 @@ interface EventDetail {
 
 const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
-// A whole summary card opens its page on click, not just the small arrow. A click that lands on a real link, button or field,
-// or that ends a text selection, is left alone. The arrow link stays for keyboard users and for open-in-new-tab.
-const linkedCardCls = "cursor-pointer transition-shadow hover:shadow-md hover:border-[#FFB08A]";
-function useCardNav() {
-  const router = useRouter();
-  return (href: string) => (e: React.MouseEvent<HTMLElement>) => {
-    if ((e.target as HTMLElement).closest("a, button, input, select, textarea, label")) return;
-    if (window.getSelection()?.toString()) return;
-    router.push(href);
-  };
-}
-
+// Only the arrow in a summary card's corner opens its page. The cards themselves are not click targets: they hold things that are
+// dragged or scrolled (the sessions table's scroll bar, text to select), and a drag must never be taken for "open this page".
 function ArrowLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} aria-label={label} title={label} className="p-1 -m-1 text-gray-900 hover:text-[#FF651D]">
+    <Link href={href} aria-label={label} title={label} className="p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#FF651D] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D]">
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
       </svg>
@@ -67,10 +57,9 @@ function ArrowLink({ href, label }: { href: string; label: string }) {
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
-  const cardNav = useCardNav();
   const tones = { peach: "bg-[#FFDCCF] text-[#FF651D]", mint: "bg-[#C9F6E6] text-[#16A34A]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   return (
-    <div onClick={cardNav(href)} className={`${card} ${linkedCardCls} p-4 flex flex-col gap-3`}>
+    <div className={`${card} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
         <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
         <ArrowLink href={href} label={`Open ${label}`} />
@@ -159,7 +148,6 @@ export default function EventDetailsPage() {
   const [assignmentsCount, setAssignmentsCount] = useState<number | null>(null); // null = not loaded yet (a placeholder, never a made-up 0)
   const [report, setReport] = useState<EventReportData | null>(null);
   const [reportLoaded, setReportLoaded] = useState(false);
-  const cardNav = useCardNav();
   const [accessLogs, setAccessLogs] = useState<AccessLogRow[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
   const [cardExpanded, setCardExpanded] = useState(false);
@@ -381,7 +369,7 @@ export default function EventDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
-              <section onClick={cardNav(`/events/${eventId}/invitees`)} className={`${card} ${linkedCardCls} p-4`} aria-labelledby="guest-logs-title">
+              <section className={`${card} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
                   <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
@@ -389,7 +377,7 @@ export default function EventDetailsPage() {
                 {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>
 
-              <section onClick={cardNav(`/events/${eventId}/sessions`)} className={`${card} ${linkedCardCls} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
+              <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="sessions-widget-title" className="text-base font-medium text-gray-900">Sessions</h3>
                   <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
