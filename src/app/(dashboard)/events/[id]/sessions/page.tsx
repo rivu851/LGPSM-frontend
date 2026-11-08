@@ -29,6 +29,17 @@ import { TableSkeletonRows } from "@/components/common/Skeleton";
 import InfoTip from "@/components/common/InfoTip";
 import Icon from "@/components/icons/Icon";
 
+interface EditableSession {
+  _id?: string;
+  id?: string;
+  name?: string;
+  rawStart?: string;
+  rawEnd?: string;
+  rawAccess?: "NO_RESTRICTION" | "ONLY_ONCE";
+  inviteeSource?: string;
+  sourceSessionId?: string | null;
+}
+
 const ACCESS_LABELS: Record<string, string> = { NO_RESTRICTION: "No Restrictions", ONLY_ONCE: "Only Once" };
 
 export default function EventSessionsPage() {
@@ -43,6 +54,12 @@ export default function EventSessionsPage() {
   const [assignedUsers, setAssignedUsers] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // the session being edited (the same form as Add Session), and the session whose Action menu is open
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  // the open menu is placed with `fixed` coordinates from its button, so the table's scroll area cannot clip it
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const eventWindow = useRef<{ start: string; end: string } | null>(null);
   const [eventStatus, setEventStatus] = useState<string | undefined>();
   const historical = isHistoricalEvent(eventStatus);
 
@@ -93,6 +110,12 @@ export default function EventSessionsPage() {
             startTime: formatCompactDateTime(startVal, "N/A"),
             endTime: endVal ? (sameDay(startVal, endVal) ? formatTime(endVal) : formatCompactDateTime(endVal)) : "",
             accessControl: ACCESS_LABELS[s.accessControl] || "No Restrictions",
+            // the saved values, for editing the session
+            rawStart: startVal as string | undefined,
+            rawEnd: endVal as string | undefined,
+            rawAccess: (s.accessControl === "ONLY_ONCE" ? "ONLY_ONCE" : "NO_RESTRICTION") as "NO_RESTRICTION" | "ONLY_ONCE",
+            inviteeSource: s.inviteeSource as string | undefined,
+            sourceSessionId: (typeof s.sourceSessionId === "object" && s.sourceSessionId ? s.sourceSessionId._id : s.sourceSessionId) as string | null | undefined,
             systemUsers: assignRes.success ? staffBySession.get(String(id)) ?? 0 : null,
             invitesCount: null as number | null,
             validateAgainstOtherSessions: s.validateAgainstOtherSessions || false,
@@ -132,8 +155,10 @@ export default function EventSessionsPage() {
   const [sampleReminder, setSampleReminder] = useState(false);
   const [copyOn, setCopyOn] = useState(false);
   const [copySourceId, setCopySourceId] = useState("");
+  // a session cannot copy itself, and a session that other sessions copy has to keep its own list
+  const copiedByOthers = editingId ? sessions.filter((x) => x.inviteeSource === "COPY_SESSION" && String(x.sourceSessionId) === editingId) : [];
   const copyOptions = sessions
-    .filter((x) => x.inviteeSource !== "COPY_SESSION")
+    .filter((x) => x.inviteeSource !== "COPY_SESSION" && String(x._id || x.id) !== editingId)
     .map((x, i) => ({ value: String(x._id || x.id), label: x.name || `Session ${i + 1}` }));
 
   useEffect(() => {
@@ -143,6 +168,7 @@ export default function EventSessionsPage() {
       const schedule = ev?.schedule;
       if (ev) setSampleColumns(templateColumnsFor({ cardInfo: ev.cardInfo, dietaryEnabled: !!ev.dietaryPreference?.enabled, corporate: /corporate/i.test(typeof ev.categoryId === "object" ? ev.categoryId?.name || "" : "") }));
       if (schedule?.start && schedule?.end) {
+        eventWindow.current = { start: schedule.start, end: schedule.end };
         setStartTime(schedule.start);
         setEndTime(schedule.end);
       }
@@ -152,6 +178,40 @@ export default function EventSessionsPage() {
   const handleOpenDatePicker = (field: "start" | "end") => {
     setActiveDateField(field);
     setIsDatePickerOpen(true);
+  };
+
+  const openAdd = () => {
+    setEditingId(null);
+    setSessionName("");
+    setAccessControl("ONLY_ONCE");
+    if (eventWindow.current) { setStartTime(eventWindow.current.start); setEndTime(eventWindow.current.end); }
+    setCopyOn(false);
+    setCopySourceId("");
+    setUploadedFile(null);
+    setUploadedFileName("");
+    setFormError(null);
+    setIsAddModalOpen(true);
+  };
+
+  const openEdit = (sess: EditableSession) => {
+    setMenuId(null);
+    setEditingId(String(sess._id || sess.id || ""));
+    setSessionName(sess.name || "");
+    if (sess.rawStart) setStartTime(sess.rawStart);
+    if (sess.rawEnd) setEndTime(sess.rawEnd);
+    setAccessControl(sess.rawAccess || "NO_RESTRICTION");
+    const copies = sess.inviteeSource === "COPY_SESSION" && sess.sourceSessionId;
+    setCopyOn(!!copies);
+    setCopySourceId(copies ? String(sess.sourceSessionId) : "");
+    setUploadedFile(null);
+    setUploadedFileName("");
+    setFormError(null);
+    setIsAddModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsAddModalOpen(false);
+    setEditingId(null);
   };
 
   const handleSaveDatePicker = (val: string) => {
@@ -195,6 +255,28 @@ export default function EventSessionsPage() {
     setFormError(null);
     if (!isAfter(endTime, startTime)) {
       setFormError("Session end must be after its start.");
+      return;
+    }
+
+    // editing a saved session: the same form, saved with an update (the guest list itself is changed on the Invitees page)
+    if (editingId) {
+      if (copyOn && !copySourceId) { setFormError("Choose the session whose invitees this one keeps."); return; }
+      try {
+        const res = await sessionService.updateSession(editingId, {
+          name: sessionName.trim(),
+          schedule: { start: startTime, end: endTime },
+          accessControl,
+          ...(copyOn && copySourceId ? { inviteeSource: "COPY_SESSION" as const, sourceSessionId: copySourceId } : { inviteeSource: "NEW_LIST" as const, sourceSessionId: null }),
+        });
+        if (res.success) {
+          closeModal();
+          await fetchSessions();
+        } else {
+          setFormError(res.message || "Failed to update the session.");
+        }
+      } catch (error: unknown) {
+        setFormError(error instanceof Error && error.message ? error.message : "Error updating the session.");
+      }
       return;
     }
 
@@ -282,7 +364,7 @@ export default function EventSessionsPage() {
             </div>
             <button
               type="button"
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={openAdd}
               disabled={historical}
               title={historical ? "This event can no longer be changed" : undefined}
               className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
@@ -338,15 +420,45 @@ export default function EventSessionsPage() {
                       <td className="h-[46px] p-2.5">{sess.accessControl || "No Restriction"}</td>
                       <td className="h-[46px] p-2.5 text-right">
                         {!historical && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteSession(sess._id || sess.id, sess.name)}
-                            className="text-rose-500 hover:text-rose-700 font-semibold cursor-pointer text-sm"
-                            title="Delete Session"
-                            aria-label={`Delete session ${sess.name}`}
-                          >
-                            Delete
-                          </button>
+                          <div className="relative inline-block text-left">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                const id = sess._id || sess.id;
+                                if (menuId === id) { setMenuId(null); return; }
+                                const r = e.currentTarget.getBoundingClientRect();
+                                setMenuPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+                                setMenuId(id);
+                              }}
+                              className="p-1.5 rounded-md text-[#4B4F52] hover:bg-gray-100 cursor-pointer"
+                              aria-label={`Actions for ${sess.name}`}
+                              aria-haspopup="menu"
+                              aria-expanded={menuId === (sess._id || sess.id)}
+                            >
+                              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                                <circle cx="12" cy="5" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="12" cy="19" r="1.8" />
+                              </svg>
+                            </button>
+                            {menuId === (sess._id || sess.id) && menuPos && (
+                              <>
+                                <div className="fixed inset-0 z-20" onClick={() => setMenuId(null)} aria-hidden />
+                                <div role="menu" style={{ top: menuPos.top, right: menuPos.right }} className="fixed z-30 w-40 rounded-md border border-[#E0E0E0] bg-white py-1 shadow-lg">
+                                  <button type="button" role="menuitem" onClick={() => openEdit(sess)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#15191C] hover:bg-gray-50 cursor-pointer text-left">
+                                    <svg className="w-4 h-4 text-[#FF651D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
+                                    </svg>
+                                    Edit
+                                  </button>
+                                  <button type="button" role="menuitem" onClick={() => { setMenuId(null); handleDeleteSession(sess._id || sess.id, sess.name); }} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 cursor-pointer text-left">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.9 12.1A2 2 0 0116.1 21H7.9a2 2 0 01-2-1.9L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+                                    </svg>
+                                    Delete
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -359,10 +471,10 @@ export default function EventSessionsPage() {
 
       {/* Add Session popup (Figma 217:22172): no title bar; one bordered card holding the fields, then the outlined Add Session button */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Add Session">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={editingId ? "Edit Session" : "Add Session"}>
           <div
             className="absolute inset-0 bg-black/60 transition-opacity"
-            onClick={() => setIsAddModalOpen(false)}
+            onClick={closeModal}
           />
 
           <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-[672px] p-4 z-10">
@@ -370,7 +482,7 @@ export default function EventSessionsPage() {
             <div className="flex justify-end -mt-1 mb-1">
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(false)}
+                onClick={closeModal}
                 aria-label="Close"
                 className="text-gray-400 hover:text-gray-700 p-1 rounded-md cursor-pointer"
               >
@@ -438,7 +550,10 @@ export default function EventSessionsPage() {
                   </div>
                 </div>
 
-                {copyOptions.length > 0 && (
+                {editingId && copiedByOthers.length > 0 && (
+                  <p className="text-xs text-[#828282]">{copiedByOthers.map((x) => x.name).join(", ")} keep{copiedByOthers.length === 1 ? "s" : ""} this session&apos;s guest list, so it keeps its own list.</p>
+                )}
+                {copyOptions.length > 0 && copiedByOthers.length === 0 && (
                   <div className="flex flex-wrap items-center gap-2">
                     <label htmlFor="session-copy" className="inline-flex items-center gap-2.5 cursor-pointer select-none text-sm text-[#4B4F52]">
                       <input
@@ -468,7 +583,7 @@ export default function EventSessionsPage() {
                   </div>
                 )}
 
-                {!copyOn && (
+                {!copyOn && !editingId && (
                 <div>
                   <label className="block text-sm font-medium text-[#15191C] mb-1.5">Add Invitees List</label>
                   <div className="border border-[#E0E0E0] rounded-md flex items-center bg-[#FAFAFA] overflow-hidden min-h-[47px]">
@@ -502,7 +617,7 @@ export default function EventSessionsPage() {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Add Session</span>
+                <span>{editingId ? "Save Session" : "Add Session"}</span>
               </button>
             </form>
           </div>
