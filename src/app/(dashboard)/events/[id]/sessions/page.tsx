@@ -366,16 +366,19 @@ export default function EventSessionsPage() {
           />
 
           <div className="relative bg-white rounded-lg shadow-2xl w-full max-w-[672px] p-4 z-10">
-            <button
-              type="button"
-              onClick={() => setIsAddModalOpen(false)}
-              aria-label="Close"
-              className="absolute -top-9 right-0 text-white/90 hover:text-white p-1 cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {/* the close button sits inside the card, top right (it used to float above the card, on the dark backdrop) */}
+            <div className="flex justify-end -mt-1 mb-1">
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                aria-label="Close"
+                className="text-gray-400 hover:text-gray-700 p-1 rounded-md cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
 
             <form onSubmit={handleCreateSession} className="space-y-4">
               <div className="border border-[#E0E0E0] rounded-lg p-5 space-y-5">
