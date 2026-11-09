@@ -185,7 +185,7 @@ export function normalizeEventDraft(raw: EventDraft): EventDraft {
   const template = legacyTemplate
     ? { id: legacyTemplate.id, name: legacyTemplate.name, previewKey: legacyTemplate.previewKey ?? legacyTemplate.previewUrl ?? null }
     : null;
-  const organizerIds = Array.isArray(raw?.organizerIds) ? raw.organizerIds : [];
+  const organizerIds = Array.isArray(raw?.organizerIds) ? raw.organizerIds.slice(0, 1) : [];
   return { ...base, ...raw, organizerIds, template, logoKey: raw?.logoKey ?? null, sessions };
 }
 
@@ -294,8 +294,9 @@ function commonPayload(draft: EventDraft) {
     title: draft.title.trim(),
     // optional: an empty description falls back to the title
     description: draft.description.trim() || draft.title.trim(),
+    // one organizer per event, whatever an old draft held
     ...(draft.organizerIds && draft.organizerIds.length > 0
-      ? { organizerIds: draft.organizerIds, organizerId: draft.organizerIds[0] }
+      ? { organizerIds: [draft.organizerIds[0]], organizerId: draft.organizerIds[0] }
       : {}),
     ...(draft.categoryId ? { categoryId: draft.categoryId } : {}),
     ...(draft.subcategoryId ? { subcategoryId: draft.subcategoryId } : {}),

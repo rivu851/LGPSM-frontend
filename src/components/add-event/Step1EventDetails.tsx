@@ -70,9 +70,10 @@ function OrganizerSelectField({
 
   // A restored draft can hold organizers that are gone or not visible to this account. Once the real list is known,
   // keep only the ones that exist, so an internal id is never left on screen or sent when the event is created.
+  // An event is created for ONE organizer: an older draft that held several keeps just the first.
   useEffect(() => {
     if (!loadedOk) return;
-    const known = selectedIds.filter((id) => organizers.some((o) => o._id === id));
+    const known = selectedIds.filter((id) => organizers.some((o) => o._id === id)).slice(0, 1);
     if (known.length !== selectedIds.length) onChange(known);
   }, [loadedOk, organizers, selectedIds, onChange]);
 
@@ -92,16 +93,15 @@ function OrganizerSelectField({
       o.email?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // single choice: picking an organizer replaces the previous one; picking the chosen one again clears it
   const toggleSelect = (id: string) => {
     if (selectedIds.includes(id)) {
-      onChange(selectedIds.filter((item) => item !== id));
+      onChange([]);
     } else {
-      onChange([...selectedIds, id]);
+      onChange([id]);
+      setIsOpen(false);
+      setSearch("");
     }
-  };
-
-  const selectAll = () => {
-    onChange(organizers.map((o) => o._id));
   };
 
   const clearAll = () => {
@@ -112,15 +112,10 @@ function OrganizerSelectField({
     <div className="space-y-1.5" ref={dropdownRef}>
       <div className="flex items-center justify-between">
         <label className={labelClass}>
-          Select Organizer(s)
+          Select Organizer
         </label>
-        {selectedIds.length > 0 && (
-          <span className="text-xs text-[#FF651D] font-semibold">
-            {selectedIds.length} organizer{selectedIds.length > 1 ? "s" : ""} selected
-          </span>
-        )}
       </div>
-      <p className="-mt-1 text-xs text-[#828282]">Choose organizers to create this event for them, or leave empty to create it under your admin account.</p>
+      <p className="-mt-1 text-xs text-[#828282]">Choose the one organizer this event is created for, or leave empty to create it under your admin account.</p>
 
       <div className="relative">
         <button
@@ -132,7 +127,7 @@ function OrganizerSelectField({
         >
           {selectedIds.length === 0 ? (
             <span className="text-[#828282]">
-              {loading ? "Loading organizers..." : "Select for which organizer(s) this event will be created"}
+              {loading ? "Loading organizers..." : "Select the organizer this event will be created for"}
             </span>
           ) : (
             <div className="flex flex-wrap gap-1.5 py-0.5">
@@ -187,14 +182,6 @@ function OrganizerSelectField({
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   type="button"
-                  onClick={selectAll}
-                  className="text-[11px] font-semibold text-[#FF651D] hover:underline px-1 py-0.5"
-                >
-                  All
-                </button>
-                <span className="text-gray-300">|</span>
-                <button
-                  type="button"
                   onClick={clearAll}
                   className="text-[11px] font-semibold text-gray-500 hover:underline px-1 py-0.5"
                 >
@@ -221,10 +208,11 @@ function OrganizerSelectField({
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <input
-                        type="checkbox"
+                        type="radio"
+                        name="event-organizer"
                         checked={isSelected}
                         onChange={() => {}}
-                        className="w-4 h-4 rounded border-gray-300 cursor-pointer check-orange"
+                        className="w-4 h-4 border-gray-300 cursor-pointer accent-[#FF651D]"
                       />
                       <div className="truncate">
                         <div className="text-xs font-semibold text-gray-900 truncate">{organizationName}</div>
