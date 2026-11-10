@@ -312,7 +312,7 @@ export default function DashboardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h3 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h3>
                 <div className="flex flex-wrap items-center gap-2">
-                  <input type="date" aria-label="From date" title="Events starting on or after this day" value={from} max={to || undefined} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  <input type="date" aria-label="From date" title="Events starting on or after this day" value={from} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
                   <span className="text-xs text-[#828282]">To</span>
                   <input type="date" aria-label="To date" title="Events starting on or before this day" value={to} min={from || undefined} onChange={(e) => { const r = settleRange({ from, to: e.target.value }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
                   {(from || to) && (

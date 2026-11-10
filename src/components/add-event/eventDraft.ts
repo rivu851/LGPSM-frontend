@@ -218,10 +218,17 @@ export interface DraftValidationOptions {
   subcategoryRequired?: boolean;
   // A new event starts from a template: it cannot go ahead without one
   templateRequired?: boolean;
+  // The moment the event was created, as an ISO time: it cannot start before it, and must end after it. A new event passes nothing:
+  // it is being created now (one minute of grace for a start picked "now").
+  createdAt?: string | null;
+  // True when this is a new event (the reference is the current time)
+  isNew?: boolean;
 }
 
 export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
   const errors: DraftErrors = {};
+  // the earliest allowed start: the creation time (a new event is created now)
+  const createdMs: number | null = options.isNew ? Date.now() - 60_000 : options.createdAt && !Number.isNaN(Date.parse(options.createdAt)) ? Date.parse(options.createdAt) : null;
   if (options.templateRequired && !draft.template) errors.template = "Select a template to continue.";
   if (!draft.title.trim()) errors.title = "Title is required.";
   else if (draft.title.trim().length > EVENT_TITLE_MAX_LENGTH) errors.title = `Title cannot exceed ${EVENT_TITLE_MAX_LENGTH} characters.`;
@@ -235,8 +242,10 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   if (!draft.venue.trim()) errors.venue = "Event location is required.";
   else if (draft.venue.trim().length > EVENT_LOCATION_MAX_LENGTH) errors.venue = `Event location cannot exceed ${EVENT_LOCATION_MAX_LENGTH} characters.`;
   if (!isValidIso(draft.start)) errors.start = "Choose a start date and time.";
+  else if (createdMs !== null && new Date(draft.start as string).getTime() < createdMs) errors.start = options.isNew ? "The event cannot start in the past. Choose a start date and time from now on." : "The event cannot start before it was created.";
   if (!isValidIso(draft.end)) errors.end = "Choose an end date and time.";
   else if (!isAfter(draft.end, draft.start)) errors.end = "End must be after the start.";
+  else if (createdMs !== null && new Date(draft.end as string).getTime() <= createdMs) errors.end = options.isNew ? "The event cannot end in the past." : "The event must end after it was created.";
   if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
     errors.rsvpDeadline = "RSVP deadline should be before the event ends.";
   }

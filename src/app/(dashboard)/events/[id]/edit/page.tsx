@@ -49,6 +49,8 @@ export default function EditEventPage() {
 
   // The event's own category and subcategory, which an admin's list does not hold when they are the organizer's custom ones
   const [extraCategory, setExtraCategory] = useState<ExtraCategory | null>(null);
+  // when the event was created: it cannot start before it
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -83,6 +85,7 @@ export default function EditEventPage() {
         isCustom: !!populated.ownerId,
         subcategory: serverEvent.subcategory?._id ? { id: serverEvent.subcategory._id, name: serverEvent.subcategory.name || "", isCustom: !!serverEvent.subcategory.isCustom } : null,
       } : null);
+      setCreatedAt((eventRes.data as unknown as { createdAt?: string }).createdAt ?? null);
       const serverDraft = eventToDraft(eventRes.data as ServerEvent, sessions);
       serverDraftRef.current = serverDraft;
       if (eventRes.data?.title) {
@@ -159,6 +162,7 @@ export default function EditEventPage() {
     <EventWizard
       heading="Edit Event"
       eventId={eventId}
+      createdAt={createdAt}
       extraCategory={extraCategory}
       draft={draftState.value}
       setDraft={draftState.update}

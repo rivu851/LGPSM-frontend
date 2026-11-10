@@ -38,6 +38,8 @@ interface EventWizardProps {
   heading: string;
   /** Set when editing a saved event */
   eventId?: string;
+  /** When the event being edited was created: it cannot start before it, and must end after it */
+  createdAt?: string | null;
   /** The event's own category, for an account whose list does not include it */
   extraCategory?: ExtraCategory | null;
   /** Add Event: whether the saved draft has been read back yet, so the template dialog does not open over a draft that already has one */
@@ -66,6 +68,7 @@ const scrollPageTo = (top: number) =>
 export default function EventWizard({
   heading,
   eventId,
+  createdAt,
   extraCategory,
   draftHydrated = true,
   draft,
@@ -174,7 +177,7 @@ export default function EventWizard({
     else if (subcategoryGone) setDraft((prev) => ({ ...prev, subcategoryId: "" }));
   }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
-  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId }), [draft, subcategoryRequired, eventId]);
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt }), [draft, subcategoryRequired, eventId]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);

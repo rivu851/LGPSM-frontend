@@ -367,7 +367,7 @@ export default function OrganizerDetailsPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts from
-                          <input type="date" value={draftFilters.from} max={draftFilters.to || undefined} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
+                          <input type="date" value={draftFilters.from} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value, to: f.to && e.target.value > f.to ? e.target.value : f.to }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
                         </label>
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts until
