@@ -22,8 +22,8 @@ interface Step2SettingsProps {
 
 // Controlled step: values live in the wizard draft owned by the page
 export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
-  // Until the organizer touches it, the card keeps its long-standing lines (guest name, then company); the first change makes the choice explicit
-  const cardInfo: CardInfo = draft.cardInfo ?? { primary: "INVITEE_NAME", secondary: "COMPANY_NAME" };
+  // The guest's name is its own checkbox above ("Invitee Name"); the two lines here are for the other details, none until chosen
+  const cardInfo: CardInfo = draft.cardInfo ?? { primary: null, secondary: null };
   const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next });
   const categories = draft.preferenceCategories;
   const setCategories = (next: PreferenceCategory[]) => onChange({ preferenceCategories: next });
@@ -112,7 +112,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     id={`card-info-${slot}`}
                     type="checkbox"
                     checked={on}
-                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (slot === "primary" ? "INVITEE_NAME" : "COMPANY_NAME") : null })}
+                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? "COMPANY_NAME" : null })}
                     className="size-[18px] accent-[#1A9242] cursor-pointer"
                   />
                   {label}

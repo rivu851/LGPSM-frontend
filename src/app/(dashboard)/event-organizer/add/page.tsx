@@ -16,6 +16,7 @@ export default function AddEventOrganizerPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     organizationName: "",
+    organizationType: "ORGANIZATION" as "INDIVIDUAL" | "ORGANIZATION",
     email: "",
     phone: "",
     password: "",
@@ -74,7 +75,8 @@ export default function AddEventOrganizerPage() {
       phone: formData.phone.trim() || undefined,
       password: formData.password,
       role: 'ORGANIZER',
-      profile: { organizationName: formData.organizationName.trim(), ...(logoKey ? { logoKey } : {}) },
+      // an individual has no organization name; an organization's name is required
+      profile: { organizationType: formData.organizationType, ...(formData.organizationType === 'ORGANIZATION' ? { organizationName: formData.organizationName.trim() } : {}), ...(logoKey ? { logoKey } : {}) },
     });
 
     setIsSubmitting(false);
@@ -100,15 +102,28 @@ export default function AddEventOrganizerPage() {
             <h2 className="text-xl font-medium text-[#15191C]">Event Organizer</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-5">
-              {/* Organization Name */}
+              {/* Organizer type: Individual, or an Organization with its name */}
+              <div className="space-y-2">
+                <span className="block text-sm font-medium text-[#15191C]">Organizer type<span className="text-red-500">*</span></span>
+                <div className="flex gap-2">
+                  {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
+                    <label key={value} className={`flex-1 flex items-center gap-2 h-[47px] px-3 rounded-md border text-sm cursor-pointer ${formData.organizationType === value ? "border-[#FF651D] bg-[#FFF3EC] font-semibold" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
+                      <input type="radio" name="organizer-type" checked={formData.organizationType === value} onChange={() => setFormData({ ...formData, organizationType: value })} className="accent-[#FF651D]" />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Organization / organizer name */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-[#15191C]">
-                  Organisation Name<span className="text-red-500">*</span>
+                  {formData.organizationType === "ORGANIZATION" ? "Organisation Name" : "Organizer Name"}<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Type Organisation Name"
+                  placeholder={formData.organizationType === "ORGANIZATION" ? "Type Organisation Name" : "Type the organizer's name"}
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
                   className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"

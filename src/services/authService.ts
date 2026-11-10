@@ -8,6 +8,9 @@ export interface RegisterPayload {
   phone?: string;
   role?: string;
   invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH";
+  // Individual, or an organization (then its name is required)
+  organizationType?: "INDIVIDUAL" | "ORGANIZATION";
+  organizationName?: string;
 }
 
 export interface LoginPayload {

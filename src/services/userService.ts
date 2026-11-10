@@ -60,7 +60,7 @@ export const userService = {
     password?: string;
     role?: "ADMIN" | "ORGANIZER" | "SYSTEM_USER";
     phone?: string;
-    profile?: { organizationName?: string; logoKey?: string; invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH" };
+    profile?: { organizationName?: string; organizationType?: "INDIVIDUAL" | "ORGANIZATION"; logoKey?: string; invitationChannel?: "EMAIL" | "WHATSAPP" | "BOTH" };
     /** Admin only: the organizer the new staff account is added for */
     organizerId?: string;
   }): Promise<ApiResponse<UserData>> {

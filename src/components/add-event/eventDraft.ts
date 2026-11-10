@@ -52,10 +52,29 @@ export interface CardInfo {
 }
 export const CUSTOM_DETAIL = "CUSTOM";
 export const CARD_INFO_OPTIONS: { value: string; label: string }[] = [
-  { value: "INVITEE_NAME", label: "Invitee Name" },
   { value: "COMPANY_NAME", label: "Company Name" },
   { value: CUSTOM_DETAIL, label: "Custom detail (add your own title)" },
 ];
+
+/**
+ * The guest's name is its own checkbox, so it is no longer a choice under Additional Information. An event saved before that: its saved
+ * choice decides whether the name is ticked, and the name is taken out of the two lines.
+ */
+export function splitInviteeName(
+  info: { primary?: string | null; secondary?: string | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null } | null | undefined,
+  savedName?: boolean | null,
+): { cardInfo: CardInfo | null; inviteeName: boolean } {
+  const configured = !!info && (info.primary != null || info.secondary != null);
+  const hadName = info?.primary === "INVITEE_NAME" || info?.secondary === "INVITEE_NAME";
+  const clean = (f?: string | null): CardInfoField | null => (f && f !== "INVITEE_NAME" ? (f as CardInfoField) : null);
+  return {
+    cardInfo: configured ? { primary: clean(info!.primary), secondary: clean(info!.secondary), identityLabel: info!.identityLabel ?? null, secondaryIdentityLabel: info!.secondaryIdentityLabel ?? null } : null,
+    inviteeName: savedName ?? (!configured || hadName),
+  };
+}
+
+/** The standard Excel columns: a custom detail cannot be given one of these titles (it would repeat a column) */
+const RESERVED_TITLES = ["name", "email", "mobile", "company name", "invitee name"];
 
 export const isCustomDetail = (f: CardInfoField | null | undefined): boolean => f === "PROFESSIONAL_IDENTITY" || f === "SECONDARY_IDENTITY";
 /** Each card line that carries a custom detail keeps its own field, title and Excel column */
@@ -68,13 +87,16 @@ export interface CardDisplay {
   qr: boolean;
   dateTime: boolean;
   location: boolean;
+  /** the guest's name: its own checkbox (it is always collected; this decides whether it is printed on the card) */
+  inviteeName: boolean;
 }
-export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true };
+export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: true };
 export const CARD_DISPLAY_OPTIONS: { key: keyof CardDisplay; label: string }[] = [
   { key: "title", label: "Event Title" },
   { key: "qr", label: "Event QR" },
   { key: "dateTime", label: "Event Date & Time" },
   { key: "location", label: "Event Location" },
+  { key: "inviteeName", label: "Invitee Name" },
 ];
 
 export interface EventDraft {
@@ -251,12 +273,16 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   }
   if (draft.dietaryEnabled) {
     const hasMissingOptions = draft.preferenceCategories.some((category) => !category.options.some((option) => option.trim()));
+    // an option row left blank (for example after "Add another option") must be filled in or removed, even when another option is filled
+    const hasBlankOption = draft.preferenceCategories.some((category) => category.options.some((option) => !option.trim()));
     if (hasMissingOptions) errors.dietaryPreference = "Add at least one dietary option for each question before continuing.";
+    else if (hasBlankOption) errors.dietaryPreference = "Fill in or remove each empty option before continuing.";
   }
 
   if (draft.cardInfo) {
     const titles = [draft.cardInfo.primary, draft.cardInfo.secondary].filter(isCustomDetail).map((f) => (draft.cardInfo![customTitleKey(f)] || "").trim());
     if (titles.some((t) => !t)) errors.cardInfo = "Enter a title for each custom detail.";
+    else if (titles.some((t) => RESERVED_TITLES.includes(t.toLowerCase()))) errors.cardInfo = "That title is already a column in the invitee Excel (Name, Email, Mobile or Company Name). Choose another title.";
     else if (titles.length === 2 && titles[0].toLowerCase() === titles[1].toLowerCase()) errors.cardInfo = "The two custom details need different titles: each one becomes its own Excel column.";
   }
 
@@ -396,6 +422,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
   const start = event?.schedule?.start || base.start;
   const end = event?.schedule?.end || base.end;
   const idOf = (v: RefOrId) => (v && typeof v === "object" ? v._id || "" : v || "");
+  const nameSplit = splitInviteeName(event?.cardInfo, (event?.cardDisplay as { inviteeName?: boolean } | undefined)?.inviteeName);
 
   const rawOptions: unknown[] = Array.isArray(event?.dietaryPreference?.options) ? event.dietaryPreference.options : [];
   const structured = rawOptions.length > 0 && typeof rawOptions[0] === "object" && rawOptions[0] !== null;
@@ -432,10 +459,9 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     allowDeclined: event?.rsvp?.allowDeclined ?? base.allowDeclined,
     dietaryEnabled: event?.dietaryPreference?.enabled ?? false,
     preferenceCategories,
-    cardInfo: event?.cardInfo && (event.cardInfo.primary !== undefined || event.cardInfo.secondary !== undefined)
-      ? { primary: event.cardInfo.primary ?? null, secondary: event.cardInfo.secondary ?? null, identityLabel: event.cardInfo.identityLabel ?? null, secondaryIdentityLabel: event.cardInfo.secondaryIdentityLabel ?? null }
-      : null,
-    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(event?.cardDisplay || {}) },
+    // the guest's name is its own checkbox now: an older event's choice is carried over into it
+    cardInfo: nameSplit.cardInfo,
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(event?.cardDisplay || {}), inviteeName: nameSplit.inviteeName },
     template,
     logoKey: event?.media?.logoKey || null,
     sessions: draftSessionsFromServer(sessions || [], start, end),

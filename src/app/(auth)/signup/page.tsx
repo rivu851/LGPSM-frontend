@@ -55,6 +55,9 @@ export default function SignupPage() {
     if (passedAlong) void Promise.resolve().then(() => setEmail((current) => current || passedAlong));
   }, []);
   const [phone, setPhone] = useState("");
+  // Individual, or an Organization (then its name is required)
+  const [orgType, setOrgType] = useState<"INDIVIDUAL" | "ORGANIZATION">("INDIVIDUAL");
+  const [orgName, setOrgName] = useState("");
   // how they will send invitations (the send screen starts with this choice)
   // const [invitationChannel, setInvitationChannel] = useState<InvitationChannel>("BOTH");
   const [password, setPassword] = useState("");
@@ -116,6 +119,10 @@ export default function SignupPage() {
     setErrorMessage("");
     setSuccessMessage("");
 
+    if (orgType === "ORGANIZATION" && orgName.trim().length < 2) {
+      setErrorMessage("Enter the organization name.");
+      return;
+    }
     if (password !== confirmPassword) {
       setErrorMessage(ERROR_MESSAGES.auth.passwordsDoNotMatch);
       return;
@@ -132,6 +139,8 @@ export default function SignupPage() {
         email: email.trim(),
         password,
         role: "ORGANIZER",
+        organizationType: orgType,
+        ...(orgType === "ORGANIZATION" ? { organizationName: orgName.trim() } : {}),
         // invitationChannel, (hidden for now, see the commented-out field)
         ...(phone.trim() ? { phone: phone.trim() } : {}),
       });
@@ -342,6 +351,36 @@ export default function SignupPage() {
                 className={authInputClass}
               />
             </div>
+            <fieldset className="space-y-2" disabled={isSubmitting}>
+              <legend className={authLabelClass}>Organizer type<span className="text-[#FF651D]">*</span></legend>
+              <div className="grid grid-cols-2 gap-2">
+                {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
+                  <label key={value} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${orgType === value ? "border-[#FF651D] bg-[#FFF3EC] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
+                    <input type="radio" name="signup-org-type" value={value} checked={orgType === value} onChange={() => setOrgType(value)} className="accent-[#FF651D]" />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            {orgType === "ORGANIZATION" && (
+              <div>
+                <label htmlFor="signup-org-name" className={authLabelClass}>
+                  Organization name<span className="text-[#FF651D]">*</span>
+                </label>
+                <input
+                  id="signup-org-name"
+                  type="text"
+                  required
+                  minLength={2}
+                  maxLength={150}
+                  placeholder="e.g. Iconic Event Planner"
+                  value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)}
+                  disabled={isSubmitting}
+                  className={authInputClass}
+                />
+              </div>
+            )}
             {/* Invitation channel at signup: hidden until the client confirms what "change invitation option during signup" means. Uncomment to bring it back.
             <fieldset>
               <legend className={authLabelClass}>How will you send invitations?<span className="text-[#FF651D]">*</span></legend>
