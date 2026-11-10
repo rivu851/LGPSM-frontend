@@ -112,7 +112,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     id={`card-info-${slot}`}
                     type="checkbox"
                     checked={on}
-                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? "COMPANY_NAME" : null })}
+                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (other === "COMPANY_NAME" ? customFieldFor(other) : "COMPANY_NAME") : null })}
                     className="size-[18px] accent-[#1A9242] cursor-pointer"
                   />
                   {label}
@@ -121,7 +121,10 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                   <CustomDropdown
                     value={custom ? CUSTOM_DETAIL : field ?? ""}
                     onChange={pick}
-                    options={CARD_INFO_OPTIONS}
+                    // a detail chosen on one line is not offered on the other; a custom detail shows the title that was typed
+                    options={CARD_INFO_OPTIONS
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? !isCustomDetail(other) : o.value !== other))
+                      .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
                   />
