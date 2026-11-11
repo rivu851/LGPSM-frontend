@@ -187,7 +187,8 @@ export default function AddEventOrganizerPage() {
 
               {/* Organizer Logo Box */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-[#15191C]">Organizer Logo</label>
+                {/* an individual has a profile picture; an organization has a logo */}
+                <label className="block text-sm font-medium text-[#15191C]">{formData.organizationType === "INDIVIDUAL" ? "Profile Picture" : "Organizer Logo"}</label>
                 <input
                   ref={logoInputRef}
                   type="file"
