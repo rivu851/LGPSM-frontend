@@ -51,8 +51,18 @@ export interface CardInfo {
   secondaryIdentityLabel?: string | null;
 }
 export const CUSTOM_DETAIL = "CUSTOM";
+/** Employee ID is the custom-detail field with the fixed title "Employee ID" (its Excel column is "Employee ID" too). */
+export const EMPLOYEE_ID = "EMPLOYEE_ID";
+export const EMPLOYEE_ID_LABEL = "Employee ID";
+export type DetailKind = "COMPANY_NAME" | "EMPLOYEE_ID" | "CUSTOM";
+export function detailKind(field: CardInfoField | null | undefined, title?: string | null): DetailKind | null {
+  if (!field || field === "INVITEE_NAME") return null;
+  if (field === "COMPANY_NAME") return "COMPANY_NAME";
+  return (title ?? "").trim().toLowerCase() === EMPLOYEE_ID_LABEL.toLowerCase() ? "EMPLOYEE_ID" : "CUSTOM";
+}
 export const CARD_INFO_OPTIONS: { value: string; label: string }[] = [
   { value: "COMPANY_NAME", label: "Company Name" },
+  { value: EMPLOYEE_ID, label: "Employee ID" },
   { value: CUSTOM_DETAIL, label: "Custom detail (add your own title)" },
 ];
 

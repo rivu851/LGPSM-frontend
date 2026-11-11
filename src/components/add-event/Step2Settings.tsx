@@ -1,6 +1,6 @@
 "use client";
 
-import { CARD_DISPLAY_DEFAULTS, CARD_DISPLAY_OPTIONS, CARD_INFO_OPTIONS, CUSTOM_DETAIL, customFieldFor, customTitleKey, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, CARD_DISPLAY_OPTIONS, CARD_INFO_OPTIONS, CUSTOM_DETAIL, EMPLOYEE_ID, EMPLOYEE_ID_LABEL, customFieldFor, customTitleKey, detailKind, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { CheckInPolicy, POLICY_FLAGS, POLICY_LABEL, policyOf, policyOptions } from "@/utils/checkInPolicy";
 import React, { useEffect, useRef } from "react";
@@ -101,10 +101,21 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
             const field = info[slot];
             const other = info[slot === "primary" ? "secondary" : "primary"];
             const on = field !== null;
-            const custom = isCustomDetail(field);
-            const label = slot === "primary" ? "Primary additional information" : "Secondary additional information";
             const titleKey = customTitleKey(field);
-            const pick = (v: string) => setCardInfo({ ...info, [slot]: v === CUSTOM_DETAIL ? customFieldFor(other) : (v as CardInfoField) });
+            const kind = detailKind(field, info[titleKey]);
+            const custom = kind === "CUSTOM";
+            const otherKind = detailKind(other, info[customTitleKey(other)]);
+            const label = slot === "primary" ? "Primary additional information" : "Secondary additional information";
+            const pick = (v: string) => {
+              if (v === EMPLOYEE_ID || v === CUSTOM_DETAIL) {
+                const next = customFieldFor(other);
+                const key = customTitleKey(next);
+                // Employee ID has a fixed title; leaving it for Custom clears the title so a new one is typed
+                const title = v === EMPLOYEE_ID ? EMPLOYEE_ID_LABEL : (info[key] ?? "").trim().toLowerCase() === EMPLOYEE_ID_LABEL.toLowerCase() ? "" : info[key] ?? "";
+                return setCardInfo({ ...info, [slot]: next, [key]: title });
+              }
+              setCardInfo({ ...info, [slot]: v as CardInfoField });
+            };
             return (
               <div key={slot} className="border border-[#E0E0E0] rounded-md p-4 flex flex-col gap-3">
                 <label htmlFor={`card-info-${slot}`} className="inline-flex items-center gap-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
@@ -112,18 +123,18 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     id={`card-info-${slot}`}
                     type="checkbox"
                     checked={on}
-                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (other === "COMPANY_NAME" ? customFieldFor(other) : "COMPANY_NAME") : null })}
+                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (otherKind === "COMPANY_NAME" ? customFieldFor(other) : "COMPANY_NAME") : null })}
                     className="size-[18px] accent-[#1A9242] cursor-pointer"
                   />
                   {label}
                 </label>
                 <div className={on ? "" : "opacity-50 pointer-events-none"} aria-disabled={!on}>
                   <CustomDropdown
-                    value={custom ? CUSTOM_DETAIL : field ?? ""}
+                    value={kind === "CUSTOM" ? CUSTOM_DETAIL : kind === "EMPLOYEE_ID" ? EMPLOYEE_ID : field ?? ""}
                     onChange={pick}
                     // a detail chosen on one line is not offered on the other; a custom detail shows the title that was typed
                     options={CARD_INFO_OPTIONS
-                      .filter((o) => (o.value === CUSTOM_DETAIL ? !isCustomDetail(other) : o.value !== other))
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? otherKind !== "CUSTOM" : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
