@@ -516,6 +516,29 @@ export default function InviteesManagementPage() {
     notifyDbUpdate();
   };
 
+  // Delete selected: every ticked guest at once. A guest already invited is set aside with their history (the server decides), not erased.
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const deleteSelected = async () => {
+    const ids = selectedIds.slice();
+    if (!ids.length) return;
+    const confirmed = await confirm({
+      title: "Delete selected invitees",
+      message: `Delete ${ids.length} selected ${ids.length === 1 ? "invitee" : "invitees"} from this event? A guest who was already invited is set aside with their history, and their pass stops working.`,
+      confirmText: "Delete selected",
+      tone: "danger",
+    });
+    if (!confirmed) return;
+    setBulkDeleting(true);
+    const results = await Promise.all(ids.map((id) => inviteeService.deleteInvitee(id).catch(() => ({ success: false }))));
+    setBulkDeleting(false);
+    const failed = results.filter((r) => !r.success).length;
+    setSelectedIds([]);
+    if (failed) showAlert(`${ids.length - failed} deleted; ${failed} could not be deleted. Please try again.`, "warning");
+    else showAlert(`${ids.length} ${ids.length === 1 ? "invitee" : "invitees"} deleted.`, "success");
+    await load();
+    notifyDbUpdate();
+  };
+
   const btn = "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   // Figma send button: outlined orange, 16px semibold, washed out until something can be sent
   const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#FF651D] text-[#FF651D] bg-white hover:bg-orange-50 text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
@@ -737,6 +760,15 @@ export default function InviteesManagementPage() {
               {lifecycleStarted && <> · {invitees.length - notInvited.length} invited · {notInvited.length} not yet invited</>}
               {selectedIds.length > 0 && <> · {selectedIds.length} selected</>}
             </span>
+              </div>
+            )}
+
+            {!historical && selectedIds.length > 0 && (
+              <div>
+                <button type="button" onClick={() => void deleteSelected()} disabled={bulkDeleting || busy !== null} className={`${btn} border border-rose-200 text-rose-700 bg-white hover:bg-rose-50`}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+                  {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.length})`}
+                </button>
               </div>
             )}
 
