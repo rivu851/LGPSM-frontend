@@ -337,7 +337,7 @@ export default function EventWizard({
 
   // one stable object per choice, so the card preview is only redrawn when a tick actually changes
   const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
-  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location }), [cd.title, cd.qr, cd.dateTime, cd.location]);
+  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location, inviteeName: cd.inviteeName }), [cd.title, cd.qr, cd.dateTime, cd.location, cd.inviteeName]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;

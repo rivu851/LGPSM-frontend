@@ -132,9 +132,9 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                   <CustomDropdown
                     value={kind === "CUSTOM" ? CUSTOM_DETAIL : kind === "EMPLOYEE_ID" ? EMPLOYEE_ID : field ?? ""}
                     onChange={pick}
-                    // a detail chosen on one line is not offered on the other; a custom detail shows the title that was typed
+                    // Company Name and Employee ID can sit on one line only; Custom is offered on both lines (each with its own title); a custom detail shows the title that was typed
                     options={CARD_INFO_OPTIONS
-                      .filter((o) => (o.value === CUSTOM_DETAIL ? otherKind !== "CUSTOM" : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? true : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
