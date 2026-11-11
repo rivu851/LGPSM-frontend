@@ -62,6 +62,8 @@ export interface TemplatePreviewPayload {
   startIso?: string;
   endIso?: string;
   venue?: string;
+  contactNumber?: string;
+  cardDisplay?: { title: boolean; qr: boolean; dateTime: boolean; location: boolean };
   locationSub?: string;
   isVirtual?: boolean;
   categoryName?: string;
@@ -169,6 +171,11 @@ export const templateService = {
     }
   ): Promise<ApiResponse<Template>> {
     return apiClient<Template>(`/api/v1/templates/${id}`, { method: "PATCH", body: JSON.stringify(payload) }, true);
+  },
+
+  /** "Upload your own template": an image the person uploaded as a TEMPLATE becomes a private template of theirs */
+  async uploadOwnTemplate(payload: { name: string; imageKey: string; categoryId?: string; subcategoryId?: string }): Promise<ApiResponse<Template>> {
+    return apiClient<Template>("/api/v1/templates/upload", { method: "POST", body: JSON.stringify(payload) }, true);
   },
 
   async deleteTemplate(id: string): Promise<ApiResponse<Template>> {

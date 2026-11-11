@@ -13,6 +13,8 @@ import DeleteInviteeModal from "@/components/add-event/modals/DeleteInviteeModal
 import AddInviteeChooserModal from "@/components/add-event/modals/AddInviteeChooserModal";
 import AddInviteeManualModal from "@/components/add-event/modals/AddInviteeManualModal";
 import SendWarningModal from "@/components/invitees/SendWarningModal";
+import SendSuccessModal from "@/components/invitees/SendSuccessModal";
+import { asInvitationChannel } from "@/utils/invitationChannel";
 import InfoTip from "@/components/common/InfoTip";
 import PageHeader from "@/components/common/PageHeader";
 import ButtonIcon from "@/components/common/ButtonIcons";
@@ -166,6 +168,8 @@ export default function InviteesManagementPage() {
   const [sessionFilter, setSessionFilter] = useState("");
   const [invitationFilter, setInvitationFilter] = useState<"" | "SENT" | "NOT_SENT">("");
   const [channel, setChannel] = useState<Channel>("BOTH");
+  // shown after a send or resend that reached at least one guest
+  const [sentPopup, setSentPopup] = useState<{ title: string; message: string; details?: string[] } | null>(null);
   const [busy, setBusy] = useState<null | "send" | "resend" | "import" | "access" | "clear">(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
 
@@ -220,6 +224,9 @@ export default function InviteesManagementPage() {
       return;
     }
     setEvent(evtRes.data as never);
+    // the send screen starts with the channel the event's organizer chose (at signup, or set by an admin)
+    const orgChannel = (evtRes.data as { organizerId?: { profile?: { invitationChannel?: string } } | string } | undefined)?.organizerId;
+    if (orgChannel && typeof orgChannel === "object" && orgChannel.profile?.invitationChannel) setChannel(asInvitationChannel(orgChannel.profile.invitationChannel));
     setSessions(sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : []);
     if (invRes.success && Array.isArray(invRes.data)) setInvitees(invRes.data as unknown as Invitee[]);
     else setLoadError(invRes.message || "Failed to load invitees.");
@@ -320,7 +327,10 @@ export default function InviteesManagementPage() {
     try {
       const res = await invitationService.sendInvitations(eventId, { inviteeIds: targets.map((t) => t._id), channel });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
-      setFeedback(res.success || results.length ? summarize(results, "sent") : { type: "error", message: res.message || "Invitations could not be sent." });
+      const sendSummary = res.success || results.length ? summarize(results, "sent") : { type: "error" as const, message: res.message || "Invitations could not be sent." };
+      // a send that reached guests is confirmed with the success popup instead of the banner; problems still show in the banner
+      if (results.some((r) => r.status === "SENT") && sendSummary && sendSummary.type === "success") setSentPopup({ title: "Invitations sent successfully", message: sendSummary.message, details: sendSummary.details });
+      else setFeedback(sendSummary);
       if (res.success || results.length) setSelectedIds([]);
       await load();
       notifyDbUpdate();
@@ -346,7 +356,9 @@ export default function InviteesManagementPage() {
     try {
       const res = await invitationService.resendInvitations(eventId, { invitationIds: targets.map((h) => h._id), channel });
       const results = (res.data?.results || (res as { results?: { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[] }).results || []) as { status: string; failureReason?: string; emailStatus?: string; whatsappStatus?: string }[];
-      setFeedback(res.success || results.length ? summarize(results, "resent") : { type: "error", message: res.message || "Invitations could not be resent." });
+      const resendSummary = res.success || results.length ? summarize(results, "resent") : { type: "error" as const, message: res.message || "Invitations could not be resent." };
+      if (results.some((r) => r.status === "SENT") && resendSummary && resendSummary.type === "success") setSentPopup({ title: "Invitations resent successfully", message: resendSummary.message, details: resendSummary.details });
+      else setFeedback(resendSummary);
       if (res.success || results.length) setSelectedIds([]);
       await load();
     } catch {
@@ -615,7 +627,7 @@ export default function InviteesManagementPage() {
                     options={eventsOptions.some((o) => o.value === eventId) ? eventsOptions : [{ value: eventId, label: event?.title || "This event" }, ...eventsOptions]}
                   />
                 )}
-                <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={[{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
+                <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
                 {!historical && (
                 <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
@@ -883,8 +895,9 @@ export default function InviteesManagementPage() {
         />
       )}
       {showListPreview && (
-        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} onClose={() => setShowListPreview(false)} />
+        <InviteeListPreviewModal eventId={eventId} subtitle={event?.title} showCompany={showCompany} readOnly={historical} onChanged={() => { void load(); notifyDbUpdate(); }} onClose={() => setShowListPreview(false)} />
       )}
+      {sentPopup && <SendSuccessModal title={sentPopup.title} message={sentPopup.message} details={sentPopup.details} onClose={() => setSentPopup(null)} />}
       {confirmFirstSend && (
         <SendWarningModal
           eventId={eventId}

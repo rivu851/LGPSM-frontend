@@ -245,6 +245,11 @@ export const eventService = {
    * The event title must be retyped as confirmation.
    * POST /api/v1/events/:eventId/cleanup
    */
+  /** "Delete event" (past events only): removes the event and all of its data for good. The owning organizer or an admin. */
+  async deleteEventPermanently(eventId: string, confirmTitle: string): Promise<ApiResponse<unknown>> {
+    return apiClient(`/api/v1/events/${eventId}/delete`, { method: "POST", body: JSON.stringify({ confirmTitle }) }, true);
+  },
+
   async cleanupEventData(eventId: string, confirmTitle: string): Promise<ApiResponse<EventData>> {
     return apiClient<EventData>(`/api/v1/events/${eventId}/cleanup`, {
       method: "POST",

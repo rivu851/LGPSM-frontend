@@ -17,6 +17,7 @@ interface OrganizerRow {
   id: string;
   name: string;
   accountName: string;
+  type: string;
   email: string;
   phone: string;
   status: "Active" | "In Active" | "Deactivate";
@@ -48,7 +49,9 @@ export default function AllOrganizersPage() {
           const organizerUsersOnly = res.data.filter((u: any) => u.role === "ORGANIZER");
           const apiOrgs = organizerUsersOnly.map((u: any, idx: number) => ({
             id: u._id || u.id || `org_${idx}`,
-            name: u.profile?.organizationName || "Organisation not set",
+            // an individual organizer has no organization name: the person's own name is shown
+            name: u.profile?.organizationName || u.fullName || "Organisation not set",
+            type: ((u.profile?.organizationType ?? (u.profile?.organizationName ? "ORGANIZATION" : "INDIVIDUAL")) === "ORGANIZATION" ? "Organization" : "Individual") as string,
             accountName: u.fullName || u.name || "Event Organizer",
             email: u.email || "--",
             phone: u.phone || u.contactNo || "--",
@@ -183,6 +186,7 @@ aria-label="Select all"
                       </button>
                     </th>
                     <th className="py-3 px-4 font-medium text-gray-400">Organizer</th>
+                    <th className="py-3 px-4 font-medium text-gray-400">Type</th>
                     <th className="py-3 px-4 font-medium text-gray-400">Email</th>
                     <th className="py-3 px-4 font-medium text-gray-400">Phone Number</th>
                     <th className="py-3 px-4 font-medium text-gray-400">Status</th>
@@ -194,10 +198,10 @@ aria-label="Select all"
                     <TableSkeletonRows rows={5} cols={6} />
                   )}
                   {!loading && loadError && (
-                    <tr><td colSpan={6} className="py-12 text-center text-rose-600 text-sm">{loadError}</td></tr>
+                    <tr><td colSpan={7} className="py-12 text-center text-rose-600 text-sm">{loadError}</td></tr>
                   )}
                   {!loading && !loadError && filteredOrganizers.length === 0 && (
-                    <tr><td colSpan={6} className="py-12 text-center text-gray-400 text-sm">No organizers found.</td></tr>
+                    <tr><td colSpan={7} className="py-12 text-center text-gray-400 text-sm">No organizers found.</td></tr>
                   )}
                   {pageOrganizers.map((org) => {
                     const isSelected = selectedIds.includes(org.id);
@@ -243,6 +247,7 @@ aria-label={`Select ${org.name}`}
                           </Link>
                         </td>
 
+                        <td className="py-4 px-4 text-gray-600">{org.type}</td>
                         <td className="py-4 px-4 text-gray-600">{org.email}</td>
                         <td className="py-4 px-4 text-gray-600">{org.phone}</td>
 

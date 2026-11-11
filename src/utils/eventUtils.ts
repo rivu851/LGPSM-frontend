@@ -96,6 +96,20 @@ export function eventCanIssuePasses(event?: { status?: string; schedule?: { end?
   return !closes || closes.getTime() > Date.now();
 }
 
+/**
+ * An event's contact number as guests see it, the same as on their card. The Add Event form shows a fixed +91 in front of the field and
+ * stores only what was typed: "9007000891" -> "+91 90070 00891". A number typed with its own "+" is left as typed.
+ */
+export function contactWithCountryCode(raw?: string): string {
+  const typed = (raw || "").trim().replace(/\s+/g, " ");
+  if (!typed || typed.startsWith("+")) return typed;
+  let digits = typed.replace(/\D/g, "");
+  if (!digits) return typed;
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits.length === 10 ? `+91 ${digits.slice(0, 5)} ${digits.slice(5)}` : `+91 ${digits}`;
+}
+
 export function formatPhoneNumber(phone?: string): string {
   if (!phone || typeof phone !== "string") return "";
 

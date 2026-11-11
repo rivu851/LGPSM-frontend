@@ -27,7 +27,7 @@ test("Professional Identity appears only when the card uses it, in both the samp
   assert.ok("Professional Identity" in templateRow(cfg));
 });
 
-test("Company Name is offered, and required in a sheet, only for corporate events or when chosen for the card", () => {
+test("Company Name is offered, and required in a sheet, only when it is chosen for the card", () => {
   assert.ok(!inviteeFieldsFor({}).includes("company"));
   assert.ok(!("Company Name" in templateRow({})));
   assert.ok(!expectedColumnsFor({}).some((c) => c.key === "company"));
@@ -35,8 +35,8 @@ test("Company Name is offered, and required in a sheet, only for corporate event
   assert.ok(expectedColumnsFor({ company: true }).some((c) => c.key === "company"));
 });
 
-test("company is required for corporate events or when chosen for the card; dietary is no column", () => {
-  assert.ok(inviteeConfigFor({ corporate: true }).company);
+test("company is required only when chosen for the card, never because the event is corporate; dietary is no column", () => {
+  assert.ok(!inviteeConfigFor({ corporate: true }).company);
   assert.ok(inviteeConfigFor({ cardInfo: { primary: "COMPANY_NAME", secondary: null } }).company);
   assert.ok(!inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null } }).company);
   assert.ok(!inviteeConfigFor({}).dietary);
@@ -64,9 +64,12 @@ test("the organizer's own title for the custom detail becomes its column title a
   assert.equal(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null, identityLabel: "Designation" } }).identityLabel, undefined);
 });
 
-test("custom details come straight after the three standard columns, before Company Name", () => {
-  const cfg = inviteeConfigFor({ corporate: true, cardInfo: { primary: "PROFESSIONAL_IDENTITY", secondary: "SECONDARY_IDENTITY", identityLabel: "MTG-B4000", secondaryIdentityLabel: "Table No" } });
-  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "MTG-B4000", "Table No", "Company Name"]);
+test("the sample is the three standard columns plus exactly what Additional Information chose, in that order", () => {
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ corporate: true })), ["Name", "Email", "Mobile"]);
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "INVITEE_NAME", secondary: null } })), ["Name", "Email", "Mobile"]);
+  assert.deepEqual(excelColumnsFor(inviteeConfigFor({ cardInfo: { primary: "COMPANY_NAME", secondary: null } })), ["Name", "Email", "Mobile", "Company Name"]);
+  const cfg = inviteeConfigFor({ cardInfo: { primary: "PROFESSIONAL_IDENTITY", secondary: "SECONDARY_IDENTITY", identityLabel: "MTG-B4000", secondaryIdentityLabel: "Table No" } });
+  assert.deepEqual(excelColumnsFor(cfg), ["Name", "Email", "Mobile", "MTG-B4000", "Table No"]);
   assert.equal(templateRow(cfg)["MTG-B4000"], "Sample value");
-  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.key), ["name", "email", "mobile", "identity", "identity2", "company"]);
+  assert.deepEqual(expectedColumnsFor(cfg).map((c) => c.key), ["name", "email", "mobile", "identity", "identity2"]);
 });

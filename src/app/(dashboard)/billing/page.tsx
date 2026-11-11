@@ -103,7 +103,7 @@ export default function BillingPage() {
                   <div className="px-6 py-5 border-b border-[#E0E0E0] text-base font-medium text-[#15191C]">Filter by date</div>
                   <div className="p-6 space-y-4">
                     <div className="space-y-2">
-                      <BillingDateField label="From date" placeholder="From" value={draft.from} max={draft.to || undefined} onChange={(from) => setDraft((d) => ({ ...d, from }))} />
+                      <BillingDateField label="From date" placeholder="From" value={draft.from} onChange={(from) => setDraft((d) => ({ ...d, from, to: d.to && from > d.to ? from : d.to }))} />
                       <BillingDateField label="To date" placeholder="To" value={draft.to} min={draft.from || undefined} onChange={(to) => setDraft((d) => ({ ...d, to }))} />
                     </div>
                     <div className="flex items-center gap-3">
@@ -209,7 +209,7 @@ export default function BillingPage() {
             <div className="p-6 space-y-4">
               <div>
                 <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#FF651D]">*</span></span>
-                <BillingDateField label="Statement from date" placeholder="Select Date" value={statement.from} max={statement.to || undefined} onChange={(from) => { setStatement((s) => ({ ...s, from })); setStatementError(null); }} />
+                <BillingDateField label="Statement from date" placeholder="Select Date" value={statement.from} onChange={(from) => { setStatement((s) => ({ ...s, from, to: s.to && from > s.to ? from : s.to })); setStatementError(null); }} />
               </div>
               <div>
                 <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#FF651D]">*</span></span>

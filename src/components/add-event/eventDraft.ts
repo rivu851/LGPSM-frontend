@@ -52,15 +52,52 @@ export interface CardInfo {
 }
 export const CUSTOM_DETAIL = "CUSTOM";
 export const CARD_INFO_OPTIONS: { value: string; label: string }[] = [
-  { value: "INVITEE_NAME", label: "Invitee Name" },
   { value: "COMPANY_NAME", label: "Company Name" },
   { value: CUSTOM_DETAIL, label: "Custom detail (add your own title)" },
 ];
+
+/**
+ * The guest's name is its own checkbox, so it is no longer a choice under Additional Information. An event saved before that: its saved
+ * choice decides whether the name is ticked, and the name is taken out of the two lines.
+ */
+export function splitInviteeName(
+  info: { primary?: string | null; secondary?: string | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null } | null | undefined,
+  savedName?: boolean | null,
+): { cardInfo: CardInfo | null; inviteeName: boolean } {
+  const configured = !!info && (info.primary != null || info.secondary != null);
+  const hadName = info?.primary === "INVITEE_NAME" || info?.secondary === "INVITEE_NAME";
+  const clean = (f?: string | null): CardInfoField | null => (f && f !== "INVITEE_NAME" ? (f as CardInfoField) : null);
+  return {
+    cardInfo: configured ? { primary: clean(info!.primary), secondary: clean(info!.secondary), identityLabel: info!.identityLabel ?? null, secondaryIdentityLabel: info!.secondaryIdentityLabel ?? null } : null,
+    inviteeName: savedName ?? (!configured || hadName),
+  };
+}
+
+/** The standard Excel columns: a custom detail cannot be given one of these titles (it would repeat a column) */
+const RESERVED_TITLES = ["name", "email", "mobile", "company name", "invitee name"];
 
 export const isCustomDetail = (f: CardInfoField | null | undefined): boolean => f === "PROFESSIONAL_IDENTITY" || f === "SECONDARY_IDENTITY";
 /** Each card line that carries a custom detail keeps its own field, title and Excel column */
 export const customFieldFor = (other: CardInfoField | null): CardInfoField => (other === "PROFESSIONAL_IDENTITY" ? "SECONDARY_IDENTITY" : "PROFESSIONAL_IDENTITY");
 export const customTitleKey = (f: CardInfoField | null | undefined): "identityLabel" | "secondaryIdentityLabel" => (f === "SECONDARY_IDENTITY" ? "secondaryIdentityLabel" : "identityLabel");
+
+/** Which of the event's own details every guest's card prints. Everything is on until the organizer unticks it. */
+export interface CardDisplay {
+  title: boolean;
+  qr: boolean;
+  dateTime: boolean;
+  location: boolean;
+  /** the guest's name: its own checkbox (it is always collected; this decides whether it is printed on the card) */
+  inviteeName: boolean;
+}
+export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: true };
+export const CARD_DISPLAY_OPTIONS: { key: keyof CardDisplay; label: string }[] = [
+  { key: "title", label: "Event Title" },
+  { key: "qr", label: "Event QR" },
+  { key: "dateTime", label: "Event Date & Time" },
+  { key: "location", label: "Event Location" },
+  { key: "inviteeName", label: "Invitee Name" },
+];
 
 export interface EventDraft {
   organizerIds: string[];
@@ -89,10 +126,16 @@ export interface EventDraft {
   template: SelectedTemplate | null;
   /** null until the organiser saves a choice; the card then keeps guest name, then company */
   cardInfo?: CardInfo | null;
+  /** "Select data to show on card": which event details every card prints (all by default) */
+  cardDisplay?: CardDisplay;
   // Uploaded event logo ("media:<id>"), shown on the card preview
   logoKey: string | null;
   sessions: DraftSession[];
   skipInvitees: boolean;
+  /** Names of the invitee files attached by session. The files themselves are never kept in the saved draft, so after a restore this says which ones are missing. */
+  inviteeFileNames?: Record<string, string>;
+  /** The Excel sample was downloaded for this draft: changing the card's guest details afterwards asks first, because the lists were filled in for the old columns */
+  sampleDownloaded?: boolean;
 }
 
 export const EVENT_DRAFT_VERSION = 1;
@@ -140,7 +183,9 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
-    cardInfo: null,
+    // A new event starts with nothing printed under the title: the guest lines stay blank until Additional Information is chosen in Settings
+    cardInfo: { primary: null, secondary: null },
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
     skipInvitees: true,
@@ -162,7 +207,7 @@ export function normalizeEventDraft(raw: EventDraft): EventDraft {
   const template = legacyTemplate
     ? { id: legacyTemplate.id, name: legacyTemplate.name, previewKey: legacyTemplate.previewKey ?? legacyTemplate.previewUrl ?? null }
     : null;
-  const organizerIds = Array.isArray(raw?.organizerIds) ? raw.organizerIds : [];
+  const organizerIds = Array.isArray(raw?.organizerIds) ? raw.organizerIds.slice(0, 1) : [];
   return { ...base, ...raw, organizerIds, template, logoKey: raw?.logoKey ?? null, sessions };
 }
 
@@ -193,10 +238,20 @@ export type DraftErrors = Record<string, string>;
 export interface DraftValidationOptions {
   // True when the chosen category offers subcategories
   subcategoryRequired?: boolean;
+  // A new event starts from a template: it cannot go ahead without one
+  templateRequired?: boolean;
+  // The moment the event was created, as an ISO time: it cannot start before it, and must end after it. A new event passes nothing:
+  // it is being created now (one minute of grace for a start picked "now").
+  createdAt?: string | null;
+  // True when this is a new event (the reference is the current time)
+  isNew?: boolean;
 }
 
 export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
   const errors: DraftErrors = {};
+  // the earliest allowed start: the creation time (a new event is created now)
+  const createdMs: number | null = options.isNew ? Date.now() - 60_000 : options.createdAt && !Number.isNaN(Date.parse(options.createdAt)) ? Date.parse(options.createdAt) : null;
+  if (options.templateRequired && !draft.template) errors.template = "Select a template to continue.";
   if (!draft.title.trim()) errors.title = "Title is required.";
   else if (draft.title.trim().length > EVENT_TITLE_MAX_LENGTH) errors.title = `Title cannot exceed ${EVENT_TITLE_MAX_LENGTH} characters.`;
   if (draft.description.length > EVENT_DESCRIPTION_MAX_LENGTH) errors.description = `Description cannot exceed ${EVENT_DESCRIPTION_MAX_LENGTH} characters.`; // optional: empty is fine
@@ -204,23 +259,30 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   else if (options.subcategoryRequired && !draft.subcategoryId) errors.subcategoryId = "Choose a subcategory.";
   const contactDigits = draft.contactNumber.replace(/\D/g, "");
   if (!contactDigits) errors.contactNumber = "Contact number is required.";
-  else if (contactDigits.length < 7 || contactDigits.length > 15) errors.contactNumber = "Enter a valid contact number.";
+  // phone numbers are 10 digits (an older saved number with +91 or a leading 0 still counts)
+  else if ((contactDigits.length > 10 && /^(91|0)/.test(contactDigits) ? contactDigits.replace(/^(91|0)/, "") : contactDigits).length !== 10) errors.contactNumber = "Enter a 10-digit contact number.";
   if (!draft.venue.trim()) errors.venue = "Event location is required.";
   else if (draft.venue.trim().length > EVENT_LOCATION_MAX_LENGTH) errors.venue = `Event location cannot exceed ${EVENT_LOCATION_MAX_LENGTH} characters.`;
   if (!isValidIso(draft.start)) errors.start = "Choose a start date and time.";
+  else if (createdMs !== null && new Date(draft.start as string).getTime() < createdMs) errors.start = options.isNew ? "The event cannot start in the past. Choose a start date and time from now on." : "The event cannot start before it was created.";
   if (!isValidIso(draft.end)) errors.end = "Choose an end date and time.";
   else if (!isAfter(draft.end, draft.start)) errors.end = "End must be after the start.";
+  else if (createdMs !== null && new Date(draft.end as string).getTime() <= createdMs) errors.end = options.isNew ? "The event cannot end in the past." : "The event must end after it was created.";
   if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
     errors.rsvpDeadline = "RSVP deadline should be before the event ends.";
   }
   if (draft.dietaryEnabled) {
     const hasMissingOptions = draft.preferenceCategories.some((category) => !category.options.some((option) => option.trim()));
+    // an option row left blank (for example after "Add another option") must be filled in or removed, even when another option is filled
+    const hasBlankOption = draft.preferenceCategories.some((category) => category.options.some((option) => !option.trim()));
     if (hasMissingOptions) errors.dietaryPreference = "Add at least one dietary option for each question before continuing.";
+    else if (hasBlankOption) errors.dietaryPreference = "Fill in or remove each empty option before continuing.";
   }
 
   if (draft.cardInfo) {
     const titles = [draft.cardInfo.primary, draft.cardInfo.secondary].filter(isCustomDetail).map((f) => (draft.cardInfo![customTitleKey(f)] || "").trim());
     if (titles.some((t) => !t)) errors.cardInfo = "Enter a title for each custom detail.";
+    else if (titles.some((t) => RESERVED_TITLES.includes(t.toLowerCase()))) errors.cardInfo = "That title is already a column in the invitee Excel (Name, Email, Mobile or Company Name). Choose another title.";
     else if (titles.length === 2 && titles[0].toLowerCase() === titles[1].toLowerCase()) errors.cardInfo = "The two custom details need different titles: each one becomes its own Excel column.";
   }
 
@@ -267,8 +329,9 @@ function commonPayload(draft: EventDraft) {
     title: draft.title.trim(),
     // optional: an empty description falls back to the title
     description: draft.description.trim() || draft.title.trim(),
+    // one organizer per event, whatever an old draft held
     ...(draft.organizerIds && draft.organizerIds.length > 0
-      ? { organizerIds: draft.organizerIds, organizerId: draft.organizerIds[0] }
+      ? { organizerIds: [draft.organizerIds[0]], organizerId: draft.organizerIds[0] }
       : {}),
     ...(draft.categoryId ? { categoryId: draft.categoryId } : {}),
     ...(draft.subcategoryId ? { subcategoryId: draft.subcategoryId } : {}),
@@ -287,6 +350,7 @@ function commonPayload(draft: EventDraft) {
     dietaryPreference: buildDietaryPreference(draft),
     ...(draft.template ? { templateId: draft.template.id } : {}),
     ...(draft.cardInfo ? { cardInfo: draft.cardInfo } : {}),
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) },
     // An empty key clears a previously saved logo
     media: { logoKey: draft.logoKey || "" },
   };
@@ -329,6 +393,7 @@ export interface ServerEvent {
   attendeeSettings?: { thresholdLimit?: number };
   dietaryPreference?: { enabled?: boolean; title?: string; options?: unknown[] };
   templateId?: string | { _id: string; name: string; previewImageKey?: string } | null;
+  cardDisplay?: Partial<CardDisplay>;
   cardInfo?: { primary?: CardInfoField | null; secondary?: CardInfoField | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null };
   media?: { logoKey?: string };
   updatedAt?: string;
@@ -357,6 +422,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
   const start = event?.schedule?.start || base.start;
   const end = event?.schedule?.end || base.end;
   const idOf = (v: RefOrId) => (v && typeof v === "object" ? v._id || "" : v || "");
+  const nameSplit = splitInviteeName(event?.cardInfo, (event?.cardDisplay as { inviteeName?: boolean } | undefined)?.inviteeName);
 
   const rawOptions: unknown[] = Array.isArray(event?.dietaryPreference?.options) ? event.dietaryPreference.options : [];
   const structured = rawOptions.length > 0 && typeof rawOptions[0] === "object" && rawOptions[0] !== null;
@@ -393,9 +459,9 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     allowDeclined: event?.rsvp?.allowDeclined ?? base.allowDeclined,
     dietaryEnabled: event?.dietaryPreference?.enabled ?? false,
     preferenceCategories,
-    cardInfo: event?.cardInfo && (event.cardInfo.primary !== undefined || event.cardInfo.secondary !== undefined)
-      ? { primary: event.cardInfo.primary ?? null, secondary: event.cardInfo.secondary ?? null, identityLabel: event.cardInfo.identityLabel ?? null, secondaryIdentityLabel: event.cardInfo.secondaryIdentityLabel ?? null }
-      : null,
+    // the guest's name is its own checkbox now: an older event's choice is carried over into it
+    cardInfo: nameSplit.cardInfo,
+    cardDisplay: { ...CARD_DISPLAY_DEFAULTS, ...(event?.cardDisplay || {}), inviteeName: nameSplit.inviteeName },
     template,
     logoKey: event?.media?.logoKey || null,
     sessions: draftSessionsFromServer(sessions || [], start, end),

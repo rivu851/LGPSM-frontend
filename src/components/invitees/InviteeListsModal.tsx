@@ -118,7 +118,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="lists-title">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl">
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
-          <h2 id="lists-title" className="text-base font-medium text-gray-900">Uploaded Lists</h2>
+          <h2 id="lists-title" className="text-base font-medium text-gray-900">Invitees Dataset</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
         </div>
         <div role="tablist" className="px-6 border-b border-[#E5E5E5] flex gap-2">

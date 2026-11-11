@@ -8,6 +8,7 @@ import PageHeader from "@/components/common/PageHeader";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import TemplateThumb from "@/components/settings/TemplateThumb";
 import { useCategories } from "@/hooks/useCategories";
+import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
 import { templateService, Template } from "@/services/templateService";
 import { eventService, EventData } from "@/services/eventService";
 import { useAlert } from "@/context/AlertContext";
@@ -26,8 +27,10 @@ interface TemplateCard {
   subcategoryId: string;
   imageKey: string | null;
   isDraft: boolean;
-  /** AI-generated (drawn from a stored design) */
+  /** AI-generated or uploaded (drawn from a stored design) */
   isCustom: boolean;
+  /** the organizer's own uploaded design */
+  isUploaded: boolean;
   kind: "INVITATION" | "POSTER";
   /** made by the signed-in user: they can publish, unpublish and delete it */
   isMine: boolean;
@@ -52,6 +55,7 @@ function TemplatesPageContent() {
   const [selectedSubcategory, setSelectedSubcategory] = useState("");
   const [preview, setPreview] = useState<TemplateCard | null>(null);
   // "My templates" is a link target (the AI studio sends people there after saving)
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [view, setView] = useState<"all" | "mine">(searchParams.get("view") === "mine" ? "mine" : "all");
   const [reload, setReload] = useState(0);
   // the template drawn with the event chosen in the preview panel (null = show the stored sample preview)
@@ -71,6 +75,7 @@ function TemplatesPageContent() {
       imageKey: t.previewImageKey || null,
       isDraft: t.isPublished === false,
       isCustom: t.cardDesign === "CUSTOM",
+      isUploaded: !!t.templateData?.uploaded,
       kind: t.kind === "POSTER" ? "POSTER" : "INVITATION",
       isMine: mine || (!!user?._id && t.ownerId === user._id),
     });
@@ -124,14 +129,32 @@ function TemplatesPageContent() {
 
   return (
     <div className="w-full min-h-full bg-white">
-      <PageHeader title="Templates" actions={<Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#FF651D] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#E5520F]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link>} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>} />
+      <PageHeader title="Templates" actions={
+        // "Design with AI" is switched off for now: the button is commented out, uncomment it to bring it back
+        /* <Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#FF651D] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#E5520F]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link> */
+        undefined
+      } icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>} />
+      {uploadOpen && (
+        <UploadTemplateModal
+          onClose={() => setUploadOpen(false)}
+          onCreated={() => { setUploadOpen(false); setView("mine"); setReload((n) => n + 1); showAlert("Your template was saved under My templates.", "success"); }}
+        />
+      )}
       <div className="p-4 sm:p-6 w-full space-y-6 pb-24">
+        <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Template list" className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
           {([["all", "All templates"], ["mine", "My templates"]] as const).map(([key, label]) => (
             <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white shadow-sm font-medium text-gray-900" : "text-gray-600"}`}>
               {label}
             </button>
           ))}
+        </div>
+        {view === "mine" && (
+          <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#FF651D] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#E5520F] cursor-pointer">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
+            Upload your own template
+          </button>
+        )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-[18px]">
@@ -174,7 +197,11 @@ function TemplatesPageContent() {
             {templates.length === 0 && view === "mine" && (
               <>
                 {" "}
+                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#FF651D] underline cursor-pointer">Upload your own template</button>
+                {/* "Design with AI" is switched off for now: uncomment to bring the link back
+                {" "}
                 <Link href="/templates/ai" className="text-[#FF651D] underline">Design one with AI</Link>
+                */}
               </>
             )}
           </p>
@@ -186,7 +213,7 @@ function TemplatesPageContent() {
               <button
                 key={t.id}
                 type="button"
-                title={`${t.name} · ${labelFor(t)}${t.isCustom && !t.isMine ? " · AI design shared with all organizers" : t.isMine ? " · Yours" : ""}`}
+                title={`${t.name} · ${labelFor(t)}${t.isCustom && !t.isMine && !t.isUploaded ? " · AI design shared with all organizers" : t.isMine ? " · Yours" : ""}`}
                 aria-label={`Preview template ${t.name}`}
                 onClick={() => { setLivePreview(null); setPreview(t); }}
                 className="group relative text-left bg-white border border-[#E0E0E0] rounded-md overflow-hidden hover:border-[#FF651D] focus-visible:border-[#FF651D] focus:outline-none transition-colors cursor-pointer"
@@ -196,7 +223,7 @@ function TemplatesPageContent() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
                 </span>
                 {t.isDraft && <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-white/95 border border-gray-200 text-xs text-gray-700">Draft</span>}
-                {(t.isCustom || t.kind === "POSTER") && <span className={`absolute left-2 px-2 py-0.5 rounded bg-black/70 text-xs text-white ${t.isDraft ? "top-9" : "top-2"}`}>{t.kind === "POSTER" ? "Poster" : "AI"}</span>}
+                {(t.isCustom || t.kind === "POSTER") && <span className={`absolute left-2 px-2 py-0.5 rounded bg-black/70 text-xs text-white ${t.isDraft ? "top-9" : "top-2"}`}>{t.kind === "POSTER" ? "Poster" : t.isUploaded ? "Own" : "AI"}</span>}
                 <span aria-hidden className="absolute inset-x-2 bottom-2 rounded bg-white px-2 py-1.5 text-center text-xs font-medium text-[#15191C] shadow opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">Use This Template</span>
               </button>
             ))}
@@ -253,11 +280,13 @@ function TemplatesPageContent() {
                       Create an Event
                     </Link>
                   )}
+                  {/* "Edit with AI" is switched off for now: uncomment to bring it back
                   {preview.isMine && (
                     <Link href={`/templates/ai?edit=${preview.id}`} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md">
                       Edit with AI
                     </Link>
                   )}
+                  */}
                   {preview.isMine && preview.isCustom && (
                     <button type="button" onClick={() => togglePublish(preview)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">
                       {preview.isDraft ? "Publish" : "Unpublish"}

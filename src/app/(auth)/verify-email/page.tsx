@@ -1,8 +1,10 @@
 "use client";
 
+import { NOT_DIGITS_MESSAGE } from "@/utils/phoneInput";
 import React, { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/services/authService";
+import ChangeEmailForm from "@/components/auth/ChangeEmailForm";
 import {
   AuthAlert,
   AuthHeading,
@@ -30,6 +32,7 @@ function VerifyEmailContent() {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [changingEmail, setChangingEmail] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -69,9 +72,12 @@ function VerifyEmailContent() {
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
+  // a letter or symbol typed or pasted into the code boxes is not entered; this says why
+  const [digitNote, setDigitNote] = useState<string | null>(null);
   const handleDigitChange = (index: number, value: string) => {
     // Only accept numeric digit
     const cleaned = value.replace(/\D/g, "");
+    setDigitNote(value.trim() && cleaned.length < value.trim().length ? NOT_DIGITS_MESSAGE : null);
     if (!cleaned) {
       const nextDigits = [...digits];
       nextDigits[index] = "";
@@ -98,7 +104,9 @@ function VerifyEmailContent() {
 
   const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const raw = e.clipboardData.getData("text");
+    const pasted = raw.replace(/\D/g, "").slice(0, 6);
+    setDigitNote(raw.trim() && raw.replace(/\s/g, "").replace(/\d/g, "").length > 0 ? NOT_DIGITS_MESSAGE : null);
     if (!pasted) return;
 
     const nextDigits = [...digits];
@@ -224,6 +232,7 @@ function VerifyEmailContent() {
               />
             ))}
           </div>
+          {digitNote && <p role="alert" className="mt-2 text-xs font-medium text-rose-600">{digitNote}</p>}
         </div>
 
         <div className="flex items-center justify-between text-xs text-gray-500">
@@ -272,17 +281,29 @@ function VerifyEmailContent() {
         Didn&apos;t receive the email? Check your spam/junk folder or{" "}
         <button
           type="button"
-          onClick={() => {
-            const newEmail = window.prompt("Enter your registration email:", email);
-            if (newEmail && newEmail.trim()) {
-              setEmail(newEmail.trim());
-              sessionStorage.setItem("lgpsm_pending_verification_email", newEmail.trim());
-            }
-          }}
+          onClick={() => { setChangingEmail((open) => !open); setErrorMessage(""); setSuccessMessage(""); }}
+          aria-expanded={changingEmail}
           className="text-[#FF651D] underline font-medium hover:text-[#C44200]"
         >
           change email address
         </button>
+        {changingEmail && (
+          <ChangeEmailForm
+            currentEmail={email}
+            onCancel={() => setChangingEmail(false)}
+            onChanged={(newEmail) => {
+              sessionStorage.setItem("lgpsm_pending_verification_email", newEmail);
+              setEmail(newEmail);
+              setDigits(["", "", "", "", "", ""]);
+              setExpirySeconds(600);
+              setResendCooldown(60);
+              setChangingEmail(false);
+              setErrorMessage("");
+              setSuccessMessage(`A new 6-digit verification code has been sent to ${newEmail}`);
+              setTimeout(() => inputRefs.current[0]?.focus(), 100);
+            }}
+          />
+        )}
       </div>
     </AuthSplitLayout>
   );

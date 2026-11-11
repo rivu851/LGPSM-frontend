@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import EventCleanupModal from "@/components/events/EventCleanupModal";
+import { useAlert } from "@/context/AlertContext";
 import EventCancelModal from "@/components/events/EventCancelModal";
 import { eventService } from "@/services/eventService";
 import { sessionService } from "@/services/sessionService";
@@ -19,7 +21,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import Icon from "@/components/icons/Icon";
 import { userService } from "@/services/userService";
 
-type RowStatus = "Upcoming" | "Ongoing" | "Completed" | "Invitation not send" | "Cancelled";
+type RowStatus = "Upcoming" | "Ongoing" | "Past" | "Invitation not sent" | "Cancelled";
 
 interface EventRow {
   id: string;
@@ -36,13 +38,17 @@ interface EventRow {
   sessionNames: string[];
   inviteesCount?: number;
   canEdit: boolean;
+  /** its end time has passed: offered "Delete Event" instead of "Cancel Event" */
+  ended: boolean;
+  /** where the event is in time (or Cancelled), shown on the organizer's cards */
+  phase: "Upcoming" | "Ongoing" | "Past" | "Cancelled";
 }
 
 const STATUS_STYLE: Record<RowStatus, string> = {
   Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
   Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
-  Completed: "bg-[#FFE3D7] text-[#FF651D]",
-  "Invitation not send": "bg-[#FFE9C0] text-[#9E8C00]",
+  Past: "bg-[#FFE3D7] text-[#FF651D]",
+  "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
   Cancelled: "bg-gray-200 text-gray-700",
 };
 
@@ -70,8 +76,11 @@ interface RawEvent {
 
 function toRow(e: RawEvent): EventRow {
   const id = String(e._id || e.id);
-  const timeStatus = eventDisplayStatus(e) as RowStatus;
-  const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not send" : timeStatus;
+  const shown = eventDisplayStatus(e);
+  const timeStatus: RowStatus = shown === "Completed" ? "Past" : (shown as RowStatus);
+  const status: RowStatus = e.status === "CANCELLED" ? "Cancelled" : timeStatus === "Upcoming" && !e.invitationsSent ? "Invitation not sent" : timeStatus;
+  const endAt = e.schedule?.end ? new Date(e.schedule.end).getTime() : NaN;
+  const ended = e.status === "COMPLETED" || (!Number.isNaN(endAt) && endAt < Date.now());
   const cat = typeof e.categoryId === "object" ? e.categoryId : null;
   const org = typeof e.organizerId === "object" ? e.organizerId : null;
   return {
@@ -89,6 +98,8 @@ function toRow(e: RawEvent): EventRow {
     sessionNames: e.sessionNames || [],
     inviteesCount: e.inviteesCount,
     canEdit: !(e.invitationsSent && e.invitationsSent > 0),
+    ended,
+    phase: e.status === "CANCELLED" ? "Cancelled" : (timeStatus === "Past" || timeStatus === "Ongoing" ? timeStatus : "Upcoming"),
   };
 }
 
@@ -109,7 +120,7 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
     if (open) { setOpen(false); return; }
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const menuItems = 1 + (row.canEdit ? 1 : 0) + (row.status !== "Cancelled" ? 1 : 0);
+    const menuItems = 1 + (row.canEdit && !row.ended ? 1 : 0) + (row.ended || row.status !== "Cancelled" ? 1 : 0);
     const menuHeight = menuItems * 36 + 8;
     const top = rect.bottom + menuHeight + 8 > window.innerHeight ? Math.max(8, rect.top - menuHeight - 4) : rect.bottom + 4;
     setPosition({ top, left: Math.max(8, Math.min(rect.right - 150, window.innerWidth - 158)) });
@@ -124,10 +135,11 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
       {open && position && createPortal(
         <div ref={menuRef} onClick={(e) => e.stopPropagation()} style={{ position: "fixed", ...position }} className="z-[9999] min-w-[150px] rounded-md bg-[#1E232A] text-white py-1 shadow-xl">
           <Link href={`/events/${row.id}`} className={item}>View Event</Link>
-          {row.status !== "Cancelled" && row.canEdit && <Link href={`/events/${row.id}/edit`} className={item}>Edit Event</Link>}
-          {row.status !== "Cancelled" && (
+          {row.status !== "Cancelled" && !row.ended && row.canEdit && <Link href={`/events/${row.id}/edit`} className={item}>Edit Event</Link>}
+          {/* a past event can only be deleted; one still to come can be cancelled */}
+          {(row.ended || row.status !== "Cancelled") && (
             <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
-              Cancel Event
+              {row.ended ? "Delete Event" : "Cancel Event"}
             </button>
           )}
         </div>, document.body
@@ -161,7 +173,7 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
     setOpen(true);
   };
   const item = "flex items-center gap-1.5 py-1 text-sm font-medium text-white hover:text-[#FFB08A] cursor-pointer";
-  const active = row.status !== "Cancelled";
+  const active = row.status !== "Cancelled" && !row.ended;
   return (
     <>
       <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="shrink-0 -mr-2 -mt-1 px-2 py-1 rounded cursor-pointer hover:bg-gray-100">
@@ -189,7 +201,13 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
                 Cancel Event
               </button>
             )}
-            {!active && <span className="py-1 text-sm text-[#BDBDBD]">Event cancelled</span>}
+            {row.ended && (
+              <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300`}>
+                <Icon name="events/trash" width={16} height={16} />
+                Delete Event
+              </button>
+            )}
+            {!active && !row.ended && <span className="py-1 text-sm text-[#BDBDBD]">Event cancelled</span>}
           </div>
         </div>, document.body
       )}
@@ -211,7 +229,10 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
       <EventCardThumbnail eventId={row.id} label={row.name} />
       <div className="flex-1 min-w-0 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5 items-start">
-          <span className="px-2 py-[3px] border border-[#FF651D] rounded-[3px] text-xs font-medium text-[#FF651D]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="px-2 py-[3px] border border-[#FF651D] rounded-[3px] text-xs font-medium text-[#FF651D]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
+            <span className={`px-2.5 py-[3px] rounded-full text-xs font-medium ${STATUS_STYLE[row.phase]}`}>{row.phase}</span>
+          </div>
           <h3 className="text-base font-medium text-[#15191C] break-words">{row.name}</h3>
           <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-[#828282]">
             <span><span className="font-bold text-[#15191C]">Start: </span>{formatCompactDateTime(row.start, "—")}</span>
@@ -251,6 +272,7 @@ export default function EventListingPage() {
   const [applyingFilters, setApplyingFilters] = useState(false);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<EventRow | null>(null);
+  const { showAlert } = useAlert();
 
   // The skeleton is for the first load; a refresh after cancelling or editing an event keeps the list on screen
   const loadedOnce = useRef(false);
@@ -378,7 +400,16 @@ export default function EventListingPage() {
     setFilterOpen(false);
   };
 
-  const deleteDialog = deleting && (
+  const deleteDialog = deleting && (deleting.ended ? (
+        <EventCleanupModal
+          isOpen
+          mode="delete"
+          onClose={() => setDeleting(null)}
+          eventId={deleting.id}
+          eventTitle={deleting.name}
+          onCleanupSuccess={async () => { setDeleting(null); showAlert(`"${deleting.name}" was deleted.`, "success"); await load(); }}
+        />
+      ) : (
         <EventCancelModal
           isOpen
           onClose={() => setDeleting(null)}
@@ -386,7 +417,7 @@ export default function EventListingPage() {
           eventTitle={deleting.name}
           onCancelled={async () => { setDeleting(null); await load(); }}
         />
-      );
+      ));
 
   const clearFilters = () => {
     const empty = { eventId: "", name: "", organizer: "", category: "", sessions: "", status: "", from: "", to: "" };

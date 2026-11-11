@@ -1,6 +1,6 @@
 "use client";
 
-import { CARD_INFO_OPTIONS, CUSTOM_DETAIL, customFieldFor, customTitleKey, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, CARD_DISPLAY_OPTIONS, CARD_INFO_OPTIONS, CUSTOM_DETAIL, customFieldFor, customTitleKey, isCustomDetail, type CardInfo, type CardInfoField } from "./eventDraft";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { CheckInPolicy, POLICY_FLAGS, POLICY_LABEL, policyOf, policyOptions } from "@/utils/checkInPolicy";
 import React, { useEffect, useRef } from "react";
@@ -22,8 +22,8 @@ interface Step2SettingsProps {
 
 // Controlled step: values live in the wizard draft owned by the page
 export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
-  // Until the organizer touches it, the card keeps its long-standing lines (guest name, then company); the first change makes the choice explicit
-  const cardInfo: CardInfo = draft.cardInfo ?? { primary: "INVITEE_NAME", secondary: "COMPANY_NAME" };
+  // The guest's name is its own checkbox above ("Invitee Name"); the two lines here are for the other details, none until chosen
+  const cardInfo: CardInfo = draft.cardInfo ?? { primary: null, secondary: null };
   const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next });
   const categories = draft.preferenceCategories;
   const setCategories = (next: PreferenceCategory[]) => onChange({ preferenceCategories: next });
@@ -65,10 +65,34 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         </div>
       )}
 
+      {/* Select data to show on card: the event's own details every card prints (the card preview follows) */}
+      <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-900">Select data to show on card</span>
+          <InfoTip label="About the data on the card" text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {CARD_DISPLAY_OPTIONS.map(({ key, label }) => {
+            const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+            return (
+              <label key={key} htmlFor={`card-show-${key}`} className="flex items-center gap-2.5 rounded-md border border-[#E0E0E0] px-3 py-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
+                <input id={`card-show-${key}`} type="checkbox" checked={display[key]} onChange={(e) => onChange({ cardDisplay: { ...display, [key]: e.target.checked } })} className="size-[18px] accent-[#1A9242] cursor-pointer" />
+                {label}
+              </label>
+            );
+          })}
+        </div>
+        {draft.cardDisplay?.qr === false && (
+          <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            Cards will be printed without the QR code. Guests will need to open their invitation link to show their entry QR at check-in.
+          </p>
+        )}
+      </div>
+
       {/* Additional Information: the two guest details printed on the card, set right here (the card preview updates as you choose) */}
       <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">Additional Information</span>
+          <span className="text-sm font-medium text-gray-900">Additional Information you want to show on card</span>
           <InfoTip label="About additional information" text="Choose which guest details are printed under the event name on each guest's card. A guest without that detail gets an empty line. This also decides the extra columns in the invitee Excel sample." />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
@@ -88,7 +112,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     id={`card-info-${slot}`}
                     type="checkbox"
                     checked={on}
-                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (slot === "primary" ? "INVITEE_NAME" : "COMPANY_NAME") : null })}
+                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (other === "COMPANY_NAME" ? customFieldFor(other) : "COMPANY_NAME") : null })}
                     className="size-[18px] accent-[#1A9242] cursor-pointer"
                   />
                   {label}
@@ -97,7 +121,10 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                   <CustomDropdown
                     value={custom ? CUSTOM_DETAIL : field ?? ""}
                     onChange={pick}
-                    options={CARD_INFO_OPTIONS}
+                    // a detail chosen on one line is not offered on the other; a custom detail shows the title that was typed
+                    options={CARD_INFO_OPTIONS
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? !isCustomDetail(other) : o.value !== other))
+                      .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
                   />

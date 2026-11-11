@@ -10,20 +10,20 @@ import Step3Sessions, { SessionInviteeFile } from "./Step3Sessions";
 import MobileCardPreview from "./MobileCardPreview";
 import SelectTemplateModal from "./modals/SelectTemplateModal";
 import DateTimePickerModal from "./modals/DateTimePickerModal";
+import ListResetWarningModal from "./modals/ListResetWarningModal";
 import InviteesPreviewModal from "./modals/InviteesPreviewModal";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
-import { useCategories } from "@/hooks/useCategories";
+import { useCategories, ExtraCategory } from "@/hooks/useCategories";
 import { EventFeatureSettings, platformSettingsService } from "@/services/platformSettingsService";
 import { templateService } from "@/services/templateService";
 import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion";
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { DraftErrors, EventDraft, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
-import type { TemplatePreviewPayload } from "@/services/templateService";
 
 type PickerTarget =
   | { kind: "event"; field: EventDateField }
@@ -38,6 +38,12 @@ interface EventWizardProps {
   heading: string;
   /** Set when editing a saved event */
   eventId?: string;
+  /** When the event being edited was created: it cannot start before it, and must end after it */
+  createdAt?: string | null;
+  /** The event's own category, for an account whose list does not include it */
+  extraCategory?: ExtraCategory | null;
+  /** Add Event: whether the saved draft has been read back yet, so the template dialog does not open over a draft that already has one */
+  draftHydrated?: boolean;
   draft: EventDraft;
   setDraft: (updater: (prev: EventDraft) => EventDraft) => void;
   draftStatus: DraftStatus;
@@ -62,6 +68,9 @@ const scrollPageTo = (top: number) =>
 export default function EventWizard({
   heading,
   eventId,
+  createdAt,
+  extraCategory,
+  draftHydrated = true,
   draft,
   setDraft,
   draftStatus,
@@ -77,7 +86,7 @@ export default function EventWizard({
 }: EventWizardProps) {
   const { confirm } = useAlert();
   const { user } = useAuth();
-  const categories = useCategories();
+  const categories = useCategories(extraCategory);
   const stepContentRef = useRef<HTMLDivElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [showErrors, setShowErrors] = useState(false);
@@ -92,6 +101,10 @@ export default function EventWizard({
   // Set while "Customize Information" is open: the payload the card preview was rendering
   // The columns of the Excel sample when it was last downloaded here: changing a custom title afterwards earns a warning
   const [downloadedColumns, setDownloadedColumns] = useState<string[] | null>(null);
+  // "Additional Information" changed after the Excel sample was downloaded: the change waits here until the organizer confirms
+  const [pendingCardInfo, setPendingCardInfo] = useState<EventDraft["cardInfo"] | null>(null);
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
   // Editing: invitee lists the event already has
   const [existingLists, setExistingLists] = useState<InviteeSetInfo[]>([]);
   useEffect(() => {
@@ -154,8 +167,17 @@ export default function EventWizard({
   // the same field definition the Excel sample, the preview and the manual Add Invitee form use
   const inviteeConfig = templateColumnsFor({ cardInfo: draft.cardInfo, dietaryEnabled: draft.dietaryEnabled, corporate: /corporate/i.test(categories.categoryName(draft.categoryId) || "") });
   const subcategoryRequired = !!draft.categoryId && categories.subcategoryOptionsFor(draft.categoryId).length > 0;
+  // A restored draft, or a template, can name a category or subcategory that is no longer offered (deleted or deactivated since). The
+  // field would look empty yet count as filled in, so it is cleared and the person is asked to choose again.
+  const listReady = !categories.loading && !categories.error;
+  const categoryGone = listReady && !!draft.categoryId && !categories.categoryOptions.some((o) => o.value === draft.categoryId);
+  const subcategoryGone = listReady && !categoryGone && !!draft.subcategoryId && !categories.subcategoryOptionsFor(draft.categoryId).some((o) => o.value === draft.subcategoryId);
+  useEffect(() => {
+    if (categoryGone) setDraft((prev) => ({ ...prev, categoryId: "", subcategoryId: "" }));
+    else if (subcategoryGone) setDraft((prev) => ({ ...prev, subcategoryId: "" }));
+  }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
-  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired }), [draft, subcategoryRequired]);
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt }), [draft, subcategoryRequired, eventId]);
   const visibleErrors: DraftErrors = showErrors ? allErrors : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
@@ -188,6 +210,23 @@ export default function EventWizard({
     }
     setDraft((prev) => ({ ...prev, ...p, ...templatePatch }));
   };
+
+  // A new event starts by choosing a template (the dialog cannot be closed until one is chosen); the template then
+  // sets the event category and subcategory. Editing a saved event does not ask again.
+  const mustPickTemplate = !eventId && draftHydrated && !draft.template;
+  const chooseTemplate = (template: SelectedTemplate | null, suggested?: { categoryId: string; subcategoryId: string }) => {
+    // an explicit choice is never swapped out by the automatic suggestion that follows a category change
+    autoTemplateId.current = null;
+    setDraft((prev) => ({
+      ...prev,
+      template,
+      // the template's event type fills the category and subcategory; a general template leaves what is there
+      ...(suggested?.categoryId ? { categoryId: suggested.categoryId, subcategoryId: suggested.subcategoryId } : {}),
+    }));
+  };
+
+  // Invitee files cannot be kept in a saved draft: after a restore, name the ones that have to be attached again (none, no mention)
+  const missingFiles = Object.entries(draft.inviteeFileNames || {}).filter(([key, name]) => !!name && !sessionFiles[key]).map(([, name]) => name);
 
   const handleStepChange = (targetStep: number) => {
     if (targetStep === currentStep) return;
@@ -259,6 +298,8 @@ export default function EventWizard({
     if (!target) return;
     if (target.kind === "event") {
       if (target.field === "rsvpDeadline") patch({ rsvpDeadline: iso });
+      // choosing the start sets the end to the same time the next day; the end can still be changed afterwards
+      else if (target.field === "start") setDraft((prev) => applyEventWindow(prev, { start: iso, end: new Date(new Date(iso).getTime() + 24 * 60 * 60 * 1000).toISOString() }));
       else setDraft((prev) => applyEventWindow(prev, { [target.field]: iso }));
       return;
     }
@@ -267,6 +308,36 @@ export default function EventWizard({
       sessions: prev.sessions.map((s) => (s.key === target.key ? { ...s, [target.field]: iso, timesLinked: false } : s)),
     }));
   };
+
+  // The invitee lists were filled in from the Excel sample: changing the card's guest details afterwards means they no longer fit
+  const listsBuiltFromSample = !!draft.sampleDownloaded || !!downloadedColumns || existingLists.length > 0 || Object.values(sessionFiles).some(Boolean);
+  const step2Change = (p: Partial<EventDraft>) => {
+    if (p.cardInfo !== undefined && listsBuiltFromSample && JSON.stringify(p.cardInfo) !== JSON.stringify(draft.cardInfo)) {
+      setResetError(null);
+      setPendingCardInfo(p.cardInfo);
+      return;
+    }
+    patch(p);
+  };
+  const confirmListReset = async () => {
+    if (pendingCardInfo === null) return;
+    // an event being edited already has its lists on the server: they are deleted first (refused once anything was sent)
+    if (eventId && existingLists.length > 0) {
+      setResetBusy(true);
+      const res = await inviteeService.clearUnusedLists(eventId);
+      setResetBusy(false);
+      if (!res.success) { setResetError(res.message || "The invitee lists could not be deleted."); return; }
+      setExistingLists([]);
+    }
+    setSessionFiles({});
+    setDownloadedColumns(null);
+    setDraft((prev) => ({ ...prev, cardInfo: pendingCardInfo, inviteeFileNames: {}, sampleDownloaded: false }));
+    setPendingCardInfo(null);
+  };
+
+  // one stable object per choice, so the card preview is only redrawn when a tick actually changes
+  const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location }), [cd.title, cd.qr, cd.dateTime, cd.location]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
@@ -292,7 +363,12 @@ export default function EventWizard({
           )}
           {draftStatus === "restored" && (
             <div role="status" className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-sm flex flex-wrap items-center justify-between gap-2">
-              <span>Your unsaved draft was restored. Uploaded invitee files need to be attached again.</span>
+              <span>
+                Your unsaved draft was restored.
+                {missingFiles.length > 0 && (
+                  <> The invitee file {missingFiles.length === 1 ? <>&ldquo;{missingFiles[0]}&rdquo; needs</> : <>{missingFiles.map((n) => `“${n}”`).join(", ")} need</>} to be attached again.</>
+                )}
+              </span>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer">OK</button>
                 {canDiscard && (
@@ -346,23 +422,32 @@ export default function EventWizard({
                   onChange={patch}
                   onOpenDatePicker={(field) => setPickerTarget({ kind: "event", field })}
                   categories={categories}
-                  canManageCategories={isAdmin}
+                  canManageCategories={isAdmin || user?.role === "ORGANIZER"}
                   isAdmin={isAdmin}
+                  isEditing={!!eventId}
                   rsvpAllowed={features.allowEventRSVP}
                   errors={visibleErrors}
                   onNext={() => handleStepChange(2)}
                   onCancel={onCancel}
                 />
               ) : currentStep === 2 ? (
-                <Step2Settings draft={draft} onChange={patch} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
+                <Step2Settings draft={draft} onChange={step2Change} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
               ) : (
                 <Step3Sessions
                   sessions={draft.sessions}
                   onSessionsChange={(sessions) => patch({ sessions })}
                   sessionFiles={sessionFiles}
                   existingLists={existingLists}
-                  onSampleDownloaded={() => setDownloadedColumns(excelColumnsFor(inviteeConfig))}
-                  onSessionFileChange={(key, file) => setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }))}
+                  onSampleDownloaded={() => { setDownloadedColumns(excelColumnsFor(inviteeConfig)); patch({ sampleDownloaded: true }); }}
+                  onSessionFileChange={(key, file) => {
+                    setSessionFiles((prev) => ({ ...prev, [key]: file || undefined }));
+                    // remembered in the draft so a restore can say exactly which file has to be attached again
+                    setDraft((prev) => {
+                      const names = { ...(prev.inviteeFileNames || {}) };
+                      if (file) names[key] = file.name; else delete names[key];
+                      return { ...prev, inviteeFileNames: names };
+                    });
+                  }}
                   skipInvitees={draft.skipInvitees}
                   templateColumns={inviteeConfig}
                   onSkipInviteesChange={(skipInvitees) => patch({ skipInvitees })}
@@ -380,20 +465,24 @@ export default function EventWizard({
             </div>
           </div>
           {/* The column runs the full height of the form; only its contents stick, 16px below the 68px sticky page
-              header, so the preview stays in view however long the current step is (admin feedback: sticky preview) */}
+              header, so the preview stays in view however long the current step is (admin feedback: sticky preview). It never scrolls itself:
+              the card is sized to fit the space below the header, so the form is the only thing that scrolls. */}
           <div className="w-full xl:w-[38%] shrink-0 border-t xl:border-t-0 xl:border-l border-[#E0E0E0] bg-[#F7F3F0]">
-            <div className="xl:sticky xl:top-[84px] xl:max-h-[calc(100vh-100px)] xl:overflow-y-auto">
+            <div className="xl:sticky xl:top-[84px]">
             <MobileCardPreview
               template={draft.template}
               eventTitle={draft.title}
               eventStart={draft.start}
               eventEnd={draft.end}
               venue={draft.venue}
+              contactNumber={draft.contactNumber}
               logoKey={draft.logoKey}
               categoryName={categories.categoryName(draft.categoryId)}
               subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}
               onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
               cardInfo={draft.cardInfo ?? null}
+              cardDisplay={cardDisplay}
+              awaitingTemplate={!eventId && !draft.template}
             />
             </div>
           </div>
@@ -401,14 +490,21 @@ export default function EventWizard({
       </div>
 
       <SelectTemplateModal
-        key={isTemplateModalOpen ? "template-open" : "template-closed"}
-        isOpen={isTemplateModalOpen}
+        key={isTemplateModalOpen || mustPickTemplate ? "template-open" : "template-closed"}
+        isOpen={isTemplateModalOpen || mustPickTemplate}
+        required={mustPickTemplate}
         onClose={() => setIsTemplateModalOpen(false)}
-        onSelectTemplate={(template) => patch({ template })}
+        onSelectTemplate={chooseTemplate}
+        onLeave={onCancel}
+        extraCategory={extraCategory}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
         subcategoryId={draft.subcategoryId || undefined}
       />
+
+      {pendingCardInfo !== null && (
+        <ListResetWarningModal busy={resetBusy} error={resetError} onCancel={() => setPendingCardInfo(null)} onConfirm={() => void confirmListReset()} />
+      )}
 
       <DateTimePickerModal
         key={pickerTarget ? `${JSON.stringify(pickerTarget)}-${pickerValue ?? ""}` : "picker-closed"}
@@ -421,7 +517,7 @@ export default function EventWizard({
 
       {previewKey && previewFile && (
         <InviteesPreviewModal
-          title="Invitees List Preview"
+          title="Invitee Preview List"
           subtitle={`${previewSession?.name || "Session"} · ${previewFile.name}`}
           rows={previewFile.rows}
           showCompany={!!inviteeConfig.company || previewFile.rows.some((r) => r.company)}

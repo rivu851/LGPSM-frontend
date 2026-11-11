@@ -22,6 +22,9 @@ export interface AccessLog {
   dateTime: string;
   action: string;
   status: "Successful" | "failed";
+  /** the organizer the action belongs to: organisation name (or their name), and their ID */
+  organizerName: string;
+  organizerCode: string;
 }
 
 export interface SessionReport {

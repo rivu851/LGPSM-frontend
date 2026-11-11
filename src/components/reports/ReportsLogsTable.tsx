@@ -30,6 +30,10 @@ interface ReportsLogsTableProps {
   sessionsReport?: SessionReport[];
   sessionColumns?: ReportSessionColumn[];
   loadingDetails?: boolean;
+  /** how many Action Log entries exist for the event (the table holds the newest ones loaded so far) */
+  accessTotal?: number;
+  loadingMoreAccess?: boolean;
+  onLoadMoreAccess?: () => void;
 }
 
 export default function ReportsLogsTable({
@@ -52,6 +56,9 @@ export default function ReportsLogsTable({
   sessionsReport = [],
   sessionColumns = [],
   loadingDetails = false,
+  accessTotal,
+  loadingMoreAccess = false,
+  onLoadMoreAccess,
 }: ReportsLogsTableProps) {
   const statusRow = (colSpan: number, text: string) =>
     /^Loading/.test(text) ? (
@@ -103,7 +110,7 @@ export default function ReportsLogsTable({
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
-            Access Logs
+            Action Log
           </button>
 
           <button
@@ -167,7 +174,8 @@ export default function ReportsLogsTable({
         </div>
 
         {/* Table Render */}
-        <div className="overflow-x-auto">
+        {/* long tables scroll inside the card (header stays in view), wide ones scroll sideways */}
+        <div className="overflow-auto max-h-[min(65vh,620px)]" tabIndex={0} role="region" aria-label="Scrollable table">
           {/* REAL CHECK-IN LOGS TAB */}
           {activeTab === "checkins" && (
             <div>
@@ -179,7 +187,7 @@ export default function ReportsLogsTable({
                 </div>
               ) : (
                 <table className="w-full text-left text-xs whitespace-nowrap">
-                  <thead>
+                  <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                     <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                       <th className="py-3 px-4 font-medium">Invitee</th>
                       <th className="py-3 px-4 font-medium">Session</th>
@@ -271,7 +279,7 @@ export default function ReportsLogsTable({
           {/* INVITEE LOGS TAB */}
           {activeTab === "invitees" && (
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead>
+              <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                   <th className="py-3 px-4 font-medium">Invitee Name</th>
                   <th className="py-3 px-4 font-medium">Mobile No.</th>
@@ -368,8 +376,10 @@ export default function ReportsLogsTable({
           {/* ACCESS LOGS TAB */}
           {activeTab === "access" && (
             <table className="w-full text-left text-xs whitespace-nowrap">
-              <thead>
+              <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                 <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
+                  <th className="py-3 px-4 font-medium">Organizer ID</th>
+                  <th className="py-3 px-4 font-medium">Organizer / Organisation</th>
                   <th className="py-3 px-4 font-medium">User Type</th>
                   <th className="py-3 px-4 font-medium">Date & Time</th>
                   <th className="py-3 px-4 font-medium">Action</th>
@@ -377,10 +387,12 @@ export default function ReportsLogsTable({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-gray-800">
-                {loadingDetails && statusRow(4, "Loading activity...")}
-                {!loadingDetails && accessLogs.length === 0 && statusRow(4, "No recorded activity for this event yet.")}
+                {loadingDetails && statusRow(6, "Loading activity...")}
+                {!loadingDetails && accessLogs.length === 0 && statusRow(6, "No recorded activity for this event yet.")}
                 {!loadingDetails && accessLogs.map((log) => (
                   <tr key={log.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="py-4 px-4 text-gray-600">{log.organizerCode}</td>
+                    <td className="py-4 px-4 text-gray-700 max-w-[200px] truncate" title={log.organizerName}>{log.organizerName}</td>
                     <td className="py-4 px-4 font-semibold text-gray-900">{log.userType}</td>
                     <td className="py-4 px-4 text-gray-600">{log.dateTime}</td>
                     <td className="py-4 px-4 text-gray-700 font-medium max-w-[280px] truncate" title={log.action}>{log.action}</td>
@@ -406,7 +418,7 @@ export default function ReportsLogsTable({
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-gray-900">Sessions</h4>
               <table className="w-full text-left text-xs whitespace-nowrap">
-                <thead>
+                <thead className="sticky top-0 z-[1] bg-white shadow-[0_1px_0_0_#E5E7EB]">
                   <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px]">
                     <th className="py-3 px-4 font-medium w-12">#</th>
                     <th className="py-3 px-4 font-medium">Session Name</th>
@@ -436,6 +448,18 @@ export default function ReportsLogsTable({
             </div>
           )}
         </div>
+
+        {/* the Action Log holds the newest entries first; older ones are fetched on request */}
+        {activeTab === "access" && accessTotal !== undefined && !loadingDetails && accessLogs.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-4 py-3 text-xs text-gray-600">
+            <span>{accessLogs.length < accessTotal ? `Showing the newest ${accessLogs.length} of ${accessTotal} entries` : `Showing all ${accessTotal} ${accessTotal === 1 ? "entry" : "entries"}`}</span>
+            {onLoadMoreAccess && accessLogs.length < accessTotal && (
+              <button type="button" onClick={onLoadMoreAccess} disabled={loadingMoreAccess} className="rounded-md border border-[#E0E0E0] px-3.5 py-1.5 font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50 cursor-pointer">
+                {loadingMoreAccess ? "Loading…" : "Load older entries"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

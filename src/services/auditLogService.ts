@@ -20,7 +20,7 @@ export const auditLogService = {
     action?: string;
     page?: number;
     limit?: number;
-  }): Promise<ApiResponse<AuditLogItem[]>> {
+  }): Promise<ApiResponse<AuditLogItem[]> & { meta?: { total: number; page: number; totalPages: number } }> {
     const query = new URLSearchParams();
     if (params?.eventId) query.append("eventId", params.eventId);
     if (params?.actorId) query.append("actorId", params.actorId);
@@ -29,6 +29,6 @@ export const auditLogService = {
     if (params?.limit) query.append("limit", params.limit.toString());
 
     const queryString = query.toString() ? `?${query.toString()}` : "";
-    return apiClient<AuditLogItem[]>(`/api/v1/audit-logs${queryString}`, { method: "GET" }, true);
+    return apiClient<AuditLogItem[]>(`/api/v1/audit-logs${queryString}`, { method: "GET" }, true) as Promise<ApiResponse<AuditLogItem[]> & { meta?: { total: number; page: number; totalPages: number } }>;
   },
 };

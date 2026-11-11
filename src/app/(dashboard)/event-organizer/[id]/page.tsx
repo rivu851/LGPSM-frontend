@@ -23,7 +23,7 @@ interface EventRow {
   startDate: string;
   startTs: number | null;
   endDate: string;
-  status: "Upcoming" | "Completed" | "Ongoing" | "Invitation not send" | "Cancelled";
+  status: "Upcoming" | "Completed" | "Ongoing" | "Invitation not sent" | "Cancelled";
 }
 
 interface OrganizerDetail {
@@ -362,12 +362,12 @@ export default function OrganizerDetailsPage() {
                         ariaLabel="Status"
                         value={draftFilters.status}
                         onChange={(v) => setDraftFilters((f) => ({ ...f, status: v }))}
-                        options={[{ value: "", label: "All statuses" }, ...["Upcoming", "Ongoing", "Completed", "Invitation not send", "Cancelled"].map((st) => ({ value: st, label: st }))]}
+                        options={[{ value: "", label: "All statuses" }, ...["Upcoming", "Ongoing", "Completed", "Invitation not sent", "Cancelled"].map((st) => ({ value: st, label: st }))]}
                       />
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts from
-                          <input type="date" value={draftFilters.from} max={draftFilters.to || undefined} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
+                          <input type="date" value={draftFilters.from} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value, to: f.to && e.target.value > f.to ? e.target.value : f.to }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
                         </label>
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts until
@@ -437,9 +437,9 @@ export default function OrganizerDetailsPage() {
                             Ongoing
                           </span>
                         )}
-                        {ev.status === "Invitation not send" && (
+                        {ev.status === "Invitation not sent" && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
-                            Invitation not send
+                            Invitation not sent
                           </span>
                         )}
                       </td>

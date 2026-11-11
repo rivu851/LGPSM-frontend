@@ -7,6 +7,9 @@ export interface CustomDropdownOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  /** Shows a delete button on this row (the organizer's own custom entries) */
+  onRemove?: () => void;
+  removeLabel?: string;
 }
 
 export interface CustomDropdownAction {
@@ -176,7 +179,7 @@ export default function CustomDropdown({
             ) : (
               options.map((opt) => {
                 const isSelected = opt.value === value;
-                return (
+                const row = (
                   <button
                     key={opt.value}
                     type="button"
@@ -200,6 +203,26 @@ export default function CustomDropdown({
                       </svg>
                     )}
                   </button>
+                );
+                if (!opt.onRemove) return row;
+                return (
+                  <div key={opt.value} className="flex items-center pr-2">
+                    <div className="min-w-0 flex-1">{row}</div>
+                    <button
+                      type="button"
+                      aria-label={opt.removeLabel || `Delete ${opt.label}`}
+                      title={opt.removeLabel || `Delete ${opt.label}`}
+                      onClick={() => {
+                        setIsOpen(false);
+                        opt.onRemove?.();
+                      }}
+                      className="shrink-0 flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                    >
+                      <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" />
+                      </svg>
+                    </button>
+                  </div>
                 );
               })
             )}

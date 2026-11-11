@@ -1,5 +1,7 @@
 "use client";
 
+import PhoneInput from "@/components/common/PhoneInput";
+import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import React, { useState, useEffect, useCallback } from "react";
@@ -143,8 +145,7 @@ export default function AssignedSystemUsersPage() {
           phone: u.phone || u.contactNo || "--",
           role: u.role,
           assignments: userAssignmentsMap[u._id || u.id] || [],
-        }))
-        .filter((u) => u.assignments.length > 0); // SHOW ONLY ASSIGNED SYSTEM USERS
+        })); // everyone is listed, including people not yet assigned to any event (they are the ones most likely to be assigned here)
 
       setUsers(formattedUserRows);
     } catch (err: any) {
@@ -479,7 +480,7 @@ aria-label="Select all"
 
         {/* Loading state — outside the scrollable table so it always centers on screen */}
         {isLoading && (
-          <TableSkeleton rows={5} cols={5} label="Loading assigned system users" />
+          <TableSkeleton rows={5} cols={5} label="Loading system users" />
         )}
 
         {/* Table Container */}
@@ -500,7 +501,7 @@ aria-label="Select all"
               {filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-400 text-sm">
-                    No assigned system users found. Assign users from the All Users tab.
+                    No system users yet. Add one with the Add User button.
                   </td>
                 </tr>
               ) : (
@@ -692,10 +693,9 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">Contact No</label>
-                <input
-                  type="tel"
+                <PhoneInput
                   value={editFormData.phone}
-                  onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                  onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
@@ -781,12 +781,11 @@ aria-label={`Select ${u.name}`}
                 <label className="text-sm font-medium text-[#15191C]">
                   Contact No<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="tel"
+                <PhoneInput
                   required
                   placeholder="Enter Contact No"
                   value={addUserData.contactNo}
-                  onChange={(e) => setAddUserData({ ...addUserData, contactNo: e.target.value })}
+                  onValueChange={(v) => setAddUserData({ ...addUserData, contactNo: v })}
                   className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
@@ -809,8 +808,7 @@ aria-label={`Select ${u.name}`}
                 <label className="text-sm font-medium text-[#15191C]">
                   Password<span className="text-[#FF651D] ml-0.5">*</span>
                 </label>
-                <input
-                  type="password"
+                <PasswordField
                   required
                   placeholder="Enter Initial Password"
                   value={addUserData.password}

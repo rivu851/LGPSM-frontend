@@ -53,7 +53,7 @@ export default function AddInviteeChooserModal({
     >
       <div
         ref={modalRef}
-        className="bg-white rounded-lg border border-gray-200 shadow-2xl w-full max-w-sm overflow-y-auto max-h-[calc(100dvh-2rem)]"
+        className="bg-white rounded-lg border border-gray-200 shadow-2xl w-full max-w-lg overflow-y-auto max-h-[calc(100dvh-2rem)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-invitee-chooser-title"
@@ -85,7 +85,7 @@ export default function AddInviteeChooserModal({
                 ariaLabel="Add to session"
                 value={sessionId}
                 onChange={onSessionChange}
-                options={[{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
+                options={sessionOptions.length === 1 ? [{ value: "", label: sessionOptions[0].name }] : [{ value: "", label: "All sessions (the whole event)" }, ...sessionOptions.map((s) => ({ value: s.id, label: s.name }))]}
               />
               <p className="mt-1 text-xs text-gray-500">Choose a session when it has its own invitee list. The guests you add can then enter that session.</p>
             </div>
@@ -94,11 +94,13 @@ export default function AddInviteeChooserModal({
             How would you like to add invitees?
           </p>
 
+          {/* the two ways side by side, in one row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Upload Excel option */}
           <button
             type="button"
             onClick={() => { onClose(); onChooseExcel(); }}
-            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left cursor-pointer"
+            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/40 transition-all text-left cursor-pointer"
           >
             <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-[#E8F5EE] flex items-center justify-center">
               {/* Microsoft Excel mark in its own greens */}
@@ -123,7 +125,7 @@ export default function AddInviteeChooserModal({
           <button
             type="button"
             onClick={() => { onClose(); onChooseManual(); }}
-            className="w-full flex items-start gap-4 px-4 py-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all text-left cursor-pointer"
+            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/40 transition-all text-left cursor-pointer"
           >
             <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center">
               {/* Standard profile glyph in neutral grey */}
@@ -141,6 +143,7 @@ export default function AddInviteeChooserModal({
               </span>
             </span>
           </button>
+          </div>
         </div>
       </div>
     </div>

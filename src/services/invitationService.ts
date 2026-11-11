@@ -59,6 +59,8 @@ export interface PublicInvitationData {
   /** Colours/character of the guest's invitation design; absent on older API versions */
   /** The guest's current pass; REPLACED = this link is an old, superseded one (only the event title and guest name are sent) */
   credential?: { status: "ACTIVE" | "REVOKED" | "EXPIRED" | "NOT_ISSUED" | "REPLACED" };
+  /** false when the organizer chose not to print the QR on the cards: the page shows the entry QR on its own */
+  cardShowsQr?: boolean;
   theme?: { design?: string; background?: string; primary?: string; accent?: string; ink?: string; heading?: "serif" | "sans" };
   event: {
     title: string;
@@ -109,6 +111,10 @@ export interface RsvpPayload {
 }
 
 export const invitationService = {
+  publicInvitationQrUrl(token: string): string {
+    return `${API_BASE_URL}/api/v1/public/invitations/${encodeURIComponent(token)}/qr`;
+  },
+
   publicInvitationCardUrl(token: string): string {
     return `${API_BASE_URL}/api/v1/public/invitations/${encodeURIComponent(token)}/card`;
   },
