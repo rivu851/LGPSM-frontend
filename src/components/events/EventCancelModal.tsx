@@ -65,7 +65,7 @@ export default function EventCancelModal({ isOpen, onClose, eventId, eventTitle,
         </div>
 
         <label className="block text-sm">
-          <span className="block text-gray-900 font-medium mb-1">Reason <span className="font-normal text-[#828282]">(optional, shown to invited guests)</span></span>
+          <span className="block text-gray-900 font-medium mb-1">Reason <span className="font-normal text-[#6B6B6B]">(optional, shown to invited guests)</span></span>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value.slice(0, REASON_MAX))}
@@ -74,7 +74,7 @@ export default function EventCancelModal({ isOpen, onClose, eventId, eventTitle,
             className="w-full px-3 py-2 border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-[#FF651D] resize-none"
             placeholder="For example: the venue is no longer available"
           />
-          <span className="block text-right text-xs text-[#828282]">{reason.length}/{REASON_MAX}</span>
+          <span className="block text-right text-xs text-[#6B6B6B]">{reason.length}/{REASON_MAX}</span>
         </label>
 
         {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}

@@ -219,7 +219,7 @@ export default function FeaturesSection() {
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#FF5B22] transition-colors">
+              <h3 className="text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#A83800] transition-colors">
                 {feature.title}
               </h3>
 

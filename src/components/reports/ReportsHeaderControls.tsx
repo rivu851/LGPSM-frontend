@@ -39,7 +39,7 @@ export default function ReportsHeaderControls({
   return (
     <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
       <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 min-w-[220px] items-center gap-2.5 focus-within:border-[#FF651D] transition-colors">
-        <span className="size-[22px] flex items-center justify-center shrink-0 text-[#828282]">
+        <span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]">
           <Icon name="reports/search" width={18.4} height={18.4} />
         </span>
         <input

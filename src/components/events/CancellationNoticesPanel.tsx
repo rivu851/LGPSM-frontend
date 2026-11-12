@@ -47,7 +47,7 @@ export default function CancellationNoticesPanel({ eventId }: { eventId: string 
     <section aria-labelledby="cancel-notices-title" className="border border-[#E0E0E0] rounded-lg p-5 space-y-3 bg-white">
       <h3 id="cancel-notices-title" className="text-base font-medium text-gray-900">Cancellation notices</h3>
       {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
-      {!data && !error && <p className="text-sm text-[#828282]">Loading…</p>}
+      {!data && !error && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
       {data && (
         <>
           {data.guests === 0 ? (
@@ -69,7 +69,7 @@ export default function CancellationNoticesPanel({ eventId }: { eventId: string 
             </div>
           )}
           {safeRetryCount(data) > 0 && (
-            <button type="button" onClick={() => retry(false)} disabled={retrying} className="px-4 py-2 border border-[#FF651D] text-[#FF651D] hover:bg-[#FFF3EC] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">
+            <button type="button" onClick={() => retry(false)} disabled={retrying} className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF3EC] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">
               {retrying ? "Retrying…" : "Retry unsent notices"}
             </button>
           )}
@@ -91,7 +91,7 @@ export default function CancellationNoticesPanel({ eventId }: { eventId: string 
               </button>
             </div>
           )}
-          <p className="text-xs text-[#828282]">“Accepted by the provider” means the email or WhatsApp service took the message; delivery to the guest is not confirmed. Messages already accepted are never sent again.</p>
+          <p className="text-xs text-[#6B6B6B]">“Accepted by the provider” means the email or WhatsApp service took the message; delivery to the guest is not confirmed. Messages already accepted are never sent again.</p>
         </>
       )}
     </section>

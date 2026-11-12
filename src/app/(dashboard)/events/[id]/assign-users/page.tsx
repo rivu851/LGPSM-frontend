@@ -21,7 +21,7 @@ import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
 import Pagination from "@/components/common/Pagination";
 import { paginate } from "@/utils/pagination.mjs";
-import { formatDateTime } from "@/utils/dateTime";
+import { formatDateTime, formatDate } from "@/utils/dateTime";
 
 export default function EventAssignUsersPage() {
   const { confirm } = useAlert();
@@ -124,7 +124,7 @@ export default function EventAssignUsersPage() {
           eventId: eventId,
           eventName: eventTitle,
           assignedBy: assignedByName,
-          assignedAt: asn.createdAt ? new Date(asn.createdAt).toLocaleDateString() : undefined,
+          assignedAt: asn.createdAt ? formatDate(asn.createdAt) : undefined,
           sessions: sessItems,
         });
       });
@@ -342,7 +342,7 @@ export default function EventAssignUsersPage() {
                 placeholder="Search system user"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
               />
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function EventAssignUsersPage() {
                 { value: ALL_SYSTEM_USERS, label: "All system users" },
               ]}
             />
-            <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg">
+            <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
               <Icon name="events/add-white" width={24} height={24} />
               Add User
             </Link>
@@ -374,7 +374,7 @@ export default function EventAssignUsersPage() {
             id="selectAll"
             checked={isAllSelected}
             onChange={handleSelectAll}
-            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
           />
           <label htmlFor="selectAll" className="cursor-pointer">
             Select All ({selectedUserIds.length} selected)
@@ -385,8 +385,8 @@ export default function EventAssignUsersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className={showEmptyAssigned ? "hidden" : undefined}>
-              <tr className="border-b border-[#D3D3D3] text-[#828282] font-medium text-sm">
-                <th className="py-3 px-4 w-10"></th>
+              <tr className="border-b border-[#D3D3D3] text-[#6B6B6B] font-medium text-sm">
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
                 <th className="py-3 px-4 font-medium">User Name</th>
                 <th className="py-3 px-4 font-medium">Assigned Event Sessions</th>
                 <th className="py-3 px-4 font-medium">Email</th>
@@ -403,15 +403,15 @@ export default function EventAssignUsersPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     {users.length === 0 ? (
-                      <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#E5520F] underline">Add User</Link>.</span>
+                      <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#C44200] underline">Add User</Link>.</span>
                     ) : userFilter !== USERS_ON_EVENT && userFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
-                      <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#E5520F] underline cursor-pointer">Show all system users</button> to assign someone.</span>
+                      <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
                     ) : userFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
                       // Figma 217:19798 empty state; "Assign User" lists every system user to pick from
                       <div className="flex flex-col items-center gap-[26px] py-16 max-w-[344px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
                         <p className="text-lg font-medium text-black/50">No system users assigned yet. Assign system users to your event now.</p>
-                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#FF651D] cursor-pointer">
+                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#C44200] cursor-pointer">
                           Assign User
                         </button>
                       </div>
@@ -439,13 +439,13 @@ export default function EventAssignUsersPage() {
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
                           aria-label={`Select ${u.name}`}
-                          className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer mt-0.5 check-orange"
+                          className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer mt-0.5 check-orange"
                         />
                       </td>
 
                       <td className="py-4 px-4 font-medium text-gray-900">
                         <div>{u.name}</div>
-                        <span className="text-[10px] font-mono text-[#FF5B22] bg-[#FF5B22]/10 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-mono text-[#C44200] bg-[#FF5B22]/10 px-1.5 py-0.5 rounded">
                           SYSTEM_USER
                         </span>
                         {otherEvents.filter((o) => o.overlaps).map((o) => (
@@ -460,7 +460,7 @@ export default function EventAssignUsersPage() {
                         <button
                           type="button"
                           onClick={() => toggleExpand(u.id)}
-                          className="flex items-center gap-2 font-bold text-gray-800 hover:text-[#FF5B22] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-bold text-gray-800 hover:text-[#A83800] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -505,11 +505,11 @@ export default function EventAssignUsersPage() {
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
+                                    <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -573,7 +573,7 @@ export default function EventAssignUsersPage() {
               <button
                 type="button"
                 onClick={openAssignModal}
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#FF5B22] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
               >
                 <span>{allAlreadyOnEvent ? `Change sessions for ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}` : `Assign ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}`}</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -594,7 +594,7 @@ export default function EventAssignUsersPage() {
               <button
                 type="button"
                 onClick={closeAssignModal}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -637,7 +637,7 @@ export default function EventAssignUsersPage() {
                 <button
                   type="submit"
                   disabled={submittingAssign}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : allAlreadyOnEvent ? "Save" : "Assign"}
                 </button>
@@ -661,7 +661,7 @@ export default function EventAssignUsersPage() {
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
             >
               Okay
             </button>

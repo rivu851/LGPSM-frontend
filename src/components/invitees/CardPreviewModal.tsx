@@ -41,9 +41,9 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
         <div className="px-5 py-4 border-b border-[#E5E5E5] flex items-center justify-between gap-3">
           <div className="min-w-0">
             <h2 id="card-preview-title" className="text-base font-medium text-gray-900">Invitation Card Preview</h2>
-            <p className="text-xs text-[#828282] truncate">{inviteeName ? `As sent to ${inviteeName}` : "Sample guest"}</p>
+            <p className="text-xs text-[#6B6B6B] truncate">{inviteeName ? `As sent to ${inviteeName}` : "Sample guest"}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -57,7 +57,7 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
               <InvitationCardImage src={url} alt="Invitation card" />
             </div>
           ) : (
-            <p className="text-sm text-[#828282]">Generating preview...</p>
+            <p className="text-sm text-[#6B6B6B]">Generating preview...</p>
           )}
         </div>
         {url && qr && (
@@ -73,7 +73,7 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
               Download
             </a>
           )}
-          <button type="button" onClick={onClose} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
+          <button type="button" onClick={onClose} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
             Close
           </button>
         </div>

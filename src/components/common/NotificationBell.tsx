@@ -12,7 +12,7 @@ export default function NotificationBell() {
     <Link href="/notification" aria-label={label} title={label} className="relative inline-flex size-10 shrink-0 items-center justify-center rounded-full text-[#15191C] hover:bg-gray-100 transition-colors">
       <NavIcon name="notifications" className="size-6" />
       {unread > 0 && (
-        <span aria-hidden className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF651D] text-white text-[10px] font-semibold flex items-center justify-center">
+        <span aria-hidden className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#C65318] text-white text-[10px] font-semibold flex items-center justify-center">
           {unread > 99 ? "99+" : unread}
         </span>
       )}

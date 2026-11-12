@@ -33,7 +33,7 @@ const chevron = (up: boolean) => (
 );
 
 function StepColumn({ label, value, onUp, onDown }: StepColProps) {
-  const btn = "w-full h-8 flex items-center justify-center rounded-md text-[#FF5B22] hover:bg-[#FF5B22]/10 cursor-pointer transition-colors";
+  const btn = "w-full h-8 flex items-center justify-center rounded-md text-[#C44200] hover:bg-[#FF5B22]/10 cursor-pointer transition-colors";
   return (
     <div
       role="group"
@@ -157,7 +157,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         onClick={() => setSelectedDay(day)}
         aria-pressed={isSelected}
         className={`mx-auto flex items-center justify-center text-[13px] font-semibold cursor-pointer transition-colors py-1.5 ${
-          isSelected ? "text-[#2563EB] border-b-2 border-[#2563EB]" : "hover:text-[#FF5B22] text-gray-900"
+          isSelected ? "text-[#2563EB] border-b-2 border-[#2563EB]" : "hover:text-[#A83800] text-gray-900"
         }`}
       >
         {day < 10 ? `0${day}` : day}
@@ -181,7 +181,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         {/* Header: title and close */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E5E5E5]">
           <h2 className="text-base font-medium text-[#15191C]">{title || "Select Date & Time"}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -192,11 +192,11 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         <div className="p-4 grid grid-cols-1 sm:grid-cols-[1.45fr_1fr] gap-4 items-stretch">
           <div className="bg-[#F3F4F7] p-4 rounded-lg border border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3 px-1">
-              <button type="button" onClick={handlePrevMonth} aria-label="Previous month" className="text-[#FF5B22] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
+              <button type="button" onClick={handlePrevMonth} aria-label="Previous month" className="text-[#C44200] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
               <span className="text-[13px] font-semibold text-gray-900">{MONTH_NAMES[currentMonth]} {currentYear}</span>
-              <button type="button" onClick={handleNextMonth} aria-label="Next month" className="text-[#FF5B22] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
+              <button type="button" onClick={handleNextMonth} aria-label="Next month" className="text-[#C44200] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
             </div>
-            <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#FF5B22] mb-1.5">
+            <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#C44200] mb-1.5">
               <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
             <div className="grid grid-cols-7 text-center gap-y-1 text-[13px] font-semibold text-gray-800">
@@ -227,7 +227,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
           <button type="button" onClick={onClose} className="px-6 py-2 border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] font-semibold text-sm rounded-lg transition-colors cursor-pointer">
             Cancel
           </button>
-          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#C65318] hover:bg-[#A83800] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
             Save
           </button>
         </div>

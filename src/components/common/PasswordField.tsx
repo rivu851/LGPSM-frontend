@@ -20,7 +20,7 @@ export default function PasswordField({ className = "", wrapperClassName = "", d
         aria-label={visible ? "Hide password" : "Show password"}
         aria-pressed={visible}
         title={visible ? "Hide password" : "Show password"}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#828282] hover:text-gray-700 cursor-pointer disabled:cursor-not-allowed"
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[#6B6B6B] hover:text-gray-700 cursor-pointer disabled:cursor-not-allowed"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
           {/* the same icons as the sign-in screen: crossed out while the password is hidden */}

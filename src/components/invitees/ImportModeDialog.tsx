@@ -28,10 +28,10 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
       <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="import-mode-title">
         <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
           <h2 id="import-mode-title" className="text-lg font-semibold text-[#15191C]">This list has already been uploaded</h2>
-          <p className="text-sm text-[#828282] break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>
+          <p className="text-sm text-[#6B6B6B] break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>
           <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">{ALREADY_SENT_MESSAGE}</p>
           <div className="flex justify-end">
-            <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] rounded-md text-sm font-medium text-white cursor-pointer">OK</button>
+            <button type="button" onClick={onCancel} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] rounded-md text-sm font-medium text-white cursor-pointer">OK</button>
           </div>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
       <div className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]">
         <div>
           <h2 id="import-mode-title" className="text-lg font-semibold text-[#15191C]">How should this list be imported?</h2>
-          <p className="text-sm text-[#828282] mt-1 break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>
+          <p className="text-sm text-[#6B6B6B] mt-1 break-words">{fileName} · {rowCount} row{rowCount === 1 ? "" : "s"}</p>
         </div>
 
         {sentSets !== null && sentSets > 0 && (
@@ -52,19 +52,19 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
         <div className="space-y-3">
           <button type="button" disabled={busy} onClick={() => onChoose("APPEND")} className="w-full text-left rounded-lg border border-[#E0E0E0] hover:border-[#FF651D] px-4 py-3 cursor-pointer disabled:opacity-60">
             <span className="block text-sm font-semibold text-[#15191C]">Add to existing invitees</span>
-            <span className="block text-xs text-[#828282] mt-0.5">Everyone already on the list stays. Only people who are not already invited are added; duplicates are skipped.</span>
+            <span className="block text-xs text-[#6B6B6B] mt-0.5">Everyone already on the list stays. Only people who are not already invited are added; duplicates are skipped.</span>
             <Forecast preview={previews?.append ?? null} loading={!previews && !previewError} mode="APPEND" />
           </button>
           <button type="button" disabled={busy} onClick={() => onChoose("REPLACE")} className="w-full text-left rounded-lg border border-[#E0E0E0] hover:border-[#FF651D] px-4 py-3 cursor-pointer disabled:opacity-60">
             <span className="block text-sm font-semibold text-[#15191C]">Replace the not-yet-invited list</span>
-            <span className="block text-xs text-[#828282] mt-0.5">
+            <span className="block text-xs text-[#6B6B6B] mt-0.5">
               Invitees who have never been invited and are not in this file are set aside (kept, not deleted, and restorable from Uploaded Lists). Guests with a failed or unresolved send are always kept. {sentSets ? "Lists you have already sent from are left as they are." : "Anyone already invited is never removed."}
             </span>
             <Forecast preview={previews?.replace ?? null} loading={!previews && !previewError} mode="REPLACE" />
           </button>
         </div>
 
-        {previewError && <p role="status" className="text-xs text-[#828282]">{previewError}</p>}
+        {previewError && <p role="status" className="text-xs text-[#6B6B6B]">{previewError}</p>}
         {previews?.replace && previews.replace.errors.length > 0 && (
           <details className="text-xs text-[#4B4F52]">
             <summary className="cursor-pointer font-medium">Rows with problems ({previews.replace.errors.length})</summary>
@@ -82,7 +82,7 @@ export default function ImportModeDialog({ fileName, rowCount, sentSets, preview
 
 // What this choice would do right now, as worked out by the server. It is a forecast: the import checks everything again.
 function Forecast({ preview, loading, mode }: { preview: ImportPreview | null; loading: boolean; mode: ImportMode }) {
-  if (loading) return <span className="block text-xs text-[#828282] mt-1.5">Checking what this would do…</span>;
+  if (loading) return <span className="block text-xs text-[#6B6B6B] mt-1.5">Checking what this would do…</span>;
   if (!preview) return null;
   return (
     <span className="block mt-2 rounded bg-[#F6F6F6] px-2.5 py-1.5 text-xs text-[#15191C]" data-testid={`forecast-${mode}`}>

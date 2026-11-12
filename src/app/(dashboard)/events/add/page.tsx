@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
+import { createSingleFlight } from "@/utils/singleFlight";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
@@ -58,11 +59,21 @@ function AddEventContent() {
     }).finally(() => setTemplateLoading(false));
   }, [hydrated, templateParam, update, categories.loading, categories.categoryOptions]);
 
-  const handleSubmit = async ({ draft, sessionFiles }: EventWizardSubmit) => {
+  // One key per distinct request: sending the same event again (double click, retry after a lost answer) returns the first result instead
+  // of creating a second event; a changed form is a new request and gets a new key
+  const createAttempt = useRef<{ body: string; key: string } | null>(null);
+  const submitFlight = useRef(createSingleFlight());
+  const handleSubmit = async (submission: EventWizardSubmit) => {
+    await submitFlight.current.run(() => createFromDraft(submission));
+  };
+  const createFromDraft = async ({ draft, sessionFiles }: EventWizardSubmit) => {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await eventService.createEvent(draftToCreatePayload(draft));
+      const payload = draftToCreatePayload(draft);
+      const body = JSON.stringify(payload);
+      if (createAttempt.current?.body !== body) createAttempt.current = { body, key: crypto.randomUUID() };
+      const res = await eventService.createEvent(payload, createAttempt.current.key);
       // POST /api/v1/events responds with { eventId, status, createdAt }
       const created = res.data as { eventId?: string } | undefined;
       const createdId = res.success ? created?.eventId : undefined;
@@ -73,6 +84,7 @@ function AddEventContent() {
       }
 
       // The event now exists; clear the draft before follow-up requests so a retry cannot create a duplicate
+      createAttempt.current = null;
       draftState.clearDraft();
 
       const problems = await persistSessionsAndInvitees(createdId, draft, sessionFiles);

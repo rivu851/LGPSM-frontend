@@ -86,7 +86,5 @@ export const platformSettingsService = {
   },
 };
 
-export function formatMoney(amount: number | null | undefined, currency = "USD"): string {
-  if (amount === null || amount === undefined) return "—";
-  return new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 2 }).format(amount);
-}
+// Prices are shown in the platform currency (rupees) by one shared formatter
+export { formatMoney } from "@/utils/money";

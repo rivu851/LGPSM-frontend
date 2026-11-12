@@ -143,10 +143,10 @@ export default function FaqSection() {
                       onClick={() => toggleFaq(idx)}
                       className="w-full flex items-center justify-between text-left group cursor-pointer"
                     >
-                      <span className="text-base sm:text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#FF5B22] transition-colors">
+                      <span className="text-base sm:text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#A83800] transition-colors">
                         {faq.question}
                       </span>
-                      <span className="text-xl font-normal text-gray-400 ml-4 shrink-0 font-mono transition-transform duration-200">
+                      <span className="text-xl font-normal text-gray-500 ml-4 shrink-0 font-mono transition-transform duration-200">
                         {isOpen ? "×" : "+"}
                       </span>
                     </button>
@@ -167,7 +167,7 @@ export default function FaqSection() {
             <div ref={cardRef} className="bg-[#F7F8FA] rounded-md p-7 sm:p-8 border border-gray-100/80 shadow-sm w-full max-w-sm text-left">
               {/* Icon */}
               <div className="mb-5">
-                <svg className="w-9 h-9 text-[#FF5B22]" viewBox="0 0 32 32" fill="none">
+                <svg className="w-9 h-9 text-[#C44200]" viewBox="0 0 32 32" fill="none">
                   <rect x="9" y="4" width="18" height="24" rx="4" stroke="#FF5B22" strokeWidth="2.2" />
                   <path d="M6 9h4M6 16h4M6 23h4" stroke="#FF5B22" strokeWidth="2.2" strokeLinecap="round" />
                   <circle cx="18" cy="12" r="3.5" stroke="#FF5B22" strokeWidth="2" />
@@ -188,7 +188,7 @@ export default function FaqSection() {
               {/* Contact Button */}
               <a
                 href="#contact"
-                className="inline-block py-2.5 px-6 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md transition-all hover:scale-105 shadow-sm font-[family-name:var(--font-space-grotesk)]"
+                className="inline-block py-2.5 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all hover:scale-105 shadow-sm font-[family-name:var(--font-space-grotesk)]"
               >
                 Contact Us
               </a>

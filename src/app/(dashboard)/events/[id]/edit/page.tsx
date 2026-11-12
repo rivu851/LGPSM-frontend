@@ -34,6 +34,9 @@ export default function EditEventPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [lockedAfterInvitation, setLockedAfterInvitation] = useState(false);
   const [baseVersion, setBaseVersion] = useState<string | undefined>(undefined);
+  // the version of the event this editor was opened on (its updatedAt), sent with the save so a newer version is never overwritten
+  const serverVersion = useRef<string | undefined>(undefined);
+  const [conflict, setConflict] = useState(false);
   // Server state the edit started from; used for "discard changes" and to detect changed sessions
   const serverDraftRef = useRef<EventDraft | null>(null);
 
@@ -93,6 +96,7 @@ export default function EditEventPage() {
       }
       // Seed with server data first; enabling the draft afterwards restores newer local edits if still valid
       reset(serverDraft);
+      serverVersion.current = eventRes.data.updatedAt ? String(eventRes.data.updatedAt) : undefined;
       setBaseVersion(String(eventRes.data.updatedAt || "server"));
       setIsFetchingEvent(false);
     })();
@@ -105,8 +109,11 @@ export default function EditEventPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await eventService.updateEvent(eventId, draftToUpdatePayload(draft));
+      setConflict(false);
+      const res = await eventService.updateEvent(eventId, draftToUpdatePayload(draft), serverVersion.current);
       if (!res.success) {
+        // someone else saved this event since it was opened here: nothing was overwritten, and the person decides what to do next
+        if (res.status === 409 && res.code === "EVENT_EDIT_CONFLICT") setConflict(true);
         setSubmitError(res.message || "Failed to update event.");
         return;
       }
@@ -138,7 +145,7 @@ export default function EditEventPage() {
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
           <h1 className="text-lg font-bold text-gray-900">Event unavailable</h1>
           <p className="text-xs text-gray-500 break-words">{loadError}</p>
-          <Link href="/events" className="inline-block px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white rounded-md text-xs font-semibold">
+          <Link href="/events" className="inline-block px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-xs font-semibold">
             Back to Events
           </Link>
         </div>
@@ -152,13 +159,20 @@ export default function EditEventPage() {
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
           <h1 className="text-lg font-bold text-gray-900">Event details are locked</h1>
           <p className="text-sm text-gray-600">This event can’t be edited after invitations have been sent.</p>
-          <Link href={`/events/${eventId}`} className="inline-block px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-semibold">Back to Event</Link>
+          <Link href={`/events/${eventId}`} className="inline-block px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-semibold">Back to Event</Link>
         </div>
       </div>
     );
   }
 
   return (
+    <>
+    {conflict && (
+      <div role="alert" className="mx-6 mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 flex flex-wrap items-center justify-between gap-3">
+        <span>This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten.</span>
+        <button type="button" onClick={() => { draftState.clearDraft(); window.location.reload(); }} className="font-medium underline cursor-pointer">Reload the latest version (discards my edits)</button>
+      </div>
+    )}
     <EventWizard
       heading="Edit Event"
       eventId={eventId}
@@ -177,5 +191,6 @@ export default function EditEventPage() {
       onSubmit={handleSubmit}
       onCancel={() => router.push(`/events/${eventId}`)}
     />
+    </>
   );
 }

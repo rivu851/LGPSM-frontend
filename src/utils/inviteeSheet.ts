@@ -87,6 +87,40 @@ export function rowProblem(row: Pick<InviteeSheetRow, "name" | "email" | "phone"
   return null;
 }
 
+// The same person written twice in one file: the second row is skipped by the import. People are told apart by e-mail (any capitals) and by
+// mobile number (digits only, a leading 0 or the country code 91 ignored), like the server's own duplicate check. Names are never compared.
+const phoneKey = (phone: string): string => {
+  const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
+  return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
+};
+
+export interface SheetIssues {
+  /** rows the import will skip because they are invalid, by row number */
+  invalid: Map<string, string>;
+  /** rows the import will skip because an earlier row is the same person, by row number */
+  repeated: Map<string, string>;
+  /** rows that can be imported (the guests already on the event are checked by the server in the next step) */
+  importable: number;
+}
+
+export function sheetIssues(rows: Pick<InviteeSheetRow, "id" | "name" | "email" | "phone">[]): SheetIssues {
+  const invalid = new Map<string, string>();
+  const repeated = new Map<string, string>();
+  const byEmail = new Map<string, string>();
+  const byPhone = new Map<string, string>();
+  for (const row of rows) {
+    const problem = rowProblem(row);
+    if (problem) { invalid.set(row.id, problem); continue; }
+    const email = row.email.trim().toLowerCase();
+    const phone = row.phone ? phoneKey(row.phone) : "";
+    const earlier = (email && byEmail.get(email)) || (phone && byPhone.get(phone)) || "";
+    if (earlier) { repeated.set(row.id, `Same person as row ${earlier}: skipped`); continue; }
+    if (email) byEmail.set(email, row.id);
+    if (phone) byPhone.set(phone, row.id);
+  }
+  return { invalid, repeated, importable: rows.length - invalid.size - repeated.size };
+}
+
 // Rebuilds a sheet from (edited) rows so edits go through the same import as an uploaded file
 export async function rowsToSheetFile(rows: InviteeSheetRow[], fileName: string, sessionNames: string[] = []): Promise<File> {
   const XLSX = await loadXlsx();

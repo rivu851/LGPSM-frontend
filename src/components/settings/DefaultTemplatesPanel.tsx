@@ -57,7 +57,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
           {plan.templatesToCreate.map((t) => (
             <li key={t.name} className="text-xs bg-white border border-[#F0D9C8] rounded-full px-3 py-1 text-gray-800">
               <span className="font-medium">{t.name}</span>
-              <span className="text-[#828282]"> · {t.category}{t.subcategory ? ` › ${t.subcategory}` : ""}</span>
+              <span className="text-[#6B6B6B]"> · {t.category}{t.subcategory ? ` › ${t.subcategory}` : ""}</span>
             </li>
           ))}
         </ul>
@@ -66,7 +66,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
         type="button"
         onClick={handleInstall}
         disabled={busy}
-        className="shrink-0 px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        className="shrink-0 px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {busy ? "Adding..." : "Add default templates"}
       </button>

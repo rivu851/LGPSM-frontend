@@ -128,10 +128,12 @@ export const eventService = {
    * Create a new event
    * POST /api/v1/events
    */
-  async createEvent(payload: CreateEventRequest): Promise<ApiResponse<EventData>> {
+  async createEvent(payload: CreateEventRequest, idempotencyKey?: string): Promise<ApiResponse<EventData>> {
+    // With a key the server creates the event once however many times this exact request is sent (a double click, a retry after a lost answer)
     return apiClient<EventData>("/api/v1/events", {
       method: "POST",
       body: JSON.stringify(payload),
+      ...(idempotencyKey ? { headers: { "Idempotency-Key": idempotencyKey } } : {}),
     }, true);
   },
 
@@ -175,10 +177,12 @@ export const eventService = {
    * Update an existing event
    * PATCH /api/v1/events/:eventId
    */
-  async updateEvent(eventId: string, payload: UpdateEventRequest): Promise<ApiResponse<EventData>> {
+  async updateEvent(eventId: string, payload: UpdateEventRequest, openedVersion?: string): Promise<ApiResponse<EventData>> {
+    // `openedVersion` is the event's updatedAt as the editor loaded it: the server refuses (409 EVENT_EDIT_CONFLICT) if someone saved since
     return apiClient<EventData>(`/api/v1/events/${eventId}`, {
       method: "PATCH",
       body: JSON.stringify(payload),
+      ...(openedVersion ? { headers: { "If-Match": openedVersion } } : {}),
     }, true);
   },
 

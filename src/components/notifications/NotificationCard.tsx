@@ -43,9 +43,9 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
           {unread && <><span aria-hidden className="size-2 rounded-full bg-[#FF651D] shrink-0" /><span className="sr-only">Unread: </span></>}
           {notification.title}
         </h2>
-        <p className="mt-3 text-xs text-[#828282] leading-[1.25] break-words">{notification.message}</p>
+        <p className="mt-3 text-xs text-[#6B6B6B] leading-[1.25] break-words">{notification.message}</p>
         {notification.timestamp && (
-          <p className="mt-3 flex items-center gap-1.5 text-xs text-[#A0A0A0]" title={notification.timeAgo}>
+          <p className="mt-3 flex items-center gap-1.5 text-xs text-[#6B7280]" title={notification.timeAgo}>
             <span>{day}</span>
             {time && <><span aria-hidden className="w-px h-3 bg-[#A0A0A0]" /><span>{time}</span></>}
           </p>
@@ -57,7 +57,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onMarkRead(notification.id); }}
-            className="text-[11px] font-semibold text-[#E04B16] hover:bg-orange-50 px-2 py-1 rounded cursor-pointer whitespace-nowrap"
+            className="text-[11px] font-semibold text-[#C44200] hover:bg-orange-50 px-2 py-1 rounded cursor-pointer whitespace-nowrap"
             title="Mark as read"
           >
             Mark read
@@ -67,7 +67,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onClear(notification.id); }}
-            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer"
+            className="p-1.5 text-gray-500 hover:text-red-700 hover:bg-red-50 rounded-md cursor-pointer"
             title="Clear notification"
             aria-label="Clear notification"
           >

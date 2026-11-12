@@ -51,7 +51,7 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
       <div className="w-full max-w-3xl bg-white rounded-lg shadow-xl my-auto animate-modal">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <h3 id="edit-template-title" className="text-base font-medium text-gray-900">Edit Template</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -62,7 +62,7 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
           <div className="space-y-4 min-w-0">
             <div>
               <label htmlFor="edit-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">
-                Template Name<span className="text-[#FF651D] ml-0.5">*</span>
+                Template Name<span className="text-[#C44200] ml-0.5">*</span>
               </label>
               <input
                 id="edit-template-name"
@@ -80,10 +80,10 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
             ) : (
             <div>
               <span className="block text-sm font-medium text-gray-900 mb-1.5">
-                Invitation Card Design<span className="text-[#FF651D] ml-0.5">*</span>
+                Invitation Card Design<span className="text-[#C44200] ml-0.5">*</span>
               </span>
               <CustomDropdown portal ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
-              <p className="mt-1 text-xs text-[#828282]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image above.</p>
+              <p className="mt-1 text-xs text-[#6B6B6B]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image above.</p>
             </div>
             )}
             <div className="flex items-center gap-3">
@@ -99,12 +99,12 @@ export default function EditTemplateModal({ template, categories, onClose, onSav
                 <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${isPublished ? "translate-x-4" : "translate-x-0"}`} />
               </button>
             </div>
-            {invalid && <p className="text-xs text-[#828282]">Name, category, subcategory and an image are required.</p>}
+            {invalid && <p className="text-xs text-[#6B6B6B]">Name, category, subcategory and an image are required.</p>}
             <div className="flex flex-wrap items-center gap-4 pt-4">
               <button
                 type="submit"
                 disabled={busy || uploading || invalid}
-                className="px-5 py-2.5 bg-[#FF651D] text-white text-sm font-medium rounded-lg hover:bg-[#E5520F] disabled:opacity-60 cursor-pointer"
+                className="px-5 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-lg hover:bg-[#A83800] disabled:opacity-60 cursor-pointer"
               >
                 {busy ? "Saving..." : "Save Template"}
               </button>

@@ -80,7 +80,7 @@ export default function UserNavDropdown() {
                 <div className="flex items-center justify-between gap-1">
                   <p className="text-xs font-bold text-gray-900 truncate">{displayName}</p>
                   {user?.role && (
-                    <span className="text-[9px] font-bold text-[#FF5B22] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded uppercase shrink-0">
+                    <span className="text-[9px] font-bold text-[#C44200] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded uppercase shrink-0">
                       {user.role}
                     </span>
                   )}
@@ -96,7 +96,7 @@ export default function UserNavDropdown() {
                 <button
                   type="button"
                   onClick={handleProfileClick}
-                  className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-[#FF5B22] flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 hover:text-[#A83800] flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -108,7 +108,7 @@ export default function UserNavDropdown() {
                 <button
                   type="button"
                   onClick={handleLogoutClick}
-                  className="w-full text-left px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 flex items-center gap-2.5 transition-colors cursor-pointer"
                 >
                   <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

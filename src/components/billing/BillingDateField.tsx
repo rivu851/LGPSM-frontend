@@ -13,7 +13,7 @@ export default function BillingDateField({ value, onChange, placeholder, label, 
   };
   return (
     <div onClick={open} className="relative bg-white border border-[#E0E0E0] rounded-md h-[47px] px-4 flex items-center gap-2.5 cursor-pointer focus-within:border-[#FF651D]">
-      <span className={`flex-1 min-w-0 truncate text-xs font-medium ${value ? "text-[#15191C]" : "text-[#7F7F7F]"}`}>{value ? formatDay(value) : placeholder}</span>
+      <span className={`flex-1 min-w-0 truncate text-xs font-medium ${value ? "text-[#15191C]" : "text-[#6B6B6B]"}`}>{value ? formatDay(value) : placeholder}</span>
       <Icon name="billing/calendar" width={20} height={20} className="text-[#4B4F52] opacity-60" />
       <input
         ref={input}
@@ -34,5 +34,5 @@ export default function BillingDateField({ value, onChange, placeholder, label, 
 export function formatDay(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return iso;
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).replace(/^(\d+ \w+) /, "$1, ");
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).replace(/^(\d+ \w+) /, "$1, ");
 }

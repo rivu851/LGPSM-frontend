@@ -21,6 +21,7 @@ import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
 import AddSystemUserModal from "@/components/users/AddSystemUserModal";
 import type { UserData } from "@/services/tokenStorage";
+import { formatDate } from "@/utils/dateTime";
 
 export default function AllUsersPage() {
   const { confirm } = useAlert();
@@ -128,7 +129,7 @@ export default function AllUsersPage() {
               eventId: ev.id,
               eventName: ev.name,
               assignedBy: assignedByName,
-              assignedAt: asn.createdAt ? new Date(asn.createdAt).toLocaleDateString() : undefined,
+              assignedAt: asn.createdAt ? formatDate(asn.createdAt) : undefined,
               sessions,
             });
           });
@@ -357,7 +358,7 @@ export default function AllUsersPage() {
         </ListControls>
 
         {/* Custom Green/White Tick Select All Checkbox */}
-        <div className="flex items-center justify-between gap-2 text-sm text-[#828282] pt-1">
+        <div className="flex items-center justify-between gap-2 text-sm text-[#6B6B6B] pt-1">
           <div className="flex items-center gap-2">
           <button
             type="button"
@@ -365,18 +366,19 @@ export default function AllUsersPage() {
 role="checkbox"
 aria-checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
 aria-label="Select all"
-            className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
+            className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
               selectedIds.length === filteredUsers.length && filteredUsers.length > 0
                 ? "bg-[#10B981] border-[#10B981] text-white"
                 : "bg-white border-gray-300 hover:border-gray-400"
-            }`}
-          >
+            }`}>
             {selectedIds.length === filteredUsers.length && filteredUsers.length > 0 && (
               <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             )}
-          </button>
+          </span>
+</button>
           <span onClick={toggleSelectAll} className="cursor-pointer">
             Select All
           </span>
@@ -391,7 +393,7 @@ aria-label="Select all"
               disabled={selectedIds.length === 0}
               aria-label="Delete selected users"
               title="Delete selected users"
-              className="p-1 rounded text-[#4B4F52] hover:text-red-600 disabled:opacity-40 disabled:hover:text-[#4B4F52] cursor-pointer disabled:cursor-not-allowed"
+              className="p-1 rounded text-[#4B4F52] hover:text-red-700 disabled:opacity-40 disabled:hover:text-[#4B4F52] cursor-pointer disabled:cursor-not-allowed"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
@@ -404,8 +406,8 @@ aria-label="Select all"
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="border-b border-gray-200 text-[#828282] font-medium text-sm">
-                <th className="py-3 px-4 w-10"></th>
+              <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm">
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
                 <th className="py-3 px-4 font-medium">User Name</th>
                 <th className="py-3 px-4 font-medium">Assigned Events & Sessions</th>
                 <th className="py-3 px-4 font-medium">Email</th>
@@ -420,7 +422,7 @@ aria-label="Select all"
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400 text-sm">
+                  <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     No SYSTEM_USER accounts found. Add users using the Add User button.
                   </td>
                 </tr>
@@ -439,16 +441,17 @@ aria-label="Select all"
 role="checkbox"
 aria-checked={isSelected}
 aria-label={`Select ${u.name}`}
-                          className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
+                          className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
                             isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
-                          }`}
-                        >
+                          }`}>
                           {isSelected && (
                             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
-                        </button>
+                        </span>
+</button>
                       </td>
 
                       {/* User Name Only (No SYSTEM_USER role badge) */}
@@ -461,7 +464,7 @@ aria-label={`Select ${u.name}`}
                         <button
                           type="button"
                           onClick={() => toggleExpand(u.id)}
-                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#FF5B22] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -506,11 +509,11 @@ aria-label={`Select ${u.name}`}
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
+                                    <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -551,7 +554,7 @@ aria-label={`Select ${u.name}`}
               disabled={selectedIds.length === 0}
               aria-label="Delete selected users"
               title="Delete selected users"
-              className="p-2.5 text-[#FF5B22] hover:text-red-600 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="p-2.5 text-[#C44200] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -561,7 +564,7 @@ aria-label={`Select ${u.name}`}
               type="button"
               onClick={() => { setErrorFeedback(null); setIsAssignModalOpen(true); }}
               disabled={selectedIds.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#FF651D] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#FF651D] disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#A83800] disabled:cursor-not-allowed"
             >
               <span>Assign {selectedIds.length} {selectedIds.length === 1 ? "user" : "users"}</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -581,7 +584,7 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -592,27 +595,27 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#FF5B22]">*</span>
+                  User Name<span className="text-[#C44200]">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#FF5B22]">*</span>
+                  Email<span className="text-[#C44200]">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={editFormData.email}
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -621,7 +624,7 @@ aria-label={`Select ${u.name}`}
                 <PhoneInput
                   value={editFormData.phone}
                   onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -636,7 +639,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingEdit ? "Saving..." : "Save Changes"}
                 </button>
@@ -655,7 +658,7 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -670,7 +673,7 @@ aria-label={`Select ${u.name}`}
               )}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#FF5B22]">*</span>
+                  Event<span className="text-[#C44200]">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
@@ -703,7 +706,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingAssign || selectedIds.length === 0 || !selectedEventId || assignableEvents(eventsList).length === 0}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : "Assign"}
                 </button>
@@ -728,7 +731,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
             >
               Okay
             </button>

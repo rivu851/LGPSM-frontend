@@ -143,9 +143,9 @@ export default function SubHeroIntro() {
           </Link>
           
           {/* Orange Spiralled Arrow SVG matching Figma design */}
-          <div ref={arrowContainerRef} className="mt-0 text-[#FF5B22] flex justify-center z-10">
+          <div ref={arrowContainerRef} className="mt-0 text-[#C44200] flex justify-center z-10">
             <svg
-              className="w-14 h-20 text-[#FF5B22]"
+              className="w-14 h-20 text-[#C44200]"
               viewBox="0 0 60 80"
               fill="none"
               stroke="currentColor"

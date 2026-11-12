@@ -83,7 +83,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
               <svg className="w-full h-full absolute inset-0" viewBox="0 0 42 42">
                 <circle cx="21" cy="21" r={DONUT_RADIUS} fill="none" stroke="#F3F4F6" strokeWidth="5" />
               </svg>
-              <span className="relative text-xs text-gray-400 font-medium">No invitations yet</span>
+              <span className="relative text-xs text-gray-500 font-medium">No invitations yet</span>
             </div>
           ) : (
             <>
@@ -150,13 +150,13 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
             {[60, 90, 45, 75].map((h, i) => <Skeleton key={i} className="flex-1" style={{ height: `${h}%` }} />)}
           </SkeletonRegion>
         ) : sessions.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-xs text-gray-400 font-medium border-l border-b border-gray-200">
+          <div className="h-64 flex items-center justify-center text-xs text-gray-500 font-medium border-l border-b border-gray-200">
             No sessions for this event yet
           </div>
         ) : (
           <div className="relative h-64 w-full pt-7 pb-2 border-l border-b border-gray-200 pl-8">
             <span className="absolute left-8 top-1 whitespace-nowrap bg-white px-0.5 text-[10px] font-semibold text-gray-500">Head Count</span>
-            <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] text-gray-400 font-medium">
+            <div className="absolute left-0 top-0 bottom-6 flex flex-col justify-between text-[10px] text-gray-500 font-medium">
               {ticks.map((t, i) => (
                 <span key={i}>{t}</span>
               ))}

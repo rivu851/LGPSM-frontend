@@ -132,9 +132,9 @@ export default function CustomDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className={`${plain ? "h-[47px] px-4 text-xs font-medium rounded-md border border-transparent hover:text-[#15191C] gap-3" : `w-full ${compact ? "min-h-[47px] px-4 text-xs font-medium" : "min-h-[44px] px-3.5 py-2.5 text-sm"} rounded-md border gap-2`} transition-colors flex items-center justify-between cursor-pointer select-none ${
           plain
-            ? `bg-transparent ${isOpen || plainTone === "ink" ? "text-[#15191C]" : "text-[#7F7F7F]"}`
+            ? `bg-transparent ${isOpen || plainTone === "ink" ? "text-[#15191C]" : "text-[#6B6B6B]"}`
             : disabled
-            ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+            ? "bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed"
             : invalid
               ? "bg-[#FAFAFA] border-rose-400 text-gray-800"
               : isOpen
@@ -142,7 +142,7 @@ export default function CustomDropdown({
                 : "bg-[#FAFAFA] border-[#E0E0E0] hover:border-[#FF651D] text-gray-700"
         }`}
       >
-        <span className={`inline-flex items-center gap-2 min-w-0 ${plain ? "" : selectedOption && value !== "" ? "text-gray-900" : "text-gray-400"}`}>
+        <span className={`inline-flex items-center gap-2 min-w-0 ${plain ? "" : selectedOption && value !== "" ? "text-gray-900" : "text-gray-500"}`}>
           {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
           <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         </span>
@@ -165,7 +165,7 @@ export default function CustomDropdown({
                 setIsOpen(false);
                 topAction.onClick();
               }}
-              className="w-full text-left px-3.5 py-2.5 bg-[#FFF3EC] hover:bg-[#FFE3D7] text-[#E5520F] font-medium text-sm flex items-center gap-2 cursor-pointer border-b border-[#FFE3D7]"
+              className="w-full text-left px-3.5 py-2.5 bg-[#FFF3EC] hover:bg-[#FFE3D7] text-[#A83800] font-medium text-sm flex items-center gap-2 cursor-pointer border-b border-[#FFE3D7]"
             >
               <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -175,7 +175,7 @@ export default function CustomDropdown({
           )}
           <div id={listId} role="listbox" className={`${portal ? "min-h-0" : "max-h-56"} overflow-y-auto pt-1 pb-2`}>
             {options.length === 0 ? (
-              <div className="px-3.5 py-3 text-sm text-gray-400 text-center">{emptyMessage}</div>
+              <div className="px-3.5 py-3 text-sm text-gray-500 text-center">{emptyMessage}</div>
             ) : (
               options.map((opt) => {
                 const isSelected = opt.value === value;
@@ -190,7 +190,7 @@ export default function CustomDropdown({
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 cursor-pointer ${
-                      isSelected ? "bg-orange-50 text-[#E5520F] font-medium" : "text-gray-700 hover:text-[#E5520F]"
+                      isSelected ? "bg-orange-50 text-[#C44200] font-medium" : "text-gray-700 hover:text-[#A83800]"
                     }`}
                   >
                     <span className="inline-flex items-center gap-2 min-w-0">
@@ -216,7 +216,7 @@ export default function CustomDropdown({
                         setIsOpen(false);
                         opt.onRemove?.();
                       }}
-                      className="shrink-0 flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
+                      className="shrink-0 flex size-7 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
                     >
                       <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" />

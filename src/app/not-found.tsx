@@ -10,7 +10,7 @@ export default function NotFound() {
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 py-24">
         
         {/* Decorative 404 Badge */}
-        <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#FF5B22] mb-4">
+        <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#C44200] mb-4">
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 16 16" fill="none">
             <rect x="2" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
             <rect x="9" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
@@ -39,7 +39,7 @@ export default function NotFound() {
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/"
-            className="px-6 py-3 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-sm rounded-md shadow-md transition-all active:scale-95"
+            className="px-6 py-3 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-sm rounded-md shadow-md transition-all active:scale-95"
           >
             Back to Home
           </Link>

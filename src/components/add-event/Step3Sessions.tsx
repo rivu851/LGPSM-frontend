@@ -158,12 +158,12 @@ export default function Step3Sessions({
             <div>
               <div className="flex justify-between items-center mb-1.5 gap-2">
                 <label htmlFor={`session-name-${sess.key}`} className="text-sm font-medium text-gray-900">
-                  Session Name<span className="text-[#FF651D] ml-0.5">*</span>
-                  {isPrimary && <span className="ml-2 text-xs font-normal text-[#828282]">Primary session</span>}
+                  Session Name<span className="text-[#C44200] ml-0.5">*</span>
+                  {isPrimary && <span className="ml-2 text-xs font-normal text-[#6B6B6B]">Primary session</span>}
                 </label>
                 <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." className="ml-auto" />
                 {!sess.backendId && sessions.length > 1 && (
-                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#E5520F] hover:underline cursor-pointer">
+                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#C44200] hover:underline cursor-pointer">
                     Remove
                   </button>
                 )}
@@ -182,7 +182,7 @@ export default function Step3Sessions({
             </div>
 
             {isPrimary && (
-              <p className="text-sm text-[#828282]">This session is the primary session for the event. Its start and end times are used as the default for any new sessions you add. You can change them here or in the event's Sessions page later.
+              <p className="text-sm text-[#6B6B6B]">This session is the primary session for the event. Its start and end times are used as the default for any new sessions you add. You can change them here or in the event's Sessions page later.
               </p>
             )}
 
@@ -192,7 +192,7 @@ export default function Step3Sessions({
                   <span className={`${labelClass} flex items-center justify-between gap-2`}>
                     <span>
                       {field === "start" ? "Start Time" : "End Time"}
-                      <span className="text-[#FF651D] ml-0.5">*</span>
+                      <span className="text-[#C44200] ml-0.5">*</span>
                     </span>
                     <InfoTip
                       label={`About the session ${field} time`}
@@ -214,7 +214,7 @@ export default function Step3Sessions({
               ))}
               <div className="min-w-0">
                 <span className={`${labelClass} flex items-center justify-between gap-2`}>
-                  <span>Access Control<span className="text-[#FF651D] ml-0.5">*</span></span>
+                  <span>Access Control<span className="text-[#C44200] ml-0.5">*</span></span>
                   <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                 </span>
                 <CustomDropdown
@@ -226,7 +226,7 @@ export default function Step3Sessions({
               </div>
             </div>
             {timeError && <p className="-mt-2 text-xs font-medium text-rose-600">{timeError}</p>}
-            {sess.timesLinked && <p className="-mt-2 text-xs text-[#828282]">Follows the event start and end until you change it.</p>}
+            {sess.timesLinked && <p className="-mt-2 text-xs text-[#6B6B6B]">Follows the event start and end until you change it.</p>}
 
             {!isPrimary && (
               <div className="flex flex-wrap items-center gap-2">
@@ -281,18 +281,18 @@ export default function Step3Sessions({
                       <button
                         type="button"
                         onClick={() => onOpenInviteesPreview(sess.key)}
-                        className="flex items-center gap-2 text-sm text-gray-800 hover:text-[#E5520F] cursor-pointer min-w-0"
+                        className="flex items-center gap-2 text-sm text-gray-800 hover:text-[#A83800] cursor-pointer min-w-0"
                         title="Open the invitees list preview"
                       >
                         <ExcelLogo />
                         <span className="truncate">{fileInfo.name}</span>
-                        <span className="shrink-0 text-[#828282]">({fileInfo.rows.length})</span>
+                        <span className="shrink-0 text-[#6B6B6B]">({fileInfo.rows.length})</span>
                       </button>
                     ) : (
-                      <span className="text-sm text-[#828282]">No file chosen</span>
+                      <span className="text-sm text-[#6B6B6B]">No file chosen</span>
                     )}
                     {fileInfo && (
-                      <button type="button" onClick={() => onSessionFileChange(sess.key, null)} aria-label="Remove file" className="p-1 text-gray-400 hover:text-rose-600 cursor-pointer shrink-0">
+                      <button type="button" onClick={() => onSessionFileChange(sess.key, null)} aria-label="Remove file" className="p-1 text-gray-500 hover:text-rose-600 cursor-pointer shrink-0">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -300,7 +300,7 @@ export default function Step3Sessions({
                     )}
                   </div>
                 </div>
-                {fileInfo && <p className="mt-1 text-xs text-[#828282]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
+                {fileInfo && <p className="mt-1 text-xs text-[#6B6B6B]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
                 {(() => {
                   // A list uploaded for this session; lists without a session (the whole event) show on the primary session
                   const lists = existingLists.filter((l) => (l.sessionId ? l.sessionId === sess.backendId : isPrimary));
@@ -320,9 +320,9 @@ export default function Step3Sessions({
                   <p className="mt-1 text-xs font-medium text-amber-700">{fileInfo.problemCount} row(s) need attention — open the preview to fix them.</p>
                 )}
                 <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
-                  <p className="text-xs text-[#828282]">Imported when you save. Files are not kept in the saved draft.</p>
+                  <p className="text-xs text-[#6B6B6B]">Imported when you save. Files are not kept in the saved draft.</p>
                   <span className="inline-flex items-center gap-2">
-                    <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#E5520F] cursor-pointer">
+                    <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#A83800] cursor-pointer">
                       <ExcelLogo /> Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
@@ -337,7 +337,7 @@ export default function Step3Sessions({
       <button
         type="button"
         onClick={handleAddSession}
-        className="px-4 py-2 border border-[#FF651D] text-[#E5520F] hover:bg-orange-50 text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
+        className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-orange-50 text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
       >
         <span aria-hidden>+</span> Add Sessions
       </button>
@@ -355,7 +355,7 @@ export default function Step3Sessions({
           <button
             type="submit"
             disabled={submitting}
-            className="px-7 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? "Saving..." : submitLabel}
           </button>

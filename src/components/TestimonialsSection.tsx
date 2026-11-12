@@ -161,12 +161,14 @@ export default function TestimonialsSection() {
               key={idx}
               onClick={() => handleSlideChange(idx)}
               aria-label={`Go to slide ${idx + 1}`}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
+              className="group inline-flex h-6 w-6 items-center justify-center cursor-pointer"
+            >
+              <span aria-hidden className={`block transition-all duration-300 rounded-full ${
                 activeIdx === idx
-                  ? "w-3 h-3 bg-[#FF5B22] scale-110"
-                  : "w-2 h-2 bg-gray-300 hover:bg-gray-400"
-              }`}
-            />
+                  ? "w-3 h-3 bg-[#C65318] scale-110"
+                  : "w-2 h-2 bg-gray-400 group-hover:bg-gray-500"
+              }`} />
+            </button>
           ))}
         </div>
 

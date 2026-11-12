@@ -255,7 +255,7 @@ export default function PublicInvitationPage() {
   const endDate = event.schedule?.end ? new Date(event.schedule.end) : null;
   const formatDateTime = (d: Date | null) =>
     d && !isNaN(d.getTime())
-      ? d.toLocaleString([], { dateStyle: "medium", timeStyle: "short", timeZone: event.timeZone })
+      ? d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: event.timeZone })
       : "TBD";
   // Only mentioned when the check-in window differs from the event's own hours
   const admissionOpens = event.admission?.opensAt ? new Date(event.admission.opensAt) : null;
@@ -297,6 +297,8 @@ export default function PublicInvitationPage() {
         {/* The invitation card itself is the top of this page: the guest's pass as designed, then the card extends downward with everything the guest needs */}
         {showPass && (
           <>
+            {/* the card image carries the event's name visually; this gives the page its heading for screen readers */}
+            <h1 className="sr-only">{event.title}: your invitation</h1>
             <div className="relative">
               <img
                 src={invitationService.publicInvitationCardUrl(token)}
@@ -419,7 +421,7 @@ export default function PublicInvitationPage() {
                   <Ico name="checkCircle" className="size-[22px]" stroke={2.2} />
                 </span>
                 <span>Accept</span>
-                <span className={`text-[10.5px] font-medium ${selectedRsvp === "ACCEPTED" ? "text-white/85" : "text-emerald-700/70"}`}>I&apos;ll be there</span>
+                <span className={`text-[10.5px] font-medium ${selectedRsvp === "ACCEPTED" ? "text-white/85" : "text-emerald-700"}`}>I&apos;ll be there</span>
               </button>
 
               <button
@@ -436,7 +438,7 @@ export default function PublicInvitationPage() {
                   <Ico name="xCircle" className="size-[22px]" stroke={2.2} />
                 </span>
                 <span>Decline</span>
-                <span className={`text-[10.5px] font-medium ${selectedRsvp === "DECLINED" ? "text-white/85" : "text-rose-700/70"}`}>Can&apos;t make it</span>
+                <span className={`text-[10.5px] font-medium ${selectedRsvp === "DECLINED" ? "text-white/85" : "text-rose-700"}`}>Can&apos;t make it</span>
               </button>
             </div>
 

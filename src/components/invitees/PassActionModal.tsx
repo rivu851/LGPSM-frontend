@@ -69,7 +69,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[#15191C] mb-1.5">Reason<span className="text-[#FF651D]">*</span></label>
+            <label className="block text-sm font-medium text-[#15191C] mb-1.5">Reason<span className="text-[#C44200]">*</span></label>
             <CustomDropdown
               value={category}
               onChange={setCategory}
@@ -84,7 +84,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
 
           <div>
             <label htmlFor="pass-note" className="block text-sm font-medium text-[#15191C] mb-1.5">
-              Explanation{category === "OTHER" ? <span className="text-[#FF651D]">*</span> : <span className="font-normal text-[#828282]"> (optional)</span>}
+              Explanation{category === "OTHER" ? <span className="text-[#C44200]">*</span> : <span className="font-normal text-[#6B6B6B]"> (optional)</span>}
             </label>
             <textarea
               id="pass-note"
@@ -96,14 +96,14 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
             />
             <div className="flex justify-between text-xs">
               <span role="alert" className="text-rose-600">{touched ? errors.note : ""}</span>
-              <span className="text-[#828282]">{note.length}/{NOTE_MAX} · kept in the pass history, not sent to the guest</span>
+              <span className="text-[#6B6B6B]">{note.length}/{NOTE_MAX} · kept in the pass history, not sent to the guest</span>
             </div>
           </div>
           {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
           <button type="button" onClick={onClose} disabled={busy} className="px-6 py-2.5 bg-white border border-[#DDD] rounded-md text-base font-semibold text-black cursor-pointer disabled:opacity-50">Cancel</button>
-          <button type="button" onClick={submit} disabled={busy || (touched && !!blocked)} className="px-6 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] rounded-md text-base font-semibold text-white cursor-pointer disabled:opacity-50">
+          <button type="button" onClick={submit} disabled={busy || (touched && !!blocked)} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-base font-semibold text-white cursor-pointer disabled:opacity-50">
             {busy ? (revoke ? "Revoking…" : "Replacing…") : revoke ? "Revoke" : "Replace"}
           </button>
         </div>

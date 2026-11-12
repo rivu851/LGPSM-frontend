@@ -41,9 +41,9 @@ const tile = "rounded-[26px] border border-[color:var(--inv-line)] bg-white p-4 
 export default function InvitationBento({ event, invitee, state, closesAt, formatDateTime, locationText, addressDetails, admissionNote, startDate, endDate, foodQuestions, foodDone }: Props) {
   const tel = event.contactNumber ? contactWithCountryCode(event.contactNumber) : "";
   const validStart = startDate && !Number.isNaN(startDate.getTime()) ? startDate : null;
-  const day = validStart ? new Intl.DateTimeFormat([], { day: "numeric", timeZone: event.timeZone }).format(validStart) : "";
-  const month = validStart ? new Intl.DateTimeFormat([], { month: "short", timeZone: event.timeZone }).format(validStart).toUpperCase() : "";
-  const weekday = validStart ? new Intl.DateTimeFormat([], { weekday: "long", timeZone: event.timeZone }).format(validStart) : "";
+  const day = validStart ? new Intl.DateTimeFormat("en-IN", { day: "numeric", timeZone: event.timeZone }).format(validStart) : "";
+  const month = validStart ? new Intl.DateTimeFormat("en-IN", { month: "short", timeZone: event.timeZone }).format(validStart).toUpperCase() : "";
+  const weekday = validStart ? new Intl.DateTimeFormat("en-IN", { weekday: "long", timeZone: event.timeZone }).format(validStart) : "";
   const live = !state.cancelled && !state.over;
   const declined = invitee.rsvpStatus === "DECLINED";
   const replied = invitee.rsvpStatus === "ACCEPTED" || declined;
@@ -74,7 +74,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
   const dayKey = (t: number) => { const [y, m, d] = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: event.timeZone }).format(t).split("-").map(Number); return Date.UTC(y, m - 1, d) / 86_400_000; };
   const daysToGo = validStart ? Math.round(dayKey(validStart.getTime()) - dayKey(now)) : null;
   const when = validStart
-    ? new Intl.DateTimeFormat([], { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: event.timeZone }).format(validStart)
+    ? new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit", timeZone: event.timeZone }).format(validStart)
     : "";
   const mySelections = (invitee.dietarySelections || []).map((x) => x.value).filter(Boolean);
   const pending = steps.filter((s) => !s.done && s.href);
@@ -178,7 +178,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
         {event.schedule && (
           <div className="col-span-2 flex items-center gap-4 overflow-hidden rounded-l-[48px] rounded-r-[26px] border border-[color:var(--inv-line)] bg-white py-4 pl-3 pr-4 shadow-sm">
             <span aria-hidden className="flex size-[68px] shrink-0 flex-col items-center justify-center rounded-full bg-[color:var(--inv-primary)] leading-none text-[color:var(--inv-on-primary)] shadow-md">
-              {validStart ? (<><span className="text-[10px] font-bold tracking-widest opacity-90">{month}</span><span className="mt-0.5 text-[26px] font-extrabold">{day}</span></>) : <Ico name="calendar" className="size-7" />}
+              {validStart ? (<><span className="text-[10px] font-bold tracking-widest">{month}</span><span className="mt-0.5 text-[26px] font-extrabold">{day}</span></>) : <Ico name="calendar" className="size-7" />}
             </span>
             <div className="min-w-0">
               <TileLabel>Date &amp; time</TileLabel>

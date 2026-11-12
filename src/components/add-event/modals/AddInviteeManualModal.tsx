@@ -175,7 +175,7 @@ export default function AddInviteeManualModal({
             onClick={closeModal}
             disabled={submitting}
             aria-label="Close"
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer disabled:opacity-50"
+            className="text-gray-500 hover:text-gray-600 transition-colors p-1 rounded-md cursor-pointer disabled:opacity-50"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -221,7 +221,7 @@ export default function AddInviteeManualModal({
             <div>
               <label htmlFor="ai-email" className={labelClass}>
                 Email Address
-                <span className="text-[#828282] font-normal text-xs ml-1">(required if no mobile)</span>
+                <span className="text-[#6B6B6B] font-normal text-xs ml-1">(required if no mobile)</span>
               </label>
               <input
                 id="ai-email"
@@ -238,7 +238,7 @@ export default function AddInviteeManualModal({
             <div>
               <label htmlFor="ai-mobile" className={labelClass}>
                 Mobile Number
-                <span className="text-[#828282] font-normal text-xs ml-1">(required if no email)</span>
+                <span className="text-[#6B6B6B] font-normal text-xs ml-1">(required if no email)</span>
               </label>
               <PhoneInput
                 id="ai-mobile"
@@ -257,14 +257,14 @@ export default function AddInviteeManualModal({
             identityLabel ? (
             <div>
               <label htmlFor="ai-identity" className={labelClass}>
-                {identityLabel} <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                {identityLabel} <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
               </label>
               <input id="ai-identity" type="text" value={identityValue} maxLength={100} onChange={(e) => setIdentityValue(e.target.value)} placeholder={`Enter ${identityLabel}`} className={inputClass} autoComplete="off" />
             </div>
             ) : (
             <div>
               <label className={labelClass}>
-                Professional Identity <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                Professional Identity <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
               </label>
               <CustomDropdown
                 value={identityType}
@@ -291,7 +291,7 @@ export default function AddInviteeManualModal({
             {has("identity2") && (
               <div>
                 <label htmlFor="ai-identity2" className={labelClass}>
-                  {identity2Label || "Second Identity"} <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                  {identity2Label || "Second Identity"} <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
                 </label>
                 <input id="ai-identity2" type="text" value={identity2Value} maxLength={100} onChange={(e) => setIdentity2Value(e.target.value)} placeholder={`Enter ${identity2Label || "second identity"}`} className={inputClass} autoComplete="off" />
               </div>
@@ -301,7 +301,7 @@ export default function AddInviteeManualModal({
             {has("company") && (
               <div>
                 <label htmlFor="ai-company" className={labelClass}>
-                  Company Name <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span>
+                  Company Name <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span>
                 </label>
                 <input
                   id="ai-company"
@@ -337,7 +337,7 @@ export default function AddInviteeManualModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-sm font-medium bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md transition-colors cursor-pointer disabled:opacity-60 min-w-[80px]"
+              className="px-5 py-2 text-sm font-medium bg-[#C65318] hover:bg-[#A83800] text-white rounded-md transition-colors cursor-pointer disabled:opacity-60 min-w-[80px]"
             >
               {submitting ? (
                 <span className="flex items-center gap-2 justify-center">

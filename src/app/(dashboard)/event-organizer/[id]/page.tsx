@@ -12,6 +12,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import { formatEventId } from "@/utils/formatId";
 import { usePageTitle } from "@/context/PageTitleContext";
 import { Skeleton, SkeletonRegion, TableSkeleton } from "@/components/common/Skeleton";
+import { formatDate, formatDateTime } from "@/utils/dateTime";
 
 interface EventRow {
   id: string;
@@ -108,11 +109,11 @@ export default function OrganizerDetailsPage() {
           eventId: formatEventId(ev.eventId || rawId),
           name: ev.title || ev.eventName || "Untitled Event",
           organizer: ev.organizerId?.profile?.organizationName || "Organisation not set",
-          createdOn: ev.createdAt ? new Date(ev.createdAt).toLocaleDateString() : "—",
+          createdOn: formatDate(ev.createdAt, "—"),
           category: ev.categoryId?.name || ev.category || "—",
-          startDate: start ? new Date(start).toLocaleString() : "TBD",
+          startDate: formatDateTime(start, "TBD"),
           startTs: start && !Number.isNaN(new Date(start).getTime()) ? new Date(start).getTime() : null,
-          endDate: end ? new Date(end).toLocaleString() : "TBD",
+          endDate: formatDateTime(end, "TBD"),
           status: eventDisplayStatus({ status: rawStatus, schedule: { start, end } }) as EventRow["status"],
         };
       });
@@ -181,7 +182,7 @@ export default function OrganizerDetailsPage() {
           <div className="max-w-md w-full border border-gray-200 rounded-md p-8 text-center space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Organizer unavailable</h2>
             <p className="text-xs text-gray-500 break-words">{loadError || "Organizer not found."}</p>
-            <Link href="/event-organizer" className="inline-block px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white rounded-md text-xs font-semibold">
+            <Link href="/event-organizer" className="inline-block px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-xs font-semibold">
               Back to Organizers
             </Link>
           </div>
@@ -221,7 +222,7 @@ export default function OrganizerDetailsPage() {
                   className="w-20 h-20 rounded-full object-cover border border-gray-300 shrink-0"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-[#FF5B22]/10 border border-[#FF5B22]/20 text-[#FF5B22] flex items-center justify-center font-bold text-xl uppercase tracking-wider shrink-0">
+                <div className="w-20 h-20 rounded-full bg-[#FF5B22]/10 border border-[#FF5B22]/20 text-[#C44200] flex items-center justify-center font-bold text-xl uppercase tracking-wider shrink-0">
                   {organizer.name ? organizer.name.slice(0, 2) : "OG"}
                 </div>
               )}
@@ -254,7 +255,7 @@ export default function OrganizerDetailsPage() {
               <button
                 onClick={() => setIsDeactivateModalOpen(true)}
                 disabled={isDeactivated}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE8E1] hover:bg-[#FCD8CC] text-[#FF5B22] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE8E1] hover:bg-[#FCD8CC] text-[#A83800] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
@@ -301,7 +302,7 @@ export default function OrganizerDetailsPage() {
               <div>
                 <span className="text-sm font-medium text-[#15191C] block">Earnings</span>
                 <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">—</span>
-                <span className="text-[10px] text-gray-400 block">Billing is not configured yet</span>
+                <span className="text-[10px] text-gray-500 block">Billing is not configured yet</span>
               </div>
               <div className="size-[52px] rounded-full bg-blue-100 text-blue-500 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,7 +319,7 @@ export default function OrganizerDetailsPage() {
                 <h3 className="text-[17px] font-medium text-black shrink-0">Events</h3>
                 <div className="relative flex-1">
                   <svg
-                    className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
+                    className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -330,7 +331,7 @@ export default function OrganizerDetailsPage() {
                     placeholder="Search event.."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-[47px] pl-10 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                    className="w-full h-[47px] pl-10 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
                   />
                 </div>
               </div>
@@ -347,7 +348,7 @@ export default function OrganizerDetailsPage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
-                    {activeFilterCount > 0 && <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-[#FF651D] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+                    {activeFilterCount > 0 && <span className="absolute -top-1.5 -right-1.5 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
                   </button>
                   {filterOpen && (
                     <div role="dialog" aria-label="Filter events" className="absolute right-0 top-full mt-2 z-30 w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-[#E0E0E0] rounded-lg shadow-xl p-4 space-y-3 text-left">
@@ -376,7 +377,7 @@ export default function OrganizerDetailsPage() {
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
                         <button type="button" onClick={() => { const cleared = { category: "", status: "", from: "", to: "" }; setDraftFilters(cleared); setFilters(cleared); setFilterOpen(false); }} className="px-4 py-2 text-xs font-semibold text-[#595D60] bg-[#E6EAED] hover:bg-[#DCE1E5] rounded-md cursor-pointer">Reset</button>
-                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className="px-4 py-2 text-xs font-semibold text-white bg-[#FF651D] hover:bg-[#E5520F] rounded-md cursor-pointer">Apply</button>
+                        <button type="button" onClick={() => { setFilters(draftFilters); setFilterOpen(false); }} className="px-4 py-2 text-xs font-semibold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md cursor-pointer">Apply</button>
                       </div>
                     </div>
                   )}
@@ -397,7 +398,7 @@ export default function OrganizerDetailsPage() {
             <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
-                  <tr className="border-b border-gray-200 text-[#828282] font-medium text-sm bg-white">
+                  <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm bg-white">
                     <th className="py-3 px-4 font-medium">Event ID</th>
                     <th className="py-3 px-4 font-medium">Event Name</th>
                     <th className="py-3 px-4 font-medium">Organizer</th>
@@ -410,12 +411,12 @@ export default function OrganizerDetailsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
                   {filteredEvents.length === 0 && (
-                    <tr><td colSpan={8} className="py-12 text-center text-gray-400 text-sm">{events.length > 0 ? "No events match your search or filters." : "No events found for this organizer."}</td></tr>
+                    <tr><td colSpan={8} className="py-12 text-center text-gray-500 text-sm">{events.length > 0 ? "No events match your search or filters." : "No events found for this organizer."}</td></tr>
                   )}
                   {filteredEvents.map((ev) => (
                     <tr key={ev.id} onClick={() => router.push(`/events/${ev.id}`)} onKeyDown={(e) => { if (e.target === e.currentTarget && e.key === "Enter") router.push(`/events/${ev.id}`); }} tabIndex={0} role="link" aria-label={`Open ${ev.name}`} className="hover:bg-gray-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5B22] transition-colors cursor-pointer">
-                      <td className="py-4 px-4 font-medium text-gray-900"><Link className="hover:text-[#FF5B22]" href={`/events/${ev.id}`}>{ev.eventId}</Link></td>
-                      <td className="py-4 px-4 font-medium text-gray-900"><Link className="hover:text-[#FF5B22]" href={`/events/${ev.id}`}>{ev.name}</Link></td>
+                      <td className="py-4 px-4 font-medium text-gray-900"><Link className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]" href={`/events/${ev.id}`}>{ev.eventId}</Link></td>
+                      <td className="py-4 px-4 font-medium text-gray-900"><Link className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]" href={`/events/${ev.id}`}>{ev.name}</Link></td>
                       <td className="py-4 px-4 text-gray-600">{ev.organizer}</td>
                       <td className="py-4 px-4 text-gray-600">{ev.createdOn}</td>
                       <td className="py-4 px-4 text-gray-600">{ev.category}</td>
@@ -460,7 +461,7 @@ export default function OrganizerDetailsPage() {
               <h3 className="text-base font-medium text-[#15191C]">Deactivate Organizer</h3>
               <button
                 onClick={() => setIsDeactivateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -473,7 +474,7 @@ export default function OrganizerDetailsPage() {
               {/* Reason Dropdown */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Reason<span className="text-[#FF651D] ml-0.5">*</span>
+                  Reason<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <CustomDropdown portal
                   value={deactivateReason}
@@ -491,7 +492,7 @@ export default function OrganizerDetailsPage() {
               {/* Message Organizer Textarea */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Message Organizer<span className="text-[#FF651D] ml-0.5">*</span>
+                  Message Organizer<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <textarea
                   rows={6}
@@ -499,7 +500,7 @@ export default function OrganizerDetailsPage() {
                   placeholder="Type"
                   value={deactivateMessage}
                   onChange={(e) => setDeactivateMessage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] resize-none"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] resize-none"
                 />
               </div>
 
@@ -518,7 +519,7 @@ export default function OrganizerDetailsPage() {
                 <button
                   type="submit"
                   disabled={isDeactivating}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60"
                 >
                   Deactivate
                 </button>

@@ -113,8 +113,8 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
           <p className="text-sm text-[#4B4F52] break-words"><span className="font-medium text-[#15191C]">Address entered:</span> {address}</p>
 
           <div role="status" aria-live="polite" className="text-sm">
-            {status === "searching" && <p className="text-[#828282]">Looking up this address…</p>}
-            {status === "found" && <p className="text-[#1A9242] font-medium">{matches.length === 1 ? "We found this place." : `We found ${matches.length} possible places. Pick the right one.`}</p>}
+            {status === "searching" && <p className="text-[#6B6B6B]">Looking up this address…</p>}
+            {status === "found" && <p className="text-[#0F7A33] font-medium">{matches.length === 1 ? "We found this place." : `We found ${matches.length} possible places. Pick the right one.`}</p>}
             {status === "none" && <p className="text-[#B45309]">We couldn&apos;t find this address on the map. Check the spelling, or click the map to drop the pin yourself.</p>}
             {status === "error" && (
               <p className="text-rose-600">
@@ -143,12 +143,12 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
           )}
 
           <div ref={mapEl} className="h-[300px] w-full rounded-md border border-[#E0E0E0] overflow-hidden z-0" aria-label="Map" />
-          <p className="text-xs text-[#828282]">Click the map or drag the pin to adjust the exact spot. Map data © OpenStreetMap contributors.</p>
+          <p className="text-xs text-[#6B6B6B]">Click the map or drag the pin to adjust the exact spot. Map data © OpenStreetMap contributors.</p>
 
           {chosen !== null && (
             <label className="flex items-start gap-2 text-sm text-[#4B4F52] cursor-pointer">
               <input type="checkbox" checked={useMatchedAddress} onChange={(e) => setUseMatchedAddress(e.target.checked)} className="mt-0.5 size-4 accent-[#16A34A]" />
-              <span>Use the matched address for the event instead of what I typed<span className="block text-xs text-[#828282] break-words">{matches[chosen]?.label}</span></span>
+              <span>Use the matched address for the event instead of what I typed<span className="block text-xs text-[#6B6B6B] break-words">{matches[chosen]?.label}</span></span>
             </label>
           )}
         </div>
@@ -159,7 +159,7 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
             type="button"
             disabled={!point}
             onClick={() => point && onConfirm(point, useMatchedAddress && chosen !== null ? matches[chosen].label : undefined)}
-            className="px-6 py-[11px] text-base font-semibold text-white bg-[#FF651D] rounded-lg hover:bg-[#E5520F] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="px-6 py-[11px] text-base font-semibold text-white bg-[#C65318] rounded-lg hover:bg-[#A83800] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Confirm location
           </button>

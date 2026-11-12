@@ -3,7 +3,7 @@ import React from "react";
 // A dashed outline drawn as one continuous SVG path. CSS `border-style: dashed` restarts its dash pattern on each side,
 // which leaves visible gaps (or stubs) at rounded corners; a single rounded rect wraps the corners unbroken.
 // Put it inside a `relative` (and `group`) parent. The colour comes from the text colour, so hover states are text classes
-// on this element, e.g. className="text-[#D3D3D3] group-hover:text-[#FF651D]".
+// on this element, e.g. className="text-[#D3D3D3] group-hover:text-[#A83800]".
 export default function DashedBorder({ className = "", radius = 6, width = 2 }: { className?: string; radius?: number; width?: number }) {
   const inset = width / 2;
   return (

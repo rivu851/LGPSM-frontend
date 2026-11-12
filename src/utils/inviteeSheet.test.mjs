@@ -60,3 +60,29 @@ test("two custom details are read into their own fields, and survive being rebui
   const again = await parseInviteeSheet(await rowsToSheetFile(parsed.rows, "list.xlsx"));
   assert.deepEqual([again.rows[0].identity, again.rows[0].identity2], ["B1", "T9"]);
 });
+
+import { sheetIssues } from "./inviteeSheet.ts";
+
+test("sheetIssues separates invalid rows, repeated rows and importable rows", () => {
+  const r = sheetIssues([
+    { id: "2", name: "Sheet One", email: "sheet1@x.test", phone: "919877700011" },
+    { id: "3", name: "Sheet Two", email: "sheet2@x.test", phone: "" },
+    { id: "4", name: "Sheet Dup", email: "SHEET1@x.test", phone: "" },
+    { id: "5", name: "No Mail Bad", email: "bad@@x", phone: "" },
+    { id: "6", name: "Same Phone", email: "", phone: "9877700011" },
+  ]);
+  assert.deepEqual([...r.invalid.keys()], ["5"]);
+  assert.deepEqual([...r.repeated.keys()], ["4", "6"]);
+  assert.match(r.repeated.get("4"), /row 2/);
+  assert.equal(r.importable, 2);
+});
+test("sheetIssues never treats two different people with the same name as a repeat", () => {
+  const r = sheetIssues([{ id: "2", name: "Priya Sharma", email: "a@x.test", phone: "" }, { id: "3", name: "Priya Sharma", email: "b@x.test", phone: "" }]);
+  assert.equal(r.repeated.size, 0);
+  assert.equal(r.importable, 2);
+});
+test("sheetIssues: an invalid row does not make a later valid row a repeat", () => {
+  const r = sheetIssues([{ id: "2", name: "X", email: "a@x.test", phone: "" }, { id: "3", name: "Good Name", email: "a@x.test", phone: "" }]);
+  assert.deepEqual([...r.invalid.keys()], ["2"]);
+  assert.equal(r.repeated.size, 0);
+});

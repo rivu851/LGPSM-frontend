@@ -47,7 +47,7 @@ const card = "bg-white border border-[#E0E0E0] rounded-lg";
 // dragged or scrolled (the sessions table's scroll bar, text to select), and a drag must never be taken for "open this page".
 function ArrowLink({ href, label }: { href: string; label: string }) {
   return (
-    <Link href={href} aria-label={label} title={label} className="p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#FF651D] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D]">
+    <Link href={href} aria-label={label} title={label} className="p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#A83800] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D]">
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
       </svg>
@@ -57,7 +57,7 @@ function ArrowLink({ href, label }: { href: string; label: string }) {
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
-  const tones = { peach: "bg-[#FFDCCF] text-[#FF651D]", mint: "bg-[#C9F6E6] text-[#16A34A]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
+  const tones = { peach: "bg-[#FFDCCF] text-[#C44200]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   return (
     <div className={`${card} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
@@ -115,7 +115,7 @@ function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: numbe
         </svg>
         <span className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-lg font-medium text-gray-900 leading-none">{total}</span>
-          <span className="text-[10px] text-[#828282]">guests</span>
+          <span className="text-[10px] text-[#6B6B6B]">guests</span>
         </span>
       </div>
       <ul className="min-w-0 space-y-2 text-xs text-[#4B4F52]">
@@ -230,7 +230,7 @@ export default function EventDetailsPage() {
           <p className="text-sm text-[#4B4F52] break-words">{loadError}</p>
           <div className="flex justify-center gap-3">
             <button type="button" onClick={load} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Retry</button>
-            <Link href="/events" className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-medium">Back to Events</Link>
+            <Link href="/events" className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium">Back to Events</Link>
           </div>
         </div>
       </div>
@@ -254,10 +254,10 @@ export default function EventDetailsPage() {
   // Until the report has arrived nothing is known about invitations, so no claim is made about them
   const status = reportLoaded && timeStatus === "Upcoming" && delivery.SENT === 0 && delivery.FAILED === 0 ? "Invitation not sent" : timeStatus;
   const statusTone: Record<string, string> = {
-    "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
-    Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
+    "Invitation not sent": "bg-[#FFE9C0] text-[#6F5600]",
+    Upcoming: "bg-[#C0FFD5] text-[#0F7A33]",
     Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
-    Completed: "bg-[#FFE3D7] text-[#FF651D]",
+    Completed: "bg-[#FFE3D7] text-[#A83800]",
     Cancelled: "bg-gray-200 text-gray-700",
   };
   const sessionRow = (id: string) => report?.sessionReports.find((r) => String(r.sessionId) === id);
@@ -291,12 +291,12 @@ export default function EventDetailsPage() {
           <div className="min-w-0">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-2xl sm:text-[28px] font-medium text-black break-words">{event.title}</h2>
-              {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#FF651D] text-xs font-medium rounded">{categoryPill}</span>}
+              {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#C44200] text-xs font-medium rounded">{categoryPill}</span>}
             </div>
             <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap text-xs text-[#4B4F52]">
               <span className={`px-3 py-1 rounded-full font-medium ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
               {/* the event ID is for administrators; organizers don't see it */}
-              {user?.role === "ADMIN" && <span className="text-[#828282]">{formatEventId(event._id)}</span>}
+              {user?.role === "ADMIN" && <span className="text-[#6B6B6B]">{formatEventId(event._id)}</span>}
               {organizer && <span><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
               <span className="text-[#D3D3D3] hidden sm:inline">|</span>
               <span className="whitespace-nowrap">
@@ -306,8 +306,8 @@ export default function EventDetailsPage() {
               </span>
             </div>
             {venue && (
-              <p className="mt-2 flex items-start gap-1.5 text-xs text-[#828282]">
-                <svg className="w-4 h-4 shrink-0 text-[#FF651D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
+              <p className="mt-2 flex items-start gap-1.5 text-xs text-[#6B6B6B]">
+                <svg className="w-4 h-4 shrink-0 text-[#C44200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
                   <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
                   <circle cx="12" cy="9.5" r="2.5" />
                 </svg>
@@ -333,14 +333,14 @@ export default function EventDetailsPage() {
             )}
             {/* After sending, Figma 426:2 keeps Edit visible but faded: the event is locked (the API refuses edits too) */}
             {!editLocked && reportLoaded ? (
-              <Link href={`/events/${eventId}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
+              <Link href={`/events/${eventId}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               Edit
               </Link>
             ) : (
-              <button type="button" disabled title={editLocked ? "This event can’t be edited after invitations have been sent" : "Checking whether this event can still be edited…"} className="inline-flex items-center gap-2 px-4 py-2 bg-[#FF651D] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <button type="button" disabled title={editLocked ? "This event can’t be edited after invitations have been sent" : "Checking whether this event can still be edited…"} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -374,7 +374,7 @@ export default function EventDetailsPage() {
                   <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
                   <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
                 </div>
-                {event.operationalDataCleared ? <p className="text-sm text-[#828282] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
+                {event.operationalDataCleared ? <p className="text-sm text-[#6B6B6B] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>
 
               <section className={`${card} p-4 min-w-0`} aria-labelledby="sessions-widget-title">
@@ -383,12 +383,12 @@ export default function EventDetailsPage() {
                   <ArrowLink href={`/events/${eventId}/sessions`} label="Open sessions list" />
                 </div>
                 {sessions.length === 0 ? (
-                  <p className="text-sm text-[#828282] py-6 text-center">No sessions yet.</p>
+                  <p className="text-sm text-[#6B6B6B] py-6 text-center">No sessions yet.</p>
                 ) : (
                   <HorizontalScroll>
                     {/* fits the card at any width: names, times and headings wrap (no fixed minimum width), so no scroll bar appears */}
                     <table className="w-full text-left text-sm">
-                      <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                      <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                         <tr>
                           <th className="py-2 pr-2 font-medium">#</th>
                           <th className="py-2 pr-3 font-medium">Session Name</th>
@@ -421,7 +421,7 @@ export default function EventDetailsPage() {
           <section className={`${card} p-4 flex flex-col`} aria-labelledby="card-preview-heading">
             <div className="flex items-center justify-between mb-3">
               <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">Card Preview</h3>
-              <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#FF651D] cursor-pointer">
+              <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#A83800] cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
@@ -435,21 +435,21 @@ export default function EventDetailsPage() {
                 label={event.title}
               />
             </div>
-            <p className="mt-2 text-xs text-[#828282] truncate">
+            <p className="mt-2 text-xs text-[#6B6B6B] truncate">
               {typeof event.templateId === "object" && event.templateId?.name ? `Template: ${event.templateId.name}` : "Design chosen from the event type"}
             </p>
             {/* Faded once invitations have gone out (Figma 426:2); resends happen per guest on the Invitees tab */}
             {event.status === "CANCELLED" ? (
-              <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#FF651D] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
+              <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
                 Send Invitation
               </span>
             ) : invitationLifecycleStarted ? (
-              <span aria-disabled="true" title="Invitations have been sent. Resend to guests from the Invitees tab." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#FF651D] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <span aria-disabled="true" title="Invitations have been sent. Resend to guests from the Invitees tab." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
               Send Invitation
             </span>
             ) : (
-            <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
+            <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
               Send Invitation
             </Link>
@@ -476,24 +476,24 @@ export default function EventDetailsPage() {
               <h4 className="text-sm font-medium text-gray-900 mb-4">Session Health Overview Panel</h4>
               {selected ? (
                 <div className="grid grid-cols-3 gap-2">
-                  <Ring value={attended} max={invited} center={<>{attended}<span className="text-[10px] text-[#828282]">/{invited}</span></>} label="Current Logged" />
+                  <Ring value={attended} max={invited} center={<>{attended}<span className="text-[10px] text-[#6B6B6B]">/{invited}</span></>} label="Current Logged" />
                   <Ring value={selected.checkInsToday ?? 0} max={Math.max(invited, 1)} center={selected.checkInsToday ?? 0} label="Check-ins Today" />
                   <Ring value={attended} max={invited} center={`${invited > 0 ? Math.round((attended / invited) * 100) : 0}%`} label="Occupancy" />
                 </div>
               ) : (
-                <p className="text-sm text-[#828282] py-6 text-center">{sessions.length ? "No data for this session yet." : "Add a session to see its health."}</p>
+                <p className="text-sm text-[#6B6B6B] py-6 text-center">{sessions.length ? "No data for this session yet." : "Add a session to see its health."}</p>
               )}
             </div>
             <div className="border border-[#E0E0E0] rounded-lg p-4 min-w-0">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Access Logs</h4>
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
                 <table className="w-full text-left text-sm min-w-[520px]">
-                  <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                  <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">Session</th><th className="py-2 pr-3 font-medium">Entry Time</th><th className="py-2 pr-3 font-medium">Exit Time</th><th className="py-2 font-medium">Staff</th></tr>
                   </thead>
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {accessLogs.length === 0 ? (
-                      <tr><td colSpan={5} className="py-6 text-center text-[#828282]">No guests have entered yet.</td></tr>
+                      <tr><td colSpan={5} className="py-6 text-center text-[#6B6B6B]">No guests have entered yet.</td></tr>
                     ) : (
                       accessLogs.map((log) => (
                         <tr key={log.id}>

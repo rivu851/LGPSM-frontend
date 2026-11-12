@@ -53,7 +53,7 @@ export default function RowMenu({ label, items }: { label: string; items: RowMen
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={toggle}
-        className="p-1 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+        className="inline-flex h-6 min-w-6 items-center justify-center p-1 text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
       >
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
           <path d="M6 10a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z" />
@@ -72,7 +72,7 @@ export default function RowMenu({ label, items }: { label: string; items: RowMen
               type="button"
               role="menuitem"
               onClick={() => { setPos(null); item.onClick(); }}
-              className="flex items-center gap-2 hover:text-[#FF5B22] transition-colors w-full text-left py-1 cursor-pointer"
+              className="flex items-center gap-2 hover:text-[#FF651D] transition-colors w-full text-left py-1 cursor-pointer"
             >
               {item.icon}
               <span>{item.label}</span>

@@ -112,7 +112,7 @@ export default function HowItWorks() {
             <rect x="2" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
             <rect x="9" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
           </svg>
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#FF5B22]">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C44200]">
             APPLICATION
           </span>
         </div>
@@ -139,7 +139,7 @@ export default function HowItWorks() {
             <h4 className="text-base sm:text-lg font-semibold text-white mb-3">
               {stepsData[activeStep].step}
             </h4>
-            <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-lg">
+            <p className="text-xs sm:text-sm text-gray-500 leading-relaxed max-w-lg">
               {stepsData[activeStep].desc}
             </p>
           </div>
@@ -168,16 +168,18 @@ export default function HowItWorks() {
           {/* Vertical Step Number Indicator */}
           <nav aria-label="How It Works steps" className="flex flex-col items-center gap-2 shrink-0">
             <span className="text-xs font-bold text-white" aria-hidden="true">01</span>
-            <div className="w-[2px] h-28 bg-gray-800 relative rounded-full overflow-hidden flex flex-col justify-between">
+            <div className="w-[2px] h-28 bg-gray-800 relative rounded-full flex flex-col justify-between">
               {stepsData.map((step, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleStepChange(idx)}
                   aria-label={`Go to step ${idx + 1}: ${step.step}`}
                   aria-current={activeStep === idx ? "true" : undefined}
-                  className={`w-full h-5 transition-colors cursor-pointer ${activeStep === idx ? "bg-white" : "bg-transparent hover:bg-gray-600"
-                    }`}
-                />
+                  // the bar is 2px wide; the button around it is 24px so it can be pressed, and draws only the 2px
+                  className="group relative -mx-[11px] h-5 w-6 cursor-pointer"
+                >
+                  <span aria-hidden className={`absolute inset-y-0 left-[11px] w-[2px] transition-colors ${activeStep === idx ? "bg-white" : "bg-transparent group-hover:bg-gray-600"}`} />
+                </button>
               ))}
             </div>
             <span className="text-xs font-bold text-gray-500" aria-hidden="true">05</span>

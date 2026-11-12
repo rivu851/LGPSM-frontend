@@ -112,7 +112,7 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
       href="/events/add"
       onClick={onLinkClick("/events/add", onNavigate)}
       className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-base font-semibold text-white transition-colors ${
-        active ? "bg-[#FF651D] hover:bg-[#E5520F]" : "bg-[#262A2D] hover:bg-[#30353A]"
+        active ? "bg-[#C65318] hover:bg-[#A83800]" : "bg-[#262A2D] hover:bg-[#30353A]"
       }`}
     >
       <NavIcon name="add" />

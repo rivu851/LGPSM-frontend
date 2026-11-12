@@ -42,6 +42,6 @@ const csvCell = (v: string | number) => {
 };
 
 export function statementCsv(invoices: Invoice[]): string {
-  const rows = [["Invoice ID", "Event Name", "No Invitees", "Payment Date", "Amount"], ...invoices.map((i) => [i.invoiceId, i.eventName, i.invitees, dayOf(i.paymentDate), i.amount.toFixed(2)])];
+  const rows = [["Invoice ID", "Event Name", "No Invitees", "Payment Date", "Amount (INR)"], ...invoices.map((i) => [i.invoiceId, i.eventName, i.invitees, dayOf(i.paymentDate), i.amount.toFixed(2)])];
   return rows.map((r) => r.map(csvCell).join(",")).join("\n");
 }

@@ -109,15 +109,15 @@ export default function ImageUploadField({
             dragOver ? "bg-orange-50/50" : "bg-[#FAFAFA]"
           }`}
         >
-          <DashedBorder className={dragOver ? "text-[#FF651D]" : "text-[#D3D3D3] group-hover:text-[#FF651D]"} />
+          <DashedBorder className={dragOver ? "text-[#C44200]" : "text-[#D3D3D3] group-hover:text-[#A83800]"} />
           <span className="text-[#4B4F52]">
             {uploading ? "Uploading..." : (
               <>
-                Drag and drop an image here or <span className="text-[#E5520F] font-medium underline">click to open file</span>
+                Drag and drop an image here or <span className="text-[#C44200] font-medium underline">click to open file</span>
               </>
             )}
           </span>
-          <span className="block mt-1 text-xs text-[#828282]">{hint}</span>
+          <span className="block mt-1 text-xs text-[#6B6B6B]">{hint}</span>
         </button>
       )}
       {error && <p role="alert" className="mt-1.5 text-xs font-medium text-rose-600">{error}</p>}

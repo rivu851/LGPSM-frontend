@@ -18,9 +18,13 @@ export function summarizeDelivery(results, verb, channel) {
     });
     const email = channelCounts("emailStatus");
     const whatsapp = channelCounts("whatsappStatus");
+    // A guest counts as "sent" as soon as one channel reached them; a channel that failed for some or all guests is still a failure the
+    // organizer has to see, so it can never be reported as plain success
+    const channelFailures = [email.failed ? `${email.failed} by email` : "", whatsapp.failed ? `${whatsapp.failed} on WhatsApp` : ""].filter(Boolean);
+    const channelNote = channelFailures.length ? ` Not delivered: ${channelFailures.join(", ")}.` : "";
     return {
-      type: failed.length ? (sent ? "info" : "error") : skipped || alreadyInvited ? "info" : "success",
-      message: `${sent} ${verb}, ${failed.length} failed${skippedNote}.`,
+      type: failed.length ? (sent ? "info" : "error") : channelFailures.length || skipped || alreadyInvited ? "info" : "success",
+      message: `${sent} ${verb}, ${failed.length} failed${skippedNote}.${channelNote}`,
       details: [
         `Email: ${email.sent} sent, ${email.failed} failed, ${Math.max(0, results.length - email.sent - email.failed)} skipped`,
         `WhatsApp: ${whatsapp.sent} sent, ${whatsapp.failed} failed, ${Math.max(0, results.length - whatsapp.sent - whatsapp.failed)} skipped`,

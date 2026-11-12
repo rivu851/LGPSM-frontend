@@ -29,13 +29,14 @@ import {
 } from "@/utils/aiTemplate";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
 import DashedBorder from "@/components/common/DashedBorder";
+import { formatDate } from "@/utils/dateTime";
 
 const PROMPT_EXAMPLES: Record<TemplateKind, string[]> = {
   INVITATION: ["Elegant black and gold invitation for a corporate awards night", "Playful pastel birthday invitation with balloons", "Warm traditional wedding reception invitation in maroon and gold"],
   POSTER: ["Bold modern poster for a two-day technology summit", "Festive poster for a charity fundraiser dinner", "Minimal poster for an alumni meet-up"],
 };
 
-const inputClass = "w-full rounded-md border border-[#D9D9D9] bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#FF651D] focus:outline-none focus:ring-1 focus:ring-[#FF651D]";
+const inputClass = "w-full rounded-md border border-[#D9D9D9] bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[#FF651D] focus:outline-none focus:ring-1 focus:ring-[#FF651D]";
 
 type Busy = null | "starting" | "saving" | "discarding";
 
@@ -202,7 +203,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
   const save = async (publish: boolean, replace = false) => {
     if (!job || busy) return;
-    const name = saveName.trim() || `AI ${kind === "POSTER" ? "poster" : "invitation"} ${new Date().toLocaleDateString()}`;
+    const name = saveName.trim() || `AI ${kind === "POSTER" ? "poster" : "invitation"} ${formatDate(new Date())}`;
     setBusy("saving");
     const res = await templateGenerationService.save(job.id, selected, { name, publish, ...(replace && editTarget ? { replaceTemplateId: editTarget.id } : {}) });
     setBusy(null);
@@ -246,7 +247,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
       <form onSubmit={generate} className="bg-white border border-[#E0E0E0] rounded-lg p-5 space-y-5 xl:sticky xl:top-24" aria-label="Describe your design">
         <div>
           <h2 className="text-base font-medium text-gray-900">{editTarget ? "Edit your design" : "Describe your design"}</h2>
-          <p className="text-sm text-[#828282] mt-0.5">We design the look. Your event details are filled in automatically every time you use it.</p>
+          <p className="text-sm text-[#6B6B6B] mt-0.5">We design the look. Your event details are filled in automatically every time you use it.</p>
         </div>
 
         {editTarget ? (
@@ -258,15 +259,15 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 </div>
               )}
               <div className="min-w-0">
-                <p className="text-xs uppercase tracking-wide text-[#828282]">Editing</p>
+                <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">Editing</p>
                 <p className="text-sm font-medium text-gray-900 break-words">{editTarget.name}</p>
-                <p className="text-xs text-[#828282] mt-1">Your original stays as it is until you choose to replace it.</p>
+                <p className="text-xs text-[#6B6B6B] mt-1">Your original stays as it is until you choose to replace it.</p>
               </div>
             </div>
             <div>
               <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">What should change?</label>
               <textarea id="ai-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={options?.limits.changeMax || 500} placeholder="e.g. Use a deep blue background and make the title larger" className={inputClass} />
-              <div className="mt-1 flex justify-between text-xs text-[#828282]"><span>{prompt.length > 0 && prompt.trim().length < 10 ? <span className="text-rose-600">Add a little more detail (10+ characters)</span> : "Describe only what you want different."}</span><span className="tabular-nums">{prompt.length}/{options?.limits.changeMax || 500}</span></div>
+              <div className="mt-1 flex justify-between text-xs text-[#6B6B6B]"><span>{prompt.length > 0 && prompt.trim().length < 10 ? <span className="text-rose-600">Add a little more detail (10+ characters)</span> : "Describe only what you want different."}</span><span className="tabular-nums">{prompt.length}/{options?.limits.changeMax || 500}</span></div>
             </div>
           </>
         ) : editTemplateId && !editLoadError ? (
@@ -284,7 +285,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
               </button>
             ))}
           </div>
-          <p className="text-xs text-[#828282] mt-1.5">{kind === "INVITATION" ? "Each guest gets their own check-in QR code on it." : "Carries a registration QR code you choose when you download it."}</p>
+          <p className="text-xs text-[#6B6B6B] mt-1.5">{kind === "INVITATION" ? "Each guest gets their own check-in QR code on it." : "Carries a registration QR code you choose when you download it."}</p>
         </fieldset>
 
         <div>
@@ -295,7 +296,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
         <div>
           <label htmlFor="ai-prompt" className="block text-sm font-medium text-gray-900 mb-1.5">Describe the look</label>
           <textarea id="ai-prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={4} maxLength={promptMax} placeholder={PROMPT_EXAMPLES[kind][0]} className={inputClass} aria-describedby="ai-prompt-help" />
-          <div id="ai-prompt-help" className="mt-1 flex items-start justify-between gap-3 text-xs text-[#828282]">
+          <div id="ai-prompt-help" className="mt-1 flex items-start justify-between gap-3 text-xs text-[#6B6B6B]">
             <span>{prompt.length > 0 && promptTooShort ? <span className="text-rose-600">Add a little more detail ({options.limits.promptMin}+ characters)</span> : "Mention occasion, mood and colours."}</span>
             <span className="shrink-0 tabular-nums">{prompt.length}/{promptMax}</span>
           </div>
@@ -329,10 +330,10 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
         {error && !job && <ErrorBanner error={error} />}
 
-        <button type="submit" disabled={busy !== null || running || promptTooShort || usageExhausted(usage) || (!!editTemplateId && !editTarget)} className="w-full rounded-md bg-[#FF651D] hover:bg-[#E5520F] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 cursor-pointer">
+        <button type="submit" disabled={busy !== null || running || promptTooShort || usageExhausted(usage) || (!!editTemplateId && !editTarget)} className="w-full rounded-md bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 cursor-pointer">
           {busy === "starting" ? "Starting…" : running ? "Designing…" : editTarget ? "Apply edit" : "Generate designs"}
         </button>
-        <p className={`text-xs text-center ${usageExhausted(usage) ? "text-amber-700 font-medium" : "text-[#828282]"}`} aria-live="polite">{usageLabel(usage) || `Up to ${options.limits.dailyQuota} generations per day.`}</p>
+        <p className={`text-xs text-center ${usageExhausted(usage) ? "text-amber-700 font-medium" : "text-[#6B6B6B]"}`} aria-live="polite">{usageLabel(usage) || `Up to ${options.limits.dailyQuota} generations per day.`}</p>
       </form>
 
       <section aria-live="polite" aria-label="Designs" className="min-w-0 space-y-5">
@@ -340,18 +341,18 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
           <div className="relative rounded-lg bg-[#FAFAFA] py-16 px-6 text-center">
             <DashedBorder width={1} radius={8} className="text-[#D9D9D9]" />
             <p className="text-base font-medium text-gray-900">Your designs will appear here</p>
-            <p className="text-sm text-[#828282] mt-1 max-w-md mx-auto">Describe the look you want and choose Generate. A design usually takes about a minute.</p>
+            <p className="text-sm text-[#6B6B6B] mt-1 max-w-md mx-auto">Describe the look you want and choose Generate. A design usually takes about a minute.</p>
           </div>
         )}
 
         {recent.length > 0 && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#828282] mb-2">Recent</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-[#6B6B6B] mb-2">Recent</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {recent.map((j) => (
                 <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] hover:border-[#FF651D]"}`}>
                   <span className="block text-xs font-medium text-gray-900 truncate">{j.prompt}</span>
-                  <span className="block text-xs text-[#828282]">{jobSummary(j)}</span>
+                  <span className="block text-xs text-[#6B6B6B]">{jobSummary(j)}</span>
                 </button>
               ))}
             </div>
@@ -369,7 +370,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 <div key={i} className="aspect-[9/16] rounded-md bg-gradient-to-b from-[#F4F5F8] to-[#ECEDF1] animate-pulse" />
               ))}
             </div>
-            {slow && <p className="mt-4 text-sm text-[#828282]">This is taking longer than usual. It keeps running on our servers, so you can leave this page and come back.</p>}
+            {slow && <p className="mt-4 text-sm text-[#6B6B6B]">This is taking longer than usual. It keeps running on our servers, so you can leave this page and come back.</p>}
           </div>
         )}
 
@@ -405,7 +406,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 return (
                   <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#FF651D]" : "border-[#E0E0E0] hover:border-[#FF651D]/60"}`}>
                     <div className="relative w-full aspect-[9/16] bg-[#F4F5F8]">
-                      {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#828282]">No preview</span>}
+                      {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#6B6B6B]">No preview</span>}
                     </div>
                     <div className="px-3 py-2 flex items-center justify-between gap-2">
                       <span className="text-sm font-medium text-gray-900">Option {v.index + 1}</span>
@@ -433,7 +434,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                         <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}>Original concept</button>
                       </div>
                     )}
-                    <p className="mt-2 text-xs text-[#828282]">{variant.ready ? "Preview uses sample details. Your real event, venue and QR code are filled in when you use it." : "Concept only, not a template."}</p>
+                    <p className="mt-2 text-xs text-[#6B6B6B]">{variant.ready ? "Preview uses sample details. Your real event, venue and QR code are filled in when you use it." : "Concept only, not a template."}</p>
                   </div>
 
                   <div className="space-y-5 min-w-0">
@@ -447,7 +448,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                       <div role="status" className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 space-y-3">
                         <p className="font-medium">&ldquo;{saved.name}&rdquo; is saved{saved.published ? " and ready to use" : " as a draft"}.</p>
                         <div className="flex flex-wrap gap-3">
-                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
+                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
                           <Link href="/templates?view=mine" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">Go to my templates</Link>
                         </div>
                       </div>
@@ -459,11 +460,11 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                         </div>
                         {editTarget && (
                           <div className="flex flex-wrap gap-3">
-                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : `Replace “${editTarget.name}”`}</button>
+                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : `Replace “${editTarget.name}”`}</button>
                           </div>
                         )}
                         <div className="flex flex-wrap gap-3">
-                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : editTarget ? "Save as new template" : "Save and use"}</button>
+                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : editTarget ? "Save as new template" : "Save and use"}</button>
                           <button type="button" disabled={busy !== null} onClick={() => save(false)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{editTarget ? "Save new one as draft" : "Save as draft"}</button>
                         </div>
                       </div>
@@ -509,7 +510,7 @@ function Panel({ tone, title, message, action }: { tone: "error" | "info"; title
     <div role={tone === "error" ? "alert" : "status"} className={`rounded-lg border p-8 text-center ${tone === "error" ? "border-rose-200 bg-rose-50" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
       <p className="text-base font-medium text-gray-900">{title}</p>
       <p className="text-sm text-[#4B4F52] mt-1 max-w-md mx-auto">{message}</p>
-      {action && <Link href={action.href} className="inline-block mt-4 px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">{action.label}</Link>}
+      {action && <Link href={action.href} className="inline-block mt-4 px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">{action.label}</Link>}
     </div>
   );
 }

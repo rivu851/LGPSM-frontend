@@ -31,7 +31,7 @@ test("a statement range needs both dates, in order", () => {
 test("the statement CSV has a header, quotes commas and defuses formulas", () => {
   const csv = statementCsv([inv("A1", 'Gala, "big"', "2026-01-04"), inv("B2", "=HYPERLINK(1)", "2026-01-05")]);
   const lines = csv.split("\n");
-  assert.equal(lines[0], "Invoice ID,Event Name,No Invitees,Payment Date,Amount");
+  assert.equal(lines[0], "Invoice ID,Event Name,No Invitees,Payment Date,Amount (INR)");
   assert.equal(lines[1], 'A1,"Gala, ""big""",5,2026-01-04,1000.00');
   assert.ok(lines[2].includes("'=HYPERLINK(1)"));
 });

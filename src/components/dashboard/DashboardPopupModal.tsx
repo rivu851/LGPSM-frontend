@@ -126,7 +126,7 @@ export default function DashboardPopupModal({
                 <div className="w-8 h-8 rounded-lg bg-[#FFF0EB] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 shadow-xs">
                   {item.icon}
                 </div>
-                <span className="group-hover:text-[#FF651D] transition-colors duration-200">{item.label}</span>
+                <span className="group-hover:text-[#A83800] transition-colors duration-200">{item.label}</span>
               </li>
             ))}
           </ul>

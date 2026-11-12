@@ -49,7 +49,7 @@ export default function OrganisationDetailsForm() {
   return (
     <section className="border border-[#E5E5E5] bg-[#F8F8F8] rounded-lg p-6 sm:p-8" aria-label="Organisation details">
       <h2 className="text-xl font-medium text-black mb-1">Organisation Details</h2>
-      <p className="text-xs text-[#828282] mb-5">Shown on your account. Only the organisation name is required.</p>
+      <p className="text-xs text-[#6B6B6B] mb-5">Shown on your account. Only the organisation name is required.</p>
       {message && (
         <div role={message.type === "error" ? "alert" : "status"} className={`mb-4 p-3 rounded-md border text-xs font-semibold ${message.type === "error" ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700"}`}>
           {message.text}
@@ -62,24 +62,24 @@ export default function OrganisationDetailsForm() {
             <input id="org-name" value={org.name} onChange={set("name")} maxLength={150} className={field} />
           </div>
           <div>
-            <label htmlFor="org-phone" className={label}>Organisation phone <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
+            <label htmlFor="org-phone" className={label}>Organisation phone <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
             <PhoneInput id="org-phone" value={org.phone} onValueChange={(v) => { setEdits((o) => ({ ...o, phone: v })); setMessage(null); }} className={field} />
           </div>
           <div>
-            <label htmlFor="org-email" className={label}>Organisation email <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
+            <label htmlFor="org-email" className={label}>Organisation email <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
             <input id="org-email" type="email" value={org.email} onChange={set("email")} maxLength={150} className={field} />
           </div>
           <div>
-            <label htmlFor="org-website" className={label}>Website <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
+            <label htmlFor="org-website" className={label}>Website <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
             <input id="org-website" value={org.website} onChange={set("website")} placeholder="https://" maxLength={200} className={field} />
           </div>
           <div className="md:col-span-2">
-            <label htmlFor="org-address" className={label}>Address <span className="text-[#828282] font-normal text-xs ml-1">(optional)</span></label>
+            <label htmlFor="org-address" className={label}>Address <span className="text-[#6B6B6B] font-normal text-xs ml-1">(optional)</span></label>
             <input id="org-address" value={org.address} onChange={set("address")} maxLength={300} className={field} />
           </div>
         </div>
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || !dirty} className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <button type="submit" disabled={saving || !dirty} className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? "Saving..." : "Save"}
           </button>
           {dirty && !saving && (

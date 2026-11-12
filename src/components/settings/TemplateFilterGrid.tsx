@@ -70,7 +70,7 @@ export default function TemplateFilterGrid({ templates, categories, loading = fa
 {Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[302/524]" />)}
 </SkeletonRegion>
       ) : filtered.length === 0 ? (
-        <div className="rounded-md border border-[#E0E0E0] p-8 text-center text-sm text-[#828282]">
+        <div className="rounded-md border border-[#E0E0E0] p-8 text-center text-sm text-[#6B6B6B]">
           {templates.length === 0 ? "No templates have been added yet." : "No templates match the selected filters."}
         </div>
       ) : (

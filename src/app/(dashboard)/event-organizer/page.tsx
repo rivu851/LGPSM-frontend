@@ -12,6 +12,7 @@ import RowMenu from "@/components/common/RowMenu";
 import Icon from "@/components/icons/Icon";
 import Pagination from "@/components/common/Pagination";
 import { paginate } from "@/utils/pagination.mjs";
+import { formatMoney } from "@/utils/money";
 
 interface OrganizerRow {
   id: string;
@@ -149,7 +150,7 @@ export default function AllOrganizersPage() {
             <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex items-center justify-between">
               <div>
                 <span className="text-sm font-medium text-[#15191C] block">Earnings</span>
-                <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">$0</span>
+                <span className="text-[32px] leading-tight font-semibold text-black mt-1 block">{formatMoney(0, { maxFractionDigits: 0 })}</span>
               </div>
               <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,7 +165,7 @@ export default function AllOrganizersPage() {
             <div className="overflow-x-auto pb-16">
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead>
-                  <tr className="border-b border-gray-200 text-gray-400 font-medium text-[11px] bg-white">
+                  <tr className="border-b border-gray-200 text-gray-500 font-medium text-[11px] bg-white">
                     <th className="py-3 px-4 w-10">
                       <button
                         type="button"
@@ -172,25 +173,26 @@ export default function AllOrganizersPage() {
 role="checkbox"
 aria-checked={selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0}
 aria-label="Select all"
-                        className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
+                        className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
                           selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0
                             ? "bg-[#10B981] border-[#10B981] text-white"
                             : "bg-white border-gray-300 hover:border-gray-400"
-                        }`}
-                      >
+                        }`}>
                         {selectedIds.length === filteredOrganizers.length && filteredOrganizers.length > 0 && (
                           <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         )}
-                      </button>
+                      </span>
+</button>
                     </th>
-                    <th className="py-3 px-4 font-medium text-gray-400">Organizer</th>
-                    <th className="py-3 px-4 font-medium text-gray-400">Type</th>
-                    <th className="py-3 px-4 font-medium text-gray-400">Email</th>
-                    <th className="py-3 px-4 font-medium text-gray-400">Phone Number</th>
-                    <th className="py-3 px-4 font-medium text-gray-400">Status</th>
-                    <th className="py-3 px-4 text-right font-medium text-gray-400">Action</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">Organizer</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">Type</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">Email</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">Phone Number</th>
+                    <th className="py-3 px-4 font-medium text-gray-500">Status</th>
+                    <th className="py-3 px-4 text-right font-medium text-gray-500">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -201,7 +203,7 @@ aria-label="Select all"
                     <tr><td colSpan={7} className="py-12 text-center text-rose-600 text-sm">{loadError}</td></tr>
                   )}
                   {!loading && !loadError && filteredOrganizers.length === 0 && (
-                    <tr><td colSpan={7} className="py-12 text-center text-gray-400 text-sm">No organizers found.</td></tr>
+                    <tr><td colSpan={7} className="py-12 text-center text-gray-500 text-sm">No organizers found.</td></tr>
                   )}
                   {pageOrganizers.map((org) => {
                     const isSelected = selectedIds.includes(org.id);
@@ -224,23 +226,24 @@ aria-label="Select all"
 role="checkbox"
 aria-checked={isSelected}
 aria-label={`Select ${org.name}`}
-                            className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
+                            className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
                               isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
-                            }`}
-                          >
+                            }`}>
                             {isSelected && (
                               <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
-                          </button>
+                          </span>
+</button>
                         </td>
 
                         {/* Organizer Name with link to details */}
                         <td className="py-4 px-4 font-medium text-gray-900">
                           <Link
                             href={`/event-organizer/${org.id}`}
-                            className="hover:text-[#FF5B22] transition-colors cursor-pointer"
+                            className="hover:text-[#A83800] transition-colors cursor-pointer"
                           >
                             {org.name}
                             <span className="block text-xs font-normal text-gray-500">Account: {org.accountName}</span>
@@ -282,7 +285,7 @@ aria-label={`Select ${org.name}`}
             </div>
 
             {totalPages > 1 && (
-              <div className="p-4 border-t border-gray-200 flex items-center justify-between gap-3 text-xs text-[#828282]">
+              <div className="p-4 border-t border-gray-200 flex items-center justify-between gap-3 text-xs text-[#6B6B6B]">
                 <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label="Organizer pages" />
                 <span>Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrganizers.length)} of {filteredOrganizers.length}</span>
               </div>

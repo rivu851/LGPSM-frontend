@@ -131,7 +131,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
       <div ref={cardRef} tabIndex={-1} className="bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] animate-modal outline-none">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <h2 id="select-template-title" className="text-base font-medium text-gray-900">{required ? "Choose a template to start your event" : "Select Template"}</h2>
-          <button type="button" onClick={() => void requestClose()} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={() => void requestClose()} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -169,7 +169,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
         <div className="px-6 pt-3 shrink-0">
         <div role="tablist" aria-label="Which templates" className="flex gap-2">
                 {([["all", "All templates"], ["mine", `My templates${mineCount ? ` (${mineCount})` : ""}`]] as const).map(([key, label]) => (
-                  <button key={key} type="button" role="tab" aria-selected={scope === key} onClick={() => setScope(key)} className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${scope === key ? "bg-[#FF651D] border-[#FF651D] text-white" : "bg-white border-[#E0E0E0] text-[#4B4F52] hover:border-gray-400"}`}>{label}</button>
+                  <button key={key} type="button" role="tab" aria-selected={scope === key} onClick={() => setScope(key)} className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${scope === key ? "bg-[#C65318] border-[#FF651D] text-white" : "bg-white border-[#E0E0E0] text-[#4B4F52] hover:border-gray-400"}`}>{label}</button>
                 ))}
               </div>
         </div>
@@ -182,7 +182,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
           ) : loadError ? (
             <p role="alert" className="text-sm text-rose-600 py-10 text-center break-words">{loadError}</p>
           ) : visible.length === 0 ? (
-            <p className="text-sm text-[#828282] py-10 text-center">
+            <p className="text-sm text-[#6B6B6B] py-10 text-center">
               {scope === "mine" && mineCount === 0 ? "You have not uploaded a template yet. Use “Upload your own template” below." : templates.length === 0 ? "No templates have been published yet." : "No templates for this category. Try another category or clear the filter."}
             </p>
           ) : (
@@ -222,13 +222,13 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
 
         <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-wrap justify-between items-center gap-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#4B4F52]">
-            <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#E5520F] hover:underline cursor-pointer">
+            <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#C44200] hover:underline cursor-pointer">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
               Upload your own template
             </button>
             <span>
               Need a custom design?{" "}
-              <Link href="/contact" className="text-[#16A34A] font-medium underline">Contact us</Link>
+              <Link href="/contact" className="text-[#15803D] font-medium underline">Contact us</Link>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -237,7 +237,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                 Clear selection
               </button>
             )}
-            <button type="button" onClick={handleSave} disabled={required && !pendingId} className="px-6 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="button" onClick={handleSave} disabled={required && !pendingId} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {required ? "Use this template" : "Save"}
             </button>
           </div>

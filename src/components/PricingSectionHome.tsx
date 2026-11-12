@@ -163,7 +163,7 @@ export default function PricingSectionHome() {
                 <div className="mt-6">
                   <a
                     href="#signup"
-                    className="block w-full text-center py-3 px-6 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs sm:text-sm rounded-md shadow-md transition-colors font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                    className="block w-full text-center py-3 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs sm:text-sm rounded-md shadow-md transition-colors font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                   >
                     Sign Up Free
                   </a>
@@ -175,7 +175,7 @@ export default function PricingSectionHome() {
                 <div>
                   {/* Address Book Icon */}
                   <div className="mb-4">
-                    <svg className="w-8 h-8 text-[#FF5B22]" viewBox="0 0 32 32" fill="none">
+                    <svg className="w-8 h-8 text-[#C44200]" viewBox="0 0 32 32" fill="none">
                       <rect x="9" y="4" width="18" height="24" rx="4" stroke="#FF5B22" strokeWidth="2.2" />
                       <path d="M6 9h4M6 16h4M6 23h4" stroke="#FF5B22" strokeWidth="2.2" strokeLinecap="round" />
                       <circle cx="18" cy="12" r="3.5" stroke="#FF5B22" strokeWidth="2" />
@@ -196,7 +196,7 @@ export default function PricingSectionHome() {
                 <div className="mt-6">
                   <button
                     onClick={() => setContactSubmitted(true)}
-                    className="w-full py-3 px-6 bg-white hover:bg-gray-100 text-[#FF5B22] font-bold text-xs sm:text-sm rounded-md transition-colors shadow-md font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                    className="w-full py-3 px-6 bg-white hover:bg-gray-100 text-[#C44200] font-bold text-xs sm:text-sm rounded-md transition-colors shadow-md font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                   >
                     {contactSubmitted ? "Message Sent!" : "Contact Us"}
                   </button>

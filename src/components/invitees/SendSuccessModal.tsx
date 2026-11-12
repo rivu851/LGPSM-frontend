@@ -19,11 +19,11 @@ export default function SendSuccessModal({ title, message, details = [], onClose
         <h2 id="send-success-title" className="text-lg font-semibold text-[#15191C]">{title}</h2>
         <p className="mt-2 text-sm text-[#4B4F52]">{message}</p>
         {details.length > 0 && (
-          <ul className="mt-3 space-y-1 text-xs text-[#828282]">
+          <ul className="mt-3 space-y-1 text-xs text-[#6B6B6B]">
             {details.map((d) => <li key={d}>{d}</li>)}
           </ul>
         )}
-        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-semibold rounded-lg cursor-pointer">Okay</button>
+        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-lg cursor-pointer">Okay</button>
       </div>
     </div>
   );
