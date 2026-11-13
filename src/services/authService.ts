@@ -29,9 +29,10 @@ export interface AuthResponseData {
 
 export const authService = {
   async register(payload: RegisterPayload): Promise<ApiResponse<AuthResponseData>> {
+    const normalizedEmail = payload.email.trim().toLowerCase();
     const response = await apiClient<AuthResponseData>("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, email: normalizedEmail }),
     });
 
     if (response.success && response.data) {

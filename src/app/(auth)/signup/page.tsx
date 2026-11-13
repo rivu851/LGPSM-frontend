@@ -69,6 +69,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const registrationInFlight = useRef(false);
 
   usePageTitle(step === "verify" ? "Verify Email" : "Create Account");
 
@@ -122,6 +123,7 @@ export default function SignupPage() {
   // Step 1: Submit account details
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (registrationInFlight.current) return;
     setErrorMessage("");
     setSuccessMessage("");
 
@@ -146,11 +148,12 @@ export default function SignupPage() {
       return;
     }
 
+    registrationInFlight.current = true;
     setIsSubmitting(true);
     try {
       const res = await register({
         fullName: fullName.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
         role: "ORGANIZER",
         organizationType: orgType,
@@ -169,12 +172,17 @@ export default function SignupPage() {
         setErrorMessage("");
         setSuccessMessage(`A 6-digit verification code has been sent to ${verifiedEmail}`);
         setStep("verify");
+      } else if (res.code === "EMAIL_VERIFICATION_PENDING") {
+        setEmail(email.trim().toLowerCase());
+        setErrorMessage(res.message || "An organizer sign-up is already waiting for its verification code.");
+        setStep("verify");
       } else {
         setErrorMessage(res.message || "Registration failed. Please check your inputs.");
       }
     } catch {
       setErrorMessage(ERROR_MESSAGES.network.genericFailure);
     } finally {
+      registrationInFlight.current = false;
       setIsSubmitting(false);
     }
   };
