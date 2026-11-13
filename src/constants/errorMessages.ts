@@ -9,6 +9,7 @@
  */
 export const ERROR_MESSAGES = {
   auth: {
+    incorrectPassword: "Incorrect password. Please try again.",
     passwordsDoNotMatch: "Passwords do not match. Please try again.",
     passwordTooShort: "Password must be at least 8 characters long.",
     passwordResetMinLength: "Password must be at least 10 characters long.",

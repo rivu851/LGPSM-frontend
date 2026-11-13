@@ -10,10 +10,12 @@ import ChangePasswordModal from "@/components/settings/modals/ChangePasswordModa
 import AvatarSection from "@/components/settings/AvatarSection";
 
 import { userService } from "@/services/userService";
+import { useAlert } from "@/context/AlertContext";
 
 
 export default function AccountSettingsPage() {
   const { user, updateProfile } = useAuth();
+  const { showAlert } = useAlert();
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
   // (email is displayed read-only; the profile API does not change it)
@@ -60,7 +62,12 @@ export default function AccountSettingsPage() {
       setTimeout(() => setSavedMessage(false), 3000);
       return true;
     }
-    setErrorMessage(res.message || "Failed to update password.");
+    const message = res.message || "Failed to update password.";
+    if (res.status === 401 || /password|credential|authentication/i.test(message)) {
+      showAlert(message, "error", "Incorrect password");
+    } else {
+      setErrorMessage(message);
+    }
     return false;
   };
 

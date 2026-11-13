@@ -4,6 +4,7 @@ import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/services/authService";
+import { useAlert } from "@/context/AlertContext";
 import {
   AuthAlert,
   AuthHeading,
@@ -27,6 +28,7 @@ const MIN_NEW_PASSWORD = 10; // matches the on-screen hint in 04C-Forgot Passwor
 function ForgotPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showAlert } = useAlert();
   const tokenFromUrl = searchParams.get("token") || "";
   const { mode } = parsePortalMode(searchParams.get("mode"), "organizer");
   const loginHref = signinHref(mode);
@@ -65,7 +67,7 @@ function ForgotPasswordContent() {
     e.preventDefault();
     setErrorMessage("");
     if (newPassword !== repeatPassword) {
-      setErrorMessage(ERROR_MESSAGES.auth.passwordsDoNotMatch);
+      showAlert(ERROR_MESSAGES.auth.passwordsDoNotMatch, "error", "Password not matching");
       return;
     }
     if (newPassword.length < MIN_NEW_PASSWORD) {
