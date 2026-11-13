@@ -108,7 +108,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
   };
 
   const tabBtn = (id: Tab, label: string, count?: number) => (
-    <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer ${tab === id ? "border-[#FF651D] text-[#FF651D]" : "border-transparent text-[#4B4F52] hover:text-gray-900"}`}>
+    <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer ${tab === id ? "border-[#FF651D] text-[#C44200]" : "border-transparent text-[#4B4F52] hover:text-gray-900"}`}>
       {label}{count !== undefined ? ` (${count})` : ""}
     </button>
   );
@@ -119,7 +119,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[88vh] flex flex-col shadow-2xl">
         <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
           <h2 id="lists-title" className="text-base font-medium text-gray-900">Invitees Dataset</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">✕</button>
         </div>
         <div role="tablist" className="px-6 border-b border-[#E5E5E5] flex gap-2">
           {tabBtn("lists", "Uploaded lists", sets?.length)}
@@ -137,11 +137,11 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
           {tab === "lists" && (
             <>
               {setsError && <p role="alert" className="text-sm text-rose-600">{setsError} <button type="button" onClick={loadSets} className="underline cursor-pointer">Try again</button></p>}
-              {!sets && !setsError && <p className="text-sm text-[#828282]">Loading…</p>}
-              {sets && sets.length === 0 && <p className="text-sm text-[#828282]">No lists yet. Upload an Excel file with Add Invitees.</p>}
+              {!sets && !setsError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
+              {sets && sets.length === 0 && <p className="text-sm text-[#6B6B6B]">No lists yet. Upload an Excel file with Add Invitees.</p>}
               {sets && sets.length > 0 && (
                 <table className="w-full text-left text-sm min-w-[760px]">
-                  <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                  <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
                       <th className="py-2 pr-3 font-medium">List</th>
                       <th className="py-2 pr-3 font-medium">Guests</th>
@@ -155,19 +155,19 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                       <React.Fragment key={s.id}>
                         <tr className="align-top">
                           <td className="py-3 pr-3 max-w-[220px]">
-                            <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#FF651D] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
-                            {s.createdAt && <span className="block text-xs text-[#828282]">{s.source === "MANUAL" ? "Added" : "Uploaded"} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
-                            <span className="sm:hidden mt-1 inline-block">{s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked") : pill("border border-[#1A9242] text-[#1A9242] bg-white", "Open")}</span>
+                            <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#A83800] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
+                            {s.createdAt && <span className="block text-xs text-[#6B6B6B]">{s.source === "MANUAL" ? "Added" : "Uploaded"} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
+                            <span className="sm:hidden mt-1 inline-block">{s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked") : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open")}</span>
                           </td>
-                          <td className="py-3 pr-3 whitespace-nowrap">{s.total}{s.importedCount !== null ? <span className="block text-xs text-[#828282]">{s.importedCount} added by this upload</span> : null}</td>
+                          <td className="py-3 pr-3 whitespace-nowrap">{s.total}{s.importedCount !== null ? <span className="block text-xs text-[#6B6B6B]">{s.importedCount} added by this upload</span> : null}</td>
                           <td className="py-3 pr-3 text-xs space-y-0.5">
-                            {allSentLine(s) && <span className="block mb-1"><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E6F6EC] text-[#1A9242] font-medium">Invitations sent</span><span className="block text-[#828282] mt-0.5">{allSentLine(s)}</span></span>}
-                            <span className="block">Sent <b className="text-[#1A9242]">{s.sent}</b> · Not sent <b>{s.notSent}</b></span>
+                            {allSentLine(s) && <span className="block mb-1"><span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E6F6EC] text-[#0F7A33] font-medium">Invitations sent</span><span className="block text-[#6B6B6B] mt-0.5">{allSentLine(s)}</span></span>}
+                            <span className="block">Sent <b className="text-[#0F7A33]">{s.sent}</b> · Not sent <b>{s.notSent}</b></span>
                             <span className="block">Failed <b className={s.failed ? "text-rose-600" : ""}>{s.failed}</b> · Unknown <b className={s.unknown ? "text-amber-700" : ""} title="Delivery was attempted but the outcome was never settled. The guest may have received it.">{s.unknown}</b></span>
                           </td>
                           <td className="py-3 pr-3">{s.setAside}</td>
                           <td className="py-3">
-                            {s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#1A9242] bg-white", "Open", "No invitation has been sent successfully from this list.")}
+                            {s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open", "No invitation has been sent successfully from this list.")}
                           </td>
                         </tr>
                         {open === s.id && (
@@ -190,18 +190,18 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
 
           {tab === "aside" && (
             <>
-              <p className="text-xs text-[#828282] mb-3">Guests a Replace set aside because they had never been invited. They are kept, apart from your active list, and can be restored.</p>
+              <p className="text-xs text-[#6B6B6B] mb-3">Guests a Replace set aside because they had never been invited. They are kept, apart from your active list, and can be restored.</p>
               {aside && !aside.restorable && <p role="note" className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{aside.notRestorableReason}</p>}
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search set-aside guests" aria-label="Search set-aside guests" className="w-64 max-w-full px-3 py-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-[#FF651D]" />
-                <button type="button" disabled={!picked.length || !aside?.restorable} onClick={() => { setOutcome(null); setConfirm(picked); }} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore selected ({picked.length})</button>
+                <button type="button" disabled={!picked.length || !aside?.restorable} onClick={() => { setOutcome(null); setConfirm(picked); }} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore selected ({picked.length})</button>
               </div>
               {asideError && <p role="alert" className="text-sm text-rose-600">{asideError} <button type="button" onClick={() => loadAside(q)} className="underline cursor-pointer">Try again</button></p>}
-              {!aside && !asideError && <p className="text-sm text-[#828282]">Loading…</p>}
-              {aside && aside.guests.length === 0 && <p className="text-sm text-[#828282]">{q ? "No set-aside guest matches your search." : "No guests have been set aside."}</p>}
+              {!aside && !asideError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
+              {aside && aside.guests.length === 0 && <p className="text-sm text-[#6B6B6B]">{q ? "No set-aside guest matches your search." : "No guests have been set aside."}</p>}
               {aside && aside.guests.length > 0 && (
                 <table className="w-full text-left text-sm min-w-[760px]">
-                  <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                  <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
                       <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-orange" /></th>
                       <th className="py-2 pr-3 font-medium">Guest</th>
@@ -215,11 +215,11 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                     {aside.guests.map((g) => (
                       <tr key={g.id} className="align-top">
                         <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-orange" /></td>
-                        <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#828282] break-all">{g.email || g.mobile || "—"}</span></td>
+                        <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#6B6B6B] break-all">{g.email || g.mobile || "—"}</span></td>
                         <td className="py-3 pr-3 max-w-[180px] break-words">{g.fromSet.name}</td>
-                        <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#828282]">by {g.setAsideBy.name}</span> : null}</td>
-                        <td className="py-3 pr-3 text-xs">{g.reasonText || "Reason not recorded"}{g.replacedBy ? <span className="block text-[#828282]">by “{listDisplayName(g.replacedBy.name)}”</span> : null}</td>
-                        <td className="py-3 text-right"><button type="button" disabled={!aside.restorable} onClick={() => { setOutcome(null); setConfirm([g.id]); }} aria-label={`Restore ${g.name}`} className="px-3 py-1.5 border border-[#FF651D] text-[#FF651D] hover:bg-[#FFF3EC] rounded-md text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore</button></td>
+                        <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#6B6B6B]">by {g.setAsideBy.name}</span> : null}</td>
+                        <td className="py-3 pr-3 text-xs">{g.reasonText || "Reason not recorded"}{g.replacedBy ? <span className="block text-[#6B6B6B]">by “{listDisplayName(g.replacedBy.name)}”</span> : null}</td>
+                        <td className="py-3 text-right"><button type="button" disabled={!aside.restorable} onClick={() => { setOutcome(null); setConfirm([g.id]); }} aria-label={`Restore ${g.name}`} className="px-3 py-1.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF3EC] rounded-md text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -237,7 +237,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             <p className="text-sm text-[#4B4F52]">{confirm.length === 1 ? "This guest returns" : "These guests return"} to the active list as <b>Not sent</b>, in the list {confirm.length === 1 ? "they" : "they each"} came from. No invitation will be sent and no access pass will be created. Anyone whose email or mobile number is already on the active list will not be restored.</p>
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setConfirm(null)} disabled={restoring} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50">Cancel</button>
-              <button type="button" onClick={doRestore} disabled={restoring} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{restoring ? "Restoring…" : "Restore"}</button>
+              <button type="button" onClick={doRestore} disabled={restoring} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{restoring ? "Restoring…" : "Restore"}</button>
             </div>
           </div>
         </div>
@@ -247,25 +247,25 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
 }
 
 function GuestTable({ state }: { state: { rows: InviteeSetMember[]; total: number; page: number } | "loading" | string | undefined }) {
-  if (!state || state === "loading") return <p className="mt-3 text-[#828282]">Loading guests…</p>;
+  if (!state || state === "loading") return <p className="mt-3 text-[#6B6B6B]">Loading guests…</p>;
   if (typeof state === "string") return <p role="alert" className="mt-3 text-rose-600">{state}</p>;
-  if (state.rows.length === 0) return <p className="mt-3 text-[#828282]">No active guests in this list.</p>;
+  if (state.rows.length === 0) return <p className="mt-3 text-[#6B6B6B]">No active guests in this list.</p>;
   return (
     <div className="mt-3 overflow-x-auto">
       <table className="w-full text-left text-xs min-w-[520px]">
-        <thead className="text-[#828282] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">Guest</th><th className="py-1.5 pr-3 font-medium">Invitation</th><th className="py-1.5 pr-3 font-medium">RSVP</th><th className="py-1.5 font-medium">Checked in</th></tr></thead>
+        <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-1.5 pr-3 font-medium">Guest</th><th className="py-1.5 pr-3 font-medium">Invitation</th><th className="py-1.5 pr-3 font-medium">RSVP</th><th className="py-1.5 font-medium">Checked in</th></tr></thead>
         <tbody className="divide-y divide-[#EEEEEE]">
           {state.rows.map((m) => (
             <tr key={m.id}>
-              <td className="py-1.5 pr-3 text-gray-900">{m.name}<span className="block text-[#828282] break-all">{m.email || m.mobile || "—"}</span></td>
-              <td className="py-1.5 pr-3">{m.delivery === "SENT" ? pill("bg-[#C0FFD5] text-[#1A9242]", DELIVERY_LABEL.SENT) : m.delivery === "FAILED" ? pill("bg-rose-100 text-rose-700", DELIVERY_LABEL.FAILED) : m.delivery === "UNKNOWN" ? pill("bg-amber-100 text-amber-800", DELIVERY_LABEL.UNKNOWN, "The guest may already have received it") : pill("bg-[#EDEDED] text-[#6E6E6E]", DELIVERY_LABEL.NOT_SENT)}</td>
+              <td className="py-1.5 pr-3 text-gray-900">{m.name}<span className="block text-[#6B6B6B] break-all">{m.email || m.mobile || "—"}</span></td>
+              <td className="py-1.5 pr-3">{m.delivery === "SENT" ? pill("bg-[#C0FFD5] text-[#0F7A33]", DELIVERY_LABEL.SENT) : m.delivery === "FAILED" ? pill("bg-rose-100 text-rose-700", DELIVERY_LABEL.FAILED) : m.delivery === "UNKNOWN" ? pill("bg-amber-100 text-amber-800", DELIVERY_LABEL.UNKNOWN, "The guest may already have received it") : pill("bg-[#EDEDED] text-[#6E6E6E]", DELIVERY_LABEL.NOT_SENT)}</td>
               <td className="py-1.5 pr-3">{m.rsvpStatus === "PENDING" ? "—" : m.rsvpStatus === "ACCEPTED" ? "Accepted" : "Declined"}</td>
               <td className="py-1.5">{m.checkedIn ? "Yes" : "—"}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      {state.total > state.rows.length && <p className="mt-2 text-[#828282]">Showing the first {state.rows.length} of {state.total} guests.</p>}
+      {state.total > state.rows.length && <p className="mt-2 text-[#6B6B6B]">Showing the first {state.rows.length} of {state.total} guests.</p>}
     </div>
   );
 }

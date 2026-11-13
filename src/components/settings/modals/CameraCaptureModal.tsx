@@ -96,7 +96,7 @@ export default function CameraCaptureModal({
           <h3 className="text-base font-bold text-gray-900">Take a Photo</h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 cursor-pointer"
+            className="text-gray-500 hover:text-gray-600 cursor-pointer"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -105,7 +105,7 @@ export default function CameraCaptureModal({
         </div>
 
         {error ? (
-          <div className="p-6 text-center text-red-600 bg-red-50 border border-red-200 rounded-md text-xs font-semibold">
+          <div className="p-6 text-center text-red-700 bg-red-50 border border-red-200 rounded-md text-xs font-semibold">
             {error}
           </div>
         ) : (
@@ -137,7 +137,7 @@ export default function CameraCaptureModal({
               type="button"
               onClick={handleSnap}
               disabled={!isCameraReady}
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#FF5B22] hover:bg-[#E04B16] rounded-md transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md transition-colors cursor-pointer shadow-xs disabled:opacity-50"
             >
               Capture Photo
             </button>

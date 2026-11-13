@@ -3,6 +3,7 @@
 import { eventCanIssuePasses, isHistoricalEvent } from "@/utils/eventUtils";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createSingleFlight } from "@/utils/singleFlight";
 import { createPortal } from "react-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -78,11 +79,11 @@ function allowedIn(inv: Invitee, session: SessionData): boolean {
 
 // Status column (Figma 217:20587): delivery state, or the guest's answer once they have replied
 function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus: Invitee["invitationStatus"]; rsvpStatus: Invitee["rsvpStatus"] }) {
-  if (invitationStatus === "FAILED") return pill("bg-[#FFE3D7] text-[#FF651D]", "Sending Failed");
+  if (invitationStatus === "FAILED") return pill("bg-[#FFE3D7] text-[#A83800]", "Sending Failed");
   if (invitationStatus === "PENDING") return pill("bg-[#EDEDED] text-[#6E6E6E]", "Not Yet Sent");
   if (rsvpStatus === "ACCEPTED") return pill("bg-[#CCD2FF] text-[#2C2EB5]", "Accepted");
-  if (rsvpStatus === "DECLINED") return pill("bg-[#FFE9C0] text-[#9E8C00]", "Declined");
-  return pill("bg-[#C0FFD5] text-[#1A9242]", "Successfully Sent");
+  if (rsvpStatus === "DECLINED") return pill("bg-[#FFE9C0] text-[#6F5600]", "Declined");
+  return pill("bg-[#C0FFD5] text-[#0F7A33]", "Successfully Sent");
 }
 
 // "⋯" row menu (Figma 217:20587: dark panel with a pointer). Edit and Resend as designed; card preview and remove kept.
@@ -343,9 +344,17 @@ export default function InviteesManagementPage() {
   };
 
   // The first send locks the event, so it goes through the Figma warning (2001:2443); later sends go straight out
-  const requestSend = () => {
-    if (lifecycleStarted) handleSend();
-    else setConfirmFirstSend(true);
+  const requestSend = async () => {
+    if (!lifecycleStarted) { setConfirmFirstSend(true); return; }
+    // Sending reaches real people and cannot be taken back, so say who it goes to and how before it goes
+    const count = sendTargets.length;
+    if (count === 0) { handleSend(); return; } // nothing to send: handleSend explains why
+    const by = channel === "BOTH" ? "email and WhatsApp" : channel === "WHATSAPP" ? "WhatsApp" : "email";
+    const ok = await confirm({
+      title: "Send invitations?",
+      message: `Send the invitation for “${event?.title || "this event"}” to ${count} ${count === 1 ? "guest" : "guests"} by ${by}? They will receive it straight away.`,
+    });
+    if (ok) handleSend();
   };
 
   const handleResend = async (targets: InvitationData[] = resendTargets) => {
@@ -410,7 +419,10 @@ export default function InviteesManagementPage() {
   };
 
   // With nobody on the list yet there is nothing to replace; otherwise the organizer chooses Add or Replace first
-  const handleImport = async (rows: InviteeSheetRow[]) => {
+  // Save on the preview works out what each choice would do (two server dry runs, one per choice). Pressing Save twice must not start that twice.
+  const importPreviewFlight = useRef(createSingleFlight());
+  const handleImport = (rows: InviteeSheetRow[]) => importPreviewFlight.current.run(() => prepareImport(rows));
+  const prepareImport = async (rows: InviteeSheetRow[]) => {
     if (!upload || importInFlight.current) return;
     if (rows.length > 1000) {
       setFeedback({ type: "error", message: "A sheet can contain at most 1,000 invitees. Remove some rows or split the upload." });
@@ -541,7 +553,7 @@ export default function InviteesManagementPage() {
 
   const btn = "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   // Figma send button: outlined orange, 16px semibold, washed out until something can be sent
-  const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#FF651D] text-[#FF651D] bg-white hover:bg-orange-50 text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+  const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#FF651D] text-[#C44200] bg-white hover:bg-orange-50 text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
   const sampleColumns = excelColumnsFor(fieldConfig);
@@ -577,7 +589,7 @@ export default function InviteesManagementPage() {
                 <label htmlFor="invitee-search-empty" className="text-[17px] font-medium text-black shrink-0">Invitees</label>
                 <div className="relative flex-1 min-w-0">
                   <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
-                  <input id="invitee-search-empty" type="search" value="" readOnly disabled placeholder="Search invitees" className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium placeholder:text-[#828282] cursor-not-allowed" />
+                  <input id="invitee-search-empty" type="search" value="" readOnly disabled placeholder="Search invitees" className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium placeholder:text-[#6B6B6B] cursor-not-allowed" />
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -589,7 +601,7 @@ export default function InviteesManagementPage() {
                   options={eventsOptions}
                 />
                 <PlainSelect ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
-                <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer">
+                <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -604,7 +616,7 @@ export default function InviteesManagementPage() {
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
               <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees to your event to get started.</p>
-              <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer">Add Invitees</button>
             </div>
           </>
         ) : loadError ? (
@@ -628,7 +640,7 @@ export default function InviteesManagementPage() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search invitees"
-                    className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                    className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
                   />
                 </div>
               </div>
@@ -653,7 +665,7 @@ export default function InviteesManagementPage() {
                 <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
                 {!historical && (
-                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
+                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -787,7 +799,7 @@ export default function InviteesManagementPage() {
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
                 <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
-                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#FF651D] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -795,9 +807,9 @@ export default function InviteesManagementPage() {
                 {/* Figma 217:20587: one Status pill (delivery, or the guest's RSVP once given), Dietary, a ✓/✗ column per
                     session and a "⋯" menu */}
                 <table className="w-full text-left text-sm min-w-[760px]">
-                  <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                  <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="h-[46px] px-2.5 w-10" aria-label="Selection" />
+                      <th className="relative h-[46px] px-2.5 w-10"><span className="sr-only">Select</span></th>
                       <th className="h-[46px] px-2.5 font-medium">Name</th>
                       <th className="h-[46px] px-2.5 font-medium">Email</th>
                       <th className="h-[46px] px-2.5 font-medium whitespace-nowrap">Phone Number</th>
@@ -838,16 +850,16 @@ export default function InviteesManagementPage() {
                           </td>
                           {isAdmin && (
                             <td className="py-3 px-2.5">
-                              {!rsvpEnabled ? <span className="text-[#828282]" aria-label="RSVP not requested">--</span>
+                              {!rsvpEnabled ? <span className="text-[#6B6B6B]" aria-label="RSVP not requested">--</span>
                                 : i.rsvpStatus === "ACCEPTED" ? pill("bg-[#CCD2FF] text-[#2C2EB5]", "Accepted")
-                                : i.rsvpStatus === "DECLINED" ? pill("bg-[#FFE9C0] text-[#9E8C00]", "Declined")
+                                : i.rsvpStatus === "DECLINED" ? pill("bg-[#FFE9C0] text-[#6F5600]", "Declined")
                                 : pill("bg-[#FFF3C4] text-[#B38A00]", "Pending")}
                             </td>
                           )}
                           <td className="py-3 px-2.5">
                             {i.credentialStatus
                               ? <span title={i.credentialStatus === "REVOKED" ? `Revoked: ${reasonLabel(i.credentialRevocation?.category)}` : undefined}>{pill(STATUS_PILL[i.credentialStatus].cls, STATUS_PILL[i.credentialStatus].label)}</span>
-                              : <span className="text-[#828282]">—</span>}
+                              : <span className="text-[#6B6B6B]">—</span>}
                           </td>
                           {dietaryTitles.map((title) => {
                             const answer = dietaryAnswer(i, title, dietaryTitles);
@@ -860,8 +872,8 @@ export default function InviteesManagementPage() {
                           {sessions.map((sess) => (
                             <td key={sess._id} className="py-3 px-2.5">
                               {allowedIn(i, sess)
-                                ? <span role="img" aria-label={`Has access to ${sess.name}`} className="text-[#1A9242] font-bold">✓</span>
-                                : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#FF651D] font-bold">✕</span>}
+                                ? <span role="img" aria-label={`Has access to ${sess.name}`} className="text-[#0F7A33] font-bold">✓</span>
+                                : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#C44200] font-bold">✕</span>}
                             </td>
                           ))}
                           <td className="py-3 px-2.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
@@ -880,7 +892,7 @@ export default function InviteesManagementPage() {
                       );
                     })}
                     {visible.length === 0 && (
-                      <tr><td colSpan={10 + sessions.length + dietaryTitles.length} className="py-10 text-center text-[#828282]">No invitees match the current filters.</td></tr>
+                      <tr><td colSpan={10 + sessions.length + dietaryTitles.length} className="py-10 text-center text-[#6B6B6B]">No invitees match the current filters.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -999,12 +1011,12 @@ export default function InviteesManagementPage() {
                   <ButtonIcon name={busy === "clear" ? "spinner" : "trash"} className="w-3.5 h-3.5" />
                   {busy === "clear" ? "Clearing..." : "Clear history"}
                 </button>
-                <button type="button" onClick={() => setShowHistory(false)} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+                <button type="button" onClick={() => setShowHistory(false)} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">✕</button>
               </div>
             </div>
             <div className="p-6 overflow-auto flex-1">
               <table className="w-full text-left text-sm min-w-[560px]">
-                <thead className="text-[#828282] border-b border-[#D3D3D3]">
+                <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                   <tr><th className="py-2 pr-3 font-medium">Invitee</th><th className="py-2 pr-3 font-medium">Channel</th><th className="py-2 pr-3 font-medium">Status</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 font-medium">When</th></tr>
                 </thead>
                 <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
@@ -1012,7 +1024,7 @@ export default function InviteesManagementPage() {
                     <tr key={h._id}>
                       <td className="py-2.5 pr-3 text-gray-900">{typeof h.inviteeId === "object" && h.inviteeId ? h.inviteeId.name : "—"}</td>
                       <td className="py-2.5 pr-3">{h.channel}</td>
-                      <td className="py-2.5 pr-3">{h.status === "SENT" ? pill("bg-[#C0FFD5] text-[#1A9242]", "Sent") : h.status === "FAILED" ? pill("bg-rose-100 text-rose-700", "Failed") : pill("bg-gray-100 text-gray-700", h.status)}</td>
+                      <td className="py-2.5 pr-3">{h.status === "SENT" ? pill("bg-[#C0FFD5] text-[#0F7A33]", "Sent") : h.status === "FAILED" ? pill("bg-rose-100 text-rose-700", "Failed") : pill("bg-gray-100 text-gray-700", h.status)}</td>
                       <td className="py-2.5 pr-3 text-rose-600 text-xs break-words max-w-[220px]">{h.failureReason || "—"}</td>
                       <td className="py-2.5 text-xs whitespace-nowrap">{formatDateTime(h.sentAt || h.createdAt, "—")}</td>
                     </tr>
@@ -1023,20 +1035,20 @@ export default function InviteesManagementPage() {
               {/* Access Pass History: credential events only. Message delivery states above and pass states here are never mixed. */}
               <section aria-labelledby="pass-history-title" className="mt-8 pt-6 border-t border-[#E5E5E5]">
                 <h3 id="pass-history-title" className="text-base font-medium text-gray-900">Access Pass History</h3>
-                <p className="mt-1 text-xs text-[#828282]">Passes issued, replaced and revoked, with the reason and what happened to the message sent to the guest. “Accepted by the provider” is not proof of delivery.</p>
+                <p className="mt-1 text-xs text-[#6B6B6B]">Passes issued, replaced and revoked, with the reason and what happened to the message sent to the guest. “Accepted by the provider” is not proof of delivery.</p>
                 {passHistoryError && <p role="alert" className="mt-3 text-sm text-rose-600">{passHistoryError}</p>}
-                {!passHistory && !passHistoryError && <p className="mt-3 text-sm text-[#828282]">Loading…</p>}
-                {passHistory && passHistory.length === 0 && <p className="mt-3 text-sm text-[#828282]">No access pass has been issued, replaced or revoked yet.</p>}
+                {!passHistory && !passHistoryError && <p className="mt-3 text-sm text-[#6B6B6B]">Loading…</p>}
+                {passHistory && passHistory.length === 0 && <p className="mt-3 text-sm text-[#6B6B6B]">No access pass has been issued, replaced or revoked yet.</p>}
                 {passHistory && passHistory.length > 0 && (
                   <>
                     <table className="mt-3 w-full text-left text-sm min-w-[560px]">
-                      <thead className="text-[#828282] border-b border-[#D3D3D3]"><tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">What happened</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 pr-3 font-medium">Message to the guest</th><th className="py-2 font-medium">When</th></tr></thead>
+                      <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]"><tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">What happened</th><th className="py-2 pr-3 font-medium">Reason</th><th className="py-2 pr-3 font-medium">Message to the guest</th><th className="py-2 font-medium">When</th></tr></thead>
                       <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                         {passHistory.map((r) => (
                           <tr key={r._id} className="align-top">
                             <td className="py-2.5 pr-3 text-gray-900">{r.inviteeName}</td>
-                            <td className="py-2.5 pr-3">{historyTitle(r)}{passRef(r.credentialId) ? <span className="block text-xs text-[#828282]" title="Reference of this pass (not its code)">pass {passRef(r.credentialId)}{r.previousCredentialId ? ` replaced ${passRef(r.previousCredentialId)}` : ""}</span> : null}{r.derived ? <span className="block text-xs text-[#828282]">follows from the event, not an action</span> : null}{r.actor ? <span className="block text-xs text-[#828282]">by {r.actor}</span> : null}</td>
-                            <td className="py-2.5 pr-3 text-xs break-words max-w-[200px]">{historyReason(r)}{r.note ? <span className="block text-[#828282]">{r.note}</span> : null}{r.reviewConfirmed ? <span className="block text-[#828282]">Reviewed before replacing</span> : null}</td>
+                            <td className="py-2.5 pr-3">{historyTitle(r)}{passRef(r.credentialId) ? <span className="block text-xs text-[#6B6B6B]" title="Reference of this pass (not its code)">pass {passRef(r.credentialId)}{r.previousCredentialId ? ` replaced ${passRef(r.previousCredentialId)}` : ""}</span> : null}{r.derived ? <span className="block text-xs text-[#6B6B6B]">follows from the event, not an action</span> : null}{r.actor ? <span className="block text-xs text-[#6B6B6B]">by {r.actor}</span> : null}</td>
+                            <td className="py-2.5 pr-3 text-xs break-words max-w-[200px]">{historyReason(r)}{r.note ? <span className="block text-[#6B6B6B]">{r.note}</span> : null}{r.reviewConfirmed ? <span className="block text-[#6B6B6B]">Reviewed before replacing</span> : null}</td>
                             <td className="py-2.5 pr-3 text-xs">
                               {[noticeText("Email", r.notice?.email), noticeText("WhatsApp", r.notice?.whatsapp)].filter(Boolean).map((t) => <span key={t} className="block">{t}</span>) }
                               {!r.notice && "—"}
@@ -1048,7 +1060,7 @@ export default function InviteesManagementPage() {
                     </table>
                     <div className="mt-4 flex flex-wrap items-start gap-4">
                       {hasUnsent(passHistory) && (
-                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#FF651D] text-[#FF651D] hover:bg-[#FFF3EC] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
+                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF3EC] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
                       )}
                       {hasUnknown(passHistory) && (
                         <div role="group" aria-label="Messages with an unknown outcome" className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 space-y-2 max-w-md">

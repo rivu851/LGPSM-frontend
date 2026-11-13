@@ -45,10 +45,10 @@ interface EventRow {
 }
 
 const STATUS_STYLE: Record<RowStatus, string> = {
-  Upcoming: "bg-[#C0FFD5] text-[#1A9242]",
+  Upcoming: "bg-[#C0FFD5] text-[#0F7A33]",
   Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
-  Past: "bg-[#FFE3D7] text-[#FF651D]",
-  "Invitation not sent": "bg-[#FFE9C0] text-[#9E8C00]",
+  Past: "bg-[#FFE3D7] text-[#A83800]",
+  "Invitation not sent": "bg-[#FFE9C0] text-[#6F5600]",
   Cancelled: "bg-gray-200 text-gray-700",
 };
 
@@ -129,7 +129,7 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
   const item = "w-full text-left px-3 py-2 text-sm hover:bg-white/10 flex items-center gap-2";
   return (
     <div className="inline-block">
-      <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="p-1.5 rounded text-[#828282] hover:text-gray-900 hover:bg-gray-100 cursor-pointer">
+      <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="inline-flex h-6 min-w-6 items-center justify-center p-1.5 rounded text-[#6B6B6B] hover:text-gray-900 hover:bg-gray-100 cursor-pointer">
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M6 10a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4zm6 0a2 2 0 110 4 2 2 0 010-4z" /></svg>
       </button>
       {open && position && createPortal(
@@ -176,7 +176,7 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
   const active = row.status !== "Cancelled" && !row.ended;
   return (
     <>
-      <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="shrink-0 -mr-2 -mt-1 px-2 py-1 rounded cursor-pointer hover:bg-gray-100">
+      <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${row.name}`} aria-expanded={open} className="inline-flex min-h-6 min-w-6 shrink-0 items-center justify-center -mr-2 -mt-1 px-2 py-1 rounded cursor-pointer hover:bg-gray-100">
         <Icon name="events/kebab" width={4} height={16} />
       </button>
       {open && position && createPortal(
@@ -230,11 +230,11 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
       <div className="flex-1 min-w-0 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5 items-start">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2 py-[3px] border border-[#FF651D] rounded-[3px] text-xs font-medium text-[#FF651D]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
+            <span className="px-2 py-[3px] border border-[#FF651D] rounded-[3px] text-xs font-medium text-[#C44200]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
             <span className={`px-2.5 py-[3px] rounded-full text-xs font-medium ${STATUS_STYLE[row.phase]}`}>{row.phase}</span>
           </div>
-          <h3 className="text-base font-medium text-[#15191C] break-words">{row.name}</h3>
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-[#828282]">
+          <h2 className="text-base font-medium text-[#15191C] break-words">{row.name}</h2>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-medium text-[#6B6B6B]">
             <span><span className="font-bold text-[#15191C]">Start: </span>{formatCompactDateTime(row.start, "—")}</span>
             <span aria-hidden className="w-px h-4 bg-[#969696]" />
             <span><span className="font-bold text-[#15191C]">End: </span>{formatCompactDateTime(row.end, "—")}</span>
@@ -242,7 +242,7 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
         </div>
         <p className="text-xs font-medium text-[#15191C]"># of invites: {row.inviteesCount ?? "—"}</p>
         <p className="flex gap-2 text-xs font-medium min-w-0">
-          <span className="text-[#828282] shrink-0">Sessions:</span>
+          <span className="text-[#6B6B6B] shrink-0">Sessions:</span>
           <span className="text-[#15191C] truncate">{row.sessionNames.length ? row.sessionNames.join(", ") : "None yet"}</span>
         </p>
       </div>
@@ -447,8 +447,8 @@ export default function EventListingPage() {
                     <FilterSelect value={draftFilters.eventId} onChange={(v) => setDraftFilters((f) => ({ ...f, eventId: v }))} options={[{ value: "", label: "Select Event" }, ...rows.map((r) => ({ value: r.id, label: r.name }))]} ariaLabel="Select Event" compact />
                   ) : (
                     <>
-                      <input aria-label="Event Name" type="text" value={draftFilters.name} onChange={(e) => setDraftFilters((f) => ({ ...f, name: e.target.value }))} placeholder="Event Name" className={`${drawerField} placeholder:text-[#7F7F7F]`} />
-                      <input aria-label="Event Organizer" type="text" value={draftFilters.organizer} onChange={(e) => setDraftFilters((f) => ({ ...f, organizer: e.target.value }))} placeholder="Event Organizer" className={`${drawerField} placeholder:text-[#7F7F7F]`} />
+                      <input aria-label="Event Name" type="text" value={draftFilters.name} onChange={(e) => setDraftFilters((f) => ({ ...f, name: e.target.value }))} placeholder="Event Name" className={`${drawerField} placeholder:text-[#6B6B6B]`} />
+                      <input aria-label="Event Organizer" type="text" value={draftFilters.organizer} onChange={(e) => setDraftFilters((f) => ({ ...f, organizer: e.target.value }))} placeholder="Event Organizer" className={`${drawerField} placeholder:text-[#6B6B6B]`} />
                     </>
                   )}
                   <FilterSelect value={draftFilters.category} onChange={(v) => setDraftFilters((f) => ({ ...f, category: v }))} options={[{ value: "", label: isOrganizer ? "Event Type" : "Event Category" }, ...categories.categoryOptions]} ariaLabel={isOrganizer ? "Event Type" : "Event Category"} compact />
@@ -477,7 +477,7 @@ export default function EventListingPage() {
                         value={draftFilters[key]}
                         onChange={(e) => setDraftFilters((f) => ({ ...f, [key]: e.target.value }))}
                         aria-label={key === "from" ? "From" : "To"}
-                        className={`${drawerField} placeholder:text-[#7F7F7F]`}
+                        className={`${drawerField} placeholder:text-[#6B6B6B]`}
                       />
                       {!draftFilters[key] && <Icon name="events/calendar" width={20} height={21} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" />}
                       </div>
@@ -490,7 +490,7 @@ export default function EventListingPage() {
                 <button type="button" onClick={clearFilters} className="flex-1 py-1.5 px-6 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-black hover:bg-gray-50 cursor-pointer">
                   Cancel
                 </button>
-                <button type="button" disabled={applyingFilters} onClick={applyFilters} className="flex-1 py-1.5 px-6 bg-[#FF651D] hover:bg-[#E5520F] rounded text-[13px] font-semibold text-white cursor-pointer disabled:opacity-60 disabled:cursor-wait">
+                <button type="button" disabled={applyingFilters} onClick={applyFilters} className="flex-1 py-1.5 px-6 bg-[#C65318] hover:bg-[#A83800] rounded text-[13px] font-semibold text-white cursor-pointer disabled:opacity-60 disabled:cursor-wait">
                   {applyingFilters ? "Loading…" : "Apply"}
                 </button>
               </div>
@@ -515,7 +515,7 @@ export default function EventListingPage() {
                   placeholder="Search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                  className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
                 />
               </div>
             </div>
@@ -527,9 +527,9 @@ export default function EventListingPage() {
                 className="relative h-[47px] p-4 rounded-md hover:bg-gray-100 cursor-pointer"
               >
                 <Icon name="events/filter" width={20} height={20} />
-                {activeFilterCount > 0 && <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-[#FF651D] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+                {activeFilterCount > 0 && <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
               </button>
-              <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg">
+              <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
                 <Icon name="events/add-white" width={24} height={24} />
                 Add
               </Link>
@@ -553,9 +553,10 @@ export default function EventListingPage() {
               ))}
             </SkeletonRegion>
           ) : visible.length === 0 ? (
-            <p className="py-12 text-center text-sm text-[#828282]">
+            // a failed load is not "no events": the error banner above says what happened
+            loadError && rows.length === 0 ? null : <p className="py-12 text-center text-sm text-[#6B6B6B]">
               {rows.length === 0 ? (
-                <>No events yet. <Link href="/events/add" className="text-[#E5520F] font-medium underline">Create your first event</Link></>
+                <>No events yet. <Link href="/events/add" className="text-[#C44200] font-medium underline">Create your first event</Link></>
               ) : (
                 "No events match your search or filters."
               )}
@@ -583,7 +584,7 @@ export default function EventListingPage() {
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <label htmlFor="event-search" className="text-base font-medium text-black shrink-0">Search</label>
           <div className="relative flex-1">
-            <svg className="w-5 h-5 text-[#828282] absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+            <svg className="w-5 h-5 text-[#6B6B6B] absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -592,7 +593,7 @@ export default function EventListingPage() {
               placeholder="Search event.."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-[47px] pl-11 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+              className="w-full h-[47px] pl-11 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
             />
           </div>
           <div className="flex items-center gap-3 shrink-0 w-fit">
@@ -609,12 +610,12 @@ export default function EventListingPage() {
               type="button"
               onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}
               aria-label={`Filter events${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
-              className="relative h-[47px] px-4 rounded-md text-[#828282] hover:bg-gray-100 cursor-pointer"
+              className="relative h-[47px] px-4 rounded-md text-[#6B6B6B] hover:bg-gray-100 cursor-pointer"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z" /></svg>
-              {activeFilterCount > 0 && <span className="absolute top-2 right-2 size-4 rounded-full bg-[#FF651D] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+              {activeFilterCount > 0 && <span className="absolute top-2 right-2 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
             </button>
-            <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg">
+            <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Add Event
             </Link>
@@ -637,7 +638,7 @@ export default function EventListingPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm min-w-[900px]">
             <thead>
-              <tr className="border-b border-[#D3D3D3] text-[#828282]">
+              <tr className="border-b border-[#D3D3D3] text-[#6B6B6B]">
                 {["Event ID", "Event Name", "Organizer", "Created on", "Category", "Event Start Date", "Event End Date", "Status"].map((h) => (
                   <th key={h} className="h-[46px] px-2.5 font-medium whitespace-nowrap">{h}</th>
                 ))}
@@ -648,10 +649,10 @@ export default function EventListingPage() {
               {loading ? (
                 <TableSkeletonRows rows={6} cols={9} />
               ) : visible.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-12 text-center text-[#828282]">
+                loadError && rows.length === 0 ? null : <tr>
+                  <td colSpan={9} className="py-12 text-center text-[#6B6B6B]">
                     {rows.length === 0 ? (
-                      <>No events yet. <Link href="/events/add" className="text-[#E5520F] font-medium underline">Create your first event</Link></>
+                      <>No events yet. <Link href="/events/add" className="text-[#C44200] font-medium underline">Create your first event</Link></>
                     ) : (
                       "No events match your search or filters."
                     )}
@@ -660,8 +661,8 @@ export default function EventListingPage() {
               ) : (
                 visible.map((r) => (
                   <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} onKeyDown={(e) => { if (e.key === "Enter") router.push(`/events/${r.id}`); }} tabIndex={0} role="link" aria-label={`Open ${r.name}`} className="border-b border-[#D3D3D3] hover:bg-gray-50/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF651D] cursor-pointer">
-                    <td className="h-[46px] px-2.5 font-medium whitespace-nowrap"><Link href={`/events/${r.id}`} className="hover:text-[#FF651D]">{r.displayId}</Link></td>
-                    <td className="px-2.5 max-w-[240px]"><Link href={`/events/${r.id}`} title={r.name} className="block text-gray-900 hover:text-[#FF651D] truncate">{r.name}</Link></td>
+                    <td className="h-[46px] px-2.5 font-medium whitespace-nowrap"><Link href={`/events/${r.id}`} className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]">{r.displayId}</Link></td>
+                    <td className="px-2.5 max-w-[240px]"><Link href={`/events/${r.id}`} title={r.name} className="block min-h-6 leading-6 text-gray-900 hover:text-[#A83800] truncate">{r.name}</Link></td>
                     <td className="px-2.5 max-w-[180px] truncate" title={r.organizer}>{r.organizer}</td>
                     <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.createdAt, "—")}</td>
                     <td className="px-2.5 whitespace-nowrap">{r.category}</td>

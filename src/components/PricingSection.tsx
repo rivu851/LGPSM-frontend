@@ -203,7 +203,7 @@ export default function PricingSection() {
           className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mb-14 text-xs sm:text-sm font-semibold text-[#1C2228]"
         >
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#FF5B22] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Free 15-day trial</span>
@@ -212,7 +212,7 @@ export default function PricingSection() {
           <div className="w-[1px] h-4 bg-gray-200 hidden sm:block" />
 
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#FF5B22] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Unlimited Team Members</span>
@@ -221,7 +221,7 @@ export default function PricingSection() {
           <div className="w-[1px] h-4 bg-gray-200 hidden sm:block" />
 
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#FF5B22] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Cancel Anytime</span>
@@ -242,7 +242,7 @@ export default function PricingSection() {
               </span>
               
               {/* Curved SVG arrow starting from above "Billed Yearly", looping/arching upward to point to the text */}
-              <svg className="w-14 h-11 text-[#FF5B22] ml-3 -mt-3.5 overflow-visible" viewBox="0 0 55 40" fill="none">
+              <svg className="w-14 h-11 text-[#C44200] ml-3 -mt-3.5 overflow-visible" viewBox="0 0 55 40" fill="none">
                 {/* Looped curve arching up-left */}
                 <path
                   ref={arrowPathRef}

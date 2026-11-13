@@ -68,12 +68,12 @@ export default function StatsBanner() {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
               Gain unlimited
             </h2>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-400 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-gray-500 leading-tight">
               hours per month
             </h2>
           </div>
 
-          <p className="text-xs sm:text-sm text-gray-400 font-medium mt-12 sm:mt-16">
+          <p className="text-xs sm:text-sm text-gray-500 font-medium mt-12 sm:mt-16">
             Trusted by thousands of event planners and families.
           </p>
         </div>
@@ -85,28 +85,28 @@ export default function StatsBanner() {
             className="grid grid-cols-2 border border-gray-600 divide-x divide-y divide-gray-600 overflow-hidden"
           >
             <div className="p-6 sm:p-8 flex flex-col justify-between min-h-[140px]">
-              <span className="text-xs text-gray-400 font-medium">Invitations Created</span>
+              <span className="text-xs text-gray-500 font-medium">Invitations Created</span>
               <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-4">
                 100K+
               </span>
             </div>
 
             <div className="p-6 sm:p-8 flex flex-col justify-between min-h-[140px]">
-              <span className="text-xs text-gray-400 font-medium">Events Managed</span>
+              <span className="text-xs text-gray-500 font-medium">Events Managed</span>
               <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-4">
                 25K+
               </span>
             </div>
 
             <div className="p-6 sm:p-8 flex flex-col justify-between min-h-[140px]">
-              <span className="text-xs text-gray-400 font-medium">Guests Invited</span>
+              <span className="text-xs text-gray-500 font-medium">Guests Invited</span>
               <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-4">
                 1M+
               </span>
             </div>
 
             <div className="p-6 sm:p-8 flex flex-col justify-between min-h-[140px]">
-              <span className="text-xs text-gray-400 font-medium">RSVP Responses Collected</span>
+              <span className="text-xs text-gray-500 font-medium">RSVP Responses Collected</span>
               <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight mt-4">
                 500K+
               </span>

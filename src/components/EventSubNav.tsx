@@ -201,7 +201,7 @@ export default function EventSubNav({
           }}
           className={`px-4 py-2 border-b-2 transition-colors shrink-0 flex items-center gap-2 ${
             shownTab === tab.id
-              ? "text-[#FF5B22] border-[#FF5B22] font-bold"
+              ? "text-[#C44200] border-[#FF5B22] font-bold"
               : "text-gray-500 hover:text-gray-900 border-transparent"
           }`}
         >

@@ -61,7 +61,7 @@ export default function CustomAlertModal({
       >
         {/* Top Icon Badge */}
         {type === "success" && (
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-2xs">
+          <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto shadow-2xs">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -90,7 +90,7 @@ export default function CustomAlertModal({
         )}
 
         {type === "info" && (
-          <div className="w-12 h-12 bg-orange-100 text-[#FF5B22] rounded-full flex items-center justify-center mx-auto shadow-2xs">
+          <div className="w-12 h-12 bg-orange-100 text-[#C44200] rounded-full flex items-center justify-center mx-auto shadow-2xs">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -113,7 +113,7 @@ export default function CustomAlertModal({
                 ? "bg-emerald-600 hover:bg-emerald-700"
                 : type === "error"
                 ? "bg-rose-600 hover:bg-rose-700"
-                : "bg-[#FF5B22] hover:bg-[#E04B16]"
+                : "bg-[#C65318] hover:bg-[#A83800]"
             }`}
           >
             {buttonText}

@@ -59,7 +59,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
       <div className="border border-[#E0E0E0] rounded-lg p-5 pb-8 space-y-5">
       <div>
         <h2 id="settings-list-title" className="text-[22px] font-medium text-[#15191C]">{title}</h2>
-        {description && <p className="text-xs text-[#828282] mt-1">{description}</p>}
+        {description && <p className="text-xs text-[#6B6B6B] mt-1">{description}</p>}
       </div>
       {loadError ? (
         <div role="alert" className="p-4 border border-rose-200 bg-rose-50 rounded-md text-sm text-rose-700 flex items-center justify-between gap-3">
@@ -99,7 +99,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              className="px-4 py-[9px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-4 py-[9px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>

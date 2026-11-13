@@ -54,7 +54,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
       <div className="bg-white rounded-lg shadow-2xl max-w-[486px] w-full overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
         <div className="px-6 py-5 border-b border-[#E0E0E0] flex items-center justify-between">
           <h3 id="add-user-title" className="text-base font-medium text-[#15191C]">Add User</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -65,7 +65,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
           {/* Admins: which organizer the new system user belongs to (required) */}
           {isAdmin && (
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#15191C]">Organizer<span className="text-[#FF651D] ml-0.5">*</span></label>
+              <label className="text-sm font-medium text-[#15191C]">Organizer<span className="text-[#C44200] ml-0.5">*</span></label>
               <CustomDropdown
                 portal
                 value={organizerId}
@@ -77,14 +77,14 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                 invalid={!!formError && missingOrganizer}
                 emptyMessage="No organizers yet"
               />
-              <p className="text-xs text-[#828282]">{lockOrganizer ? "This event's organizer." : "The user is added to this organizer's system users."}</p>
+              <p className="text-xs text-[#6B6B6B]">{lockOrganizer ? "This event's organizer." : "The user is added to this organizer's system users."}</p>
             </div>
           )}
 
               {/* User Name */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#FF651D] ml-0.5">*</span>
+                  User Name<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -92,28 +92,28 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                   placeholder="Enter User Name"
                   value={form.userName}
                   onChange={(e) => setForm({ ...form, userName: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               {/* Contact No */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#FF651D] ml-0.5">*</span>
+                  Contact No<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
                   placeholder="Enter Contact No"
                   value={form.contactNo}
                   onValueChange={(v) => setForm({ ...form, contactNo: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#FF651D] ml-0.5">*</span>
+                  Email<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
@@ -121,14 +121,14 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                   placeholder="Enter Email"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               {/* Temporary Password */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Temporary Password<span className="text-[#FF651D] ml-0.5">*</span>
+                  Temporary Password<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
@@ -137,7 +137,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                   placeholder="At least 8 characters"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -149,7 +149,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
                 <button type="button" onClick={onClose} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? "Select an organizer first" : undefined} className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? "Select an organizer first" : undefined} className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? "Adding..." : "Add"}
                 </button>
               </div>

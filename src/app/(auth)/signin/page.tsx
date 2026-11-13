@@ -151,7 +151,7 @@ function SigninContent() {
       {entering && createPortal(<div className="fixed inset-0 z-[100]"><BrandLoader label="Signing in" /></div>, document.body)}
       <div>
         <label htmlFor="signin-email" className={authLabelClass}>
-          Email Address<span className="text-[#FF651D]">*</span>
+          Email Address<span className="text-[#C44200]">*</span>
         </label>
         <input
           id="signin-email"
@@ -167,7 +167,7 @@ function SigninContent() {
       </div>
       <div className="mt-3">
         <label htmlFor="signin-password" className={authLabelClass}>
-          Password<span className="text-[#FF651D]">*</span>
+          Password<span className="text-[#C44200]">*</span>
         </label>
         <PasswordInput
           id="signin-password"
@@ -196,7 +196,7 @@ function SigninContent() {
           />
           Remember me
         </label>
-        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#FF651D]">
+        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#A83800]">
           Forgot Password?
         </Link>
       </div>
@@ -217,6 +217,7 @@ function SigninContent() {
           <h1 className="text-[22px] leading-7 font-semibold text-black">Super Admin Log In</h1>
           <p className="mt-2 text-sm leading-5 text-[#5C5C5C]">Welcome back! Login to Dashboard</p>
         </div>
+        {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
         {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
         {sharedForm}
       </AdminAuthLayout>
@@ -237,6 +238,7 @@ function SigninContent() {
       {mode === "organizer" && (
         <>
           <AuthHeading title="Organizer Sign In" subtitle="Welcome back! Login to Organizer Portal" />
+          {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
           {searchParams.get("notice") === "mobile-only" && (
             <AuthAlert tone="info">On-ground staff sign in through the LGPSM mobile app. Organizers can sign in here.</AuthAlert>
           )}

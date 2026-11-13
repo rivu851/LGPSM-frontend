@@ -28,19 +28,19 @@ export default function Navbar() {
           <nav aria-label="Main" className="hidden md:flex items-center gap-7">
             <Link
               href="/features"
-              className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] transition-colors font-[family-name:var(--font-space-grotesk)]"
+              className="text-sm font-semibold text-gray-700 hover:text-[#A83800] transition-colors font-[family-name:var(--font-space-grotesk)]"
             >
               Features
             </Link>
             <Link
               href="/pricing"
-              className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] transition-colors font-[family-name:var(--font-space-grotesk)]"
+              className="text-sm font-semibold text-gray-700 hover:text-[#A83800] transition-colors font-[family-name:var(--font-space-grotesk)]"
             >
               Pricing
             </Link>
             <Link
               href="/contact"
-              className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] transition-colors font-[family-name:var(--font-space-grotesk)]"
+              className="text-sm font-semibold text-gray-700 hover:text-[#A83800] transition-colors font-[family-name:var(--font-space-grotesk)]"
             >
               Contact
             </Link>
@@ -51,13 +51,13 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           <Link
             href="/signin?mode=organizer"
-            className="text-sm font-semibold text-gray-700 hover:text-[#FF5B22] px-3 py-2 transition-colors font-[family-name:var(--font-space-grotesk)]"
+            className="text-sm font-semibold text-gray-700 hover:text-[#A83800] px-3 py-2 transition-colors font-[family-name:var(--font-space-grotesk)]"
           >
             Sign In
           </Link>
           <Link
             href="/signup"
-            className="px-5 py-2.5 text-sm font-bold text-white bg-[#eb6e15] hover:bg-[#b34609] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
+            className="px-5 py-2.5 text-sm font-bold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md shadow-sm transition-all active:scale-95 font-[family-name:var(--font-space-grotesk)]"
           >
             Sign Up Free
           </Link>
@@ -83,7 +83,7 @@ export default function Navbar() {
           <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-semibold text-gray-700">Pricing</Link>
           <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-sm font-semibold text-gray-700">Contact</Link>
           <div className="pt-2 flex flex-col gap-2 border-t border-gray-100">
-            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 pt-1">Sign In Roles</div>
+            <div className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 pt-1">Sign In Roles</div>
             <Link href="/signin?mode=organizer" onClick={() => setMobileMenuOpen(false)} className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg hover:border-[#FF5B22] transition-colors">Organizer Sign In</Link>
             <Link href="/signin?mode=admin" onClick={() => setMobileMenuOpen(false)} className="w-full text-center py-2 text-sm font-semibold text-gray-700 border border-gray-200 rounded-lg hover:border-[#FF5B22] transition-colors">Super Admin Sign In</Link>
             <div className="pt-1">

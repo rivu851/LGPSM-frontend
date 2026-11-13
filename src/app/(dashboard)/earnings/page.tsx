@@ -1,6 +1,6 @@
 "use client";
 
-import { csvRow } from "@/utils/csv";
+import { csvRow, csvBlob } from "@/utils/csv";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
 import { EarningsRecord } from "@/types/earnings";
@@ -126,18 +126,18 @@ export default function EarningsPage() {
 
   const exportCSV = () => {
     const headers = activeTab === "organizer"
-      ? "Organizer,Event Name,Date of Payment,Invites,Rate,Amount\n"
-      : "Event Name,Organizer,Date of Payment,Invites,Rate,Amount\n";
+      ? "Organizer,Event Name,Date of Payment,Invites,Rate (INR),Amount (INR)\n"
+      : "Event Name,Organizer,Date of Payment,Invites,Rate (INR),Amount (INR)\n";
 
     const rows = currentRecords
       .map((r) =>
         activeTab === "organizer"
-          ? csvRow([r.organizer, r.eventName, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : `$${r.rate}`, `$${r.amount}`])
-          : csvRow([r.eventName, r.organizer, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : `$${r.rate}`, `$${r.amount}`])
+          ? csvRow([r.organizer, r.eventName, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : r.rate, r.amount])
+          : csvRow([r.eventName, r.organizer, r.dateOfPayment, r.invites, r.rate === null ? "Not set" : r.rate, r.amount])
       )
       .join("\n");
 
-    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const blob = csvBlob(headers + rows);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

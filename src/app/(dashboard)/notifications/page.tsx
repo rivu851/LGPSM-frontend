@@ -10,13 +10,14 @@ import {
 } from "@/services/notificationService";
 import { useAlert } from "@/context/AlertContext";
 import { SkeletonRegion, CardSkeleton } from "@/components/common/Skeleton";
+import { formatDateAndTime, formatDayMonth } from "@/utils/dateTime";
 
 const PAGE_SIZE = 20;
 
 function formatTimestamp(iso: string): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return "";
-  return `${d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} | ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}`;
+  return formatDateAndTime(d);
 }
 
 function timeAgo(iso: string): string {
@@ -30,7 +31,7 @@ function timeAgo(iso: string): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  return formatDayMonth(d);
 }
 
 function toCard(n: RealNotification): NotificationCardData {
@@ -177,7 +178,7 @@ export default function NotificationsPage() {
               <button
                 type="button"
                 onClick={handleClearAllNotifications}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -227,13 +228,13 @@ export default function NotificationsPage() {
           </div>
         ) : !errorFeedback ? (
           <div className="py-20 text-center text-gray-500 text-xs border border-gray-200 rounded-lg bg-gray-50/50 flex flex-col items-center justify-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
             <p className="font-medium text-gray-600">No notifications yet.</p>
-            <p className="text-[11px] text-gray-400">You&apos;re all caught up.</p>
+            <p className="text-[11px] text-gray-500">You&apos;re all caught up.</p>
           </div>
         ) : null}
       </div>

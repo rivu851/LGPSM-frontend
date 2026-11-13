@@ -59,7 +59,7 @@ export default function SessionScopePicker({
             ))}
           </div>
           {value !== null && valid.length === 0 && sessions.length > 0 && <p className="text-[11px] text-amber-700">Tick at least one session, or choose &quot;All Sessions&quot;.</p>}
-          {sessions.length === 0 && <p className="text-[11px] text-gray-400">This event has no sessions yet; staff can check guests in at the event entry.</p>}
+          {sessions.length === 0 && <p className="text-[11px] text-gray-500">This event has no sessions yet; staff can check guests in at the event entry.</p>}
         </>
       )}
     </fieldset>

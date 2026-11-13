@@ -47,7 +47,7 @@ export default function SendWarningModal({ eventId, eventTitle, onCancel, onConf
           {/* The template is chosen from the card preview on the edit form's first step */}
           <Link href={`/events/${eventId}/edit`} className={secondary}>Change Template</Link>
           <button type="button" onClick={onCancel} className={secondary}>I’ll do later</button>
-          <button type="button" onClick={onConfirm} autoFocus className="inline-flex items-center justify-center px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] rounded-lg text-base font-semibold text-white cursor-pointer">
+          <button type="button" onClick={onConfirm} autoFocus className="inline-flex items-center justify-center px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] rounded-lg text-base font-semibold text-white cursor-pointer">
             Yes
           </button>
         </div>

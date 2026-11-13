@@ -34,7 +34,7 @@ export default function ListResetWarningModal({ onCancel, onConfirm, busy = fals
         </div>
         <div className="px-6 py-4 border-t border-[#E0E0E0] flex justify-end gap-3">
           <button type="button" onClick={onCancel} disabled={busy} className="px-5 py-2 text-sm font-semibold border border-[#E0E0E0] rounded-lg text-[#15191C] hover:bg-gray-50 cursor-pointer disabled:opacity-50">Cancel</button>
-          <button type="button" onClick={onConfirm} disabled={!read || busy} className="px-6 py-2 text-sm font-semibold bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">{busy ? "Deleting…" : "Okay"}</button>
+          <button type="button" onClick={onConfirm} disabled={!read || busy} className="px-6 py-2 text-sm font-semibold bg-[#C65318] hover:bg-[#A83800] text-white rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">{busy ? "Deleting…" : "Okay"}</button>
         </div>
       </div>
     </div>

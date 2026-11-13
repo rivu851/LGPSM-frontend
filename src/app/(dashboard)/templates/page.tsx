@@ -131,7 +131,7 @@ function TemplatesPageContent() {
     <div className="w-full min-h-full bg-white">
       <PageHeader title="Templates" actions={
         // "Design with AI" is switched off for now: the button is commented out, uncomment it to bring it back
-        /* <Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#FF651D] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#E5520F]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link> */
+        /* <Link href="/templates/ai" className="mr-2 inline-flex items-center gap-1.5 rounded-md bg-[#C65318] px-3 py-2 text-xs sm:text-sm font-medium text-white hover:bg-[#A83800]"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>Design with AI</Link> */
         undefined
       } icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>} />
       {uploadOpen && (
@@ -150,7 +150,7 @@ function TemplatesPageContent() {
           ))}
         </div>
         {view === "mine" && (
-          <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#FF651D] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#E5520F] cursor-pointer">
+          <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-[#C65318] px-4 py-2.5 text-sm font-medium text-white hover:bg-[#A83800] cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
             Upload your own template
           </button>
@@ -188,7 +188,7 @@ function TemplatesPageContent() {
         ) : loadError ? (
           <p role="alert" className="py-16 text-center text-sm text-rose-600 break-words">{loadError}</p>
         ) : visible.length === 0 ? (
-          <p className="py-16 text-center text-sm text-[#828282]">
+          <p className="py-16 text-center text-sm text-[#6B6B6B]">
             {templates.length === 0
               ? view === "mine"
                 ? "You haven't saved any templates with this account yet. Designs made by an administrator and shared with everyone are listed under All templates, not here."
@@ -197,10 +197,10 @@ function TemplatesPageContent() {
             {templates.length === 0 && view === "mine" && (
               <>
                 {" "}
-                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#FF651D] underline cursor-pointer">Upload your own template</button>
+                <button type="button" onClick={() => setUploadOpen(true)} className="text-[#C44200] underline cursor-pointer">Upload your own template</button>
                 {/* "Design with AI" is switched off for now: uncomment to bring the link back
                 {" "}
-                <Link href="/templates/ai" className="text-[#FF651D] underline">Design one with AI</Link>
+                <Link href="/templates/ai" className="text-[#C44200] underline">Design one with AI</Link>
                 */}
               </>
             )}
@@ -236,7 +236,7 @@ function TemplatesPageContent() {
           <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-auto">
             <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
               <h3 id="template-preview-title" className="text-base font-medium text-gray-900">Template Preview</h3>
-              <button type="button" onClick={() => { setLivePreview(null); setPreview(null); }} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <button type="button" onClick={() => { setLivePreview(null); setPreview(null); }} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -270,13 +270,13 @@ function TemplatesPageContent() {
                   </p>
                 )}
                 {preview.isDraft ? (
-                  <p className="text-sm text-[#828282]">
+                  <p className="text-sm text-[#6B6B6B]">
                     {preview.isMine ? "This template is a draft. Publish it to use it for your events." : "This template is a draft. Publish it from Template Settings before organizers can use it."}
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
                   {!preview.isDraft && preview.kind === "INVITATION" && (
-                    <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md">
+                    <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
                       Create an Event
                     </Link>
                   )}

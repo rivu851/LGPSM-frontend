@@ -49,9 +49,9 @@ export default function AdmissionWindowModal({ isOpen, onClose, eventId, start, 
     <div>
       <span className="block text-xs font-medium text-gray-700 mb-1">{label}</span>
       <button type="button" onClick={() => setPicking(field)} aria-label={label} className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-md text-sm text-left cursor-pointer hover:border-[#FF651D]">
-        {draft[field] ? formatDateTime(draft[field]) : <span className="text-[#828282]">{fallbackLabel} — {formatDateTime(fallback)}</span>}
+        {draft[field] ? formatDateTime(draft[field]) : <span className="text-[#6B6B6B]">{fallbackLabel} — {formatDateTime(fallback)}</span>}
       </button>
-      {draft[field] && <button type="button" onClick={() => setDraft((d) => ({ ...d, [field]: null }))} className="mt-1 text-xs text-[#FF651D] underline cursor-pointer">{fallbackLabel === "Event start" ? "Use event start" : "Use event end"}</button>}
+      {draft[field] && <button type="button" onClick={() => setDraft((d) => ({ ...d, [field]: null }))} className="mt-1 text-xs text-[#C44200] underline cursor-pointer">{fallbackLabel === "Event start" ? "Use event start" : "Use event end"}</button>}
     </div>
   );
 
@@ -67,7 +67,7 @@ export default function AdmissionWindowModal({ isOpen, onClose, eventId, start, 
         {(problem || error) && <p role="alert" className="text-sm text-rose-600">{problem || error}</p>}
         <div className="flex justify-end gap-3">
           <button type="button" onClick={onClose} disabled={busy} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer disabled:opacity-50">Cancel</button>
-          <button type="button" onClick={save} disabled={busy || !!problem} className="px-4 py-2 bg-[#FF651D] hover:bg-[#E5520F] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{busy ? "Saving…" : "Save"}</button>
+          <button type="button" onClick={save} disabled={busy || !!problem} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{busy ? "Saving…" : "Save"}</button>
         </div>
       </div>
       <DateTimePickerModal

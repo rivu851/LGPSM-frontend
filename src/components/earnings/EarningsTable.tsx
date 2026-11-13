@@ -5,6 +5,7 @@ import { EarningsRecord } from "@/types/earnings";
 import { TableSkeletonRows } from "@/components/common/Skeleton";
 import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 import { useRouter } from "next/navigation";
+import { formatMoney } from "@/utils/money";
 
 interface EarningsTableProps {
   activeTab: "organizer" | "event";
@@ -54,7 +55,7 @@ export default function EarningsTable({
           <button
             type="button"
             onClick={onExportCSV}
-            className="font-bold text-[#FF5B22] hover:underline cursor-pointer"
+            className="font-bold text-[#C44200] hover:underline cursor-pointer"
           >
             Export CSV
           </button>
@@ -67,7 +68,7 @@ export default function EarningsTable({
           onClick={() => setActiveTab("organizer")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "organizer"
               ? "bg-white text-gray-900 font-semibold shadow-2xs"
-              : "text-gray-500 hover:text-gray-800"
+              : "text-gray-600 hover:text-gray-800"
             }`}
         >
           By Organizer
@@ -77,7 +78,7 @@ export default function EarningsTable({
           onClick={() => setActiveTab("event")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "event"
               ? "bg-white text-gray-900 font-semibold shadow-2xs"
-              : "text-gray-500 hover:text-gray-800"
+              : "text-gray-600 hover:text-gray-800"
             }`}
         >
           By Event
@@ -87,7 +88,7 @@ export default function EarningsTable({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-xl">
           <svg
-            className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"
+            className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -105,7 +106,7 @@ export default function EarningsTable({
             aria-label="Search earnings"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#FF5B22] transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
           />
         </div>
 
@@ -117,14 +118,14 @@ export default function EarningsTable({
               onChange={(e) => setStartDate(e.target.value)}
               placeholder="DD/MM/YYYY"
               aria-label="From date"
-              className="w-20 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none"
+              className="w-20 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
             />
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
 
-          <span className="text-gray-400 font-normal">To</span>
+          <span className="text-gray-500 font-normal">To</span>
 
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-md px-3 py-1.5">
             <input
@@ -133,9 +134,9 @@ export default function EarningsTable({
               onChange={(e) => setEndDate(e.target.value)}
               placeholder="DD/MM/YYYY"
               aria-label="To date"
-              className="w-20 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none"
+              className="w-20 bg-transparent text-gray-800 placeholder-gray-500 focus:outline-none"
             />
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
@@ -149,7 +150,7 @@ export default function EarningsTable({
             id="selectAllEarnings"
             checked={selectedIds.length === records.length && records.length > 0}
             onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
           />
           <label htmlFor="selectAllEarnings" className="cursor-pointer">
             Select All
@@ -161,9 +162,9 @@ export default function EarningsTable({
             type="button"
             onClick={onDeleteSelected}
             title="Delete Selected Records"
-            className="p-1.5 text-[#FF5B22] hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-[#C44200] hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5 text-[#FF5B22]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[#C44200]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
@@ -173,8 +174,8 @@ export default function EarningsTable({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead>
-            <tr className="border-b border-gray-200 text-[#828282] font-medium text-sm">
-              <th className="py-3 px-4 w-10"></th>
+            <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm">
+              <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
               <th className="py-3 px-4 font-medium">
                 {activeTab === "organizer" ? "Organizer" : "Event Name"}
               </th>
@@ -198,7 +199,7 @@ export default function EarningsTable({
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
                     aria-label="Select this row"
-                    className="rounded border-gray-300 text-[#FF5B22] focus:ring-[#FF5B22] cursor-pointer check-orange"
+                    className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
                   />
                 </td>
                 <td className="py-4 px-4 font-semibold text-gray-900">
@@ -209,8 +210,8 @@ export default function EarningsTable({
                 </td>
                 <td className="py-4 px-4 text-gray-600">{r.dateOfPayment}</td>
                 <td className="py-4 px-4 text-gray-900 font-semibold">{r.invites}</td>
-                <td className="py-4 px-4 text-gray-600">{r.rate === null ? "Not set" : `$${r.rate}`}</td>
-                <td className="py-4 px-4 text-emerald-600 font-bold">${r.amount}</td>
+                <td className="py-4 px-4 text-gray-600">{r.rate === null ? "Not set" : formatMoney(r.rate)}</td>
+                <td className="py-4 px-4 text-emerald-700 font-bold">{formatMoney(r.amount)}</td>
                 <td className="py-4 px-4 text-right">
                   {/* was an inert "⋯"; event rows can open their event, and any row can be hidden from this view */}
                   <RowMenu

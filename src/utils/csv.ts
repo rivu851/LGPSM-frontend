@@ -10,3 +10,6 @@ export function csvCell(value: unknown): string {
 }
 
 export const csvRow = (cells: unknown[]): string => cells.map(csvCell).join(",");
+
+/** A CSV download. The byte-order mark makes Excel read the file as UTF-8 (names with accents, the rupee sign). */
+export const csvBlob = (text: string): Blob => new Blob(["\ufeff" + text], { type: "text/csv;charset=utf-8" });

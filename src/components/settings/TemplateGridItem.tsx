@@ -30,7 +30,7 @@ export default function TemplateGridItem({ template, categoryLabel, onEdit }: Te
         )}
         <span
           className={`absolute bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap ${
-            isPublished ? "bg-[#FF651D] text-white" : "bg-white/95 text-gray-800 border border-gray-200"
+            isPublished ? "bg-[#C65318] text-white" : "bg-white/95 text-gray-800 border border-gray-200"
           }`}
         >
           {template.status}

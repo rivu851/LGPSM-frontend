@@ -154,7 +154,7 @@ export default function MobileCardPreview({
             )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
-                <svg className="h-4 w-4 animate-spin text-[#FF5B22]" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <svg className="h-4 w-4 animate-spin text-[#C44200]" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                   <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
                 </svg>
@@ -162,12 +162,12 @@ export default function MobileCardPreview({
             )}
             {awaitingTemplate && (
               <div role="status" aria-live="polite" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]">
-                <svg className="h-9 w-9 animate-spin text-[#FF5B22]" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <svg className="h-9 w-9 animate-spin text-[#C44200]" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
                   <path className="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
                 </svg>
                 <p className="text-xs font-medium text-[#4B4F52]">Selecting template…</p>
-                <p className="text-[11px] text-[#828282]">Your card appears here once you choose one.</p>
+                <p className="text-[11px] text-[#6B6B6B]">Your card appears here once you choose one.</p>
               </div>
             )}
             {!awaitingTemplate && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
@@ -216,13 +216,13 @@ export default function MobileCardPreview({
           </p>
         )}
         {showLive && (
-          <p className="mt-1 text-[11px] text-[#828282] text-center max-w-[260px]">
+          <p className="mt-1 text-[11px] text-[#6B6B6B] text-center max-w-[260px]">
             {usesSamplePhoto ? "Sample photo, guest and QR. Add an event image to use your own." : "Sample guest and QR."} Each guest gets their own QR when invitations are sent.
           </p>
         )}
         <p className="text-xs text-[#4B4F52] mt-3 text-center">
           Looking for custom card design?{" "}
-          <Link href="/contact" className="text-[#16A34A] font-medium underline">
+          <Link href="/contact" className="text-[#15803D] font-medium underline">
             Contact us
           </Link>
         </p>

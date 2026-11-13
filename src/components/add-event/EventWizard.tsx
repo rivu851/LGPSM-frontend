@@ -337,7 +337,7 @@ export default function EventWizard({
 
   // one stable object per choice, so the card preview is only redrawn when a tick actually changes
   const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
-  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location }), [cd.title, cd.qr, cd.dateTime, cd.location]);
+  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location, inviteeName: cd.inviteeName }), [cd.title, cd.qr, cd.dateTime, cd.location, cd.inviteeName]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
@@ -425,8 +425,8 @@ export default function EventWizard({
             </div>
           )}
           {draftSavedAt && draftStatus !== "restored" && (
-            <p className="text-xs text-[#828282]">
-              Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            <p className="text-xs text-[#6B6B6B]">
+              Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
               {canDiscard && (
                 <>
                   {" · "}
@@ -450,7 +450,7 @@ export default function EventWizard({
               ) : featuresError || !features ? (
                 <div className="p-8 text-center space-y-3" role="alert">
                   <p className="text-sm text-rose-700">{featuresError || "Event settings are unavailable."} The event form needs the saved platform settings before you can continue.</p>
-                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#FF651D] rounded-md text-sm font-medium text-[#E5520F]">Retry</button>
+                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#FF651D] rounded-md text-sm font-medium text-[#C44200]">Retry</button>
                 </div>
               ) : currentStep === 1 ? (
                 <Step1EventDetails
@@ -533,6 +533,7 @@ export default function EventWizard({
         onSelectTemplate={chooseTemplate}
         onLeave={onCancel}
         extraCategory={extraCategory}
+        organizerId={draft.organizerIds[0]}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
         subcategoryId={draft.subcategoryId || undefined}

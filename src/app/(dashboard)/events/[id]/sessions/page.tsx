@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { reportService } from "@/services/reportService";
 import { inviteeService } from "@/services/inviteeService";
 import { sessionService } from "@/services/sessionService";
+import { createSingleFlight } from "@/utils/singleFlight";
 import { eventService } from "@/services/eventService";
 import { assignmentService } from "@/services/assignmentService";
 import PageHeader from "@/components/common/PageHeader";
@@ -249,8 +250,20 @@ export default function EventSessionsPage() {
     else setSampleReminder(true);
   };
 
+  // One save at a time: a double click (or Enter pressed twice) must not send the request twice (see utils/singleFlight.ts)
+  const [savingSession, setSavingSession] = useState(false);
+  const saveFlight = useRef(createSingleFlight());
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSavingSession(true);
+    try {
+      await saveFlight.current.run(saveSession);
+    } finally {
+      setSavingSession(saveFlight.current.busy);
+    }
+  };
+
+  const saveSession = async () => {
     if (!sessionName.trim()) return;
     setFormError(null);
     if (!isAfter(endTime, startTime)) {
@@ -358,7 +371,7 @@ export default function EventSessionsPage() {
                   placeholder="Search sessions"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                  className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
                 />
               </div>
             </div>
@@ -367,7 +380,7 @@ export default function EventSessionsPage() {
               onClick={openAdd}
               disabled={historical}
               title={historical ? "This event can no longer be changed" : undefined}
-              className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
+              className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
             >
               <Icon name="events/add-white" width={24} height={24} />
               Add Session
@@ -380,7 +393,7 @@ export default function EventSessionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm font-medium whitespace-nowrap">
               <thead>
-                <tr className="border-b border-[#D3D3D3] text-[#828282]">
+                <tr className="border-b border-[#D3D3D3] text-[#6B6B6B]">
                   <th className="h-[46px] p-2.5 w-[43px] font-medium">#</th>
                   <th className="h-[46px] p-2.5 w-[270px] font-medium">Session Title</th>
                   <th className="h-[46px] p-2.5 w-[348px] font-medium">Date & Time</th>
@@ -444,7 +457,7 @@ export default function EventSessionsPage() {
                                 <div className="fixed inset-0 z-20" onClick={() => setMenuId(null)} aria-hidden />
                                 <div role="menu" style={{ top: menuPos.top, right: menuPos.right }} className="fixed z-30 w-40 rounded-md border border-[#E0E0E0] bg-white py-1 shadow-lg">
                                   <button type="button" role="menuitem" onClick={() => openEdit(sess)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#15191C] hover:bg-gray-50 cursor-pointer text-left">
-                                    <svg className="w-4 h-4 text-[#FF651D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <svg className="w-4 h-4 text-[#C44200]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
                                     </svg>
                                     Edit
@@ -484,7 +497,7 @@ export default function EventSessionsPage() {
                 type="button"
                 onClick={closeModal}
                 aria-label="Close"
-                className="text-gray-400 hover:text-gray-700 p-1 rounded-md cursor-pointer"
+                className="text-gray-500 hover:text-gray-700 p-1 rounded-md cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -496,7 +509,7 @@ export default function EventSessionsPage() {
               <div className="border border-[#E0E0E0] rounded-lg p-5 space-y-5">
                 <div>
                   <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                    <span>Session Name<span className="text-[#FF651D] ml-0.5">*</span></span>
+                    <span>Session Name<span className="text-[#C44200] ml-0.5">*</span></span>
                     <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." />
                   </label>
                   <input
@@ -505,7 +518,7 @@ export default function EventSessionsPage() {
                     value={sessionName}
                     onChange={(e) => setSessionName(e.target.value)}
                     required
-                    className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                    className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
                   />
                 </div>
 
@@ -513,7 +526,7 @@ export default function EventSessionsPage() {
                   {(["start", "end"] as const).map((field) => (
                     <div key={field} className="min-w-0">
                       <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-[#FF651D] ml-0.5">*</span></span>
+                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-[#C44200] ml-0.5">*</span></span>
                         <InfoTip
                           label={`About the session ${field} time`}
                           text={field === "start" ? "When this session opens for check-in. It must fall within the event's dates." : "When this session closes. It must be after the start time."}
@@ -551,7 +564,7 @@ export default function EventSessionsPage() {
                 </div>
 
                 {editingId && copiedByOthers.length > 0 && (
-                  <p className="text-xs text-[#828282]">{copiedByOthers.map((x) => x.name).join(", ")} keep{copiedByOthers.length === 1 ? "s" : ""} this session&apos;s guest list, so it keeps its own list.</p>
+                  <p className="text-xs text-[#6B6B6B]">{copiedByOthers.map((x) => x.name).join(", ")} keep{copiedByOthers.length === 1 ? "s" : ""} this session&apos;s guest list, so it keeps its own list.</p>
                 )}
                 {copyOptions.length > 0 && copiedByOthers.length === 0 && (
                   <div className="flex flex-wrap items-center gap-2">
@@ -591,13 +604,13 @@ export default function EventSessionsPage() {
                       Choose File
                     </button>
                     <input ref={fileInput} type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
-                    <span className="px-3 text-xs text-[#828282] truncate">{uploadedFileName || "No file chosen"}</span>
+                    <span className="px-3 text-xs text-[#6B6B6B] truncate">{uploadedFileName || "No file chosen"}</span>
                   </div>
-                  <p className="mt-1.5 text-xs text-[#828282]">The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again.</p>
+                  <p className="mt-1.5 text-xs text-[#6B6B6B]">The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again.</p>
 
                   <div className="flex items-center justify-end gap-2 mt-2 text-sm">
                     <div className="w-4 h-4 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-[9px]">X</div>
-                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#FF651D] cursor-pointer">
+                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#A83800] cursor-pointer">
                       Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
@@ -612,12 +625,14 @@ export default function EventSessionsPage() {
 
               <button
                 type="submit"
-                className="px-4 py-2.5 border border-[#FF651D] text-[#FF651D] hover:bg-[#FF651D]/5 text-sm font-medium rounded-md transition-colors cursor-pointer inline-flex items-center gap-2 bg-white"
+                disabled={savingSession}
+                aria-busy={savingSession}
+                className="px-4 py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D]/5 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2 bg-white"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>{editingId ? "Save Session" : "Add Session"}</span>
+                <span>{savingSession ? (editingId ? "Saving…" : "Adding…") : editingId ? "Save Session" : "Add Session"}</span>
               </button>
             </form>
           </div>

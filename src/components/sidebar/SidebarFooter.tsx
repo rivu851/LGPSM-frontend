@@ -31,7 +31,7 @@ export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterP
         <span className="flex-1">Notification</span>
         {unreadCount > 0 && (
           <span
-            className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#FF651D] text-white text-[11px] font-semibold flex items-center justify-center"
+            className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#C65318] text-white text-[11px] font-semibold flex items-center justify-center"
             aria-label={`${unreadCount} unread notifications`}
           >
             {unreadCount > 99 ? "99+" : unreadCount}

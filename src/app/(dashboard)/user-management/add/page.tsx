@@ -36,6 +36,14 @@ function AddUserContent() {
   // An admin works on one organizer's staff at a time
   const [organizers, setOrganizers] = useState<UserData[]>([]);
   const [organizerId, setOrganizerId] = useState(organizerParam || "");
+  // The chosen organizer lives in the address (?organizer=…): a refresh keeps it, it belongs to this tab only, nothing is stored, and
+  // leaving the page or signing out forgets it. It is checked against the organizers that exist before it is used.
+  const writeOrganizerParam = (id: string) => {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("organizer", id); else url.searchParams.delete("organizer");
+    window.history.replaceState(window.history.state, "", url.pathname + url.search);
+  };
+  const rememberOrganizer = (id: string) => { setOrganizerId(id); writeOrganizerParam(id); };
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(openedByLink);
   // Cancelling a form that was opened from another page goes back to that page rather than stranding the person on this list
   const cancelModal = () => {
@@ -59,7 +67,16 @@ function AddUserContent() {
         fromEventId ? eventService.getEvent(fromEventId) : Promise.resolve(null),
       ]);
       if (!live) return;
-      if (orgs.success && Array.isArray(orgs.data)) setOrganizers(orgs.data.filter((u) => u.role === "ORGANIZER"));
+      if (orgs.success && Array.isArray(orgs.data)) {
+        const list = orgs.data.filter((u) => u.role === "ORGANIZER");
+        setOrganizers(list);
+        // an organizer named in the address (kept across a refresh, see rememberOrganizer) that no longer exists or is not available: start empty
+        setOrganizerId((current) => {
+          if (!current || list.some((o) => o._id === current)) return current;
+          writeOrganizerParam("");
+          return "";
+        });
+      }
       const owner = ev && ev.success && ev.data ? (ev.data as { organizerId?: string | { _id?: string } }).organizerId : undefined;
       const ownerId = typeof owner === "string" ? owner : owner?._id;
       if (ownerId) setOrganizerId(ownerId);
@@ -96,7 +113,7 @@ function AddUserContent() {
     setAddedUserName(created.fullName);
     setIsAddUserModalOpen(false);
     // the list follows the organizer the user was added for
-    if (isAdmin && forOrganizerId && forOrganizerId !== organizerId) setOrganizerId(forOrganizerId);
+    if (isAdmin && forOrganizerId && forOrganizerId !== organizerId) rememberOrganizer(forOrganizerId);
     // Opened from another page: go back to it, where the new user now shows in the list
     if (assignNote) setFormError(assignNote);
     else if (openedByLink) router.back();
@@ -120,16 +137,16 @@ function AddUserContent() {
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
-              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#FF651D] ml-0.5">*</span></label>
+              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#C44200] ml-0.5">*</span></label>
               <CustomDropdown
                 value={organizerId}
-                onChange={(v) => setOrganizerId(v)}
+                onChange={rememberOrganizer}
                 options={organizers.map((o) => ({ value: o._id, label: `${o.fullName}${(o.profile?.organizationName as string) ? ` · ${o.profile?.organizationName as string}` : ""}` }))}
                 placeholder="Select an organizer"
                 ariaLabel="Organizer whose system users to show"
                 disabled={!!fromEventId}
               />
-              <p className="text-xs text-[#828282]">{fromEventId ? "This event's organizer." : "System users shown and added here belong to the selected organizer."}</p>
+              <p className="text-xs text-[#6B6B6B]">{fromEventId ? "This event's organizer." : "System users shown and added here belong to the selected organizer."}</p>
             </div>
           )}
           <ListControls label="System Users" searchId="add-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
@@ -157,7 +174,7 @@ function AddUserContent() {
               <p className="text-sm font-semibold text-rose-600 text-center break-words">{loadError}</p>
               <button
                 onClick={() => loadSystemUsers()}
-                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-[#FF5B22] font-semibold text-xs rounded-md transition-colors cursor-pointer"
+                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-[#C44200] font-semibold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Retry
               </button>
@@ -174,7 +191,7 @@ function AddUserContent() {
               </p>
               <button
                 onClick={() => setIsAddUserModalOpen(true)}
-                className="px-6 py-2 bg-[#F6F6F6] hover:bg-gray-200 text-[#FF651D] font-medium text-base rounded-md transition-colors cursor-pointer"
+                className="px-6 py-2 bg-[#F6F6F6] hover:bg-gray-200 text-[#C44200] font-medium text-base rounded-md transition-colors cursor-pointer"
               >
                 Add User
               </button>
@@ -192,7 +209,7 @@ function AddUserContent() {
                 <tbody className="divide-y divide-gray-200 text-gray-800">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-8 text-center text-gray-400">No users match your search.</td>
+                      <td colSpan={3} className="py-8 text-center text-gray-500">No users match your search.</td>
                     </tr>
                   ) : (
                     filteredUsers.map((u) => (

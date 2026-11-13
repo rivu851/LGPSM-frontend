@@ -132,9 +132,9 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                   <CustomDropdown
                     value={kind === "CUSTOM" ? CUSTOM_DETAIL : kind === "EMPLOYEE_ID" ? EMPLOYEE_ID : field ?? ""}
                     onChange={pick}
-                    // a detail chosen on one line is not offered on the other; a custom detail shows the title that was typed
+                    // Company Name and Employee ID can sit on one line only; Custom is offered on both lines (each with its own title); a custom detail shows the title that was typed
                     options={CARD_INFO_OPTIONS
-                      .filter((o) => (o.value === CUSTOM_DETAIL ? otherKind !== "CUSTOM" : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? true : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
@@ -142,7 +142,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                 </div>
                 {custom && (
                   <div>
-                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-[#FF651D] ml-0.5">*</span></label>
+                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-[#C44200] ml-0.5">*</span></label>
                     <input
                       id={`card-info-title-${slot}`}
                       type="text"
@@ -151,7 +151,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       onChange={(e) => setCardInfo({ ...info, [titleKey]: e.target.value })}
                       placeholder="e.g. Designation, Employee ID, Badge No."
                       aria-invalid={!!errors.cardInfo}
-                      className={`w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] ${errors.cardInfo ? "border-rose-400" : "border-[#E0E0E0]"}`}
+                      className={`w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] ${errors.cardInfo ? "border-rose-400" : "border-[#E0E0E0]"}`}
                     />
                   </div>
                 )}
@@ -160,7 +160,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
           })}
         </div>
         {(isCustomDetail(cardInfo.primary) || isCustomDetail(cardInfo.secondary)) && (
-          <p className="text-xs text-[#828282]">The title becomes the column heading in the Excel sample and the field name when adding an invitee.</p>
+          <p className="text-xs text-[#6B6B6B]">The title becomes the column heading in the Excel sample and the field name when adding an invitee.</p>
         )}
         {errors.cardInfo && <p role="alert" className="text-xs font-medium text-rose-600">{errors.cardInfo}</p>}
         {sampleColumnsChanged && (
@@ -225,7 +225,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                             type="button"
                             aria-label={`Remove option ${optIdx + 1}`}
                             onClick={() => updateCategory(category.id, { options: category.options.filter((_, i) => i !== optIdx) })}
-                            className="text-gray-400 hover:text-rose-600 cursor-pointer"
+                            className="text-gray-500 hover:text-rose-600 cursor-pointer"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -235,7 +235,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       </li>
                     ))}
                   </ul>
-                  <button type="button" onClick={() => { focusNext.current = `pref-opt-${category.id}-${category.options.length}`; updateCategory(category.id, { options: [...category.options, ""] }); }} className="text-sm font-medium text-[#16A34A] hover:underline cursor-pointer">
+                  <button type="button" onClick={() => { focusNext.current = `pref-opt-${category.id}-${category.options.length}`; updateCategory(category.id, { options: [...category.options, ""] }); }} className="text-sm font-medium text-[#15803D] hover:underline cursor-pointer">
                     Add another option
                   </button>
                 </div>
@@ -243,7 +243,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               <button
                 type="button"
                 onClick={() => { const id = newClientKey("pref"); focusNext.current = `pref-title-${id}`; setCategories([...categories, { id, title: "", options: [""] }]); }}
-                className="px-4 py-2 border border-[#FF651D] text-[#E5520F] hover:bg-orange-50 text-sm font-medium rounded-md cursor-pointer"
+                className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-orange-50 text-sm font-medium rounded-md cursor-pointer"
               >
                 + Add another question
               </button>
@@ -257,7 +257,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Back
         </button>
-        <button type="submit" className="px-7 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
+        <button type="submit" className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
       </div>

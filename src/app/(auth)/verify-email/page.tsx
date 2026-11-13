@@ -248,8 +248,8 @@ function VerifyEmailContent() {
             disabled={resendCooldown > 0 || isResending || !email}
             className={`font-semibold transition-colors ${
               resendCooldown > 0 || isResending || !email
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-[#FF651D] hover:underline cursor-pointer"
+                ? "text-gray-500 cursor-not-allowed"
+                : "text-[#C44200] hover:underline cursor-pointer"
             }`}
           >
             {isResending ? (
@@ -283,7 +283,7 @@ function VerifyEmailContent() {
           type="button"
           onClick={() => { setChangingEmail((open) => !open); setErrorMessage(""); setSuccessMessage(""); }}
           aria-expanded={changingEmail}
-          className="text-[#FF651D] underline font-medium hover:text-[#C44200]"
+          className="text-[#C44200] underline font-medium hover:text-[#C44200]"
         >
           change email address
         </button>

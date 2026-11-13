@@ -35,7 +35,7 @@ export default function StepHeader({ currentStep, onStepClick, maxUnlockedStep }
                   : isCompleted
                   ? "text-gray-700"
                   : isLocked
-                  ? "text-gray-400 opacity-65"
+                  ? "text-gray-500"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >

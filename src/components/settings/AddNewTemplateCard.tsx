@@ -27,7 +27,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
   const [cat, setCat] = useState({ categoryId: "", subcategoryId: "" });
   const [imageKey, setImageKey] = useState<string | null>(null);
   const [cardDesign, setCardDesign] = useState<CardDesign>("CLASSIC");
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
@@ -68,7 +68,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-5">
           <div className="min-w-0">
             <label htmlFor="new-template-name" className={labelCls}>
-              Template Name<span className="text-[#FF651D] ml-0.5">*</span>
+              Template Name<span className="text-[#C44200] ml-0.5">*</span>
             </label>
             <input
               id="new-template-name"
@@ -97,7 +97,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-5">
           <div className="min-w-0">
             <ImageUploadField
-              label={<>Upload Card Template<span className="text-[#FF651D] ml-0.5">*</span></>}
+              label={<>Upload Card Template<span className="text-[#C44200] ml-0.5">*</span></>}
               value={imageKey}
               onChange={setImageKey}
               purpose="TEMPLATE"
@@ -110,10 +110,10 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           {/* Not in the Figma frame, but every template needs one: it fills the empty space beside the upload box */}
           <div className="min-w-0">
             <span className={labelCls}>
-              Invitation Card Design<span className="text-[#FF651D] ml-0.5">*</span>
+              Invitation Card Design<span className="text-[#C44200] ml-0.5">*</span>
             </span>
             <CustomDropdown ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
-            <p className="mt-1 text-xs text-[#828282]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image.</p>
+            <p className="mt-1 text-xs text-[#6B6B6B]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image.</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -128,12 +128,12 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           >
             <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${isPublished ? "translate-x-[26px]" : "translate-x-0"}`} />
           </button>
-          <span className="text-xs text-[#828282]">{isPublished ? "Organizers can pick it" : "Saved as draft"}</span>
+          <span className="text-xs text-[#6B6B6B]">{isPublished ? "Organizers can pick it" : "Saved as draft: hidden when choosing a template"}</span>
         </div>
         <button
           type="submit"
           disabled={submitting || uploading}
-          className="px-6 py-[11px] bg-[#FF651D] text-white text-base font-semibold rounded-lg hover:bg-[#E5520F] disabled:opacity-60 cursor-pointer"
+          className="px-6 py-[11px] bg-[#C65318] text-white text-base font-semibold rounded-lg hover:bg-[#A83800] disabled:opacity-60 cursor-pointer"
         >
           {submitting ? "Adding..." : "Add Template"}
         </button>

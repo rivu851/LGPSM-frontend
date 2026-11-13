@@ -1,6 +1,6 @@
 "use client";
 
-import { csvCell } from "@/utils/csv";
+import { csvCell, csvBlob } from "@/utils/csv";
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
@@ -128,7 +128,7 @@ export default function ReportsPage() {
 
   const selectedEvent = allEventsList.find((e) => (e._id || e.id) === selectedEventId) || null;
   const selectedEventTitle = selectedEvent?.title || "";
-  const formatDate = (value?: string) => (value ? new Date(value).toLocaleString() : "TBD");
+  const formatDate = (value?: string) => formatDateTime(value, "TBD");
 
   // 3. Paginated check-in logs
   const loadCheckInLogs = useCallback(async () => {
@@ -260,7 +260,7 @@ export default function ReportsPage() {
           invitationStatus: invitationStatus === "SENT" ? "Sent" : invitationStatus === "FAILED" ? "Failed" : "Pending",
           rsvpStatus: !rsvpEnabled ? "Not requested" : rsvp === "ACCEPTED" ? "Accepted" : rsvp === "DECLINED" ? "Declined" : "Pending",
           checkInStatus: records.length === 0 ? "Not Checked-in" : sessionCount > 0 && attendedSessions > 0 && attendedSessions < sessionCount ? "Partially Checked-in" : "Checked-in",
-          lastCheckInTime: latest ? new Date(latest).toLocaleString() : "—",
+          lastCheckInTime: formatDateTime(latest, "—"),
           sessionCheckIns,
         } as InviteeLog;
       }));
@@ -277,7 +277,7 @@ export default function ReportsPage() {
     return {
       id: log._id,
       userType: ROLE_LABELS[log.actorType] || log.actorType || "—",
-      dateTime: log.createdAt ? new Date(log.createdAt).toLocaleString() : "—",
+      dateTime: formatDateTime(log.createdAt, "—"),
       action: log.action,
       status: log.status === "FAILED" ? "failed" : "Successful",
       organizerName: org?.profile?.organizationName || org?.fullName || "—",
@@ -326,7 +326,7 @@ export default function ReportsPage() {
             log.invitee?.name,
             log.session?.name || "Event entry",
             log.checkInMethod,
-            log.checkInAt ? new Date(log.checkInAt).toLocaleString() : "",
+            formatDateTime(log.checkInAt, ""),
             staff,
             log.invitee?.rsvpStatus,
           ].map(csvCell).join(",");
@@ -345,7 +345,7 @@ export default function ReportsPage() {
         sessionsReport.map(s => [s.id, s.name, s.dateTime, s.invitees, s.attendees, s.accessControl, s.systemUsers].map(csvCell).join(",")).join("\n");
     }
 
-    const blob = new Blob([content], { type: "text/csv" });
+    const blob = csvBlob(content);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -425,11 +425,11 @@ export default function ReportsPage() {
                     <h2 className="text-[30px] leading-tight font-medium text-[#15191C] break-words min-w-0">{selectedEventTitle}</h2>
                   )}
                   {selectedEvent?.categoryId?.name && (
-                    <span className="border border-orange-400 text-[#FF5B22] rounded-md px-2 py-0.5 text-[10px] font-semibold bg-orange-50/50">
+                    <span className="border border-orange-400 text-[#C44200] rounded-md px-2 py-0.5 text-[10px] font-semibold bg-orange-50/50">
                       {selectedEvent.categoryId.name}
                     </span>
                   )}
-                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#E5520F] underline underline-offset-2">Open event</Link>}
+                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#C44200] underline underline-offset-2">Open event</Link>}
                 </div>
                 {selectedEvent && (
                   <p className="text-xs text-gray-500 font-medium">

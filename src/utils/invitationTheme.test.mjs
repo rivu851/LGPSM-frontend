@@ -19,7 +19,7 @@ test("only #RRGGBB colours reach CSS; anything else is replaced", () => {
 test("text on a colour is chosen for contrast", () => {
   assert.equal(readableOn("#FEE715"), "#15191C");
   assert.equal(readableOn("#660410"), "#FFFFFF");
-  assert.equal(readableOn("#E3340F"), "#FFFFFF");
+  assert.equal(readableOn("#DC320F"), "#FFFFFF");
 });
 
 test("tint moves toward white and stays valid", () => {
@@ -39,4 +39,20 @@ test("a light card palette (dark theme) never makes the page text unreadable", (
   assert.equal(t.ink, DEFAULT_INVITATION_THEME.ink);
   const vars = themeCssVars(t);
   assert.notEqual(vars["--inv-accent-text"], "#FEE715");
+});
+
+import { accessiblePrimary, contrastRatio } from "./invitationTheme.ts";
+
+test("a primary colour whose text would be hard to read is darkened just enough (white text 4.5:1)", () => {
+  const out = accessiblePrimary("#FF651D");
+  assert.notEqual(out, "#FF651D");
+  assert.ok(contrastRatio(out, readableOn(out)) >= 4.5);
+});
+test("a primary that already reads well is left exactly as it is", () => {
+  assert.equal(accessiblePrimary("#123C8F"), "#123C8F");
+});
+test("a light primary gets dark text and, when needed, is lightened rather than darkened", () => {
+  const out = accessiblePrimary("#F4D35E");
+  assert.equal(readableOn(out), "#15191C");
+  assert.ok(contrastRatio(out, "#15191C") >= 4.5);
 });

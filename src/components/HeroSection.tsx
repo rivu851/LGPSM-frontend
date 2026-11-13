@@ -56,11 +56,11 @@ export default function HeroSection() {
                   placeholder="hello@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF5B22] text-sm border border-gray-200/60 shadow-sm font-[family-name:var(--font-space-grotesk)]"
+                  className="flex-1 px-4 py-3 rounded-md bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5B22] text-sm border border-gray-200/60 shadow-sm font-[family-name:var(--font-space-grotesk)]"
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[#eb7a15] hover:bg-[#A83800]/10 text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-100 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                  className="px-6 py-3 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-sm rounded-md shadow-md transition-all hover:scale-100 active:scale-95 whitespace-nowrap font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                 >
                   Sign Up Free
                 </button>

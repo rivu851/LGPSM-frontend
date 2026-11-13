@@ -73,3 +73,42 @@ export function isAfter(end: string | null | undefined, start: string | null | u
   const s = parseIso(start);
   return !!e && !!s && e.getTime() > s.getTime();
 }
+
+
+// ---- Display of dates in the Indian format (en-IN), "12 Nov 2026". formatDateTime and formatCompactDateTime above stay as they are.
+export const DISPLAY_LOCALE = "en-IN";
+const DATE_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * "12 Nov 2026". A date with no time (`2026-11-12`, what a date input holds) is a calendar day, not an instant: it is shown as that
+ * day whatever the time zone, never moved to the day before or after. A full timestamp is shown in the browser's own time zone, as
+ * everywhere else in the web app (see the rules at the top of this file).
+ */
+export function formatDate(value: string | Date | null | undefined, fallback = ""): string {
+  if (!value) return fallback;
+  let date: Date | null;
+  if (typeof value === "string" && DATE_ONLY.test(value)) {
+    const [, y, m, d] = DATE_ONLY.exec(value)!;
+    date = new Date(Number(y), Number(m) - 1, Number(d));
+    if (date.getMonth() !== Number(m) - 1) return fallback; // 2026-02-31 is not a day
+  } else {
+    date = value instanceof Date ? value : parseIso(value);
+  }
+  if (!date || isNaN(date.getTime())) return fallback;
+  return date.toLocaleDateString(DISPLAY_LOCALE, { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** "12 Nov" (a recent date without its year). */
+export function formatDayMonth(value: string | Date | null | undefined, fallback = ""): string {
+  const date = value instanceof Date ? value : parseIso(value as string | null | undefined);
+  if (!date || isNaN(date.getTime())) return fallback;
+  return date.toLocaleDateString(DISPLAY_LOCALE, { day: "numeric", month: "short" });
+}
+
+/** "12 Nov 2026 | 09:42 am": a date and time on one line (lists, logs). */
+export function formatDateAndTime(value: string | Date | null | undefined, fallback = ""): string {
+  const date = value instanceof Date ? value : parseIso(value as string | null | undefined);
+  if (!date || isNaN(date.getTime())) return fallback;
+  const time = date.toLocaleTimeString(DISPLAY_LOCALE, { hour: "2-digit", minute: "2-digit", hour12: true });
+  return `${formatDate(date)} | ${time}`;
+}

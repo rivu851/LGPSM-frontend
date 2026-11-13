@@ -26,7 +26,7 @@ export default function ListControls({ label, searchId, placeholder, value, onCh
             placeholder={placeholder}
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+            className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
           />
         </div>
       </div>
@@ -36,4 +36,4 @@ export default function ListControls({ label, searchId, placeholder, value, onCh
 }
 
 /** The orange "+ Add …" action from the same frames: 16px semibold, 24px icon, 11px x 24px padding. */
-export const addButtonClass = "inline-flex items-center gap-2 px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg";
+export const addButtonClass = "inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg";

@@ -15,6 +15,7 @@ import DashboardPopupModal from "@/components/dashboard/DashboardPopupModal";
 import { Skeleton, TableSkeletonRows } from "@/components/common/Skeleton";
 import { formatDateTime } from "@/utils/dateTime";
 import { settleRange, startsWithin } from "@/utils/dateRange";
+import { formatMoney } from "@/utils/money";
 
 interface OrganizerSummary {
   id: string;
@@ -27,6 +28,7 @@ interface OrganizerSummary {
 }
 
 type Phase = "Upcoming" | "Ongoing" | "Past";
+type Tab = "All" | Phase;
 
 interface OverviewRow {
   id: string;
@@ -41,8 +43,16 @@ interface OverviewRow {
 
 // ---- small pieces drawn the way the dashboard design shows them -------------------------------------------------------------
 
-const ArrowOut = ({ href, label }: { href: string; label: string }) => (
-  <Link href={href} aria-label={label} title={label} className="text-[#15191C] hover:text-[#FF651D] shrink-0">
+// `stretch` makes the whole (relatively positioned) card the link target, not just the arrow
+const PHASE_BADGE: Record<OverviewRow["phase"], string> = {
+  Upcoming: "bg-[#E1E8FF] text-[#2F5BEA]",
+  Ongoing: "bg-[#D6F5E1] text-[#0F7A33]",
+  Past: "bg-[#EDEDED] text-[#4B4F52]",
+  Cancelled: "bg-[#FDE2E2] text-[#B42318]",
+};
+const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
+const ArrowOut = ({ href, label, stretch }: { href: string; label: string; stretch?: boolean }) => (
+  <Link href={href} aria-label={label} title={label} className={`text-[#15191C] hover:text-[#A83800] shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
   </Link>
 );
@@ -57,15 +67,15 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
   href: string;
   loading: boolean;
 }) {
-  const t = { orange: ["bg-[#FFE9DE]", "text-[#FF651D]"], green: ["bg-[#DDF6EA]", "text-[#1A9C5B]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"] }[tone];
+  const t = { orange: ["bg-[#FFE9DE]", "text-[#C44200]"], green: ["bg-[#DDF6EA]", "text-[#117A43]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"] }[tone];
   return (
-    <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col">
+    <div className={`bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col ${clickableCard}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
           <span className={`size-12 rounded-full flex items-center justify-center ${t[0]} ${t[1]}`} aria-hidden>{icon}</span>
           <span className={`text-sm font-semibold ${t[1]}`}>{label}</span>
         </div>
-        <ArrowOut href={href} label={`Open ${label}`} />
+        <ArrowOut href={href} label={`Open ${label}`} stretch />
       </div>
       <div className="mt-4 text-[34px] leading-none font-semibold text-[#15191C] tracking-tight">{loading ? <Skeleton className="h-9 w-24" /> : value}</div>
       <p className="mt-1.5 text-sm text-[#15191C]">{caption}</p>
@@ -75,7 +85,7 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
 }
 
 function Donut({ invitees, attendees }: { invitees: number; attendees: number }) {
-  if (invitees <= 0) return <p className="py-6 text-center text-xs text-[#828282]">No guests were invited to this event.</p>;
+  if (invitees <= 0) return <p className="py-6 text-center text-xs text-[#6B6B6B]">No guests were invited to this event.</p>;
   const attended = Math.min(attendees, invitees);
   const pctAttended = Math.round((attended / invitees) * 100);
   const r = 44, c = 2 * Math.PI * r;
@@ -96,14 +106,9 @@ function Donut({ invitees, attendees }: { invitees: number; attendees: number })
   );
 }
 
-const compactMoney = (amount: number, currency: string) => {
-  try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, notation: "compact", maximumFractionDigits: 1 }).format(amount); }
-  catch { return String(amount); }
-};
-const fullMoney = (amount: number, currency: string) => {
-  try { return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount); }
-  catch { return String(amount); }
-};
+// Prices are always in the platform currency (rupees); the amounts are shown as stored, never converted
+const compactMoney = (amount: number) => formatMoney(amount, { compact: true, maxFractionDigits: 1 });
+const fullMoney = (amount: number) => formatMoney(amount, { maxFractionDigits: 0 });
 const sameMonth = (iso?: string) => { if (!iso) return false; const d = new Date(iso), n = new Date(); return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth(); };
 const shortDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—");
 
@@ -122,7 +127,7 @@ export default function DashboardPage() {
   const [report, setReport] = useState<{ title: string; invitees: number; attendees: number } | null>(null);
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
 
-  const [tab, setTab] = useState<Phase>("Upcoming");
+  const [tab, setTab] = useState<Tab>("Upcoming");
   // the overview shows one page at a time, so a long list never stretches the page past the cards beside it
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 8;
@@ -228,19 +233,22 @@ export default function DashboardPage() {
 
   // Events Overview: the chosen tab, within the chosen dates (by start date); soonest first for what is to come, latest first for the past
   const overview = useMemo(() => {
-    const list = rows.filter((r) => r.phase === tab && startsWithin(r.start, from, to));
-    return list.sort((a, b) => (tab === "Past" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
+    const list = rows.filter((r) => (tab === "All" || r.phase === tab) && startsWithin(r.start, from, to));
+    return list.sort((a, b) => (tab === "Past" || tab === "All" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
   }, [rows, tab, from, to]);
 
   // The table keeps one height whichever tab is open: room for as many rows as the fullest tab shows (at most a page), plus the
   // pagination bar if any tab needs one. Switching tabs then never makes the card, or the column beside it, jump.
   const tabCounts = useMemo(() => {
     const inRange = rows.filter((r) => startsWithin(r.start, from, to));
-    return (["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length);
+    return [inRange.length, ...(["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length)];
   }, [rows, from, to]);
   const reservedRows = Math.min(PAGE_SIZE, Math.max(1, ...tabCounts));
   const reservePager = tabCounts.some((c) => c > PAGE_SIZE);
 
+  // the tab already says which kind of event it lists, so only "All" needs a status column
+  const showStatus = tab === "All";
+  const cols = (isAdmin ? 6 : 5) + (showStatus ? 1 : 0);
   const pageCount = Math.max(1, Math.ceil(overview.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pageRows = overview.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -248,7 +256,6 @@ export default function DashboardPage() {
   // const active = rows.filter((r) => r.phase === "Upcoming" || r.phase === "Ongoing");
   // const sentCount = active.filter((r) => r.invited).length;
 
-  const currency = earnings?.currency || "INR";
   const thisMonth = (earnings?.events || []).filter((e) => sameMonth(e.createdAt)).reduce((n, e) => n + (e.amount || 0), 0);
   const lastBilled = [...(earnings?.events || [])].filter((e) => e.amount).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
@@ -271,11 +278,11 @@ export default function DashboardPage() {
                 label="Events"
                 href="/events"
                 loading={loading}
-                value={rows.length.toLocaleString()}
+                value={rows.length.toLocaleString("en-IN")}
                 caption="Total Events"
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                 lines={[
-                  <><span className="font-semibold text-[#FF651D]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
+                  <><span className="font-semibold text-[#C44200]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
                   <>Last Created: {shortDate(lastCreated)}</>,
                 ]}
               />
@@ -284,11 +291,11 @@ export default function DashboardPage() {
                 label={isAdmin ? "Event Organizers" : "System Users"}
                 href={isAdmin ? "/event-organizer" : "/user-management"}
                 loading={loading}
-                value={people.total.toLocaleString()}
+                value={people.total.toLocaleString("en-IN")}
                 caption={isAdmin ? "Total Organizers" : "Total System Users"}
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                 lines={[
-                  <><span className="font-semibold text-[#FF651D]">{people.active.toLocaleString()} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString()} Inactive</span></>,
+                  <><span className="font-semibold text-[#C44200]">{people.active.toLocaleString("en-IN")} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")} Inactive</span></>,
                   <>{people.newThisMonth} New {isAdmin ? (people.newThisMonth === 1 ? "organizer" : "organizers") : people.newThisMonth === 1 ? "user" : "users"} added this month</>,
                 ]}
               />
@@ -297,12 +304,12 @@ export default function DashboardPage() {
                 label={isAdmin ? "Earnings Overview" : "Billing Overview"}
                 href={isAdmin ? "/earnings" : "/billing"}
                 loading={loading}
-                value={earnings ? compactMoney(earnings.totalAmount, currency) : "—"}
+                value={earnings ? compactMoney(earnings.totalAmount) : "—"}
                 caption={isAdmin ? "Total Earnings" : "Total Payments"}
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
                 lines={[
-                  <>This Month: <span className="font-semibold text-[#FF651D]">{fullMoney(thisMonth, currency)}</span></>,
-                  lastBilled ? <>Last billed: <span className="font-semibold text-[#1A9C5B]">{lastBilled.eventName}</span></> : <>No billed events yet</>,
+                  <>This Month: <span className="font-semibold text-[#C44200]">{fullMoney(thisMonth)}</span></>,
+                  lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>No billed events yet</>,
                 ]}
               />
             </div>
@@ -310,57 +317,61 @@ export default function DashboardPage() {
             {/* Events Overview: tabs, a date range and the events of the chosen kind */}
             <section className={`${card} p-5`} aria-labelledby="events-overview-title">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h3>
+                <h2 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h2>
                 <div className="flex flex-wrap items-center gap-2">
                   <input type="date" aria-label="From date" title="Events starting on or after this day" value={from} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
-                  <span className="text-xs text-[#828282]">To</span>
+                  <span className="text-xs text-[#6B6B6B]">To</span>
                   <input type="date" aria-label="To date" title="Events starting on or before this day" value={to} min={from || undefined} onChange={(e) => { const r = settleRange({ from, to: e.target.value }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
                   {(from || to) && (
-                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#FF651D] cursor-pointer">
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#A83800] cursor-pointer">
                       Clear dates
                     </button>
                   )}
-                  <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-semibold rounded-md">
+                  <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md">
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                     Add Event
                   </Link>
                 </div>
               </div>
               <div role="tablist" aria-label="Which events" className="mt-4 flex gap-6 border-b border-[#E0E0E0]">
-                {(["Upcoming", "Ongoing", "Past"] as Phase[]).map((p) => (
+                {(["All", "Upcoming", "Ongoing", "Past"] as Tab[]).map((p) => (
                   <button key={p} type="button" role="tab" aria-selected={tab === p} onClick={() => { setTab(p); setPage(1); }} className={`-mb-px pb-2.5 text-sm cursor-pointer ${tab === p ? "border-b-2 border-[#15191C] text-[#15191C] font-medium" : "text-[#4B4F52] hover:text-[#15191C]"}`}>
-                    {p} Events
+                    {p === "All" ? "All Events" : `${p} Events`}
                   </button>
                 ))}
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] table-fixed text-left text-sm">
+                <table className="w-full min-w-[860px] table-fixed text-left text-sm">
                   <thead>
-                    <tr className="text-[#828282] text-[13px] border-b border-[#E0E0E0]">
-                      <th className={`${isAdmin ? "w-[28%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>Event Name</th>
-                      {isAdmin && <th className="w-[18%] py-3 px-2.5 font-normal">Organizer</th>}
-                      <th className="w-[24%] py-3 px-2.5 font-normal">Start Date &amp; Time</th>
-                      <th className="w-[13%] py-3 px-2.5 font-normal">Total Invitee</th>
-                      <th className="w-[19%] py-3 px-2.5 font-normal">Status</th>
-                      <th className="w-[6%] py-3" aria-label="Open" />
+                    <tr className="text-[#6B6B6B] text-[13px] border-b border-[#E0E0E0]">
+                      <th className={`${showStatus ? (isAdmin ? "w-[20%]" : "w-[27%]") : isAdmin ? "w-[26%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>Event Name</th>
+                      {isAdmin && <th className={`${showStatus ? "w-[14%]" : "w-[17%]"} py-3 px-2.5 font-normal`}>Organizer</th>}
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>Start Date &amp; Time</th>
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>End Date &amp; Time</th>
+                      <th className="w-[11%] py-3 px-2.5 font-normal">Total Invitee</th>
+                      {showStatus && <th className="w-[11%] py-3 px-2.5 font-normal">Status</th>}
+                      <th className="relative w-[4%] py-3"><span className="sr-only">Open</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E0E0E0] text-[#15191C] [&>tr]:h-12">
                     {loading ? (
-                      <TableSkeletonRows rows={4} cols={isAdmin ? 6 : 5} />
+                      <TableSkeletonRows rows={4} cols={cols} />
                     ) : overview.length === 0 ? (
-                      <tr><td colSpan={isAdmin ? 6 : 5} className="py-3 text-center text-sm text-[#828282]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
+                      <tr><td colSpan={cols} className="py-3 text-center text-sm text-[#6B6B6B]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
                     ) : (
                       pageRows.map((r) => (
                         <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} className="cursor-pointer hover:bg-gray-50/80">
-                          <td className="py-3 px-2.5 truncate" title={r.title}><Link href={`/events/${r.id}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#FF651D]">{r.title}</Link></td>
+                          <td className="py-3 px-2.5 truncate" title={r.title}><Link href={`/events/${r.id}`} onClick={(e) => e.stopPropagation()} className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]">{r.title}</Link></td>
                           {isAdmin && <td className="py-3 px-2.5 truncate text-[#4B4F52]" title={r.organizer}>{r.organizer}</td>}
                           <td className="py-3 px-2.5 whitespace-nowrap">{r.start ? formatDateTime(r.start).replace(", ", " | ") : "—"}</td>
+                          <td className="py-3 px-2.5 whitespace-nowrap">{r.end ? formatDateTime(r.end).replace(", ", " | ") : "—"}</td>
                           <td className="py-3 px-2.5">{String(r.invitees).padStart(2, "0")}</td>
-                          <td className="py-3 px-2.5">
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${r.invited ? "bg-[#D6F5E1] text-[#1A9242]" : "bg-[#FFF0C2] text-[#9E7C00]"}`}>{r.invited ? "Invitation Sent" : "Invitation not sent"}</span>
-                          </td>
-                          <td className="py-3 text-right text-[#FF651D]" aria-hidden>
+                          {showStatus && (
+                            <td className="py-3 px-2.5">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${PHASE_BADGE[r.phase]}`}>{r.phase}</span>
+                            </td>
+                          )}
+                          <td className="py-3 text-right text-[#C44200]" aria-hidden>
                             <svg className="size-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
                           </td>
                         </tr>
@@ -368,7 +379,7 @@ export default function DashboardPage() {
                     )}
                     {/* blank rows up to the reserved height (see reservedRows) */}
                     {!loading && Array.from({ length: Math.max(0, reservedRows - Math.max(1, pageRows.length)) }, (_, i) => (
-                      <tr key={`pad-${i}`} aria-hidden className="!h-[49px] !border-transparent"><td colSpan={isAdmin ? 6 : 5} /></tr>
+                      <tr key={`pad-${i}`} aria-hidden className="!h-[49px] !border-transparent"><td colSpan={cols} /></tr>
                     ))}
                   </tbody>
                 </table>
@@ -392,41 +403,41 @@ export default function DashboardPage() {
           <div className="flex flex-col gap-6 min-w-0">
             <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="recent-notes-title">
               <div className="flex items-center justify-between gap-2">
-                <h3 id="recent-notes-title" className="text-base font-medium text-[#15191C]">Recent Notification</h3>
+                <h2 id="recent-notes-title" className="text-base font-medium text-[#15191C]">Recent Notification</h2>
                 <ArrowOut href="/notification" label="Open notifications" />
               </div>
               <div className={`mt-3 max-h-[300px] overflow-y-auto pr-1 divide-y divide-[#E0E0E0] xl:flex-1 ${!loading && notes.length === 0 ? "flex flex-col justify-center" : ""}`}>
                 {loading ? (
                   <div className="space-y-3 py-2"><Skeleton className="h-4 w-40" /><Skeleton className="h-8 w-full" /></div>
                 ) : notes.length === 0 ? (
-                  <p className="py-6 text-center text-xs text-[#828282]">No notifications yet.</p>
+                  <p className="py-6 text-center text-xs text-[#6B6B6B]">No notifications yet.</p>
                 ) : (
                   notes.map((n) => (
                     <div key={n._id} className="py-3">
                       <p className={`text-sm ${n.isRead ? "font-normal" : "font-semibold"} text-[#15191C] break-words`}>{n.title}</p>
                       <p className="mt-1 text-xs text-[#4B4F52] line-clamp-2 break-words">{n.message}</p>
-                      <p className="mt-1.5 text-[11px] text-[#828282]">{formatDateTime(n.createdAt).replace(", ", " | ")}</p>
+                      <p className="mt-1.5 text-[11px] text-[#6B6B6B]">{formatDateTime(n.createdAt).replace(", ", " | ")}</p>
                     </div>
                   ))
                 )}
               </div>
             </section>
 
-            <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="last-report-title">
+            <section className={`${card} p-5 xl:flex-1 flex flex-col ${clickableCard}`} aria-labelledby="last-report-title">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="size-11 rounded-full bg-[#FFE9DE] text-[#FF651D] flex items-center justify-center shrink-0" aria-hidden>
+                  <span className="size-11 rounded-full bg-[#FFE9DE] text-[#C44200] flex items-center justify-center shrink-0" aria-hidden>
                     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 17V9m4 8V7m4 10v-4M4 21h16a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v16a1 1 0 001 1z" /></svg>
                   </span>
                   <div className="min-w-0">
-                    <h3 id="last-report-title" className="text-sm font-semibold text-[#15191C]">Last Event Report</h3>
+                    <h2 id="last-report-title" className="text-sm font-semibold text-[#15191C]">Last Event Report</h2>
                     <p className="text-xs text-[#4B4F52] truncate" title={report?.title}>{report?.title || "No finished events yet"}</p>
                   </div>
                 </div>
-                <ArrowOut href="/reports" label="Open reports" />
+                <ArrowOut href="/reports" label="Open reports" stretch />
               </div>
               <div className="mt-5 xl:flex-1 flex flex-col justify-center">
-                {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#828282]">Attendance appears here once an event has taken place.</p>}
+                {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#6B6B6B]">Attendance appears here once an event has taken place.</p>}
               </div>
             </section>
 
@@ -435,13 +446,13 @@ export default function DashboardPage() {
             <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="invite-status-title">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h3 id="invite-status-title" className="text-sm font-semibold text-[#15191C]">Invitation Status</h3>
+                  <h2 id="invite-status-title" className="text-sm font-semibold text-[#15191C]">Invitation Status</h2>
                   <p className="text-xs text-[#4B4F52]">Upcoming and ongoing events</p>
                 </div>
                 <ArrowOut href="/events" label="Open events" />
               </div>
               {loading ? <Skeleton className="mt-4 h-16 w-full" /> : active.length === 0 ? (
-                <p className="py-6 text-center text-xs text-[#828282]">No upcoming events.</p>
+                <p className="py-6 text-center text-xs text-[#6B6B6B]">No upcoming events.</p>
               ) : (
                 <div className="mt-4 space-y-3 xl:flex-1 xl:flex xl:flex-col xl:justify-center">
                   <div className="h-2.5 w-full rounded-full bg-[#FFF0C2] overflow-hidden" role="img" aria-label={`${sentCount} of ${active.length} events have sent invitations`}>
@@ -449,12 +460,12 @@ export default function DashboardPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-md bg-[#D6F5E1] px-3 py-2.5">
-                      <p className="text-xl font-semibold text-[#1A9242]">{sentCount}</p>
-                      <p className="text-[11px] font-medium text-[#1A9242]">Invitation Sent</p>
+                      <p className="text-xl font-semibold text-[#0F7A33]">{sentCount}</p>
+                      <p className="text-[11px] font-medium text-[#0F7A33]">Invitation Sent</p>
                     </div>
                     <div className="rounded-md bg-[#FFF0C2] px-3 py-2.5">
-                      <p className="text-xl font-semibold text-[#9E7C00]">{active.length - sentCount}</p>
-                      <p className="text-[11px] font-medium text-[#9E7C00]">Invitation not sent</p>
+                      <p className="text-xl font-semibold text-[#7A5F00]">{active.length - sentCount}</p>
+                      <p className="text-[11px] font-medium text-[#7A5F00]">Invitation not sent</p>
                     </div>
                   </div>
                 </div>
@@ -468,10 +479,10 @@ export default function DashboardPage() {
         {user?.role === "ADMIN" && (
           <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-gray-900">Top Organizers</h3>
+              <h2 className="text-base font-bold text-gray-900">Top Organizers</h2>
               <Link
                 href="/event-organizer/add"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -491,7 +502,7 @@ export default function DashboardPage() {
                     <th className="py-3 px-4 font-medium">Revenue</th>
                     <th className="py-3 px-4 font-medium">Ongoing Events</th>
                     <th className="py-3 px-4 font-medium">Past Events</th>
-                    <th className="py-3 px-2 text-right font-medium"></th>
+                    <th className="relative py-3 px-2 text-right font-medium"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-gray-800">
@@ -510,11 +521,11 @@ export default function DashboardPage() {
                         <td className="py-4 px-4 text-gray-600 max-w-[240px] truncate" title={org.email}>{org.email}</td>
                         <td className="py-4 px-4 text-gray-600">{org.phone}</td>
                         <td className="py-4 px-4 font-medium">{org.totalEvents}</td>
-                        <td className="py-4 px-4 text-gray-400">—</td>
+                        <td className="py-4 px-4 text-gray-500">—</td>
                         <td className="py-4 px-4 font-medium">{org.ongoingEvents}</td>
                         <td className="py-4 px-4 font-medium">{org.pastEvents}</td>
                         <td className="py-4 px-2 text-right">
-                          <Link href={`/event-organizer/${org.id}`} className="text-[#FF5B22] font-semibold hover:underline">
+                          <Link href={`/event-organizer/${org.id}`} className="text-[#C44200] font-semibold hover:underline">
                             View
                           </Link>
                         </td>

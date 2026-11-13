@@ -144,9 +144,9 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-modal">
         <div className="px-6 py-4 border-b border-[#E5E5E5]">
           <h2 id="list-preview-title" className="text-base font-medium text-gray-900">
-            {title} <span className="text-sm font-normal text-[#828282]">({total} {total === 1 ? "invitee" : "invitees"})</span>
+            {title} <span className="text-sm font-normal text-[#6B6B6B]">({total} {total === 1 ? "invitee" : "invitees"})</span>
           </h2>
-          {subtitle && <p className="text-xs text-[#828282] mt-0.5 break-words">{subtitle}</p>}
+          {subtitle && <p className="text-xs text-[#6B6B6B] mt-0.5 break-words">{subtitle}</p>}
         </div>
 
         <div className="px-6 pt-4 grid grid-cols-1 sm:grid-cols-[1fr_260px] gap-3">
@@ -174,7 +174,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="text-xs text-[#828282]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
+                <p className="text-xs text-[#6B6B6B]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
                 <button type="button" onClick={() => void removeSelected()} disabled={!selected.length || busy} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
                   <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                   {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
@@ -182,7 +182,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
               </div>
             )}
             <table className="w-full text-left text-sm min-w-[640px]">
-              <thead className="text-[#828282] border-b border-[#D3D3D3]">
+              <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                 <tr>
                   {!readOnly && (
                     <th className="py-2.5 pr-2 w-8">
@@ -205,7 +205,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                         <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 check-orange cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
                       </td>
                     )}
-                    <td className="py-2.5 pr-3 text-[#828282]">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                    <td className="py-2.5 pr-3 text-[#6B6B6B]">{(page - 1) * PAGE_SIZE + i + 1}</td>
                     <td className="py-2.5 pr-3 text-gray-900 break-words">{m.name}</td>
                     <td className="py-2.5 pr-3 break-all">{m.email || "—"}</td>
                     <td className="py-2.5 pr-3 whitespace-nowrap">{m.mobile || "—"}</td>
@@ -223,10 +223,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   </tr>
                 ))}
                 {!loading && members.length === 0 && (
-                  <tr><td colSpan={8} className="py-8 text-center text-[#828282]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
+                  <tr><td colSpan={8} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
                 )}
                 {loading && members.length === 0 && (
-                  <tr><td colSpan={8} className="py-8 text-center text-[#828282]">Loading…</td></tr>
+                  <tr><td colSpan={8} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
                 )}
               </tbody>
             </table>

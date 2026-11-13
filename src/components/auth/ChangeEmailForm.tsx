@@ -57,7 +57,7 @@ export default function ChangeEmailForm({ currentEmail, knownPassword, onChanged
         </div>
       )}
       <div className="flex items-center gap-3 pt-1">
-        <button type="submit" disabled={busy || !newEmail.trim() || (!knownPassword && !password)} className="inline-flex items-center gap-2 rounded-full bg-[#FF651D] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#C44200] disabled:cursor-not-allowed disabled:opacity-50">
+        <button type="submit" disabled={busy || !newEmail.trim() || (!knownPassword && !password)} className="inline-flex items-center gap-2 rounded-full bg-[#C65318] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#C44200] disabled:cursor-not-allowed disabled:opacity-50">
           {busy ? <><Spinner /> Sending...</> : "Send code to this address"}
         </button>
         <button type="button" onClick={onCancel} disabled={busy} className="text-sm font-medium text-gray-600 underline hover:text-gray-900">Cancel</button>

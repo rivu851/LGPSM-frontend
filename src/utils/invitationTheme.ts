@@ -13,7 +13,7 @@ export interface InvitationTheme {
 // The page's original look, used when an older API does not send a theme
 export const DEFAULT_INVITATION_THEME: InvitationTheme = {
   background: "#F6F7F9",
-  primary: "#E3340F",
+  primary: "#DC320F", // the page's red, darkened a little so its white text reads at 4.5:1 (it was #E3340F at 4.4:1)
   accent: "#123C8F",
   ink: "#15191C",
   heading: "sans",
@@ -29,7 +29,7 @@ export function resolveInvitationTheme(theme?: Partial<InvitationTheme> | null):
   return {
     design: typeof theme?.design === "string" ? theme.design : undefined,
     background: pick(theme?.background, DEFAULT_INVITATION_THEME.background),
-    primary: pick(theme?.primary, DEFAULT_INVITATION_THEME.primary),
+    primary: accessiblePrimary(pick(theme?.primary, DEFAULT_INVITATION_THEME.primary)),
     accent: pick(theme?.accent, DEFAULT_INVITATION_THEME.accent),
     ink: luminance(ink) <= 0.183 ? ink : DEFAULT_INVITATION_THEME.ink,
     heading: theme?.heading === "serif" ? "serif" : "sans",
@@ -49,6 +49,21 @@ export function luminance(hex: string): number {
 /** White or near-black, whichever reads better on `hex`. */
 export function readableOn(hex: string): "#FFFFFF" | "#15191C" {
   return luminance(hex) > 0.4 ? "#15191C" : "#FFFFFF";
+}
+
+/** WCAG contrast ratio of two #rrggbb colours. */
+export function contrastRatio(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** The theme's primary colour carries the page's buttons and headings: keep it as close as it is, but dark (or light) enough for its text to meet 4.5:1. */
+export function accessiblePrimary(hex: string): string {
+  const text = readableOn(hex);
+  const toward = text === "#FFFFFF" ? "#000000" : "#FFFFFF";
+  let out = hex;
+  for (let i = 0; i < 25 && contrastRatio(out, readableOn(out)) < 4.5; i++) out = mix(out, toward, 0.03);
+  return out;
 }
 
 function mix(a: string, b: string, amount: number): string {

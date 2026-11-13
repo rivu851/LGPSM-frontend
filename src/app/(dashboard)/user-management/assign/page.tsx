@@ -4,7 +4,9 @@ import PhoneInput from "@/components/common/PhoneInput";
 import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { createSingleFlight } from "@/utils/singleFlight";
+import { isAssignableEvent, defaultAssignableEventId } from "@/utils/assignableEvent";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -16,7 +18,7 @@ import { assignmentService, AssignmentData } from "@/services/assignmentService"
 import { useAlert } from "@/context/AlertContext";
 import { notifyDbUpdate } from "@/components/EventSubNav";
 import { mapWithConcurrency } from "@/utils/mapWithConcurrency";
-import { formatDateTime } from "@/utils/dateTime";
+import { formatDateTime, formatDate } from "@/utils/dateTime";
 import { TableSkeleton } from "@/components/common/Skeleton";
 import RowMenu, { EditIcon, TrashIcon } from "@/components/common/RowMenu";
 
@@ -49,7 +51,11 @@ export default function AssignedSystemUsersPage() {
 
   // Form states
   const [addUserData, setAddUserData] = useState({ userName: "", contactNo: "", email: "", password: "" });
-  const [eventsList, setEventsList] = useState<{ id: string; title: string }[]>([]);
+  const [eventsList, setEventsList] = useState<{ id: string; title: string; status?: string }[]>([]);
+  // only events that can still take staff are offered (the server refuses cancelled and closed ones)
+  const assignableEvents = eventsList.filter(isAssignableEvent);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const assignFlight = useRef(createSingleFlight());
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   // null = all sessions of the selected event
   const [sessionScope, setSessionScope] = useState<string[] | null>(null);
@@ -61,6 +67,7 @@ export default function AssignedSystemUsersPage() {
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
+      setLoadFailed(false);
       setErrorFeedback(null);
 
       // 1. Fetch system users only (role === SYSTEM_USER)
@@ -85,14 +92,14 @@ export default function AssignedSystemUsersPage() {
 
       // Events loaded alongside users above.
       const rawEvents = Array.isArray(eventsRes?.data) ? eventsRes.data : ((eventsRes?.data as any)?.events || []);
-      const formattedEvents: { id: string; title: string }[] = rawEvents.map((ev: any) => ({
+      const formattedEvents: { id: string; title: string; status?: string }[] = rawEvents.map((ev: any) => ({
         id: String(ev._id || ev.id || ""),
         title: ev.title || ev.eventName || "Untitled Event",
+        status: ev.status ? String(ev.status) : undefined,
       }));
       setEventsList(formattedEvents);
-      if (formattedEvents.length > 0) {
-        setSelectedEventId((current) => current || formattedEvents[0].id);
-      }
+      // Preselect an event only when there is no doubt which one (never a closed or cancelled one); otherwise the person chooses
+      setSelectedEventId((current) => defaultAssignableEventId(formattedEvents, current));
 
       // 3. Collect assignments across events
       const userAssignmentsMap: Record<string, SystemUserRow["assignments"]> = {};
@@ -130,7 +137,7 @@ export default function AssignedSystemUsersPage() {
               eventId: ev.id,
               eventName: ev.title,
               assignedBy: assignedByName,
-              assignedAt: asn.createdAt ? new Date(asn.createdAt).toLocaleDateString() : undefined,
+              assignedAt: asn.createdAt ? formatDate(asn.createdAt) : undefined,
               sessions,
             });
           });
@@ -150,6 +157,7 @@ export default function AssignedSystemUsersPage() {
       setUsers(formattedUserRows);
     } catch (err: any) {
       console.error("Error loading system users and assignments:", err);
+      setLoadFailed(true);
       setErrorFeedback(err.message || "Failed to load system user assignments.");
     } finally {
       setIsLoading(false);
@@ -251,7 +259,12 @@ export default function AssignedSystemUsersPage() {
   // Handle assigning selected users to selected event & sessions via backend API
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedIds.length === 0 || !selectedEventId) {
+    // one Assign at a time: a double click must not send every request twice
+    await assignFlight.current.run(() => assignSelectedUsers());
+  };
+
+  const assignSelectedUsers = async () => {
+    if (selectedIds.length === 0 || !selectedEventId || !assignableEvents.some((evt) => evt.id === selectedEventId)) {
       showAlert("Please select at least one system user and an event.", "warning");
       return;
     }
@@ -454,25 +467,26 @@ export default function AssignedSystemUsersPage() {
         </ListControls>
 
         {/* Custom Green/White Tick Select All Checkbox */}
-        <div className="flex items-center gap-2 text-sm text-[#828282] pt-1">
+        <div className="flex items-center gap-2 text-sm text-[#6B6B6B] pt-1">
           <button
             type="button"
             onClick={toggleSelectAll}
 role="checkbox"
 aria-checked={selectedIds.length === filteredUsers.length && filteredUsers.length > 0}
 aria-label="Select all"
-            className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer ${
+            className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border ${
               selectedIds.length === filteredUsers.length && filteredUsers.length > 0
                 ? "bg-[#10B981] border-[#10B981] text-white"
                 : "bg-white border-gray-300 hover:border-gray-400"
-            }`}
-          >
+            }`}>
             {selectedIds.length === filteredUsers.length && filteredUsers.length > 0 && (
               <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             )}
-          </button>
+          </span>
+</button>
           <span onClick={toggleSelectAll} className="cursor-pointer">
             Select All
           </span>
@@ -488,8 +502,8 @@ aria-label="Select all"
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="border-b border-gray-200 text-[#828282] font-medium text-sm">
-                <th className="py-3 px-4 w-10"></th>
+              <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm">
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
                 <th className="py-3 px-4 font-medium">User Name</th>
                 <th className="py-3 px-4 font-medium">Assigned Events & Sessions</th>
                 <th className="py-3 px-4 font-medium">Email</th>
@@ -499,8 +513,8 @@ aria-label="Select all"
             </thead>
             <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
               {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-400 text-sm">
+                loadFailed ? null : <tr>
+                  <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     No system users yet. Add one with the Add User button.
                   </td>
                 </tr>
@@ -519,16 +533,17 @@ aria-label="Select all"
 role="checkbox"
 aria-checked={isSelected}
 aria-label={`Select ${u.name}`}
-                          className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
+                          className="inline-flex h-6 w-6 items-center justify-center cursor-pointer">
+<span className={`w-4 h-4 rounded-sm flex items-center justify-center transition-colors border cursor-pointer mt-0.5 ${
                             isSelected ? "bg-[#10B981] border-[#10B981] text-white" : "bg-white border-gray-300 hover:border-gray-400"
-                          }`}
-                        >
+                          }`}>
                           {isSelected && (
                             <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
-                        </button>
+                        </span>
+</button>
                       </td>
 
                       {/* User Name Only (No SYSTEM_USER badge) */}
@@ -541,7 +556,7 @@ aria-label={`Select ${u.name}`}
                         <button
                           type="button"
                           onClick={() => toggleExpandUser(u.id)}
-                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#FF5B22] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -587,7 +602,7 @@ aria-label={`Select ${u.name}`}
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#FF5B22] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -626,7 +641,7 @@ aria-label={`Select ${u.name}`}
             type="button"
             onClick={handleBulkDelete}
             disabled={selectedIds.length === 0}
-            className="p-2.5 text-[#FF5B22] hover:text-red-600 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
+            className="p-2.5 text-[#C44200] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
             title="Delete Selected Users"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -637,7 +652,7 @@ aria-label={`Select ${u.name}`}
             type="button"
             onClick={() => { setSessionScope(null); setErrorFeedback(null); setIsAssignModalOpen(true); }}
             disabled={selectedIds.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#FF651D] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#FF5B22]"
+            className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#A83800]"
           >
             <span>Assign {selectedIds.length} users</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -656,7 +671,7 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -667,27 +682,27 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#FF5B22]">*</span>
+                  User Name<span className="text-[#C44200]">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#FF5B22]">*</span>
+                  Email<span className="text-[#C44200]">*</span>
                 </label>
                 <input
                   type="email"
                   required
                   value={editFormData.email}
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -696,7 +711,7 @@ aria-label={`Select ${u.name}`}
                 <PhoneInput
                   value={editFormData.phone}
                   onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -711,7 +726,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingEdit ? "Saving..." : "Save Changes"}
                 </button>
@@ -730,7 +745,7 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => setIsAddUserModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -742,7 +757,7 @@ aria-label={`Select ${u.name}`}
               {isAdmin && (
                 <div className="space-y-1.5 pt-4">
                   <label className="text-sm font-medium text-[#15191C]">
-                    Organizer<span className="text-[#FF651D] ml-0.5">*</span>
+                    Organizer<span className="text-[#C44200] ml-0.5">*</span>
                   </label>
                   <CustomDropdown
                     portal
@@ -765,7 +780,7 @@ aria-label={`Select ${u.name}`}
               {addUserFormError && <p role="alert" className="text-xs text-rose-700">{addUserFormError}</p>}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#FF651D] ml-0.5">*</span>
+                  User Name<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -773,26 +788,26 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Full Name"
                   value={addUserData.userName}
                   onChange={(e) => setAddUserData({ ...addUserData, userName: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#FF651D] ml-0.5">*</span>
+                  Contact No<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
                   placeholder="Enter Contact No"
                   value={addUserData.contactNo}
                   onValueChange={(v) => setAddUserData({ ...addUserData, contactNo: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#FF651D] ml-0.5">*</span>
+                  Email<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
@@ -800,20 +815,20 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Email"
                   value={addUserData.email}
                   onChange={(e) => setAddUserData({ ...addUserData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Password<span className="text-[#FF651D] ml-0.5">*</span>
+                  Password<span className="text-[#C44200] ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
                   placeholder="Enter Initial Password"
                   value={addUserData.password}
                   onChange={(e) => setAddUserData({ ...addUserData, password: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
                 />
               </div>
 
@@ -828,7 +843,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingUser}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingUser ? "Creating..." : "Add System User"}
                 </button>
@@ -847,7 +862,7 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -858,7 +873,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#FF5B22]">*</span>
+                  Event<span className="text-[#C44200]">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
@@ -866,9 +881,9 @@ aria-label={`Select ${u.name}`}
                     setSelectedEventId(v);
                     setSessionScope(null);
                   }}
-                  options={eventsList.map((evt) => ({ value: evt.id, label: evt.title }))}
+                  options={assignableEvents.map((evt) => ({ value: evt.id, label: evt.title }))}
                   placeholder="Select an event"
-                  emptyMessage="No events yet"
+                  emptyMessage="No open events. Staff cannot be assigned to a closed or cancelled event."
                   ariaLabel="Event"
                 />
               </div>
@@ -891,8 +906,8 @@ aria-label={`Select ${u.name}`}
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingAssign}
-                  className="px-6 py-[11px] bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  disabled={submittingAssign || !selectedEventId}
+                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : "Assign"}
                 </button>
@@ -916,7 +931,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
             >
               Okay
             </button>

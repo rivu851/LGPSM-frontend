@@ -76,11 +76,11 @@ export default function Footer() {
               name="email"
               aria-label="Email address"
               placeholder="hello@example.com"
-              className="w-full sm:w-72 px-4 py-2.5 rounded-md text-xs sm:text-sm text-gray-900 bg-white placeholder:text-gray-400 focus:outline-none shadow-md font-[family-name:var(--font-space-grotesk)]"
+              className="w-full sm:w-72 px-4 py-2.5 rounded-md text-xs sm:text-sm text-gray-900 bg-white placeholder:text-gray-500 focus:outline-none shadow-md font-[family-name:var(--font-space-grotesk)]"
             />
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-2.5 bg-[#FF5B22] hover:bg-[#E04B16] text-white text-xs sm:text-sm font-bold rounded-md transition-all hover:scale-105 active:scale-95 shadow-md shrink-0 font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+              className="w-full sm:w-auto px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-xs sm:text-sm font-bold rounded-md transition-all hover:scale-105 active:scale-95 shadow-md shrink-0 font-[family-name:var(--font-space-grotesk)] cursor-pointer"
             >
               Sign Up Free
             </button>
@@ -101,12 +101,12 @@ export default function Footer() {
           </div>
 
           {/* Footer Description Paragraph */}
-          <p className="text-xs text-gray-400 leading-relaxed font-[family-name:var(--font-space-grotesk)]">
+          <p className="text-xs text-gray-500 leading-relaxed font-[family-name:var(--font-space-grotesk)]">
             LGPSM helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.
           </p>
 
           {/* Navigation Links */}
-          <div className="flex items-center justify-center gap-6 mt-6 text-xs font-semibold text-gray-400 font-[family-name:var(--font-space-grotesk)]">
+          <div className="flex items-center justify-center gap-6 mt-6 text-xs font-semibold text-gray-500 font-[family-name:var(--font-space-grotesk)]">
             <Link href="/pages/features" className="hover:text-white transition-colors">
               Features
             </Link>

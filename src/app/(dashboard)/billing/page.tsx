@@ -5,6 +5,8 @@ import PageHeader from "@/components/common/PageHeader";
 import Icon from "@/components/icons/Icon";
 import BillingDateField, { formatDay } from "@/components/billing/BillingDateField";
 import { Invoice, filterInvoices, statementCsv, validateRange } from "@/components/billing/billingStatement";
+import { formatMoney } from "@/utils/money";
+import { csvBlob } from "@/utils/csv";
 
 // Organiser Billing (Figma 217:24385 list, 217:23316 filter, and the Download Statement dialog).
 //
@@ -13,10 +15,10 @@ import { Invoice, filterInvoices, statementCsv, validateRange } from "@/componen
 // when a payment provider and its invoices endpoint exist, only this array needs to be filled from it.
 const NO_INVOICES: Invoice[] = [];
 
-const money = (amount: number, currency = "INR") => new Intl.NumberFormat("en-IN", { style: "currency", currency, minimumFractionDigits: 1 }).format(amount);
+const money = (amount: number) => formatMoney(amount, { minFractionDigits: 1, maxFractionDigits: 1 });
 
 function saveCsv(name: string, csv: string) {
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const url = URL.createObjectURL(csvBlob(csv));
   const a = document.createElement("a");
   a.href = url;
   a.download = name;
@@ -69,19 +71,19 @@ export default function BillingPage() {
           <div className="flex items-center gap-2.5 min-w-0 sm:flex-1">
             <label htmlFor="billing-search" className="text-[17px] font-medium text-black shrink-0">Billing</label>
             <div className="relative w-full sm:max-w-[198px]">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#828282]"><Icon name="reports/search" width={16} height={16} /></span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B6B6B]"><Icon name="reports/search" width={16} height={16} /></span>
               <input
                 id="billing-search"
                 type="search"
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-[47px] pl-11 pr-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#828282] focus:outline-none focus:border-[#FF651D]"
+                className="w-full h-[47px] pl-11 pr-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
               />
             </div>
           </div>
           <div className="flex items-center gap-4 shrink-0 relative" ref={filterRef}>
-            <button type="button" onClick={openStatement} className="h-[46px] px-6 bg-[#FF651D] hover:bg-[#E5520F] text-white text-base font-semibold rounded-lg cursor-pointer">
+            <button type="button" onClick={openStatement} className="h-[46px] px-6 bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
               Download Statement
             </button>
             <button
@@ -108,10 +110,10 @@ export default function BillingPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => setFilterOpen(false)} className="flex-1 py-1.5 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-black cursor-pointer">Cancel</button>
-                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className="flex-1 py-1.5 bg-[#FF651D] hover:bg-[#E5520F] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
+                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className="flex-1 py-1.5 bg-[#C65318] hover:bg-[#A83800] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
                     </div>
                     {(range.from || range.to) && (
-                      <button type="button" onClick={() => { setRange({ from: "", to: "" }); setDraft({ from: "", to: "" }); setFilterOpen(false); }} className="w-full text-xs text-[#FF651D] underline cursor-pointer">Clear dates</button>
+                      <button type="button" onClick={() => { setRange({ from: "", to: "" }); setDraft({ from: "", to: "" }); setFilterOpen(false); }} className="w-full text-xs text-[#C44200] underline cursor-pointer">Clear dates</button>
                     )}
                   </div>
                 </div>
@@ -126,7 +128,7 @@ export default function BillingPage() {
           </p>
         )}
 
-        <div className="flex items-center gap-2 text-sm text-[#828282]">
+        <div className="flex items-center gap-2 text-sm text-[#6B6B6B]">
           <input
             id="billing-select-all"
             type="checkbox"
@@ -141,8 +143,8 @@ export default function BillingPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="border-b border-[#E0E0E0] text-[#828282] font-medium text-sm">
-                <th className="py-3 px-4 w-10" aria-label="Select" />
+              <tr className="border-b border-[#E0E0E0] text-[#6B6B6B] font-medium text-sm">
+                <th className="relative py-3 px-4 w-10"><span className="sr-only">Select</span></th>
                 <th className="py-3 px-4 font-medium">Invoice ID</th>
                 <th className="py-3 px-4 font-medium">Event Name</th>
                 <th className="py-3 px-4 font-medium">Invites No.</th>
@@ -156,7 +158,7 @@ export default function BillingPage() {
                 <tr>
                   <td colSpan={7} className="py-16 text-center whitespace-normal">
                     <p className="text-base font-medium text-[#15191C]">{filtering ? "No invoices match your search or dates" : "No invoices yet"}</p>
-                    <p className="mt-1 text-sm text-[#828282] max-w-md mx-auto">
+                    <p className="mt-1 text-sm text-[#6B6B6B] max-w-md mx-auto">
                       {filtering
                         ? "Try a different search or clear the dates."
                         : "Online payments are not available yet. When they go live, your invoices and payment history will be listed here."}
@@ -179,7 +181,7 @@ export default function BillingPage() {
                     <td className="px-4">{r.eventName}</td>
                     <td className="px-4">{r.invitees}</td>
                     <td className="px-4">{formatDay(r.paymentDate.slice(0, 10))}</td>
-                    <td className="px-4">{money(r.amount, r.currency)}</td>
+                    <td className="px-4">{money(r.amount)}</td>
                     <td className="px-4 text-right">
                       <button
                         type="button"
@@ -208,18 +210,18 @@ export default function BillingPage() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#FF651D]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#C44200]">*</span></span>
                 <BillingDateField label="Statement from date" placeholder="Select Date" value={statement.from} onChange={(from) => { setStatement((s) => ({ ...s, from, to: s.to && from > s.to ? from : s.to })); setStatementError(null); }} />
               </div>
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#FF651D]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#C44200]">*</span></span>
                 <BillingDateField label="Statement to date" placeholder="Select Date" value={statement.to} min={statement.from || undefined} onChange={(to) => { setStatement((s) => ({ ...s, to })); setStatementError(null); }} />
               </div>
               {statementError && <p role="alert" className="text-sm text-rose-600">{statementError}</p>}
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
               <button type="button" onClick={() => setStatementOpen(false)} className="px-6 py-2.5 bg-white border border-[#DDD] rounded-md text-base font-semibold text-black cursor-pointer">Cancel</button>
-              <button type="button" onClick={downloadStatement} className="px-6 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] rounded-md text-base font-semibold text-white cursor-pointer">Download Statement</button>
+              <button type="button" onClick={downloadStatement} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-base font-semibold text-white cursor-pointer">Download Statement</button>
             </div>
           </div>
         </div>

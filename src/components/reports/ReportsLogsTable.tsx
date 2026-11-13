@@ -7,6 +7,7 @@ import Icon from "@/components/icons/Icon";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { TableSkeletonRows } from "@/components/common/Skeleton";
 import { Skeleton, SkeletonRegion, TableSkeleton } from "@/components/common/Skeleton";
+import { formatDateTime } from "@/utils/dateTime";
 
 interface ReportsLogsTableProps {
   activeTab: "checkins" | "invitees" | "access" | "sessions";
@@ -65,7 +66,7 @@ export default function ReportsLogsTable({
       <TableSkeletonRows rows={4} cols={colSpan} />
     ) : (
       <tr>
-        <td colSpan={colSpan} className="py-10 text-center text-gray-400 font-medium">
+        <td colSpan={colSpan} className="py-10 text-center text-gray-500 font-medium">
           {text}
         </td>
       </tr>
@@ -134,7 +135,7 @@ export default function ReportsLogsTable({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 max-w-lg">
             <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 items-center gap-2.5 focus-within:border-[#FF651D] transition-colors">
-              <span className="size-[22px] flex items-center justify-center shrink-0 text-[#828282]">
+              <span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]">
                 <Icon name="reports/search" width={18.4} height={18.4} />
               </span>
               <input
@@ -208,7 +209,7 @@ export default function ReportsLogsTable({
                       const sessionName = sessionObj?.name || "Event entry";
 
                       const method = log.checkInMethod || "QR";
-                      const checkInTime = log.checkInAt ? new Date(log.checkInAt).toLocaleString() : "—";
+                      const checkInTime = formatDateTime(log.checkInAt, "—");
                       const staffName = checkedInByObj?.fullName || checkedInByObj?.email || String(log.checkedInBy || "Staff");
                       const rsvp = inviteeObj?.rsvpStatus || "—";
 
@@ -217,7 +218,7 @@ export default function ReportsLogsTable({
                           <td className="py-4 px-4 font-semibold text-gray-900">
                             <div>{inviteeName}</div>
                             {inviteeContact && (
-                              <div className="text-[11px] text-gray-400 font-normal">{inviteeContact}</div>
+                              <div className="text-[11px] text-gray-500 font-normal">{inviteeContact}</div>
                             )}
                           </td>
                           <td className="py-4 px-4 font-medium text-gray-700">{sessionName}</td>
@@ -334,7 +335,7 @@ export default function ReportsLogsTable({
                           Declined
                         </span>
                       )}
-                      {log.rsvpStatus === "Not requested" && <span className="text-[#828282]" aria-label="RSVP not requested">--</span>}
+                      {log.rsvpStatus === "Not requested" && <span className="text-[#6B6B6B]" aria-label="RSVP not requested">--</span>}
                     </td>
                     <td className="py-4 px-4">
                       {log.checkInStatus === "Checked-in" && (
@@ -348,7 +349,7 @@ export default function ReportsLogsTable({
                         </span>
                       )}
                       {log.checkInStatus === "Partially Checked-in" && (
-                        <span className="border border-emerald-500 text-emerald-600 px-3 py-1 rounded-full text-[11px] font-semibold inline-block bg-emerald-50/30">
+                        <span className="border border-emerald-500 text-emerald-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block bg-emerald-50/30">
                           Partially Checked-in
                         </span>
                       )}
@@ -357,7 +358,7 @@ export default function ReportsLogsTable({
                     {sessionColumns.map((col) => (
                       <td key={col.id} className="py-4 px-4 text-center">
                         {log.sessionCheckIns[col.id] ? (
-                          <svg className="w-4 h-4 text-emerald-600 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-emerald-700 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         ) : (

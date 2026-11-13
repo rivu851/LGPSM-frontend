@@ -1,6 +1,7 @@
 import { tokenStorage } from "./tokenStorage";
 import { loginRedirectPath } from "@/components/auth/authPortal";
 import { refreshOutcome, type RefreshOutcome } from "./refreshOutcome";
+import { ACCOUNT_INACTIVE_CODE, ACCOUNT_INACTIVE_MESSAGE, ACCOUNT_INACTIVE_NOTICE, isAccountInactiveResponse } from "./accountInactive";
 
 const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
 export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
@@ -98,6 +99,15 @@ async function performTokenRefresh(expiredAccessToken: string | null): Promise<R
 // is cached, so a later call always fetches fresh data. Each extra caller gets its own copy of the result.
 const inflightGets = new Map<string, Promise<ApiResponse<unknown>>>();
 
+function endSessionAccountInactive() {
+  tokenStorage.clearTokens();
+  if (typeof window !== "undefined" && !window.location.pathname.includes("/signin")) {
+    const target = new URL(loginRedirectPath(), window.location.origin);
+    target.searchParams.set("notice", ACCOUNT_INACTIVE_NOTICE);
+    window.location.href = target.pathname + target.search;
+  }
+}
+
 export async function apiClient<T = unknown>(
   endpoint: string,
   options: RequestInit = {},
@@ -188,6 +198,12 @@ async function requestApi<T = unknown>(
     }
 
     if (!response.ok) {
+      // The account was switched off while it was in use: every request will fail from now on, so end the session with an explanation
+      // instead of leaving a page that can only show errors. Other 403s (not allowed to do this one thing) are not this.
+      if (requiresAuth && isAccountInactiveResponse(response.status, data as { code?: unknown; message?: unknown })) {
+        endSessionAccountInactive();
+        return { success: false, message: ACCOUNT_INACTIVE_MESSAGE, code: ACCOUNT_INACTIVE_CODE, status: 403 };
+      }
       let errorMessage = data.message || (typeof data.error === "string" ? data.error : undefined);
 
       if (response.status === 403 && !data.message) {

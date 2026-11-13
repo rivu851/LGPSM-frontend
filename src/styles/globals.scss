@@ -405,21 +405,31 @@ input[type="checkbox"].check-orange {
   flex-shrink: 0;
   width: 1rem;
   height: 1rem;
+  // the box is 16px; with this margin it has 24px to itself, so it is a comfortable target and never touches its neighbours
+  margin: 0.25rem;
   background-color: #fff;
-  border: 1.5px solid #9ca3af;
+  border: 1.5px solid #6b7280; // 4.8:1 on white (the box edge must be seen against the page)
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease;
 
-  &:not(:disabled):hover { border-color: #ff651d; }
+  &:not(:disabled):hover { border-color: #c44200; }
   &:checked {
-    background-color: #ff651d;
-    border-color: #ff651d;
+    background-color: #c65318; // the brand orange, dark enough for the white tick to read (4.5:1)
+    border-color: #c65318;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
     background-size: 82% 82%;
   }
-  &:focus-visible { outline: 2px solid #ff651d; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid #c44200; outline-offset: 2px; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Keyboard focus: every link and button shows where the focus is, even when its own styles do not (the account menu, icon buttons).
+// :where() gives this no weight, so a control's own focus style still wins; the white halo keeps it visible on the dark sidebar too.
+:where(a, button, [role="button"], [role="checkbox"], summary):focus-visible {
+  outline: 2px solid #c44200;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #ffffff;
 }

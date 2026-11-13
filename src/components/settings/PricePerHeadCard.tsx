@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { formatMoney } from "@/utils/money";
 
 interface PricePerHeadCardProps {
   /** null until a rate has been set for the first time */
@@ -15,7 +16,7 @@ export default function PricePerHeadCard({
   onSaveRate,
 }: PricePerHeadCardProps) {
   const [sliderVal, setSliderVal] = useState<number>(currentRate ?? 1);
-  const rateText = currentRate === null ? "Not set" : `$${currentRate.toFixed(2)}`;
+  const rateText = currentRate === null ? "Not set" : formatMoney(currentRate);
   const rateLine = currentRate === null ? "No rate has been set yet, so events created now have no per-head price" : `Per-head billing · ${rateText} / invitee (current rate)`;
 
   const handleSave = () => {
@@ -37,7 +38,7 @@ export default function PricePerHeadCard({
         {/* Left Side Big Rate Display */}
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-semibold text-[#FF651D]">
+            <span className="text-5xl font-semibold text-[#C44200]">
               {rateText}
             </span>
             <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
@@ -65,10 +66,10 @@ export default function PricePerHeadCard({
                 onChange={(e) => setSliderVal(parseFloat(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FF5B22]"
               />
-              <div className="flex justify-between text-xs font-medium text-[#828282]">
-                <span>$1</span>
-                <span>$10</span>
-                <span>$20</span>
+              <div className="flex justify-between text-xs font-medium text-[#6B6B6B]">
+                <span>{formatMoney(1, { maxFractionDigits: 0 })}</span>
+                <span>{formatMoney(10, { maxFractionDigits: 0 })}</span>
+                <span>{formatMoney(20, { maxFractionDigits: 0 })}</span>
               </div>
             </div>
 
@@ -76,7 +77,7 @@ export default function PricePerHeadCard({
               type="button"
               onClick={handleSave}
               disabled={saving || sliderVal === currentRate}
-              className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#FF651D] text-white text-sm font-semibold rounded-md hover:bg-[#E5520F] transition-colors shrink-0"
+              className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#C65318] text-white text-sm font-semibold rounded-md hover:bg-[#A83800] transition-colors shrink-0"
             >
               {saving ? "Saving..." : "Save"}
             </button>

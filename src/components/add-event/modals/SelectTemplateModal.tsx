@@ -28,21 +28,23 @@ interface SelectTemplateModalProps {
   onLeave?: () => void;
   /** The event's own category, for an account whose list does not include it */
   extraCategory?: ExtraCategory | null;
+  /** The organizer the event is being created for (an admin's list also holds other organizers' private templates) */
+  organizerId?: string;
 }
 
 const templateCategoryId = (t: Template) => (typeof t.categoryId === "object" && t.categoryId ? t.categoryId._id : t.categoryId || "");
 
 // The parent remounts this modal (via key) each time it opens, so its state starts from the props
-export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate, selectedTemplateId, categoryId, subcategoryId, required = false, onLeave, extraCategory }: SelectTemplateModalProps) {
+export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate, selectedTemplateId, categoryId, subcategoryId, required = false, onLeave, extraCategory, organizerId }: SelectTemplateModalProps) {
   const categories = useCategories(extraCategory);
   const { user } = useAuth();
   const { confirm, showAlert } = useAlert();
   // everything about templates is done here: pick, upload, and remove the ones the organizer made
   const [scope, setScope] = useState<"all" | "mine">("all");
   const isMine = (t: Template) => !!user?._id && t.ownerId === user._id;
-  // an admin's list holds every template, organizers' private ones too, and those cannot serve this event: they are not offered
-  // (the one the event already uses stays, so it is still shown as selected)
-  const offered = (t: Template) => !t.ownerId || isMine(t) || t.isSystemTemplate || t._id === selectedTemplateId;
+  // Every template is listed, as on the Templates page. An admin's list also holds organizers' private designs: those can serve
+  // only that organizer's own events, so for anyone else they are shown but cannot be chosen (the one already in use stays usable)
+  const usable = (t: Template) => !t.ownerId || isMine(t) || t.isSystemTemplate || t._id === selectedTemplateId || (!!organizerId && t.ownerId === organizerId);
   // a design shared with all organizers is managed on the Templates page, not removed from a picker
   const canDelete = (t: Template) => isMine(t) && !t.isSystemTemplate;
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -69,7 +71,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
     let cancelled = false;
     templateService.getTemplates().then((res) => {
       if (cancelled) return;
-      if (res.success && Array.isArray(res.data)) setTemplates(res.data.filter((t) => t.isPublished !== false));
+      if (res.success && Array.isArray(res.data)) setTemplates(res.data);
       else setLoadError(res.message || "Failed to load templates.");
       setLoading(false);
     });
@@ -85,7 +87,6 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   const mineCount = templates.filter((t) => isMine(t)).length;
   const visible = templates.filter(
     (t) =>
-      offered(t) &&
       (scope === "all" || isMine(t)) &&
       (!templateCategoryId(t) ||
       ((!filterCategory || templateCategoryId(t) === filterCategory) && (!filterSub || !t.subcategoryId || t.subcategoryId === filterSub)))
@@ -117,7 +118,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   };
 
   const handleSave = () => {
-    const chosen = templates.find((t) => t._id === pendingId);
+    const chosen = templates.find((t) => t._id === pendingId && usable(t));
     if (required && !chosen) return;
     onSelectTemplate(
       chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null } : null,
@@ -131,7 +132,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
       <div ref={cardRef} tabIndex={-1} className="bg-white rounded-lg shadow-2xl max-w-3xl w-full flex flex-col max-h-[90vh] animate-modal outline-none">
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E5E5]">
           <h2 id="select-template-title" className="text-base font-medium text-gray-900">{required ? "Choose a template to start your event" : "Select Template"}</h2>
-          <button type="button" onClick={() => void requestClose()} aria-label="Close" className="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={() => void requestClose()} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -169,7 +170,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
         <div className="px-6 pt-3 shrink-0">
         <div role="tablist" aria-label="Which templates" className="flex gap-2">
                 {([["all", "All templates"], ["mine", `My templates${mineCount ? ` (${mineCount})` : ""}`]] as const).map(([key, label]) => (
-                  <button key={key} type="button" role="tab" aria-selected={scope === key} onClick={() => setScope(key)} className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${scope === key ? "bg-[#FF651D] border-[#FF651D] text-white" : "bg-white border-[#E0E0E0] text-[#4B4F52] hover:border-gray-400"}`}>{label}</button>
+                  <button key={key} type="button" role="tab" aria-selected={scope === key} onClick={() => setScope(key)} className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${scope === key ? "bg-[#C65318] border-[#FF651D] text-white" : "bg-white border-[#E0E0E0] text-[#4B4F52] hover:border-gray-400"}`}>{label}</button>
                 ))}
               </div>
         </div>
@@ -182,7 +183,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
           ) : loadError ? (
             <p role="alert" className="text-sm text-rose-600 py-10 text-center break-words">{loadError}</p>
           ) : visible.length === 0 ? (
-            <p className="text-sm text-[#828282] py-10 text-center">
+            <p className="text-sm text-[#6B6B6B] py-10 text-center">
               {scope === "mine" && mineCount === 0 ? "You have not uploaded a template yet. Use “Upload your own template” below." : templates.length === 0 ? "No templates have been published yet." : "No templates for this category. Try another category or clear the filter."}
             </p>
           ) : (
@@ -197,14 +198,15 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                       <button
                         type="button"
                         onClick={() => setPendingId(selected ? null : t._id)}
+                        disabled={!usable(t)}
                         aria-pressed={selected}
                         aria-label={t.name}
                         title={t.name}
-                        className={`block w-full rounded-md overflow-hidden border-2 cursor-pointer ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
+                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
                       >
                         <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="aspect-[2/3]!" />
                       </button>
-                      {isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
+                      {!usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
                       {canDelete(t) && (
                         <>
                           <button type="button" onClick={() => void removeOwn(t)} aria-label={`Delete ${t.name}`} title="Delete this template" className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow hover:bg-rose-50 cursor-pointer">
@@ -222,13 +224,13 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
 
         <div className="px-6 py-4 border-t border-[#E5E5E5] flex flex-wrap justify-between items-center gap-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-[#4B4F52]">
-            <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#E5520F] hover:underline cursor-pointer">
+            <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#C44200] hover:underline cursor-pointer">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0-12l-4 4m4-4l4 4" /></svg>
               Upload your own template
             </button>
             <span>
               Need a custom design?{" "}
-              <Link href="/contact" className="text-[#16A34A] font-medium underline">Contact us</Link>
+              <Link href="/contact" className="text-[#15803D] font-medium underline">Contact us</Link>
             </span>
           </div>
           <div className="flex items-center gap-3">
@@ -237,7 +239,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                 Clear selection
               </button>
             )}
-            <button type="button" onClick={handleSave} disabled={required && !pendingId} className="px-6 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="button" onClick={handleSave} disabled={required && !pendingId} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {required ? "Use this template" : "Save"}
             </button>
           </div>

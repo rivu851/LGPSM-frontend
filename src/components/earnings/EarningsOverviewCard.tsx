@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { formatMoney } from "@/utils/money";
 
 interface EarningsOverviewCardProps {
   /** null until a rate has been set for the first time */
@@ -20,7 +21,7 @@ export default function EarningsOverviewCard({
   saving = false,
   isSavedNotice,
 }: EarningsOverviewCardProps) {
-  const rateText = rate === null ? "Not set" : `$${rate.toFixed(2)}`;
+  const rateText = rate === null ? "Not set" : formatMoney(rate);
   const rateLine = rate === null ? "No rate has been set yet" : `Per-head billing · ${rateText} / invitee (current rate)`;
   return (
     <div>
@@ -37,7 +38,7 @@ export default function EarningsOverviewCard({
           {/* Left Side Rate Text (No extra box wrapper) */}
           <div className="space-y-1">
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-semibold text-[#FF651D]">
+              <span className="text-5xl font-semibold text-[#C44200]">
                 {rateText}
               </span>
               <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
@@ -52,7 +53,7 @@ export default function EarningsOverviewCard({
                 ADJUST RATE
               </span>
               {isSavedNotice && (
-                <span className="text-xs font-semibold text-emerald-600 animate-fadeIn">
+                <span className="text-xs font-semibold text-emerald-700 animate-fadeIn">
                   Saved. Applies to events created from now on.
                 </span>
               )}
@@ -70,10 +71,10 @@ export default function EarningsOverviewCard({
                   onChange={(e) => setTempRate(parseFloat(e.target.value))}
                   className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FF5B22]"
                 />
-                <div className="flex items-center justify-between text-xs font-medium text-[#828282] px-0.5">
-                  <span>$1</span>
-                  <span>$10</span>
-                  <span>$20</span>
+                <div className="flex items-center justify-between text-xs font-medium text-[#6B6B6B] px-0.5">
+                  <span>{formatMoney(1, { maxFractionDigits: 0 })}</span>
+                  <span>{formatMoney(10, { maxFractionDigits: 0 })}</span>
+                  <span>{formatMoney(20, { maxFractionDigits: 0 })}</span>
                 </div>
               </div>
 
@@ -81,7 +82,7 @@ export default function EarningsOverviewCard({
                 type="button"
                 onClick={onSaveRate}
                 disabled={saving || tempRate === rate}
-                className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-semibold rounded-md transition-colors cursor-pointer shrink-0"
+                className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md transition-colors cursor-pointer shrink-0"
               >
                 {saving ? "Saving..." : "Save"}
               </button>

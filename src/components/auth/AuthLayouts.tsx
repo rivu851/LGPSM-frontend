@@ -117,7 +117,7 @@ export function AuthLoadingShell() {
 
 export function BackLink({ href, label = "Back to Home", onClick }: { href?: string; label?: string; onClick?: () => void }) {
   const inner = (
-    <span className="inline-flex items-center gap-2 text-sm leading-6 font-semibold text-[#15191C] hover:text-[#FF651D] transition-colors cursor-pointer">
+    <span className="inline-flex items-center gap-2 text-sm leading-6 font-semibold text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer">
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
@@ -197,7 +197,7 @@ export function PasswordInput({
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Hide password" : "Show password"}
-        className="absolute right-4 text-[#ACACAC] hover:text-gray-600 cursor-pointer"
+        className="absolute right-3 p-1 text-[#6B6B6B] hover:text-gray-800 cursor-pointer"
       >
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
           {!visible ? (

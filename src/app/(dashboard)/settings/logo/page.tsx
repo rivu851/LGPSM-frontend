@@ -79,11 +79,11 @@ export default function LogoSettingsPage() {
         <h2 className="text-base font-medium text-[#15191C]">Organiser Logo</h2>
 
         <section className="border border-[#D2D2D2] rounded-lg px-5 pt-5 pb-[25px] flex flex-col gap-3.5" aria-label="Organiser logo">
-          <p className="flex items-start gap-1 px-2 text-xs font-medium text-[#B1B1B1]">
+          <p className="flex items-start gap-1 px-2 text-xs font-medium text-[#6B6B6B]">
             <Icon name="events/alert-grey" width={16} height={14} className="mt-px shrink-0" />
             <span>
               This logo will show up in the footer of your QR Invitation card as organizer logo.{" "}
-              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#FF651D] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                 Preview
               </button>
               .
@@ -104,21 +104,21 @@ export default function LogoSettingsPage() {
             }`}
           >
             {uploading ? (
-              <span className="text-xs font-medium text-[#15191C]/50">Uploading…</span>
+              <span className="text-xs font-medium text-[#15191C]/70">Uploading…</span>
             ) : shownUrl ? (
               <span className="relative block w-[240px] h-[50px] max-w-full">
                 <Image src={shownUrl} alt="Organiser logo" fill unoptimized sizes="240px" className="object-contain" />
               </span>
             ) : (
-              <span className="text-xs font-medium text-[#15191C]/50">Drag and drop a photo here or click to open file</span>
+              <span className="text-xs font-medium text-[#15191C]/70">Drag and drop a photo here or click to open file</span>
             )}
           </button>
 
           <div className="space-y-1 text-xs font-medium">
-            <p className="text-[#B1B1B1]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed.</p>
-            <p className="text-[#7C7C7C]">
+            <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed.</p>
+            <p className="text-[#6B6B6B]">
               Organizer Logo:{" "}
-              <button type="button" onClick={() => { setMessage(null); setStaged(null); }} disabled={!shownKey || saving} className="text-[#FF651D] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={() => { setMessage(null); setStaged(null); }} disabled={!shownKey || saving} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                 Reset to default
               </button>
             </p>
@@ -127,7 +127,7 @@ export default function LogoSettingsPage() {
           {message && <p role={message.type === "error" ? "alert" : "status"} className={`text-xs font-medium ${message.type === "error" ? "text-rose-600" : "text-emerald-700"}`}>{message.text}</p>}
 
           <div className="pt-3">
-            <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#FF651D] hover:bg-[#E5520F] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#C65318] hover:bg-[#A83800] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? "Updating…" : "Update"}
             </button>
           </div>
@@ -145,7 +145,7 @@ export default function LogoSettingsPage() {
                 <Image src={shownUrl} alt="Organiser logo at its 240×50 size" fill unoptimized sizes="240px" className="object-contain" />
               </span>
             </div>
-            <p className="text-xs text-[#828282]">Shown at the 240×50 size it is meant for.{dirty ? " Not saved yet — select Update to keep it." : ""}</p>
+            <p className="text-xs text-[#6B6B6B]">Shown at the 240×50 size it is meant for.{dirty ? " Not saved yet — select Update to keep it." : ""}</p>
             <div className="flex justify-end">
               <button type="button" onClick={() => setPreviewOpen(false)} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Close</button>
             </div>

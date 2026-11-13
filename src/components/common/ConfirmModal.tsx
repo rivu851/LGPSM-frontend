@@ -97,7 +97,7 @@ export default function ConfirmModal({
       >
         <div
           className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto shadow-2xs ${
-            danger ? "bg-rose-100 text-rose-600" : "bg-orange-100 text-[#FF5B22]"
+            danger ? "bg-rose-100 text-rose-600" : "bg-orange-100 text-[#C44200]"
           }`}
         >
           {danger ? (
@@ -133,7 +133,7 @@ export default function ConfirmModal({
             type="button"
             onClick={() => resolve(true)}
             className={`flex-1 py-2.5 font-bold text-xs rounded-md text-white shadow-2xs transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 ${
-              danger ? "bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600" : "bg-[#FF5B22] hover:bg-[#E04B16] focus-visible:outline-[#FF5B22]"
+              danger ? "bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600" : "bg-[#C65318] hover:bg-[#A83800] focus-visible:outline-[#FF5B22]"
             }`}
           >
             {confirmText}
