@@ -4,6 +4,7 @@ import React, { Suspense, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useAlert } from "@/context/AlertContext";
 import {
   AdminAuthLayout,
   AuthAlert,
@@ -71,6 +72,7 @@ function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const { showAlert } = useAlert();
 
   const initial = parsePortalMode(searchParams.get("mode"));
   const mode: PortalMode = initial.mode;
@@ -134,7 +136,7 @@ function SigninContent() {
         sessionStorage.setItem("lgpsm_pending_verification_email", email.trim());
         router.push("/verify-email");
       } else {
-        setErrorMessage(res.message || ERROR_MESSAGES.auth.invalidCredentials);
+        showAlert(res.message || ERROR_MESSAGES.auth.incorrectPassword, "error", "Incorrect password");
       }
     } catch {
       setErrorMessage(ERROR_MESSAGES.network.genericFailure);

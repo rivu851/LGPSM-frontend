@@ -1,6 +1,7 @@
 "use client";
 
 import PasswordField from "@/components/common/PasswordField";
+import { useAlert } from "@/context/AlertContext";
 import React, { useState } from "react";
 
 interface ChangePasswordModalProps {
@@ -14,6 +15,7 @@ export default function ChangePasswordModal({
   onClose,
   onUpdate,
 }: ChangePasswordModalProps) {
+  const { showAlert } = useAlert();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -34,7 +36,8 @@ export default function ChangePasswordModal({
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError("New password and confirm password do not match.");
+      setError("");
+      showAlert("New password and confirm password do not match.", "error", "Password not matching");
       return;
     }
     setError("");

@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useAlert } from "@/context/AlertContext";
 import { authService } from "@/services/authService";
 import ChangeEmailForm from "@/components/auth/ChangeEmailForm";
 import {
@@ -33,6 +34,7 @@ type SignupStep = "details" | "verify";
 export default function SignupPage() {
   const router = useRouter();
   const { register } = useAuth();
+  const { showAlert } = useAlert();
 
   // Step state
   const [step, setStep] = useState<SignupStep>(() => {
@@ -124,7 +126,7 @@ export default function SignupPage() {
       return;
     }
     if (password !== confirmPassword) {
-      setErrorMessage(ERROR_MESSAGES.auth.passwordsDoNotMatch);
+      showAlert(ERROR_MESSAGES.auth.passwordsDoNotMatch, "error", "Password not matching");
       return;
     }
     if (password.length < 8) {

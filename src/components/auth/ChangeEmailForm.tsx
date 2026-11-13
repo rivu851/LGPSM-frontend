@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { authService } from "@/services/authService";
+import { useAlert } from "@/context/AlertContext";
 import { AuthAlert, PasswordInput, Spinner, authInputClass, authLabelClass } from "@/components/auth/AuthLayouts";
 
 /**
@@ -16,6 +17,7 @@ export default function ChangeEmailForm({ currentEmail, knownPassword, onChanged
   onChanged: (newEmail: string) => void;
   onCancel: () => void;
 }) {
+  const { showAlert } = useAlert();
   const [newEmail, setNewEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -30,7 +32,9 @@ export default function ChangeEmailForm({ currentEmail, knownPassword, onChanged
     try {
       const res = await authService.changePendingEmail(currentEmail, wanted, knownPassword || password);
       if (res.success) onChanged(res.data?.email || wanted.toLowerCase());
-      else setError(res.message || "Could not change the email address. Please try again.");
+      else if (res.status === 401 || /password|credential|authentication/i.test(res.message || "")) {
+        showAlert(res.message || "Incorrect password. Please try again.", "error", "Incorrect password");
+      } else setError(res.message || "Could not change the email address. Please try again.");
     } catch {
       setError("Could not reach the server. Please try again.");
     } finally {
