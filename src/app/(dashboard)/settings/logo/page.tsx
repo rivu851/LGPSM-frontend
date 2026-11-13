@@ -8,14 +8,15 @@ import { mediaService } from "@/services/mediaService";
 import { resolveImageUrl } from "@/utils/mediaUrl";
 import Icon from "@/components/icons/Icon";
 import OrganisationDetailsForm from "@/components/settings/OrganisationDetailsForm";
+import LogoCropDialog from "@/components/settings/LogoCropDialog";
 
 // The design allows JPG and PNG only (Figma 222:34175: "Only JPG & PNG allowed")
 const ACCEPTED = "image/png,image/jpeg";
 const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
 
 /**
- * Organiser "Logo Settings" (Figma Organiser page, frame 222:34175). The logo is uploaded through the media service
- * (ORGANIZATION_LOGO) as soon as it is chosen, and saved on the organiser's profile with Update.
+ * Organiser "Logo Settings" (Figma Organiser page, frame 222:34175). A chosen logo is cropped before it is uploaded through
+ * the media service (ORGANIZATION_LOGO), then saved on the organiser's profile with Update.
  */
 export default function LogoSettingsPage() {
   const { user, updateProfile } = useAuth();
@@ -27,7 +28,15 @@ export default function LogoSettingsPage() {
   const [dragOver, setDragOver] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [cropSelection, setCropSelection] = useState<{ file: File; source: string } | null>(null);
   const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const source = cropSelection?.source;
+    return () => {
+      if (source) URL.revokeObjectURL(source);
+    };
+  }, [cropSelection?.source]);
 
   const shownKey = staged === undefined ? savedKey : staged;
   const shownUrl = resolveImageUrl(shownKey);
@@ -40,19 +49,39 @@ export default function LogoSettingsPage() {
     return () => document.removeEventListener("keydown", onKey);
   }, [previewOpen]);
 
-  const upload = async (file: File | undefined) => {
+  const selectFile = (file: File | undefined) => {
     if (!file) return;
     setMessage(null);
     if (!ACCEPTED_TYPES.includes(file.type)) {
       setMessage({ type: "error", text: "Only JPG and PNG images can be used as the logo." });
+      if (input.current) input.current.value = "";
       return;
     }
-    setUploading(true);
-    const res = await mediaService.uploadImage(file, "ORGANIZATION_LOGO");
-    setUploading(false);
+
     if (input.current) input.current.value = "";
-    if (res.success && res.data?.key) setStaged(res.data.key);
-    else setMessage({ type: "error", text: res.message || "The logo could not be uploaded. Please try again." });
+    setCropSelection({ file, source: URL.createObjectURL(file) });
+  };
+
+  const uploadCropped = async (file: File) => {
+    setUploading(true);
+    try {
+      const res = await mediaService.uploadImage(file, "ORGANIZATION_LOGO");
+      if (res.success && res.data?.key) {
+        setStaged(res.data.key);
+        setMessage(null);
+        return { success: true };
+      }
+
+      const error = res.message || "The logo could not be uploaded. Please try again.";
+      setMessage({ type: "error", text: error });
+      return { success: false, message: error };
+    } catch {
+      const error = "The logo could not be uploaded. Please try again.";
+      setMessage({ type: "error", text: error });
+      return { success: false, message: error };
+    } finally {
+      setUploading(false);
+    }
   };
 
   const save = async () => {
@@ -90,14 +119,14 @@ export default function LogoSettingsPage() {
             </span>
           </p>
 
-          <input ref={input} type="file" accept={ACCEPTED} className="hidden" onChange={(e) => upload(e.target.files?.[0])} />
+          <input ref={input} type="file" accept={ACCEPTED} className="hidden" onChange={(e) => selectFile(e.target.files?.[0])} />
           <button
             type="button"
             disabled={uploading || saving}
             onClick={() => input.current?.click()}
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
             onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => { e.preventDefault(); setDragOver(false); upload(e.dataTransfer.files?.[0]); }}
+            onDrop={(e) => { e.preventDefault(); setDragOver(false); selectFile(e.dataTransfer.files?.[0]); }}
             aria-label={shownUrl ? "Replace the organiser logo" : "Upload an organiser logo"}
             className={`relative w-full max-w-[541px] h-[109px] rounded-lg border p-4 flex items-center justify-center cursor-pointer disabled:cursor-wait ${
               dragOver ? "border-[#FF651D] bg-orange-50/40" : "border-[#D2D2D2] hover:border-[#FF651D]"
@@ -106,16 +135,19 @@ export default function LogoSettingsPage() {
             {uploading ? (
               <span className="text-xs font-medium text-[#15191C]/70">Uploading…</span>
             ) : shownUrl ? (
-              <span className="relative block w-[240px] h-[50px] max-w-full">
-                <Image src={shownUrl} alt="Organiser logo" fill unoptimized sizes="240px" className="object-contain" />
-              </span>
+              <>
+                <span className="relative block w-[240px] h-[50px] max-w-full">
+                  <Image src={shownUrl} alt="Organiser logo" fill unoptimized sizes="240px" className="object-contain" />
+                </span>
+                <span className="absolute bottom-2 text-[10px] font-medium text-[#6B6B6B]">Click to replace and crop</span>
+              </>
             ) : (
-              <span className="text-xs font-medium text-[#15191C]/70">Drag and drop a photo here or click to open file</span>
+              <span className="text-xs font-medium text-[#15191C]/70">Choose a photo to edit and crop, or drag and drop it here</span>
             )}
           </button>
 
           <div className="space-y-1 text-xs font-medium">
-            <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed.</p>
+            <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed. Select or drag a photo to crop and reposition before upload.</p>
             <p className="text-[#6B6B6B]">
               Organizer Logo:{" "}
               <button type="button" onClick={() => { setMessage(null); setStaged(null); }} disabled={!shownKey || saving} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
@@ -151,6 +183,16 @@ export default function LogoSettingsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {cropSelection && (
+        <LogoCropDialog
+          key={cropSelection.source}
+          file={cropSelection.file}
+          source={cropSelection.source}
+          onClose={() => setCropSelection(null)}
+          onCrop={uploadCropped}
+        />
       )}
     </div>
   );
