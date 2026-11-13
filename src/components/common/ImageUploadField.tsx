@@ -19,6 +19,7 @@ interface ImageUploadFieldProps {
   /** Extra classes for the empty drop area (e.g. a minimum height) */
   emptyClassName?: string;
   disabled?: boolean;
+  optional?: boolean;
   onUploadingChange?: (uploading: boolean) => void;
 }
 
@@ -34,6 +35,7 @@ export default function ImageUploadField({
   fill = false,
   emptyClassName = "",
   disabled = false,
+  optional = false,
   onUploadingChange,
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,15 +111,15 @@ export default function ImageUploadField({
             dragOver ? "bg-orange-50/50" : "bg-[#FAFAFA]"
           }`}
         >
-          <DashedBorder className={dragOver ? "text-[#C44200]" : "text-[#D3D3D3] group-hover:text-[#A83800]"} />
+          <DashedBorder className={dragOver ? "text-[#FF651D]" : optional ? "text-[#D3D3D3] group-focus:text-[#16A34A]" : "text-[#D3D3D3] group-hover:text-[#FF651D]"} />
           <span className="text-[#4B4F52]">
             {uploading ? "Uploading..." : (
               <>
-                Drag and drop an image here or <span className="text-[#C44200] font-medium underline">click to open file</span>
+                Drag and drop an image here or <span className="text-[#E5520F] font-medium underline">click to open file</span>
               </>
             )}
           </span>
-          <span className="block mt-1 text-xs text-[#6B6B6B]">{hint}</span>
+          <span className="block mt-1 text-xs text-[#828282]">{hint}</span>
         </button>
       )}
       {error && <p role="alert" className="mt-1.5 text-xs font-medium text-rose-600">{error}</p>}

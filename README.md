@@ -18,6 +18,10 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Backend API
+
+Set `NEXT_PUBLIC_API_URL` to the backend base URL before running or building the app. The current backend is `https://lgpsm-backend-vzuz.onrender.com`. `NEXT_PUBLIC_API_BASE_URL` is also supported as a fallback alias. If deploying with Vercel environment overrides, update the value there as well.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

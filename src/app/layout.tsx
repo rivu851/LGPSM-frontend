@@ -73,7 +73,7 @@ export const metadata: Metadata = {
 // takes that wait off the first request.
 const API_ORIGIN = (() => {
   try {
-    return new URL(process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com").origin;
+    return new URL(process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend-vzuz.onrender.com").origin;
   } catch {
     return null;
   }

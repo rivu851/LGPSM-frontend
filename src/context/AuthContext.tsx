@@ -21,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserData | null>(() => tokenStorage.getUser());
+  const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const refreshUser = async () => {
@@ -50,9 +50,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // A returning visitor already has a stored session: open the app at once with it and confirm it with the server in the
     // background, instead of showing a loader for a whole round trip (tens of seconds when the server is asleep). If the
     // server says otherwise, refreshUser / the 401 handler end the session as before.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (tokenStorage.getAccessToken() && tokenStorage.getUser()) setIsLoading(false);
-    void refreshUser();
+    const storedToken = tokenStorage.getAccessToken();
+    const storedUser = tokenStorage.getUser();
+    if (storedToken && storedUser) {
+      void Promise.resolve().then(() => {
+        setUser(storedUser);
+        setIsLoading(false);
+      });
+    }
+    void Promise.resolve().then(() => refreshUser());
   }, []);
 
   // The API server sleeps when idle and takes a long time to wake. Poke it as soon as the app opens (so it wakes while the

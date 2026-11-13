@@ -250,6 +250,8 @@ export default function Step3Sessions({
                     onChange={(v) => updateSession(sess.key, { inviteeSource: "COPY_SESSION", sourceSessionKey: v })}
                     options={sourceOptions}
                     disabled={!copies}
+                    invalid={!!sourceError}
+                    optional={!copies}
                     placeholder={sourceOptions[0]?.label || "Session"}
                     emptyMessage="No earlier session has its own list"
                     ariaLabel="Session to copy invitees from"
@@ -261,8 +263,8 @@ export default function Step3Sessions({
 
             {!copies && (
               <div>
-                <span className={labelClass}>Add Invitees List</span>
-                <div className="flex items-center bg-[#FAFAFA] border border-[#E0E0E0] rounded-md p-1 min-w-0">
+                <span className={labelClass}>Add Invitees List <span className="font-normal text-[#828282]">(optional)</span></span>
+                <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] ? "border-rose-400" : "border-[#E0E0E0]"}`}>
                   <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">
                     Choose File
                     <input

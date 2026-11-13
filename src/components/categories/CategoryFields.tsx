@@ -46,6 +46,7 @@ export default function CategoryFields({
   const [modal, setModal] = useState<ModalState>(null);
   const { confirm, showAlert } = useAlert();
   const subOptions = categoryId ? api.subcategoryOptionsFor(categoryId) : [];
+  const subcategoryIsOptional = !required || subcategoryOptional || (!!categoryId && subOptions.length === 0);
 
   // Organizers can remove their own custom entries from these lists. Nothing that already uses one is harmed: see the message.
   const removable = canManage && api.isOrganizer;
@@ -76,7 +77,7 @@ export default function CategoryFields({
   };
   const withDelete = (options: CategoryOption[], remove: (o: CategoryOption) => Promise<void>) =>
     removable ? options.map((o) => (o.custom ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
-  const starMark = <span className="text-[#C44200] ml-0.5">*</span>;
+  const starMark = <span className="text-[#FF651D] ml-0.5">*</span>;
   const star = required ? starMark : null;
   // A subcategory can only be required once the chosen category has some; before that (or when it has none) the star would promise a rule that cannot apply
   const subStar = required && !subcategoryOptional && (!categoryId || subOptions.length > 0) ? starMark : null;
@@ -96,6 +97,7 @@ export default function CategoryFields({
             placeholder={api.loading ? "Loading..." : api.categoryOptions.length ? "- Category -" : "No categories yet"}
             topAction={canManage ? { label: api.isOrganizer ? "Add custom category" : "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
             invalid={!!categoryError}
+            optional={!required}
           />
           {api.error && <p className="mt-1 text-xs font-medium text-rose-600">{api.error}</p>}
           {categoryError && <p className="mt-1 text-xs font-medium text-rose-600">{categoryError}</p>}
@@ -104,7 +106,7 @@ export default function CategoryFields({
           <label className={labelClassName}>
             {subcategoryLabel}
             {subStar}
-            {subcategoryOptional && <span className="font-normal text-[#6B6B6B]"> (optional)</span>}
+            {subcategoryIsOptional && <span className="font-normal text-[#828282]"> (optional)</span>}
           </label>
           <CustomDropdown
             value={subcategoryId}
@@ -115,6 +117,7 @@ export default function CategoryFields({
             topAction={canManage && categoryId ? { label: api.isOrganizer ? "Add custom subcategory" : "Add New Subcategory", onClick: () => setModal({ kind: "subcategory", categoryId }) } : undefined}
             emptyMessage={canManage ? "No subcategories yet — add one above" : "No subcategories for this category"}
             invalid={!!subcategoryError}
+            optional={subcategoryIsOptional}
           />
           {subcategoryError && <p className="mt-1 text-xs font-medium text-rose-600">{subcategoryError}</p>}
         </div>
@@ -197,7 +200,7 @@ export function CategoryModal({
         </div>
         <form onSubmit={submit} noValidate>
           <div className="px-6 pt-5 pb-6 space-y-5">
-            {api.isOrganizer && <p className="text-xs text-[#6B6B6B]">Only you will see this {isSub ? "subcategory" : "category"}. It will not appear for other organizers.</p>}
+            {api.isOrganizer && <p className="text-xs text-[#828282]">Only you will see this {isSub ? "subcategory" : "category"}. It will not appear for other organizers.</p>}
             {error && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-sm text-rose-700">{error}</p>}
             {isSub && (
               <div>
@@ -217,7 +220,7 @@ export function CategoryModal({
                 placeholder="Type"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-[47px] px-3.5 text-xs border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D] text-gray-900 placeholder:text-[#6B6B6B]"
+                className="w-full h-[47px] px-3.5 text-xs border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D] text-gray-900 placeholder:text-[#828282]"
               />
             </div>
           </div>
@@ -228,7 +231,7 @@ export function CategoryModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-[11px] text-base font-semibold text-white bg-[#C65318] rounded-lg hover:bg-[#A83800] disabled:opacity-60 cursor-pointer"
+              className="px-6 py-[11px] text-base font-semibold text-white bg-[#FF651D] rounded-lg hover:bg-[#E5520F] disabled:opacity-60 cursor-pointer"
             >
               {submitting ? "Adding..." : "Add"}
             </button>

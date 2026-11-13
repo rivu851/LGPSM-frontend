@@ -36,10 +36,10 @@ interface Step1EventDetailsProps {
 }
 
 const labelClass = "text-sm font-medium text-gray-900";
-const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]";
+const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none";
 const border = (err?: string) => (err ? "border-rose-400" : "border-[#E0E0E0]");
 const Err = ({ msg }: { msg?: string }) => (msg ? <p className="mt-1 text-xs font-medium text-rose-600">{msg}</p> : null);
-const Req = () => <span className="text-[#C44200] ml-0.5">*</span>;
+const Req = () => <span className="text-[#FF651D] ml-0.5">*</span>;
 
 function OrganizerSelectField({
   selectedIds,
@@ -115,18 +115,18 @@ function OrganizerSelectField({
           Select Organizer
         </label>
       </div>
-      <p className="-mt-1 text-xs text-[#6B6B6B]">Choose the one organizer this event is created for, or leave empty to create it under your admin account.</p>
+      <p className="-mt-1 text-xs text-[#828282]">Choose the one organizer this event is created for, or leave empty to create it under your admin account.</p>
 
       <div className="relative">
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full min-h-[44px] px-3.5 py-2 bg-[#FAFAFA] border rounded-md text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
-            error ? "border-rose-400" : "border-[#E0E0E0] focus:border-[#FF651D]"
+          className={`w-full min-h-[44px] px-3.5 py-2 bg-[#FAFAFA] border rounded-md text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer focus:border-[#16A34A] ${
+            error ? "border-rose-400" : "border-[#E0E0E0]"
           }`}
         >
           {selectedIds.length === 0 ? (
-            <span className="text-[#6B6B6B]">
+            <span className="text-[#828282]">
               {loading ? "Loading organizers..." : "Select the organizer this event will be created for"}
             </span>
           ) : (
@@ -220,7 +220,7 @@ function OrganizerSelectField({
                         <div className="text-[11px] text-gray-500 truncate">{org.email}</div>
                       </div>
                     </div>
-                    {isSelected && <span className="text-[#C44200] text-xs font-bold shrink-0 ml-2">✓</span>}
+                    {isSelected && <span className="text-[#FF651D] text-xs font-bold shrink-0 ml-2">✓</span>}
                   </div>
                 );
               })
@@ -234,16 +234,16 @@ function OrganizerSelectField({
   );
 }
 
-function DateButton({ label, value, placeholder, onClick, error }: { label: string; value: string | null; placeholder: string; onClick: () => void; error?: string }) {
+function DateButton({ label, value, placeholder, onClick, error, optional = false }: { label: string; value: string | null; placeholder: string; onClick: () => void; error?: string; optional?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       aria-invalid={!!error}
-      className={`${inputClass} ${border(error)} flex items-center justify-between gap-2 text-left cursor-pointer`}
+      className={`${inputClass} ${border(error)} ${optional ? "focus:border-[#16A34A]" : "focus:border-[#FF651D]"} flex items-center justify-between gap-2 text-left cursor-pointer`}
     >
-      <span className={value ? "text-gray-900" : "text-[#6B6B6B]"}>{formatDateTime(value, placeholder)}</span>
+      <span className={value ? "text-gray-900" : "text-[#828282]"}>{formatDateTime(value, placeholder)}</span>
       <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
@@ -274,7 +274,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
           <label htmlFor="event-title" className={labelClass}>Title<Req /></label>
-          <span className="text-xs text-[#6B6B6B]">{TITLE_MAX - draft.title.length} Chars remaining</span>
+          <span className="text-xs text-[#828282]">{TITLE_MAX - draft.title.length} Chars remaining</span>
         </div>
         <input
           id="event-title"
@@ -284,15 +284,15 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Product Launch Event 2026"
           aria-invalid={!!errors.title}
-          className={`${inputClass} ${border(errors.title)}`}
+          className={`${inputClass} ${border(errors.title)} focus:border-[#FF651D]`}
         />
         <Err msg={errors.title} />
       </div>
 
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
-          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>Description <span className="font-normal text-[#6B6B6B]">(optional)</span></label><InfoTip label="About the description" text="A short note guests see on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and the event title is used." align="left" /></span>
-          <span className="text-xs text-[#6B6B6B]">{DESCRIPTION_MAX - draft.description.length} Chars remaining</span>
+          <span className="flex items-center gap-1.5"><label htmlFor="event-description" className={labelClass}>Description <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About the description" text="A short note guests see on their invitation page: what the event is, what to expect, anything to bring. Leave it empty and the event title is used." align="left" /></span>
+          <span className="text-xs text-[#828282]">{DESCRIPTION_MAX - draft.description.length} Chars remaining</span>
         </div>
         <textarea
           id="event-description"
@@ -302,7 +302,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           onChange={(e) => onChange({ description: e.target.value })}
           placeholder="Eg: Join us for an unforgettable event filled with celebration, connection, and memorable moments."
           aria-invalid={!!errors.description}
-          className={`${inputClass} ${border(errors.description)} leading-relaxed`}
+          className={`${inputClass} ${border(errors.description)} focus:border-[#16A34A] leading-relaxed`}
         />
         <Err msg={errors.description} />
       </div>
@@ -351,7 +351,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <div>
           <label htmlFor="event-contact" className={`block ${labelClass} mb-1.5`}>Contact Number<Req /></label>
           <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-[#FF651D] ${border(errors.contactNumber)}`}>
-            <span className="px-3 text-sm text-[#6B6B6B] border-r border-[#E0E0E0]">+91</span>
+            <span className="px-3 text-sm text-[#828282] border-r border-[#E0E0E0]">+91</span>
             <PhoneInput
               id="event-contact"
               value={draft.contactNumber}
@@ -359,7 +359,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
               onNote={setContactNote}
               placeholder="Enter Number"
               aria-invalid={!!errors.contactNumber}
-              className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none"
+              className="w-full px-3 py-2.5 bg-transparent text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none"
             />
           </div>
           <PhoneNote message={contactNote} />
@@ -382,14 +382,14 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             </div>
             {draft.rsvpEnabled && (
               <div>
-                <span className={`block ${labelClass} mb-1.5`}>Acceptance Last Date <span className="font-normal text-[#6B6B6B]">(optional)</span></span>
-                <DateButton label="RSVP acceptance last date" value={draft.rsvpDeadline} placeholder="Select last date to respond" onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} />
+                <span className={`block ${labelClass} mb-1.5`}>Acceptance Last Date <span className="font-normal text-[#828282]">(optional)</span></span>
+                <DateButton label="RSVP acceptance last date" value={draft.rsvpDeadline} placeholder="Select last date to respond" onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} optional />
                 <Err msg={errors.rsvpDeadline} />
               </div>
             )}
           </div>
         ) : (
-          <p className="p-4 border border-[#E0E0E0] rounded-md text-sm text-[#6B6B6B]">RSVP collection is turned off by the platform administrator.</p>
+          <p className="p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
         )}
         <div className="sm:col-start-2 sm:row-start-1 sm:row-span-2">
           <ImageUploadField
@@ -399,6 +399,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             purpose="EVENT_LOGO"
             aspectClassName="aspect-[2/1]"
             fill
+            optional
             hint="Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"
           />
         </div>
@@ -414,14 +415,14 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           onChange={(e) => onChange({ venue: e.target.value })}
           placeholder="Where is it? (shown on the invitation card)"
           aria-invalid={!!errors.venue}
-          className={`${inputClass} ${border(errors.venue)}`}
+          className={`${inputClass} ${border(errors.venue)} focus:border-[#FF651D]`}
         />
-        <p className="mt-1 text-xs text-[#6B6B6B] text-right">{EVENT_LOCATION_MAX_LENGTH - draft.venue.length} Chars remaining</p>
+        <p className="mt-1 text-xs text-[#828282] text-right">{EVENT_LOCATION_MAX_LENGTH - draft.venue.length} Chars remaining</p>
         <Err msg={errors.venue} />
       </div>
 
       <div>
-        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-address-details" className={`block ${labelClass}`}>Address <span className="font-normal text-[#6B6B6B]">(optional)</span></label><InfoTip label="About Address" text="The full address, landmark or directions. It is shown to guests on their invitation page, not on the card design. Leave it empty if the Event Location is enough." align="left" /></span>
+        <span className="flex items-center gap-1.5 mb-1.5"><label htmlFor="event-address-details" className={`block ${labelClass}`}>Address <span className="font-normal text-[#828282]">(optional)</span></label><InfoTip label="About Address" text="The full address, landmark or directions. It is shown to guests on their invitation page, not on the card design. Leave it empty if the Event Location is enough." align="left" /></span>
         <textarea
           id="event-address-details"
           rows={2}
@@ -429,7 +430,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           maxLength={300}
           onChange={(e) => onChange({ addressDetails: e.target.value })}
           placeholder="Full address, landmark or directions"
-          className={`${inputClass} ${border()} leading-relaxed`}
+          className={`${inputClass} ${border()} focus:border-[#16A34A] leading-relaxed`}
         />
       </div>
 
@@ -437,7 +438,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Cancel
         </button>
-        <button type="submit" className="px-8 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
+        <button type="submit" className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
       </div>

@@ -8,7 +8,7 @@ const PRIVATE_SECTIONS =
 // The only remote image origin the app serves from is the backend (uploaded media). Every dynamic
 // next/image in the app is `unoptimized`, so the image optimizer never needs to proxy arbitrary hosts;
 // a wildcard here would let it fetch any URL (SSRF/bandwidth-abuse surface), so keep this allowlist tight.
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend-vzuz.onrender.com";
 const apiHost = new URL(apiUrl).hostname;
 const apiOrigin = new URL(apiUrl).origin;
 

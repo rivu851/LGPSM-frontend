@@ -37,24 +37,28 @@ export default function SignupPage() {
   const { showAlert } = useAlert();
 
   // Step state
-  const [step, setStep] = useState<SignupStep>(() => {
-    if (typeof window === "undefined") return "details";
-    const pending = sessionStorage.getItem("lgpsm_pending_verification_email");
-    return pending ? "verify" : "details";
-  });
+  const [step, setStep] = useState<SignupStep>("details");
 
   // Step 1: Form state
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState(() => {
-    if (typeof window === "undefined") return "";
-    // the "Sign Up Free" forms on the marketing pages pass the address along
-    return sessionStorage.getItem("lgpsm_pending_verification_email") || "";
-  });
-  // The "Sign Up Free" forms on the marketing pages pass the address along. Read after mounting: during an in-app navigation the
-  // browser's address is only updated once the page has rendered.
+  const [email, setEmail] = useState("");
+  // Restore browser-only state after hydration so server and first client renders match.
   useEffect(() => {
+    let pending = "";
+    try {
+      pending = sessionStorage.getItem("lgpsm_pending_verification_email") || "";
+    } catch {
+      // Storage can be unavailable; the signup form still works without a restored verification step.
+    }
     const passedAlong = new URLSearchParams(window.location.search).get("email");
-    if (passedAlong) void Promise.resolve().then(() => setEmail((current) => current || passedAlong));
+    void Promise.resolve().then(() => {
+      if (pending) {
+        setStep("verify");
+        setEmail(pending);
+      } else if (passedAlong) {
+        setEmail(passedAlong);
+      }
+    });
   }, []);
   const [phone, setPhone] = useState("");
   // Individual, or an Organization (then its name is required)
@@ -121,6 +125,14 @@ export default function SignupPage() {
     setErrorMessage("");
     setSuccessMessage("");
 
+    if (fullName.trim().length < 2) {
+      setErrorMessage("Full name must be at least 2 characters.");
+      return;
+    }
+    if (fullName.trim().length > 120) {
+      setErrorMessage("Full name is too long.");
+      return;
+    }
     if (orgType === "ORGANIZATION" && orgName.trim().length < 2) {
       setErrorMessage("Enter the organization name.");
       return;
@@ -317,6 +329,7 @@ export default function SignupPage() {
                 autoComplete="name"
                 placeholder={INPUT_PLACEHOLDERS.auth.name}
                 value={fullName}
+                maxLength={120}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={isSubmitting}
                 className={authInputClass}
@@ -357,8 +370,8 @@ export default function SignupPage() {
               <legend className={authLabelClass}>Organizer type<span className="text-[#C44200]">*</span></legend>
               <div className="grid grid-cols-2 gap-2">
                 {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
-                  <label key={value} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${orgType === value ? "border-[#FF651D] bg-[#FFF3EC] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
-                    <input type="radio" name="signup-org-type" value={value} checked={orgType === value} onChange={() => setOrgType(value)} className="accent-[#FF651D]" />
+                  <label key={value} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${orgType === value ? "border-[#86EFAC] bg-[#F0FDF4] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
+                    <input type="radio" name="signup-org-type" value={value} checked={orgType === value} onChange={() => setOrgType(value)} className="accent-[#16A34A]" />
                     {label}
                   </label>
                 ))}

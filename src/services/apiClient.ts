@@ -3,7 +3,7 @@ import { loginRedirectPath } from "@/components/auth/authPortal";
 import { refreshOutcome, type RefreshOutcome } from "./refreshOutcome";
 import { ACCOUNT_INACTIVE_CODE, ACCOUNT_INACTIVE_MESSAGE, ACCOUNT_INACTIVE_NOTICE, isAccountInactiveResponse } from "./accountInactive";
 
-const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend.onrender.com";
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend-vzuz.onrender.com";
 export const API_BASE_URL = rawApiUrl.replace(/\/+$/, "");
 
 export interface ApiResponse<T = unknown> {

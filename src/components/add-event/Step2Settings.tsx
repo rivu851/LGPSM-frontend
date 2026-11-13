@@ -60,6 +60,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               onChange={(v) => onChange(POLICY_FLAGS[v as CheckInPolicy])}
               options={policyOptions(features).map((k) => ({ value: k, label: POLICY_LABEL[k] }))}
               ariaLabel="Who can check in"
+              optional
             />
           </div>
         </div>
@@ -138,6 +139,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
+                    optional
                   />
                 </div>
                 {custom && (
@@ -204,7 +206,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     maxLength={100}
                     onChange={(e) => updateCategory(category.id, { title: e.target.value })}
                     placeholder="Dietary Preference"
-                    className="w-full max-w-md px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#FF651D]"
+                    className="w-full max-w-md px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#16A34A]"
                   />
                   <ul className="space-y-2.5">
                     {category.options.map((opt, optIdx) => (

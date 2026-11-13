@@ -19,12 +19,24 @@ export default function DashboardLayout({
   const { user, isAuthenticated, isLoading, logout } = useAuth();
   const isSystemUser = user?.role === "SYSTEM_USER";
   // Set by the sign-in page: hold the branded loader for a moment after signing in, as the sign-out path does
-  const [welcoming, setWelcoming] = useState(() => {
-    try { return typeof window !== "undefined" && sessionStorage.getItem("lgpsm_signing_in") === "1"; } catch { return false; }
-  });
+  const [welcoming, setWelcoming] = useState(false);
+  const [welcomeChecked, setWelcomeChecked] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      let shouldWelcome = false;
+      try {
+        shouldWelcome = sessionStorage.getItem("lgpsm_signing_in") === "1";
+        if (shouldWelcome) sessionStorage.removeItem("lgpsm_signing_in");
+      } catch {
+        // The dashboard can still open when session storage is unavailable.
+      }
+      setWelcomeChecked(true);
+      if (shouldWelcome) setWelcoming(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   useEffect(() => {
     if (!welcoming) return;
-    try { sessionStorage.removeItem("lgpsm_signing_in"); } catch { /* ignore */ }
     const timer = setTimeout(() => setWelcoming(false), 900);
     return () => clearTimeout(timer);
   }, [welcoming]);
@@ -66,7 +78,7 @@ export default function DashboardLayout({
   }, [isLoading, isAuthenticated, isSystemUser, user, pathname, router, logout]);
 
   // Wordless branded loader while the session is checked (first load and after signing out)
-  if (isLoading || welcoming) return <BrandLoader />;
+  if (isLoading || !welcomeChecked || welcoming) return <BrandLoader />;
 
   // Signed out (or session ended): keep the loader up until the redirect to the sign-in page lands, instead of a blank screen
   if (!isAuthenticated) {

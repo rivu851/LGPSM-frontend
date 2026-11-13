@@ -20,15 +20,19 @@ import { signinHref } from "@/components/auth/authPortal";
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const urlEmail = searchParams.get("email") || "";
 
-  const [email, setEmail] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return (
-      searchParams.get("email") ||
-      sessionStorage.getItem("lgpsm_pending_verification_email") ||
-      ""
-    );
-  });
+  const [email, setEmail] = useState("");
+  useEffect(() => {
+    let pendingEmail = "";
+    try {
+      pendingEmail = sessionStorage.getItem("lgpsm_pending_verification_email") || "";
+    } catch {
+      // A URL-provided email remains usable when storage is unavailable.
+    }
+    const initialEmail = urlEmail || pendingEmail;
+    if (initialEmail) void Promise.resolve().then(() => setEmail(initialEmail));
+  }, [urlEmail]);
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);

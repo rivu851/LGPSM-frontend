@@ -60,9 +60,12 @@ export default function PublicInvitationPage() {
   const [cardFullscreen, setCardFullscreen] = useState(false);
   const [linkDismissed, setLinkDismissed] = useState(false);
   const closeCardFullscreen = useCallback(() => { setCardFullscreen(false); setLinkDismissed(true); }, []);
-  // the link in the invitation email ("?view=card") opens the card full screen straight away. Read once at load; nothing is shown
-  // until the invitation has loaded, so the server/client difference of this initial value is never rendered.
-  const [openedByLink] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "card");
+  // The link in the invitation email ("?view=card") opens the card full screen straight away.
+  const [openedByLink, setOpenedByLink] = useState(false);
+  useEffect(() => {
+    const shouldOpenCard = new URLSearchParams(window.location.search).get("view") === "card";
+    if (shouldOpenCard) void Promise.resolve().then(() => setOpenedByLink(true));
+  }, []);
 
   const eventTitle = invitationData?.event?.title;
   const rsvpEnabled = invitationData?.event?.rsvp?.enabled !== false;
