@@ -28,6 +28,7 @@ interface OrganizerSummary {
 }
 
 type Phase = "Upcoming" | "Ongoing" | "Past";
+type Tab = "All" | Phase;
 
 interface OverviewRow {
   id: string;
@@ -43,6 +44,12 @@ interface OverviewRow {
 // ---- small pieces drawn the way the dashboard design shows them -------------------------------------------------------------
 
 // `stretch` makes the whole (relatively positioned) card the link target, not just the arrow
+const PHASE_BADGE: Record<OverviewRow["phase"], string> = {
+  Upcoming: "bg-[#E1E8FF] text-[#2F5BEA]",
+  Ongoing: "bg-[#D6F5E1] text-[#0F7A33]",
+  Past: "bg-[#EDEDED] text-[#4B4F52]",
+  Cancelled: "bg-[#FDE2E2] text-[#B42318]",
+};
 const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
 const ArrowOut = ({ href, label, stretch }: { href: string; label: string; stretch?: boolean }) => (
   <Link href={href} aria-label={label} title={label} className={`text-[#15191C] hover:text-[#A83800] shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
@@ -120,7 +127,7 @@ export default function DashboardPage() {
   const [report, setReport] = useState<{ title: string; invitees: number; attendees: number } | null>(null);
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
 
-  const [tab, setTab] = useState<Phase>("Upcoming");
+  const [tab, setTab] = useState<Tab>("Upcoming");
   // the overview shows one page at a time, so a long list never stretches the page past the cards beside it
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 8;
@@ -226,19 +233,22 @@ export default function DashboardPage() {
 
   // Events Overview: the chosen tab, within the chosen dates (by start date); soonest first for what is to come, latest first for the past
   const overview = useMemo(() => {
-    const list = rows.filter((r) => r.phase === tab && startsWithin(r.start, from, to));
-    return list.sort((a, b) => (tab === "Past" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
+    const list = rows.filter((r) => (tab === "All" || r.phase === tab) && startsWithin(r.start, from, to));
+    return list.sort((a, b) => (tab === "Past" || tab === "All" ? new Date(b.start).getTime() - new Date(a.start).getTime() : new Date(a.start).getTime() - new Date(b.start).getTime()));
   }, [rows, tab, from, to]);
 
   // The table keeps one height whichever tab is open: room for as many rows as the fullest tab shows (at most a page), plus the
   // pagination bar if any tab needs one. Switching tabs then never makes the card, or the column beside it, jump.
   const tabCounts = useMemo(() => {
     const inRange = rows.filter((r) => startsWithin(r.start, from, to));
-    return (["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length);
+    return [inRange.length, ...(["Upcoming", "Ongoing", "Past"] as const).map((ph) => inRange.filter((r) => r.phase === ph).length)];
   }, [rows, from, to]);
   const reservedRows = Math.min(PAGE_SIZE, Math.max(1, ...tabCounts));
   const reservePager = tabCounts.some((c) => c > PAGE_SIZE);
 
+  // the tab already says which kind of event it lists, so only "All" needs a status column
+  const showStatus = tab === "All";
+  const cols = (isAdmin ? 6 : 5) + (showStatus ? 1 : 0);
   const pageCount = Math.max(1, Math.ceil(overview.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pageRows = overview.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -324,39 +334,43 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div role="tablist" aria-label="Which events" className="mt-4 flex gap-6 border-b border-[#E0E0E0]">
-                {(["Upcoming", "Ongoing", "Past"] as Phase[]).map((p) => (
+                {(["All", "Upcoming", "Ongoing", "Past"] as Tab[]).map((p) => (
                   <button key={p} type="button" role="tab" aria-selected={tab === p} onClick={() => { setTab(p); setPage(1); }} className={`-mb-px pb-2.5 text-sm cursor-pointer ${tab === p ? "border-b-2 border-[#15191C] text-[#15191C] font-medium" : "text-[#4B4F52] hover:text-[#15191C]"}`}>
-                    {p} Events
+                    {p === "All" ? "All Events" : `${p} Events`}
                   </button>
                 ))}
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] table-fixed text-left text-sm">
+                <table className="w-full min-w-[860px] table-fixed text-left text-sm">
                   <thead>
                     <tr className="text-[#6B6B6B] text-[13px] border-b border-[#E0E0E0]">
-                      <th className={`${isAdmin ? "w-[28%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>Event Name</th>
-                      {isAdmin && <th className="w-[18%] py-3 px-2.5 font-normal">Organizer</th>}
-                      <th className="w-[24%] py-3 px-2.5 font-normal">Start Date &amp; Time</th>
-                      <th className="w-[13%] py-3 px-2.5 font-normal">Total Invitee</th>
-                      <th className="w-[19%] py-3 px-2.5 font-normal">Status</th>
-                      <th className="relative w-[6%] py-3"><span className="sr-only">Open</span></th>
+                      <th className={`${showStatus ? (isAdmin ? "w-[20%]" : "w-[27%]") : isAdmin ? "w-[26%]" : "w-[36%]"} py-3 px-2.5 font-normal`}>Event Name</th>
+                      {isAdmin && <th className={`${showStatus ? "w-[14%]" : "w-[17%]"} py-3 px-2.5 font-normal`}>Organizer</th>}
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>Start Date &amp; Time</th>
+                      <th className={`${showStatus ? "w-[19%]" : "w-[22%]"} py-3 px-2.5 font-normal`}>End Date &amp; Time</th>
+                      <th className="w-[11%] py-3 px-2.5 font-normal">Total Invitee</th>
+                      {showStatus && <th className="w-[11%] py-3 px-2.5 font-normal">Status</th>}
+                      <th className="relative w-[4%] py-3"><span className="sr-only">Open</span></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#E0E0E0] text-[#15191C] [&>tr]:h-12">
                     {loading ? (
-                      <TableSkeletonRows rows={4} cols={isAdmin ? 6 : 5} />
+                      <TableSkeletonRows rows={4} cols={cols} />
                     ) : overview.length === 0 ? (
-                      <tr><td colSpan={isAdmin ? 6 : 5} className="py-3 text-center text-sm text-[#6B6B6B]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
+                      <tr><td colSpan={cols} className="py-3 text-center text-sm text-[#6B6B6B]">No {tab.toLowerCase()} events{from || to ? " in these dates" : ""}.</td></tr>
                     ) : (
                       pageRows.map((r) => (
                         <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} className="cursor-pointer hover:bg-gray-50/80">
                           <td className="py-3 px-2.5 truncate" title={r.title}><Link href={`/events/${r.id}`} onClick={(e) => e.stopPropagation()} className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]">{r.title}</Link></td>
                           {isAdmin && <td className="py-3 px-2.5 truncate text-[#4B4F52]" title={r.organizer}>{r.organizer}</td>}
                           <td className="py-3 px-2.5 whitespace-nowrap">{r.start ? formatDateTime(r.start).replace(", ", " | ") : "—"}</td>
+                          <td className="py-3 px-2.5 whitespace-nowrap">{r.end ? formatDateTime(r.end).replace(", ", " | ") : "—"}</td>
                           <td className="py-3 px-2.5">{String(r.invitees).padStart(2, "0")}</td>
-                          <td className="py-3 px-2.5">
-                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${r.invited ? "bg-[#D6F5E1] text-[#0F7A33]" : "bg-[#FFF0C2] text-[#7A5F00]"}`}>{r.invited ? "Invitation Sent" : "Invitation not sent"}</span>
-                          </td>
+                          {showStatus && (
+                            <td className="py-3 px-2.5">
+                              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${PHASE_BADGE[r.phase]}`}>{r.phase}</span>
+                            </td>
+                          )}
                           <td className="py-3 text-right text-[#C44200]" aria-hidden>
                             <svg className="size-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
                           </td>
@@ -365,7 +379,7 @@ export default function DashboardPage() {
                     )}
                     {/* blank rows up to the reserved height (see reservedRows) */}
                     {!loading && Array.from({ length: Math.max(0, reservedRows - Math.max(1, pageRows.length)) }, (_, i) => (
-                      <tr key={`pad-${i}`} aria-hidden className="!h-[49px] !border-transparent"><td colSpan={isAdmin ? 6 : 5} /></tr>
+                      <tr key={`pad-${i}`} aria-hidden className="!h-[49px] !border-transparent"><td colSpan={cols} /></tr>
                     ))}
                   </tbody>
                 </table>

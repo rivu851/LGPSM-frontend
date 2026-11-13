@@ -315,12 +315,27 @@ export default function AllUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.phone.includes(searchQuery)
-  );
+  // Filters: the event, then (once an event is chosen) one of its sessions. A user assigned to an event without listing sessions covers all of them.
+  const [filterEvent, setFilterEvent] = useState("");
+  const [filterSession, setFilterSession] = useState("");
+  const eventFilterOptions = (() => {
+    const seen = new Map<string, string>();
+    users.forEach((u) => u.assignments.forEach((a) => { if (a.eventId && !seen.has(a.eventId)) seen.set(a.eventId, a.eventName); }));
+    return [{ value: "", label: "All events" }, ...[...seen].map(([value, label]) => ({ value, label })).sort((x, y) => x.label.localeCompare(y.label))];
+  })();
+  const sessionFilterOptions = (() => {
+    const seen = new Map<string, string>();
+    if (filterEvent) users.forEach((u) => u.assignments.filter((a) => a.eventId === filterEvent).forEach((a) => a.sessions.forEach((x) => { if (!seen.has(x.id)) seen.set(x.id, x.name); })));
+    return [{ value: "", label: "All sessions" }, ...[...seen].map(([value, label]) => ({ value, label }))];
+  })();
+  const query = searchQuery.trim().toLowerCase();
+  const queryDigits = query.replace(/\D/g, "");
+  const filteredUsers = users.filter((u) => {
+    // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
+    if (query && !(u.name.toLowerCase().includes(query) || (queryDigits.length > 0 && u.phone.replace(/\D/g, "").includes(queryDigits)))) return false;
+    if (!filterEvent) return true;
+    return u.assignments.some((a) => a.eventId === filterEvent && (!filterSession || a.sessions.length === 0 || a.sessions.some((x) => x.id === filterSession)));
+  });
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
@@ -350,7 +365,10 @@ export default function AllUsersPage() {
         )}
 
         {/* Controls (Figma 450:6796 / 217:23029) */}
-        <ListControls label="System Users" searchId="system-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
+        <ListControls label="Search" searchId="system-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
+          {/* the same borderless pickers as the Invitees page: event, then session */}
+          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
+          <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder="Select Session" options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
           <button type="button" onClick={() => setAddOpen(true)} className={`${addButtonClass} cursor-pointer`}>
             <Icon name="events/add-white" width={24} height={24} />
             Add User
