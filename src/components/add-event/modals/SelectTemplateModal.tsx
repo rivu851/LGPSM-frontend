@@ -28,21 +28,23 @@ interface SelectTemplateModalProps {
   onLeave?: () => void;
   /** The event's own category, for an account whose list does not include it */
   extraCategory?: ExtraCategory | null;
+  /** The organizer the event is being created for (an admin's list also holds other organizers' private templates) */
+  organizerId?: string;
 }
 
 const templateCategoryId = (t: Template) => (typeof t.categoryId === "object" && t.categoryId ? t.categoryId._id : t.categoryId || "");
 
 // The parent remounts this modal (via key) each time it opens, so its state starts from the props
-export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate, selectedTemplateId, categoryId, subcategoryId, required = false, onLeave, extraCategory }: SelectTemplateModalProps) {
+export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate, selectedTemplateId, categoryId, subcategoryId, required = false, onLeave, extraCategory, organizerId }: SelectTemplateModalProps) {
   const categories = useCategories(extraCategory);
   const { user } = useAuth();
   const { confirm, showAlert } = useAlert();
   // everything about templates is done here: pick, upload, and remove the ones the organizer made
   const [scope, setScope] = useState<"all" | "mine">("all");
   const isMine = (t: Template) => !!user?._id && t.ownerId === user._id;
-  // an admin's list holds every template, organizers' private ones too, and those cannot serve this event: they are not offered
-  // (the one the event already uses stays, so it is still shown as selected)
-  const offered = (t: Template) => !t.ownerId || isMine(t) || t.isSystemTemplate || t._id === selectedTemplateId;
+  // Every template is listed, as on the Templates page. An admin's list also holds organizers' private designs: those can serve
+  // only that organizer's own events, so for anyone else they are shown but cannot be chosen (the one already in use stays usable)
+  const usable = (t: Template) => !t.ownerId || isMine(t) || t.isSystemTemplate || t._id === selectedTemplateId || (!!organizerId && t.ownerId === organizerId);
   // a design shared with all organizers is managed on the Templates page, not removed from a picker
   const canDelete = (t: Template) => isMine(t) && !t.isSystemTemplate;
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -69,7 +71,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
     let cancelled = false;
     templateService.getTemplates().then((res) => {
       if (cancelled) return;
-      if (res.success && Array.isArray(res.data)) setTemplates(res.data.filter((t) => t.isPublished !== false));
+      if (res.success && Array.isArray(res.data)) setTemplates(res.data);
       else setLoadError(res.message || "Failed to load templates.");
       setLoading(false);
     });
@@ -85,7 +87,6 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   const mineCount = templates.filter((t) => isMine(t)).length;
   const visible = templates.filter(
     (t) =>
-      offered(t) &&
       (scope === "all" || isMine(t)) &&
       (!templateCategoryId(t) ||
       ((!filterCategory || templateCategoryId(t) === filterCategory) && (!filterSub || !t.subcategoryId || t.subcategoryId === filterSub)))
@@ -117,7 +118,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   };
 
   const handleSave = () => {
-    const chosen = templates.find((t) => t._id === pendingId);
+    const chosen = templates.find((t) => t._id === pendingId && usable(t));
     if (required && !chosen) return;
     onSelectTemplate(
       chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null } : null,
@@ -197,14 +198,15 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                       <button
                         type="button"
                         onClick={() => setPendingId(selected ? null : t._id)}
+                        disabled={!usable(t)}
                         aria-pressed={selected}
                         aria-label={t.name}
                         title={t.name}
-                        className={`block w-full rounded-md overflow-hidden border-2 cursor-pointer ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
+                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
                       >
                         <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="aspect-[2/3]!" />
                       </button>
-                      {isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
+                      {!usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
                       {canDelete(t) && (
                         <>
                           <button type="button" onClick={() => void removeOwn(t)} aria-label={`Delete ${t.name}`} title="Delete this template" className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow hover:bg-rose-50 cursor-pointer">

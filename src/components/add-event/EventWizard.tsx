@@ -533,6 +533,7 @@ export default function EventWizard({
         onSelectTemplate={chooseTemplate}
         onLeave={onCancel}
         extraCategory={extraCategory}
+        organizerId={draft.organizerIds[0]}
         selectedTemplateId={draft.template?.id}
         categoryId={draft.categoryId || undefined}
         subcategoryId={draft.subcategoryId || undefined}

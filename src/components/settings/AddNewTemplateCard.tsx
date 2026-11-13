@@ -27,7 +27,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
   const [cat, setCat] = useState({ categoryId: "", subcategoryId: "" });
   const [imageKey, setImageKey] = useState<string | null>(null);
   const [cardDesign, setCardDesign] = useState<CardDesign>("CLASSIC");
-  const [isPublished, setIsPublished] = useState(false);
+  const [isPublished, setIsPublished] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
@@ -128,7 +128,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           >
             <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${isPublished ? "translate-x-[26px]" : "translate-x-0"}`} />
           </button>
-          <span className="text-xs text-[#6B6B6B]">{isPublished ? "Organizers can pick it" : "Saved as draft"}</span>
+          <span className="text-xs text-[#6B6B6B]">{isPublished ? "Organizers can pick it" : "Saved as draft: hidden when choosing a template"}</span>
         </div>
         <button
           type="submit"
