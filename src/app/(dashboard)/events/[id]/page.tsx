@@ -43,11 +43,18 @@ interface EventDetail {
 
 const card = "bg-white border border-[#E0E0E0] rounded-lg";
 
-// Only the arrow in a summary card's corner opens its page. The cards themselves are not click targets: they hold things that are
-// dragged or scrolled (the sessions table's scroll bar, text to select), and a drag must never be taken for "open this page".
-function ArrowLink({ href, label }: { href: string; label: string }) {
+// A summary card opens its page. Cards with nothing to scroll or drag (the three totals, Guest Logs) are clickable all over: the arrow in the
+// corner is the one real link and is stretched across the card, so there is still a single link per card for keyboards and screen readers.
+// The Sessions card holds a table that can scroll sideways, so there only the arrow is the link: dragging its scroll bar or selecting text
+// must never be taken for "open this page".
+function ArrowLink({ href, label, stretch = false }: { href: string; label: string; stretch?: boolean }) {
   return (
-    <Link href={href} aria-label={label} title={label} className="p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#A83800] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D]">
+    <Link
+      href={href}
+      aria-label={label}
+      title={label}
+      className={`p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#A83800] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D] ${stretch ? "after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}
+    >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
       </svg>
@@ -55,14 +62,17 @@ function ArrowLink({ href, label }: { href: string; label: string }) {
   );
 }
 
+// the look of a card that is clickable all over
+const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
+
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
   const tones = { peach: "bg-[#FFDCCF] text-[#C44200]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
   return (
-    <div className={`${card} p-4 flex flex-col gap-3`}>
+    <div className={`${card} ${clickableCard} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
         <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
-        <ArrowLink href={href} label={`Open ${label}`} />
+        <ArrowLink href={href} label={`Open ${label}`} stretch />
       </div>
       <div>
         <p className="text-3xl font-medium text-black leading-none">{value === null ? <span role="status" aria-label="Loading" className="inline-block h-[30px] w-12 rounded bg-gray-200 animate-pulse align-top" /> : String(value).padStart(2, "0")}</p>
@@ -369,10 +379,10 @@ export default function EventDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,240px)_1fr] gap-5">
-              <section className={`${card} p-4`} aria-labelledby="guest-logs-title">
+              <section className={`${card} ${clickableCard} p-4`} aria-labelledby="guest-logs-title">
                 <div className="flex items-center justify-between mb-3">
                   <h3 id="guest-logs-title" className="text-base font-medium text-gray-900">Guest Logs</h3>
-                  <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" />
+                  <ArrowLink href={`/events/${eventId}/invitees`} label="Open invitees list" stretch />
                 </div>
                 {event.operationalDataCleared ? <p className="text-sm text-[#6B6B6B] py-8 text-center">Data cleared</p> : !reportLoaded ? <div role="status" aria-label="Loading guest logs" className="py-4 flex items-center gap-5"><div className="size-[104px] rounded-full border-[14px] border-gray-200 animate-pulse" /><div className="space-y-2.5 flex-1"><div className="h-3 w-16 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-20 rounded bg-gray-200 animate-pulse" /><div className="h-3 w-14 rounded bg-gray-200 animate-pulse" /></div></div> : <DeliveryDonut sent={delivery.SENT} notSent={delivery.PENDING} failed={delivery.FAILED} />}
               </section>

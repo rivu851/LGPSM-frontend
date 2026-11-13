@@ -42,8 +42,10 @@ interface OverviewRow {
 
 // ---- small pieces drawn the way the dashboard design shows them -------------------------------------------------------------
 
-const ArrowOut = ({ href, label }: { href: string; label: string }) => (
-  <Link href={href} aria-label={label} title={label} className="text-[#15191C] hover:text-[#A83800] shrink-0">
+// `stretch` makes the whole (relatively positioned) card the link target, not just the arrow
+const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
+const ArrowOut = ({ href, label, stretch }: { href: string; label: string; stretch?: boolean }) => (
+  <Link href={href} aria-label={label} title={label} className={`text-[#15191C] hover:text-[#A83800] shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
   </Link>
 );
@@ -60,13 +62,13 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
 }) {
   const t = { orange: ["bg-[#FFE9DE]", "text-[#C44200]"], green: ["bg-[#DDF6EA]", "text-[#117A43]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"] }[tone];
   return (
-    <div className="bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col">
+    <div className={`bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col ${clickableCard}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
           <span className={`size-12 rounded-full flex items-center justify-center ${t[0]} ${t[1]}`} aria-hidden>{icon}</span>
           <span className={`text-sm font-semibold ${t[1]}`}>{label}</span>
         </div>
-        <ArrowOut href={href} label={`Open ${label}`} />
+        <ArrowOut href={href} label={`Open ${label}`} stretch />
       </div>
       <div className="mt-4 text-[34px] leading-none font-semibold text-[#15191C] tracking-tight">{loading ? <Skeleton className="h-9 w-24" /> : value}</div>
       <p className="mt-1.5 text-sm text-[#15191C]">{caption}</p>
@@ -407,7 +409,7 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            <section className={`${card} p-5 xl:flex-1 flex flex-col`} aria-labelledby="last-report-title">
+            <section className={`${card} p-5 xl:flex-1 flex flex-col ${clickableCard}`} aria-labelledby="last-report-title">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="size-11 rounded-full bg-[#FFE9DE] text-[#C44200] flex items-center justify-center shrink-0" aria-hidden>
@@ -418,7 +420,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-[#4B4F52] truncate" title={report?.title}>{report?.title || "No finished events yet"}</p>
                   </div>
                 </div>
-                <ArrowOut href="/reports" label="Open reports" />
+                <ArrowOut href="/reports" label="Open reports" stretch />
               </div>
               <div className="mt-5 xl:flex-1 flex flex-col justify-center">
                 {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#6B6B6B]">Attendance appears here once an event has taken place.</p>}
