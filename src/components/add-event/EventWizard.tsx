@@ -348,6 +348,58 @@ export default function EventWizard({
     <div className="w-full flex-1 flex flex-col bg-white">
       <PageHeader title={heading} />
 
+      {draftStatus === "restored" && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="restored-draft-title" aria-describedby="restored-draft-description">
+          <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
+            <div className="px-6 pt-7 pb-6 text-center sm:px-8">
+              <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-orange-100 text-[#E5520F]" aria-hidden="true">
+                <svg className="size-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+              <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">Your unsaved event draft was restored</h2>
+              <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">
+                This draft was saved temporarily.<br />
+                Would you like to continue editing it or discard it and start fresh?
+              </p>
+              {missingFiles.length > 0 && (
+                <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  {missingFiles.length === 1
+                    ? <>The invitee file &ldquo;{missingFiles[0]}&rdquo; needs to be attached again.</>
+                    : <>These invitee files need to be attached again: {missingFiles.map((name) => `“${name}”`).join(", ")}.</>}
+                </p>
+              )}
+            </div>
+            <div className="grid place-items-center border-t border-[#E0E0E0] bg-gray-50 px-6 py-4 sm:px-8">
+              <div className="mx-auto flex w-fit flex-col-reverse items-center gap-3 sm:flex-row">
+                {canDiscard && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionFiles({});
+                      setShowErrors(false);
+                      setCurrentStep(1);
+                      onDiscardDraft();
+                    }}
+                    className="rounded-lg border border-rose-200 bg-white px-5 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
+                  >
+                    Discard draft
+                  </button>
+                )}
+                <button
+                  type="button"
+                  autoFocus
+                  onClick={onDismissDraftStatus}
+                  className="rounded-lg bg-[#FF651D] px-5 py-3 text-sm font-semibold text-white hover:bg-[#E5520F] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF651D]"
+                >
+                  {canDiscard ? "Keep draft and continue" : "Continue"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {(draftStatus !== "idle" || draftSavedAt || submitError || currentStepHasErrors) && (
         <div className="px-4 sm:px-6 pt-4 space-y-2">
           {currentStepHasErrors && (
@@ -359,22 +411,6 @@ export default function EventWizard({
                 <span>Please complete all required details on Step {currentStep} before proceeding to the next step.</span>
               </div>
               <button type="button" onClick={() => setShowErrors(false)} className="text-amber-700 hover:text-amber-900 font-medium text-xs cursor-pointer shrink-0">Dismiss</button>
-            </div>
-          )}
-          {draftStatus === "restored" && (
-            <div role="status" className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-md text-sm flex flex-wrap items-center justify-between gap-2">
-              <span>
-                Your unsaved draft was restored.
-                {missingFiles.length > 0 && (
-                  <> The invitee file {missingFiles.length === 1 ? <>&ldquo;{missingFiles[0]}&rdquo; needs</> : <>{missingFiles.map((n) => `“${n}”`).join(", ")} need</>} to be attached again.</>
-                )}
-              </span>
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer">OK</button>
-                {canDiscard && (
-                  <button type="button" onClick={discard} className="font-medium text-rose-600 cursor-pointer">Discard draft</button>
-                )}
-              </div>
             </div>
           )}
           {draftStatus === "discarded-stale" && (
