@@ -8,7 +8,7 @@ import React, { useEffect, useRef, useState } from "react";
  * the panel is too small for it, in which case every device shrinks by the same step to fit. What is inside the screen never changes
  * the device.
  */
-export type DeviceKind = "island" | "notch" | "punch" | "home-button" | "tablet" | "tablet-home" | "fold";
+export type DeviceKind = "island" | "notch" | "waterdrop" | "punch" | "home-button" | "tablet" | "tablet-home" | "fold";
 
 export interface DeviceSpec {
   label: string;
@@ -42,6 +42,26 @@ export const DEVICES: Record<string, DeviceSpec> = {
   "galaxy-z-fold": { label: "Galaxy Z Fold (open)", group: "Samsung", w: 673, h: 841, kind: "fold", body: "#222" },
   "oneplus-12": { label: "OnePlus 12", group: "Android", w: 412, h: 919, kind: "punch", body: "#1B2A26" },
   "android-small": { label: "Small Android (320 × 568)", group: "Android", w: 320, h: 568, kind: "home-button", body: "#222" },
+  "vivo-v30": { label: "vivo V30", group: "Vivo", w: 393, h: 873, kind: "punch", body: "#1B1F2A" },
+  "vivo-x100-pro": { label: "vivo X100 Pro", group: "Vivo", w: 393, h: 851, kind: "punch", body: "#1C1C1E" },
+  "vivo-y200": { label: "vivo Y200", group: "Vivo", w: 412, h: 915, kind: "punch", body: "#24312B" },
+  "vivo-y27": { label: "vivo Y27", group: "Vivo", w: 360, h: 800, kind: "waterdrop", body: "#22232A" },
+  "oppo-reno11": { label: "OPPO Reno11", group: "Oppo", w: 393, h: 873, kind: "punch", body: "#2A2438" },
+  "oppo-find-x7-ultra": { label: "OPPO Find X7 Ultra", group: "Oppo", w: 412, h: 915, kind: "punch", body: "#2B2420" },
+  "oppo-a78": { label: "OPPO A78", group: "Oppo", w: 360, h: 800, kind: "punch", body: "#1F2A2A" },
+  "realme-12-pro-plus": { label: "realme 12 Pro+", group: "Realme", w: 393, h: 873, kind: "punch", body: "#3A2F1F" },
+  "realme-gt5-pro": { label: "realme GT 5 Pro", group: "Realme", w: 412, h: 915, kind: "punch", body: "#1C1C1E" },
+  "realme-narzo-60": { label: "realme narzo 60", group: "Realme", w: 360, h: 800, kind: "punch", body: "#1E3A2E" },
+  "xiaomi-14": { label: "Xiaomi 14", group: "Xiaomi", w: 393, h: 873, kind: "punch", body: "#1C1C1E" },
+  "xiaomi-14-ultra": { label: "Xiaomi 14 Ultra", group: "Xiaomi", w: 412, h: 915, kind: "punch", body: "#26262A" },
+  "redmi-note-13-pro": { label: "Redmi Note 13 Pro", group: "Xiaomi", w: 393, h: 873, kind: "punch", body: "#202A3A" },
+  "redmi-13c": { label: "Redmi 13C", group: "Xiaomi", w: 360, h: 800, kind: "waterdrop", body: "#1E1E22" },
+  "poco-x6": { label: "POCO X6", group: "Xiaomi", w: 393, h: 873, kind: "punch", body: "#2A2A2E" },
+  "iqoo-12": { label: "iQOO 12", group: "iQOO", w: 393, h: 873, kind: "punch", body: "#1C1C1E" },
+  "motorola-edge-50": { label: "Motorola Edge 50", group: "Motorola", w: 412, h: 915, kind: "punch", body: "#26323A" },
+  "nothing-phone-2": { label: "Nothing Phone (2)", group: "Nothing", w: 412, h: 915, kind: "punch", body: "#2B2B2E" },
+  "infinix-note-40": { label: "Infinix Note 40", group: "Infinix", w: 393, h: 873, kind: "punch", body: "#1F2A24" },
+  "honor-90": { label: "HONOR 90", group: "Honor", w: 393, h: 873, kind: "punch", body: "#26262A" },
   "ipad-mini": { label: "iPad mini", group: "Tablets", w: 744, h: 1133, kind: "tablet", body: "#1B1C1E" },
   "ipad-air": { label: "iPad Air 11\"", group: "Tablets", w: 820, h: 1180, kind: "tablet", body: "#1B1C1E" },
   "ipad-pro-11": { label: "iPad Pro 11\"", group: "Tablets", w: 834, h: 1194, kind: "tablet", body: "#2B2D30" },
@@ -50,9 +70,9 @@ export const DEVICES: Record<string, DeviceSpec> = {
 };
 export const DEFAULT_DEVICE = "iphone-15";
 
-const BEZEL: Record<DeviceKind, number> = { island: 11, notch: 12, punch: 9, "home-button": 14, tablet: 16, "tablet-home": 22, fold: 12 };
-const RADIUS: Record<DeviceKind, number> = { island: 54, notch: 46, punch: 40, "home-button": 34, tablet: 30, "tablet-home": 26, fold: 24 };
-const STATUS_H: Record<DeviceKind, number> = { island: 54, notch: 48, punch: 38, "home-button": 20, tablet: 24, "tablet-home": 20, fold: 36 };
+const BEZEL: Record<DeviceKind, number> = { island: 11, notch: 12, waterdrop: 10, punch: 9, "home-button": 14, tablet: 16, "tablet-home": 22, fold: 12 };
+const RADIUS: Record<DeviceKind, number> = { island: 54, notch: 46, waterdrop: 34, punch: 40, "home-button": 34, tablet: 30, "tablet-home": 26, fold: 24 };
+const STATUS_H: Record<DeviceKind, number> = { island: 54, notch: 48, waterdrop: 36, punch: 38, "home-button": 20, tablet: 24, "tablet-home": 20, fold: 36 };
 
 const MAX_SCALE = 0.62; // phones at about this size; larger devices shrink by the same step only when the panel is too small
 const MAX_HEIGHT = 560;
@@ -128,6 +148,7 @@ export default function DeviceFrame({ deviceKey, label, children }: { deviceKey:
           {/* camera cut-out */}
           {d.kind === "island" && <span aria-hidden className="absolute left-1/2 -translate-x-1/2 bg-black rounded-full" style={{ top: 11 * scale, width: 118 * scale, height: 34 * scale }} />}
           {d.kind === "notch" && <span aria-hidden className="absolute left-1/2 -translate-x-1/2 bg-black" style={{ top: 0, width: 160 * scale, height: 30 * scale, borderRadius: `0 0 ${18 * scale}px ${18 * scale}px` }} />}
+          {d.kind === "waterdrop" && <span aria-hidden className="absolute left-1/2 -translate-x-1/2 bg-black" style={{ top: 0, width: 62 * scale, height: 24 * scale, borderRadius: `0 0 ${14 * scale}px ${14 * scale}px` }} />}
           {(d.kind === "punch" || d.kind === "fold") && <span aria-hidden className="absolute left-1/2 -translate-x-1/2 bg-black rounded-full" style={{ top: 12 * scale, width: 15 * scale, height: 15 * scale }} />}
           {(d.kind === "tablet" || d.kind === "tablet-home") && <span aria-hidden className="absolute left-1/2 -translate-x-1/2 bg-black/80 rounded-full" style={{ top: 7 * scale, width: 7 * scale, height: 7 * scale }} />}
 
