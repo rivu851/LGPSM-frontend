@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect } from "react";
 import ModalClose from "@/components/common/ModalClose";
@@ -13,7 +14,8 @@ export default function ChoiceModal({ title, message, first, second, onClose }: 
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
-  return (
+  // drawn on the page itself (not inside the form's layout), so the dim layer and the window cover the whole screen
+  return typeof document === "undefined" ? null : createPortal(
     <div className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 font-sans" role="alertdialog" aria-modal="true" aria-labelledby="choice-title" aria-describedby="choice-text">
       <div className="bg-white rounded-xl border border-gray-100 shadow-2xl max-w-md w-full p-6 text-center space-y-4 relative">
         <ModalClose onClick={onClose} />
@@ -25,6 +27,7 @@ export default function ChoiceModal({ title, message, first, second, onClose }: 
           <button type="button" onClick={second.onClick} className="py-2.5 px-3 font-bold text-xs rounded-md bg-[#C65318] hover:bg-[#A83800] text-white cursor-pointer">{second.label}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

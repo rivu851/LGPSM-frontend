@@ -110,16 +110,16 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         </div>
       )}
 
-      {/* Select data to show on card: the event's own details every card prints (the card preview follows). An organizer's own uploaded
-          design is the card as it is: its title, date, place and picture are in the artwork, so only the two things added for each guest
-          (the QR code and the name) can be switched on or off for it, and Additional Information is not offered. */}
+      {/* Select data to show on card: the event's own details every card prints (the card preview follows). An organizer's own uploaded design is
+          the card as it is, so neither this nor Additional Information is offered for it: only who can check in and the food question are. */}
+      {!draft.template?.staticCard && (
       <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-3">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-900">Select data to show on card</span>
           <InfoTip label="About the data on the card" text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
         </div>
-        <div className={`grid grid-cols-2 gap-3 ${draft.template?.staticCard ? "md:grid-cols-2 max-w-md" : "md:grid-cols-4"}`}>
-          {(draft.template?.staticCard ? ([{ key: "qr", label: "Event QR" }, { key: "inviteeName", label: "Invitee Name" }] as const) : CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName")).map(({ key, label }) => {
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName").map(({ key, label }) => {
             const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
             return (
               <label key={key} htmlFor={`card-show-${key}`} className="flex items-center gap-2.5 rounded-md border border-[#E0E0E0] px-3 py-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
@@ -131,6 +131,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         </div>
         <PopupMessage message={draft.cardDisplay?.qr === false ? "Cards will be printed without the QR code. Guests will need to open their invitation link to show their entry QR at check-in." : null} type="warning" title="No QR code on the cards" />
       </div>
+      )}
 
       {!draft.template?.staticCard && (
       <div className="p-4 border border-[#E0E0E0] rounded-md bg-white space-y-4">

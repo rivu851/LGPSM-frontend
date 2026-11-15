@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import AlertIcon from "@/components/common/AlertIcon";
 import React, { useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -15,7 +16,8 @@ interface Props {
 /** Shown when "Additional Information" is changed after the Excel sample was downloaded: the uploaded lists no longer match. */
 export default function ListResetWarningModal({ onCancel, onConfirm, busy = false, error }: Props) {
   const [read, setRead] = useState(false);
-  return (
+  // drawn on the page itself (not inside the form's layout), so the dim layer and the window cover the whole screen
+  return typeof document === "undefined" ? null : createPortal(
     <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-labelledby="list-reset-title" aria-describedby="list-reset-text">
       <div className="w-full max-w-md bg-white rounded-lg shadow-2xl relative">
         <ModalClose onClick={onCancel} disabled={busy} />
@@ -38,6 +40,7 @@ export default function ListResetWarningModal({ onCancel, onConfirm, busy = fals
           <button type="button" onClick={onConfirm} disabled={!read || busy} className="px-6 py-2 text-sm font-semibold bg-[#C65318] hover:bg-[#A83800] text-white rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">{busy ? "Deleting…" : "Okay"}</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

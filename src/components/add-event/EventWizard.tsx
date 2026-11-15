@@ -144,7 +144,8 @@ export default function EventWizard({
 
   useEffect(() => {
     if (stepContentRef.current) {
-      gsap.fromTo(stepContentRef.current, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" });
+      // (clearProps: a transform left on this container would make every popup inside it position itself against the container, not the screen)
+      gsap.fromTo(stepContentRef.current, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", clearProps: "transform,opacity" });
     }
   }, [currentStep]);
 

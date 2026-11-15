@@ -1,5 +1,6 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
@@ -54,7 +55,8 @@ export default function CustomAlertModal({
       ? "Attention"
       : "Notification";
 
-  return (
+  // drawn on the page itself (not inside the form's layout), so the dim layer and the window cover the whole screen
+  return typeof document === "undefined" ? null : createPortal(
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 font-sans select-none"
@@ -93,6 +95,7 @@ export default function CustomAlertModal({
         </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
