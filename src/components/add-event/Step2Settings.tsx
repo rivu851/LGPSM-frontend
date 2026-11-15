@@ -8,6 +8,8 @@ import React, { useEffect, useRef } from "react";
 import { DraftErrors, EventDraft, PreferenceCategory, newClientKey } from "./eventDraft";
 import { EventFeatureSettings } from "@/services/platformSettingsService";
 import InfoTip from "@/components/common/InfoTip";
+import { useAlert } from "@/context/AlertContext";
+import { checkCardTitles } from "@/utils/cardTitleRules";
 
 interface Step2SettingsProps {
   draft: EventDraft;
@@ -23,9 +25,50 @@ interface Step2SettingsProps {
 
 // Controlled step: values live in the wizard draft owned by the page
 export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
-  // The guest's name is its own checkbox above ("Invitee Name"); the two lines here are for the other details, none until chosen
-  const cardInfo: CardInfo = draft.cardInfo ?? { primary: null, secondary: null };
-  const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next });
+  const { showAlert, confirm } = useAlert();
+  const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+  // "Invitee Name" is one of the choices for the two lines; before anything is saved the name is on the primary line, as every card has always had it
+  const cardInfo: CardInfo = draft.cardInfo ?? { primary: display.inviteeName ? "INVITEE_NAME" : null, secondary: null };
+  // the name is printed exactly when it is chosen for one of the lines
+  const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next, cardDisplay: { ...display, inviteeName: next.primary === "INVITEE_NAME" || next.secondary === "INVITEE_NAME" } });
+
+  // The custom titles are checked by what they MEAN (utils/columnMeaning.ts): one that says what the card or the sample Excel already
+  // has is refused, and one that only renames a standard Excel column is kept only if the organizer agrees.
+  const agreed = useRef(new Set<string>());
+  const asking = useRef(false);
+  const verifyTitles = async (): Promise<boolean> => {
+    if (asking.current || draft.template?.staticCard) return true;
+    const customSlots = (["primary", "secondary"] as const).filter((s) => isCustomDetail(cardInfo[s])).map((slot) => ({ slot, title: (cardInfo[customTitleKey(cardInfo[slot])] ?? "").trim() })).filter((x) => x.title);
+    if (customSlots.length === 0) return true;
+    const verdict = checkCardTitles({ nameChosen: cardInfo.primary === "INVITEE_NAME" || cardInfo.secondary === "INVITEE_NAME", companyChosen: cardInfo.primary === "COMPANY_NAME" || cardInfo.secondary === "COMPANY_NAME", custom: customSlots });
+    const clear = (slots: Array<"primary" | "secondary">) => {
+      const next = { ...cardInfo };
+      slots.forEach((s) => { (next as Record<string, unknown>)[customTitleKey(cardInfo[s])] = ""; });
+      setCardInfo(next);
+    };
+    asking.current = true;
+    try {
+      if (verdict.blocked) {
+        showAlert(verdict.blocked, "error", "Already included");
+        const bad = customSlots.filter((x) => verdict.blocked!.includes(`"${x.title}"`)).map((x) => x.slot);
+        if (bad.length) clear(bad);
+        return false;
+      }
+      const pending = verdict.renames.filter((r) => !agreed.current.has(`${r.slot}:${r.title.toLowerCase()}`));
+      if (pending.length === 0) return true;
+      const list = pending.map((r) => `"${r.title}" is the ${r.column} column`).join(", ");
+      const ok = await confirm({
+        title: "These columns are already in the sample Excel",
+        message: `${list}, which the sample Excel already has. Do you still want to keep ${pending.length === 1 ? "this title" : "these titles"}? If you do, the sample Excel will use ${pending.length === 1 ? "it" : "them"} as the heading${pending.length === 1 ? "" : "s"} of ${pending.length === 1 ? "that column" : "those columns"} instead of adding new columns, and the card will show that detail under your title.`,
+        confirmText: pending.length === 1 ? "Keep this title" : "Keep these titles",
+        cancelText: "Set a different title",
+        cancelButton: true,
+      });
+      if (ok) { pending.forEach((r) => agreed.current.add(`${r.slot}:${r.title.toLowerCase()}`)); return true; }
+      clear(pending.map((r) => r.slot));
+      return false;
+    } finally { asking.current = false; }
+  };
   const categories = draft.preferenceCategories;
   const setCategories = (next: PreferenceCategory[]) => onChange({ preferenceCategories: next });
   const updateCategory = (id: string, patch: Partial<PreferenceCategory>) => setCategories(categories.map((c) => (c.id === id ? { ...c, ...patch } : c)));
@@ -42,7 +85,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        onNext();
+        void verifyTitles().then((ok) => { if (ok) onNext(); });
       }}
       noValidate
       className="p-4 sm:p-6 space-y-5"
@@ -76,7 +119,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
           <InfoTip label="About the data on the card" text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {CARD_DISPLAY_OPTIONS.map(({ key, label }) => {
+          {CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName").map(({ key, label }) => {
             const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
             return (
               <label key={key} htmlFor={`card-show-${key}`} className="flex items-center gap-2.5 rounded-md border border-[#E0E0E0] px-3 py-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
@@ -124,7 +167,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     id={`card-info-${slot}`}
                     type="checkbox"
                     checked={on}
-                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (otherKind === "COMPANY_NAME" ? customFieldFor(other) : "COMPANY_NAME") : null })}
+                    onChange={(e) => setCardInfo({ ...info, [slot]: e.target.checked ? (otherKind !== "INVITEE_NAME" ? "INVITEE_NAME" : "COMPANY_NAME") : null })}
                     className="size-[18px] accent-[#1A9242] cursor-pointer"
                   />
                   {label}
@@ -135,7 +178,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                     onChange={pick}
                     // Company Name and Employee ID can sit on one line only; Custom is offered on both lines (each with its own title); a custom detail shows the title that was typed
                     options={CARD_INFO_OPTIONS
-                      .filter((o) => (o.value === CUSTOM_DETAIL ? true : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : otherKind !== "COMPANY_NAME"))
+                      .filter((o) => (o.value === CUSTOM_DETAIL ? true : o.value === EMPLOYEE_ID ? otherKind !== "EMPLOYEE_ID" : o.value === "INVITEE_NAME" ? otherKind !== "INVITEE_NAME" : otherKind !== "COMPANY_NAME"))
                       .map((o) => (o.value === CUSTOM_DETAIL && custom && (info[titleKey] ?? "").trim() ? { ...o, label: (info[titleKey] ?? "").trim() } : o))}
                     placeholder="Choose a detail"
                     ariaLabel={label}
@@ -150,7 +193,8 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                       type="text"
                       value={info[titleKey] ?? ""}
                       maxLength={40}
-                      onChange={(e) => setCardInfo({ ...info, [titleKey]: e.target.value })}
+                      onChange={(e) => { agreed.current.clear(); setCardInfo({ ...info, [titleKey]: e.target.value }); }}
+                      onBlur={() => { void verifyTitles(); }}
                       placeholder="e.g. Designation, Employee ID, Badge No."
                       aria-invalid={!!errors.cardInfo}
                       className={`w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black ${errors.cardInfo ? "!border-rose-500" : "border-[#E0E0E0]"}`}

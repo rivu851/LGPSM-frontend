@@ -3,7 +3,7 @@
 import PageHeader from "@/components/common/PageHeader";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
-import { openDatePicker } from "@/utils/openDatePicker";
+import DateField from "@/components/common/DateField";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -134,7 +134,7 @@ export default function DashboardPage() {
   const [report, setReport] = useState<{ title: string; invitees: number; attendees: number } | null>(null);
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
 
-  const [tab, setTab] = useState<Tab>("Upcoming");
+  const [tab, setTab] = useState<Tab>("All");
   // the overview shows one page at a time, so a long list never stretches the page past the cards beside it
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 8;
@@ -274,7 +274,6 @@ export default function DashboardPage() {
   const lastBilled = [...(earnings?.events || [])].filter((e) => e.amount).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
   const card = "bg-white border border-[#E0E0E0] rounded-lg";
-  const dateField = "h-9 w-[132px] px-2.5 text-xs border border-[#E0E0E0] rounded-md bg-white text-[#15191C] focus:outline-none focus:border-black";
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans">
@@ -333,9 +332,9 @@ export default function DashboardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <input type="date" onClick={openDatePicker} aria-label="From date" title="Events starting on or after this day" value={from} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  <DateField compact className="w-[150px]" placeholder="From" title="Events starting on or after this day" value={from} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from: v, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   <span className="text-xs text-[#6B6B6B]">To</span>
-                  <input type="date" onClick={openDatePicker} aria-label="To date" title="Events starting on or before this day" value={to} min={from || undefined} onChange={(e) => { const r = settleRange({ from, to: e.target.value }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  <DateField compact className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={to} min={from || undefined} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from, to: v }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   {(from || to) && (
                     <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#A83800] cursor-pointer">
                       Clear dates

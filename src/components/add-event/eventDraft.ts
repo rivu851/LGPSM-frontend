@@ -1,6 +1,7 @@
 // Event wizard form model shared by the create and edit flows.
 // All dates are ISO strings (see utils/dateTime.ts); payload builders produce the exact backend contract.
 
+import { checkCardTitles } from "@/utils/cardTitleRules";
 import { addHours, isAfter, isValidIso, nextWholeHourIso, parseIso } from "@/utils/dateTime";
 import { resolveImageUrl } from "@/utils/mediaUrl";
 import { EVENT_TITLE_MAX_LENGTH, EVENT_DESCRIPTION_MAX_LENGTH, EVENT_LOCATION_MAX_LENGTH } from "@/utils/eventLimits.mjs";
@@ -62,21 +63,24 @@ export const CUSTOM_DETAIL = "CUSTOM";
 /** Employee ID is the custom-detail field with the fixed title "Employee ID" (its Excel column is "Employee ID" too). */
 export const EMPLOYEE_ID = "EMPLOYEE_ID";
 export const EMPLOYEE_ID_LABEL = "Employee ID";
-export type DetailKind = "COMPANY_NAME" | "EMPLOYEE_ID" | "CUSTOM";
+export type DetailKind = "INVITEE_NAME" | "COMPANY_NAME" | "EMPLOYEE_ID" | "CUSTOM";
 export function detailKind(field: CardInfoField | null | undefined, title?: string | null): DetailKind | null {
-  if (!field || field === "INVITEE_NAME") return null;
+  if (!field) return null;
+  if (field === "INVITEE_NAME") return "INVITEE_NAME";
   if (field === "COMPANY_NAME") return "COMPANY_NAME";
   return (title ?? "").trim().toLowerCase() === EMPLOYEE_ID_LABEL.toLowerCase() ? "EMPLOYEE_ID" : "CUSTOM";
 }
 export const CARD_INFO_OPTIONS: { value: string; label: string }[] = [
+  { value: "INVITEE_NAME", label: "Invitee Name" },
   { value: "COMPANY_NAME", label: "Company Name" },
   { value: EMPLOYEE_ID, label: "Employee ID" },
   { value: CUSTOM_DETAIL, label: "Custom detail (add your own title)" },
 ];
 
 /**
- * The guest's name is its own checkbox, so it is no longer a choice under Additional Information. An event saved before that: its saved
- * choice decides whether the name is ticked, and the name is taken out of the two lines.
+ * The guest's name is one of the choices under Additional Information ("Invitee Name"): it is printed on the card only when it is chosen
+ * for the primary or the secondary line. It is always collected (it is the Name column), so choosing it adds no Excel column. An event
+ * saved with the name as a separate tick: its tick decides, and the name takes the first free line.
  */
 export function splitInviteeName(
   info: { primary?: string | null; secondary?: string | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null; showIdentityLabel?: boolean; showSecondaryIdentityLabel?: boolean } | null | undefined,
@@ -84,15 +88,23 @@ export function splitInviteeName(
 ): { cardInfo: CardInfo | null; inviteeName: boolean } {
   const configured = !!info && (info.primary != null || info.secondary != null);
   const hadName = info?.primary === "INVITEE_NAME" || info?.secondary === "INVITEE_NAME";
-  const clean = (f?: string | null): CardInfoField | null => (f && f !== "INVITEE_NAME" ? (f as CardInfoField) : null);
+  const inviteeName = savedName ?? (!configured || hadName);
+  if (!configured) return { cardInfo: null, inviteeName };
+  let primary = (info!.primary ?? null) as CardInfoField | null;
+  let secondary = (info!.secondary ?? null) as CardInfoField | null;
+  if (!inviteeName) {
+    if (primary === "INVITEE_NAME") primary = null;
+    if (secondary === "INVITEE_NAME") secondary = null;
+  } else if (!hadName) {
+    if (primary === null) primary = "INVITEE_NAME";
+    else if (secondary === null) secondary = "INVITEE_NAME";
+  }
   return {
-    cardInfo: configured ? { primary: clean(info!.primary), secondary: clean(info!.secondary), identityLabel: info!.identityLabel ?? null, secondaryIdentityLabel: info!.secondaryIdentityLabel ?? null, showIdentityLabel: info!.showIdentityLabel === true, showSecondaryIdentityLabel: info!.showSecondaryIdentityLabel === true } : null,
-    inviteeName: savedName ?? (!configured || hadName),
+    cardInfo: { primary, secondary, identityLabel: info!.identityLabel ?? null, secondaryIdentityLabel: info!.secondaryIdentityLabel ?? null, showIdentityLabel: info!.showIdentityLabel === true, showSecondaryIdentityLabel: info!.showSecondaryIdentityLabel === true },
+    inviteeName,
   };
 }
 
-/** The standard Excel columns: a custom detail cannot be given one of these titles (it would repeat a column) */
-const RESERVED_TITLES = ["name", "email", "mobile", "company name", "invitee name"];
 
 export const isCustomDetail = (f: CardInfoField | null | undefined): boolean => f === "PROFESSIONAL_IDENTITY" || f === "SECONDARY_IDENTITY";
 /** Each card line that carries a custom detail keeps its own field, title and Excel column */
@@ -307,10 +319,15 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   }
 
   if (draft.cardInfo && !draft.template?.staticCard) {
-    const titles = [draft.cardInfo.primary, draft.cardInfo.secondary].filter(isCustomDetail).map((f) => (draft.cardInfo![customTitleKey(f)] || "").trim());
-    if (titles.some((t) => !t)) errors.cardInfo = "Enter a title for each custom detail.";
-    else if (titles.some((t) => RESERVED_TITLES.includes(t.toLowerCase()))) errors.cardInfo = "That title is already a column in the invitee Excel (Name, Email, Mobile or Company Name). Choose another title.";
-    else if (titles.length === 2 && titles[0].toLowerCase() === titles[1].toLowerCase()) errors.cardInfo = "The two custom details need different titles: each one becomes its own Excel column.";
+    const ci = draft.cardInfo;
+    const slots = (["primary", "secondary"] as const).filter((slot) => isCustomDetail(ci[slot])).map((slot) => ({ slot, title: (ci[customTitleKey(ci[slot])] || "").trim() }));
+    if (slots.some((x) => !x.title)) errors.cardInfo = "Enter a title for each custom detail.";
+    else {
+      // a title that means a column the Excel already has is refused when that information is already on the card; the ones that merely
+      // rename a column are confirmed by the organizer on the Settings step
+      const verdict = checkCardTitles({ nameChosen: ci.primary === "INVITEE_NAME" || ci.secondary === "INVITEE_NAME", companyChosen: ci.primary === "COMPANY_NAME" || ci.secondary === "COMPANY_NAME", custom: slots });
+      if (verdict.blocked) errors.cardInfo = verdict.blocked;
+    }
   }
 
   const start = parseIso(draft.start);

@@ -1,5 +1,6 @@
 "use client";
 
+import ModalClose from "@/components/common/ModalClose";
 import { eventCanIssuePasses, isHistoricalEvent } from "@/utils/eventUtils";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -191,6 +192,9 @@ export default function InviteesManagementPage() {
   const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showChooser, setShowChooser] = useState(false);
+  // the event list opened by "Select Event" when no event is chosen yet (an organizer's own events; an administrator sees all)
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSearch, setPickerSearch] = useState("");
   const [showManualAdd, setShowManualAdd] = useState(false);
   // Which session the guests being added belong to ("" = the whole event); only asked when sessions keep their own lists
   const [targetSessionId, setTargetSessionId] = useState("");
@@ -602,7 +606,7 @@ export default function InviteesManagementPage() {
                   options={eventsOptions}
                 />
                 <PlainSelect ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
-                <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
+                <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -617,8 +621,26 @@ export default function InviteesManagementPage() {
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
               <p className="max-w-[300px] text-base text-[#4B4F52]">Select an event to check its invitee list.</p>
-              <button type="button" onClick={() => showAlert("Select an event first, then add its invitees.", "info")} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={() => setPickerOpen(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer">Select Event</button>
             </div>
+            {pickerOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPickerOpen(false)}>
+                <div role="dialog" aria-modal="true" aria-label="Select an event" className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                  <ModalClose onClick={() => setPickerOpen(false)} />
+                  <h2 className="pr-8 text-base font-semibold text-[#15191C]">Select an event</h2>
+                  <p className="mt-1 text-xs text-[#6B6B6B]">{isAdmin ? "Every event on the platform." : "Your events."} Pick one to see its invitees or add some.</p>
+                  <input type="search" autoFocus value={pickerSearch} onChange={(e) => setPickerSearch(e.target.value)} placeholder="Search events" className="mt-4 w-full h-[42px] px-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs focus:outline-none focus:border-black" />
+                  <ul className="mt-3 max-h-[50vh] overflow-y-auto divide-y divide-[#EEE] border border-[#EEE] rounded-md">
+                    {eventsOptions.filter((o) => o.label.toLowerCase().includes(pickerSearch.trim().toLowerCase())).map((o) => (
+                      <li key={o.value}>
+                        <button type="button" onClick={() => { setPickerOpen(false); router.replace(`/events/select/invitees?from=sidebar&event=${o.value}`); }} className="w-full text-left px-4 py-3 text-sm text-[#15191C] hover:bg-[#FFF1EA] cursor-pointer break-words">{o.label}</button>
+                      </li>
+                    ))}
+                    {eventsOptions.length === 0 && <li className="px-4 py-6 text-center text-xs text-[#6B6B6B]">No events yet. Create one first.</li>}
+                  </ul>
+                </div>
+              </div>
+            )}
           </>
         ) : loadError ? (
           <div role="alert" className="py-12 text-center space-y-3">

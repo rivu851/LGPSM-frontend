@@ -96,8 +96,9 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
               value={imageKey}
               onChange={setImageKey}
               purpose="TEMPLATE"
-              hint="JPG, PNG or WEBP, up to 5 MB. Portrait works best (for example 1080 × 1920)."
-              aspectClassName="aspect-[3/4]"
+              hint="JPG, PNG or WEBP, up to 5 MB. You crop it to 9:16 (for example 1080 × 1920) so every card has the same shape."
+              aspectClassName="aspect-[9/16]"
+              cropAspect={{ ratio: 9 / 16, label: "9:16" }}
               emptyClassName="flex flex-col items-center justify-center min-h-[160px]"
               onUploadingChange={setUploading}
             />

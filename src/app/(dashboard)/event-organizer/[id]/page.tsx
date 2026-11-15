@@ -2,7 +2,7 @@
 
 import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
-import { openDatePicker } from "@/utils/openDatePicker";
+import DateField from "@/components/common/DateField";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { addButtonClass } from "@/components/common/ListControls";
@@ -368,11 +368,11 @@ export default function OrganizerDetailsPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts from
-                          <input type="date" onClick={openDatePicker} value={draftFilters.from} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value, to: f.to && e.target.value > f.to ? e.target.value : f.to }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-black" />
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.from} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, from: v, to: f.to && v > f.to ? v : f.to }))} />
                         </label>
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts until
-                          <input type="date" onClick={openDatePicker} value={draftFilters.to} min={draftFilters.from || undefined} onChange={(e) => setDraftFilters((f) => ({ ...f, to: e.target.value }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-black" />
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.to} min={draftFilters.from || undefined} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, to: v }))} />
                         </label>
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">

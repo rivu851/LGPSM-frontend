@@ -1,5 +1,6 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import React, { useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import ModalClose from "@/components/common/ModalClose";
@@ -19,9 +20,7 @@ export default function ListResetWarningModal({ onCancel, onConfirm, busy = fals
       <div className="w-full max-w-md bg-white rounded-lg shadow-2xl relative">
         <ModalClose onClick={onCancel} disabled={busy} />
         <div className="px-6 pt-6 pb-4 text-center">
-          <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-100 text-amber-700" aria-hidden>
-            <svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-          </span>
+          <AlertIcon kind="warning" className="w-14 h-14 mx-auto mb-3" />
           <h2 id="list-reset-title" className="text-base font-semibold text-[#15191C]">Change additional information?</h2>
           <p id="list-reset-text" className="mt-2 text-sm text-[#4B4F52]">
             All invitee lists you uploaded will be deleted and you must download the excel sample again to update additional information on your invitee list.

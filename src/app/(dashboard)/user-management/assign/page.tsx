@@ -1,5 +1,6 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
 import PasswordField from "@/components/common/PasswordField";
@@ -909,11 +910,7 @@ aria-label={`Select ${u.name}`}
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
-            <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+            <AlertIcon kind="success" />
 
             <h3 className="text-lg font-bold text-gray-900">Assigned Successfully!</h3>
 

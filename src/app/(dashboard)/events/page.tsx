@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
-import { openDatePicker } from "@/utils/openDatePicker";
+import DateField from "@/components/common/DateField";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -66,8 +66,8 @@ const STATUS_HOVER: Record<RowStatus, string> = {
 };
 
 // `compact` is the organiser filter drawer style (Figma 217:22781): 12px medium text, 16px padding
-function FilterSelect({ value, onChange, ariaLabel, options, compact = false }: { value: string; onChange: (value: string) => void; ariaLabel: string; options: { value: string; label: string }[]; compact?: boolean }) {
-  return <CustomDropdown value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} compact={compact} placeholder={options[0]?.label} />;
+function FilterSelect({ value, onChange, ariaLabel, options, compact = false, plain = false }: { value: string; onChange: (value: string) => void; ariaLabel: string; options: { value: string; label: string }[]; compact?: boolean; plain?: boolean }) {
+  return <CustomDropdown variant={plain ? "plain" : undefined} value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} compact={compact} placeholder={options[0]?.label} />;
 }
 
 interface RawEvent {
@@ -281,7 +281,6 @@ export default function EventListingPage() {
   const [selectedOrganizerId, setSelectedOrganizerId] = useState("");
   const [organizerError, setOrganizerError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [filterOpen, setFilterOpen] = useState(false);
   const [filters, setFilters] = useState({ name: "", organizer: "", category: "", sessions: "", status: "", from: "", to: "" });
   const [draftFilters, setDraftFilters] = useState(filters);
   const [sessionCounts, setSessionCounts] = useState<Record<string, number>>({});
@@ -353,10 +352,10 @@ export default function EventListingPage() {
   const visible = rows.filter((r) => matchesEventFilters(r, filters, term, sessionCounts[r.id]));
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
-  const applyFilters = async () => {
+  const applyFilters = async (next = draftFilters) => {
     setFilterApplyError(null);
-    if (draftFilters.sessions) {
-      const candidates = rows.filter((r) => matchesEventFilters(r, { ...draftFilters, sessions: "" }, term));
+    if (next.sessions) {
+      const candidates = rows.filter((r) => matchesEventFilters(r, { ...next, sessions: "" }, term));
       const missing = candidates.filter((r) => r.sessionsCount === undefined && sessionCounts[r.id] === undefined);
       if (missing.length) {
         setApplyingFilters(true);
@@ -379,13 +378,12 @@ export default function EventListingPage() {
         setSessionCounts((prev) => ({ ...prev, ...counts }));
         setApplyingFilters(false);
         if (failures.length) {
-          setFilterApplyError(`Could not load session totals for ${failures.length} event${failures.length === 1 ? "" : "s"}. Try Apply again.`);
+          setFilterApplyError(`Could not load session totals for ${failures.length} event${failures.length === 1 ? "" : "s"}. Try again.`);
           return;
         }
       }
     }
-    setFilters(draftFilters);
-    setFilterOpen(false);
+    setFilters(next);
   };
 
   const deleteDialog = deleting && (deleting.ended ? (
@@ -411,83 +409,30 @@ export default function EventListingPage() {
     const empty = { name: "", organizer: "", category: "", sessions: "", status: "", from: "", to: "" };
     setDraftFilters(empty);
     setFilters(empty);
-    setFilterOpen(false);
   };
-  const drawerField = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-xs font-medium text-[#15191C] focus:outline-none focus:border-black";
-
-  // Filter drawer (Organiser 217:22772, Super Admin 422:12324): same panel, each role's own fields
-  const filterDrawer = filterOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="filter-title">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setFilterOpen(false)} />
-            <div className="relative w-full max-w-[279px] bg-white h-full px-6 pt-[19.5px] pb-6 flex flex-col overflow-y-auto">
-              <div className="flex items-center justify-between">
-                <h2 id="filter-title" className="flex items-center gap-2 text-base font-medium text-[#15191C]">
-                  <Icon name="events/filter-dark" width={20} height={20} />
-                  Filter
-                </h2>
-                <button type="button" onClick={() => setFilterOpen(false)} aria-label="Close filters" className="cursor-pointer">
-                  <Icon name="events/close" width={16} height={16} />
-                </button>
-              </div>
-              <div className="flex-1 overflow-y-auto pt-8 flex flex-col gap-[13px]">
-                <div className="flex flex-col gap-2">
-                  {!isOrganizer && (
-                    <>
-                      <input aria-label="Event Name" type="text" value={draftFilters.name} onChange={(e) => setDraftFilters((f) => ({ ...f, name: e.target.value }))} placeholder="Event Name" className={`${drawerField} placeholder:text-[#6B6B6B]`} />
-                      <input aria-label="Event Organizer" type="text" value={draftFilters.organizer} onChange={(e) => setDraftFilters((f) => ({ ...f, organizer: e.target.value }))} placeholder="Event Organizer" className={`${drawerField} placeholder:text-[#6B6B6B]`} />
-                    </>
-                  )}
-                  <FilterSelect value={draftFilters.category} onChange={(v) => setDraftFilters((f) => ({ ...f, category: v }))} options={[{ value: "", label: isOrganizer ? "Event Type" : "Event Category" }, ...categories.categoryOptions]} ariaLabel={isOrganizer ? "Event Type" : "Event Category"} compact />
-                  {!isOrganizer && (
-                    <FilterSelect value={draftFilters.sessions} onChange={(v) => setDraftFilters((f) => ({ ...f, sessions: v }))} options={[{ value: "", label: "No. of Sessions" }, { value: "0", label: "0 sessions" }, { value: "1", label: "1 session" }, { value: "2-5", label: "2–5 sessions" }, { value: "6+", label: "6+ sessions" }]} ariaLabel="No. of Sessions" compact />
-                  )}
-                  <FilterSelect
-                    value={draftFilters.status}
-                    onChange={(v) => setDraftFilters((f) => ({ ...f, status: v }))}
-                    options={[{ value: "", label: "Event Status" }, ...STATUS_FILTERS.map((st) => ({ value: st, label: st }))]}
-                    ariaLabel="Event Status"
-                    compact
-                  />
-                </div>
-                <fieldset className="flex flex-col gap-[13px]">
-                  <legend className="text-base font-medium text-[#15191C] mb-[13px]">Date range</legend>
-                  <div className="flex flex-col gap-2">
-                    {/* Shows the Figma "From" / "To" placeholder until focused, then the native date picker */}
-                    {(["from", "to"] as const).map((key) => (
-                      <div key={key} className="relative">
-                      {/* always a date field (switching its type while it has focus made the value impossible to clear); the
-                          "From" / "To" label stands in for the empty mm/dd/yyyy until the field is used */}
-                      <input
-                        type="date" onClick={openDatePicker}
-                        value={draftFilters[key]}
-                        onChange={(e) => setDraftFilters((f) => ({ ...f, [key]: e.target.value }))}
-                        aria-label={key === "from" ? "From" : "To"}
-                        className={`peer ${drawerField} pr-14 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-12 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer ${draftFilters[key] ? "" : "!text-transparent focus:!text-[#15191C]"}`}
-                      />
-                      {!draftFilters[key] && <span aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#6B6B6B] peer-focus:hidden">{key === "from" ? "From" : "To"}</span>}
-                      {draftFilters[key] ? (
-                        <button type="button" onClick={() => setDraftFilters((f) => ({ ...f, [key]: "" }))} aria-label={`Clear ${key === "from" ? "From" : "To"} date`} className="absolute right-11 top-1/2 -translate-y-1/2 size-5 flex items-center justify-center rounded-full text-[#4B4F52] hover:bg-gray-200 cursor-pointer">
-                          <svg className="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      ) : null}
-                      <Icon name="events/calendar" width={20} height={21} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2" />
-                      </div>
-                    ))}
-                  </div>
-                </fieldset>
-                <PopupMessage message={filterApplyError} />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={clearFilters} className="flex-1 py-1.5 px-6 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-black hover:bg-gray-50 cursor-pointer">
-                  Cancel
-                </button>
-                <button type="button" disabled={applyingFilters} onClick={applyFilters} className="flex-1 py-1.5 px-6 bg-[#C65318] hover:bg-[#A83800] rounded text-[13px] font-semibold text-white cursor-pointer disabled:opacity-60 disabled:cursor-wait">
-                  {applyingFilters ? "Loading…" : "Apply"}
-                </button>
-              </div>
-            </div>
-          </div>
-        );
+  // The filters sit beside the search box and apply as soon as they change (no drawer, no Apply button). Each role gets its own set:
+  // organizers filter by type, status and dates; administrators also by category and number of sessions (their organizer picker is next to it).
+  const setFilter = (patch: Partial<typeof filters>) => {
+    const next = { ...filters, ...patch };
+    if (next.from && next.to && next.to < next.from) { if ("from" in patch) next.to = next.from; else next.from = next.to; }
+    setDraftFilters(next);
+    void applyFilters(next);
+  };
+  const filterBar = (
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Event filters">
+      <div><FilterSelect value={filters.category} onChange={(v) => setFilter({ category: v })} options={[{ value: "", label: isOrganizer ? "Event Type" : "Event Category" }, ...categories.categoryOptions]} ariaLabel={isOrganizer ? "Event Type" : "Event Category"} plain /></div>
+      {!isOrganizer && (
+        <div><FilterSelect value={filters.sessions} onChange={(v) => setFilter({ sessions: v })} options={[{ value: "", label: "No. of Sessions" }, { value: "0", label: "0 sessions" }, { value: "1", label: "1 session" }, { value: "2-5", label: "2–5 sessions" }, { value: "6+", label: "6+ sessions" }]} ariaLabel="No. of Sessions" plain /></div>
+      )}
+      <div><FilterSelect value={filters.status} onChange={(v) => setFilter({ status: v })} options={[{ value: "", label: "Event Status" }, ...STATUS_FILTERS.map((st) => ({ value: st, label: st }))]} ariaLabel="Event Status" plain /></div>
+      <DateField className="w-[150px]" placeholder="From" title="Events starting on or after this day" value={filters.from} max={filters.to || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ from: v })} />
+      <DateField className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
+      {applyingFilters && <span role="status" className="text-xs text-[#6B6B6B]">Loading session totals…</span>}
+      {activeFilterCount > 0 && (
+        <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#C44200] hover:bg-[#FFF1EA] rounded-md cursor-pointer whitespace-nowrap">Clear filters</button>
+      )}
+    </div>
+  );
 
   // Organiser shell (Figma 217:22527 list, 217:22656 filter): "Events" search row, filter + Add, a grid of event cards
   if (isOrganizer) {
@@ -495,31 +440,23 @@ export default function EventListingPage() {
       <div className="w-full min-h-full bg-white">
         <PageHeader title="Event Management" />
         <div className="px-4 sm:px-6 pt-[30px] pb-24 w-full space-y-9">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 lg:gap-[139px]">
-            <div className="flex flex-1 items-center gap-2.5 min-w-0">
-              <label htmlFor="event-search" className="text-[17px] font-medium text-black shrink-0">Events</label>
+          <div className="flex flex-col xl:flex-row xl:items-center gap-3 xl:gap-4">
+            <div className="flex items-center gap-2.5 min-w-0 xl:flex-1 xl:min-w-[260px]">
+              <label htmlFor="event-search" className="text-[17px] font-medium text-black shrink-0">Search</label>
               <div className="relative flex-1 min-w-0">
                 <Icon name="events/search" width={18} height={18} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-60" />
                 <input
                   id="event-search"
                   type="search"
-                  placeholder="Search event names ... "
+                  placeholder="Search by event names ... "
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
                 />
               </div>
             </div>
+            <div className="min-w-0 xl:shrink-0">{filterBar}</div>
             <div className="flex items-center gap-3 shrink-0 w-fit">
-              <button
-                type="button"
-                onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}
-                aria-label={`Filter events${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
-                className="relative h-[47px] p-4 rounded-md hover:bg-gray-100 cursor-pointer"
-              >
-                <Icon name="events/filter" width={20} height={20} />
-                {activeFilterCount > 0 && <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
-              </button>
               <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
                 <Icon name="events/add-white" width={24} height={24} />
                 Add
@@ -527,6 +464,7 @@ export default function EventListingPage() {
             </div>
           </div>
 
+          <PopupMessage message={filterApplyError} onClose={() => setFilterApplyError(null)} />
           <PopupMessage message={loadError} action={{ label: "Try again", onClick: load }} onClose={() => setLoadError(null)} />
 
           {loading ? (
@@ -558,7 +496,6 @@ export default function EventListingPage() {
 
         {deleteDialog}
 
-        {filterDrawer}
       </div>
     );
   }
@@ -592,15 +529,6 @@ export default function EventListingPage() {
                 placeholder="All Events"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => { setDraftFilters(filters); setFilterOpen(true); }}
-              aria-label={`Filter events${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
-              className="relative h-[47px] px-4 rounded-md text-[#6B6B6B] hover:bg-gray-100 cursor-pointer"
-            >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden><path d="M3 5h18l-7 8.5V19l-4 2v-7.5L3 5z" /></svg>
-              {activeFilterCount > 0 && <span className="absolute top-2 right-2 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
-            </button>
             <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Add Event
@@ -608,6 +536,8 @@ export default function EventListingPage() {
           </div>
         </div>
 
+        {filterBar}
+        <PopupMessage message={filterApplyError} onClose={() => setFilterApplyError(null)} />
         <PopupMessage message={loadError} action={{ label: "Try again", onClick: load }} onClose={() => setLoadError(null)} />
         <PopupMessage message={organizerError} action={{ label: "Try again", onClick: loadOrganizers }} onClose={() => setOrganizerError(null)} />
 
@@ -656,7 +586,6 @@ export default function EventListingPage() {
 
       {deleteDialog}
 
-      {filterDrawer}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import { templateColumnsFor } from "@/utils/inviteeTemplate";
 import PopupMessage from "@/components/common/PopupMessage";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -381,11 +382,7 @@ export default function EventWizard({
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="restored-draft-title" aria-describedby="restored-draft-description">
           <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
             <div className="px-6 pt-7 pb-6 text-center sm:px-8">
-              <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-orange-100 text-[#E5520F]" aria-hidden="true">
-                <svg className="size-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
+              <AlertIcon kind="info" className="w-14 h-14 mx-auto mb-4" />
               <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">Your unsaved event draft was restored</h2>
               <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">
                 This draft was saved temporarily.<br />

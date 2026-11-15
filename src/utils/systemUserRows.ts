@@ -21,6 +21,8 @@ export interface SystemUserRow {
   email: string;
   phone: string;
   role: string;
+  /** when the user was added (ISO), for "Recently added" */
+  createdAt?: string;
   assignments: {
     assignmentId: string;
     eventId: string;
@@ -28,6 +30,8 @@ export interface SystemUserRow {
     dateStr?: string;
     assignedBy?: string;
     assignedAt?: string;
+    /** when the event ends (ISO): an assignment is "upcoming" until then, "past" after */
+    eventEnd?: string;
     sessions: { id: string; name: string; time?: string }[];
   }[];
   assignedEvents?: AssignedEventCard[];

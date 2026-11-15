@@ -25,6 +25,8 @@ interface ImageUploadFieldProps {
   onUploadingChange?: (uploading: boolean) => void;
   /** Offer a 1:1 crop before the picture is uploaded */
   squareCrop?: boolean;
+  /** Offer a crop to a fixed shape (width ÷ height, e.g. 9 / 16) before the picture is uploaded; the shape cannot be changed in the crop window */
+  cropAspect?: { ratio: number; label: string };
 }
 
 // Uploads immediately and previews the stored copy, so what the user sees here is exactly what
@@ -42,6 +44,7 @@ export default function ImageUploadField({
   optional = false,
   onUploadingChange,
   squareCrop = false,
+  cropAspect,
 }: ImageUploadFieldProps) {
   const [cropping, setCropping] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +56,7 @@ export default function ImageUploadField({
   // a picked picture goes to the crop window first when this field crops; an animated or vector picture is uploaded as it is
   const pick = (file: File | undefined) => {
     if (!file || disabled) return;
-    if (squareCrop && /^image\/(jpeg|png|webp)$/.test(file.type)) { setCropping(file); if (inputRef.current) inputRef.current.value = ""; return; }
+    if ((squareCrop || cropAspect) && /^image\/(jpeg|png|webp)$/.test(file.type)) { setCropping(file); if (inputRef.current) inputRef.current.value = ""; return; }
     void upload(file);
   };
 
@@ -135,7 +138,7 @@ export default function ImageUploadField({
           <span className="block mt-1 text-xs text-[#828282]">{hint}</span>
         </button>
       )}
-      {cropping && <ImageCropModal file={cropping} onCancel={() => setCropping(null)} onConfirm={(cropped) => { setCropping(null); void upload(cropped); }} />}
+      {cropping && <ImageCropModal file={cropping} onCancel={() => setCropping(null)} aspect={cropAspect?.ratio} aspectLabel={cropAspect?.label} onConfirm={(cropped) => { setCropping(null); void upload(cropped); }} />}
       <PopupMessage message={error} />
     </div>
   );

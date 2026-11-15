@@ -306,18 +306,19 @@ export default function EventDetailsPage() {
         )}
 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 md:flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-2xl sm:text-[28px] font-medium text-black break-words">{event.title}</h2>
               {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#C44200] text-xs font-medium rounded">{categoryPill}</span>}
             </div>
-            <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap text-xs text-[#4B4F52]">
-              <span className={`px-3 py-1 rounded-full font-medium ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
+            {/* from tablet width up the status, organizer, dates and venue stay on one line, whatever the status says; a long venue is shortened, not moved down */}
+            <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap md:flex-nowrap text-xs text-[#4B4F52]">
+              <span className={`px-3 py-1 rounded-full font-medium whitespace-nowrap shrink-0 ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
               {/* the event ID is for administrators; organizers don't see it */}
               {user?.role === "ADMIN" && <span className="text-[#6B6B6B]">{formatEventId(event._id)}</span>}
-              {organizer && <span><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
+              {organizer && <span className="whitespace-nowrap shrink-0"><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
               <span className="text-[#D3D3D3] hidden sm:inline">|</span>
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap shrink-0">
                 <span className="font-medium text-gray-900">Start:</span> {formatDateTime(event.schedule?.start, "—")}
                 <span className="mx-2 text-[#D3D3D3]">|</span>
                 <span className="font-medium text-gray-900">End:</span> {formatDateTime(event.schedule?.end, "—")}
@@ -325,12 +326,12 @@ export default function EventDetailsPage() {
               {venue && (
                 <>
                   <span className="text-[#D3D3D3] hidden sm:inline">|</span>
-                  <span className="inline-flex items-start gap-1.5 min-w-0">
+                  <span className="inline-flex items-start gap-1.5 min-w-0 md:items-center" title={venue}>
                     <svg className="w-4 h-4 shrink-0 text-[#C44200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
                       <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
                       <circle cx="12" cy="9.5" r="2.5" />
                     </svg>
-                    <span className="min-w-0 break-words text-[#6B6B6B]">{venue}</span>
+                    <span className="min-w-0 break-words md:truncate text-[#6B6B6B]">{venue}</span>
                   </span>
                 </>
               )}

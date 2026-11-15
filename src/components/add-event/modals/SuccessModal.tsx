@@ -1,5 +1,6 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
@@ -45,11 +46,7 @@ export default function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
         className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full p-8 text-center overflow-hidden my-auto relative"
       >
         {/* Solid Green Checkmark Circle matching exact screenshot */}
-        <div className="w-14 h-14 bg-[#10B981] text-white rounded-full flex items-center justify-center mx-auto mb-5 shadow-xs">
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
+        <AlertIcon kind="success" className="w-14 h-14 mx-auto mb-5" />
 
         {/* Title */}
         <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">

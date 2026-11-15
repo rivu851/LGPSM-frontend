@@ -1,6 +1,8 @@
 // The invitee fields an event collects, in one place: the Excel sample's columns, the Excel preview, and the manual Add
 // Invitee form are all built from this list, so they can never drift apart.
 
+import { meaningOf } from "./columnMeaning.ts";
+
 export type InviteeFieldKey = "name" | "email" | "mobile" | "company" | "identity" | "identity2";
 
 export interface InviteeFieldConfig {
@@ -13,6 +15,8 @@ export interface InviteeFieldConfig {
   /** A second custom detail, when both card lines carry one, and its title */
   identity2?: boolean;
   identity2Label?: string;
+  /** A custom title that means a column the sample already has ("Ph No" for Mobile) renames that column instead of adding a new one */
+  columnTitles?: Partial<Record<"name" | "email" | "mobile", string>>;
   /** Kept for callers; the food choice is never a column or a form field: the guest makes it on the invitation page */
   dietary?: boolean;
 }
@@ -40,12 +44,24 @@ interface CardInfoLike { primary?: string | null; secondary?: string | null; ide
 
 export function inviteeConfigFor(opts: { cardInfo?: CardInfoLike | null; dietaryEnabled?: boolean; /** Ignored: kept so callers need no change; the category never adds a column */ corporate?: boolean }): InviteeFieldConfig {
   const chosen = [opts.cardInfo?.primary, opts.cardInfo?.secondary];
+  const titleOf = (field: "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY") => ((field === "PROFESSIONAL_IDENTITY" ? opts.cardInfo?.identityLabel : opts.cardInfo?.secondaryIdentityLabel) || "").trim();
+  const columnTitles: NonNullable<InviteeFieldConfig["columnTitles"]> = {};
+  // a custom detail whose title only renames Name, Email or Mobile adds no column: that column takes the title
+  const own = (field: "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY") => {
+    if (!chosen.includes(field)) return false;
+    const m = meaningOf(titleOf(field));
+    if (m === "name" || m === "email" || m === "mobile") { if (!columnTitles[m]) columnTitles[m] = titleOf(field); return false; }
+    return true;
+  };
+  const identity = own("PROFESSIONAL_IDENTITY");
+  const identity2 = own("SECONDARY_IDENTITY");
   return {
     company: chosen.includes("COMPANY_NAME"),
-    identity: chosen.includes("PROFESSIONAL_IDENTITY"),
-    identityLabel: chosen.includes("PROFESSIONAL_IDENTITY") ? (opts.cardInfo?.identityLabel || "").trim() || undefined : undefined,
-    identity2: chosen.includes("SECONDARY_IDENTITY"),
-    identity2Label: chosen.includes("SECONDARY_IDENTITY") ? (opts.cardInfo?.secondaryIdentityLabel || "").trim() || undefined : undefined,
+    identity,
+    identityLabel: identity ? titleOf("PROFESSIONAL_IDENTITY") || undefined : undefined,
+    identity2,
+    identity2Label: identity2 ? titleOf("SECONDARY_IDENTITY") || undefined : undefined,
+    columnTitles: Object.keys(columnTitles).length ? columnTitles : undefined,
     dietary: Boolean(opts.dietaryEnabled),
   };
 }
@@ -61,7 +77,7 @@ export function inviteeFieldsFor(config: InviteeFieldConfig): InviteeFieldKey[] 
 }
 
 /** The Excel column heading / form label for a field in this event: the organizer's own title for the custom detail, otherwise the standard one */
-export const headerFor = (key: InviteeFieldKey, config: InviteeFieldConfig = {}): string => (key === "identity" && config.identityLabel?.trim() ? config.identityLabel.trim() : key === "identity2" && config.identity2Label?.trim() ? config.identity2Label.trim() : EXCEL_HEADER[key]);
+export const headerFor = (key: InviteeFieldKey, config: InviteeFieldConfig = {}): string => ((key === "name" || key === "email" || key === "mobile") && config.columnTitles?.[key] ? config.columnTitles[key]! : key === "identity" && config.identityLabel?.trim() ? config.identityLabel.trim() : key === "identity2" && config.identity2Label?.trim() ? config.identity2Label.trim() : EXCEL_HEADER[key]);
 
 export const excelColumnsFor = (config: InviteeFieldConfig): string[] => inviteeFieldsFor(config).map((k) => headerFor(k, config));
 
