@@ -149,16 +149,16 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className={`relative ${hasCard ? "w-fit max-w-full" : "w-[230px] sm:w-[250px] aspect-[9/18.5]"} bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
+          className={`relative w-[250px] max-w-full aspect-[9/16] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
           style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
           aria-label="Invitation card preview"
         >
-          <div className={`relative w-full ${hasCard ? "" : "h-full"} rounded-[30px] overflow-hidden bg-[#EFEFEF]`}>
+          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-[#EFEFEF] flex items-center justify-center">
             {/* the phone takes the card's own proportions (it is taller when the guest name band and details are added) and the card is
                 sized to the space available, so all of it is visible without any scrolling */}
             {hasCard && (
               // eslint-disable-next-line @next/next/no-img-element -- invitation card is a blob URL rendered by the API, or the uploaded design
-              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-auto w-auto max-w-[234px] max-h-[max(380px,calc(100vh-340px))] mx-auto" />
+              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block max-h-full max-w-full object-contain" />
             )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
