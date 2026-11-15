@@ -44,13 +44,13 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
             <h2 id="card-preview-title" className="text-base font-medium text-gray-900">Invitation Card Preview</h2>
             <p className="text-xs text-[#6B6B6B] truncate">{inviteeName ? `As sent to ${inviteeName}` : "Sample guest"}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600 cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close" className="text-gray-500 hover:text-gray-600">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-4 bg-[#F4F5F8] flex items-center justify-center min-h-[300px]">
+        <div className="flex-1 overflow-auto p-4 bg-[#F4F5F8] flex items-center justify-center min-h-[300px] cursor-pointer">
           <PopupMessage message={error} title="The card could not be shown" />
           {error ? null : url ? (
             <div className="relative w-full max-w-[320px] mx-auto aspect-[393/682]">

@@ -458,7 +458,7 @@ export default function EventDetailsPage() {
               title="Click to enlarge"
               onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setCardExpanded(true); }}
               onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) setCardExpanded(true); }}
-              className="rounded-md overflow-hidden border border-[#EEEEEE] xl:flex-1 xl:min-h-0 xl:flex cursor-zoom-in focus-visible:outline-2 focus-visible:outline-black"
+              className="rounded-md overflow-hidden border border-[#EEEEEE] xl:flex-1 xl:min-h-0 xl:flex focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
             >
               <EventCardPreview
                 heightClassName="h-52 sm:h-60 xl:h-auto xl:flex-1 xl:min-h-[160px]"
