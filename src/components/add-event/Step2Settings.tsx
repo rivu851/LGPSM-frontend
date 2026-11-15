@@ -296,7 +296,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               <button
                 type="button"
                 onClick={() => { const id = newClientKey("pref"); focusNext.current = `pref-title-${id}`; setCategories([...categories, { id, title: "", options: [""] }]); }}
-                className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#D6F5E1] hover:text-[#0F7A33] text-sm font-medium rounded-md cursor-pointer"
+                className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#eda83f] hover:text-[#0F7A33] text-sm font-medium rounded-md cursor-pointer"
               >
                 + Add another question
               </button>
