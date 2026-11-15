@@ -283,9 +283,9 @@ function TemplatesPageContent() {
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
-                  {preview.isMine && preview.isDynamic && (
+                  {preview.isMine && preview.isUploaded && (
                     <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] text-sm font-medium rounded-md cursor-pointer">
-                      Text areas
+                      {preview.isDynamic ? "Text areas" : "QR placement"}
                     </button>
                   )}
                   {!preview.isDraft && preview.kind === "INVITATION" && (

@@ -7,10 +7,13 @@ import ModalClose from "@/components/common/ModalClose";
 import { templateService, type TextZone, type TextZoneRole } from "@/services/templateService";
 import { resolveImageUrl } from "@/utils/mediaUrl";
 
-const ROLES: { value: TextZoneRole; label: string }[] = [
-  { value: "title", label: "Event name" },
-  { value: "dateTime", label: "Date and time" },
-  { value: "venue", label: "Venue" },
+const ROLES: { value: TextZoneRole; label: string; wording: boolean }[] = [
+  { value: "title", label: "Event name", wording: true },
+  { value: "dateTime", label: "Date and time", wording: true },
+  { value: "venue", label: "Venue", wording: true },
+  { value: "qr", label: "QR code", wording: false },
+  { value: "inviteeName", label: "Guest name", wording: false },
+  { value: "inviteeMeta", label: "Guest details", wording: false },
 ];
 const FONTS = ["Inter", "Manrope", "Playfair Display", "Ancizar Serif", "Alexandria", "Alkatra", "Alex Brush", "Birthstone"];
 const labelOf = (r: TextZoneRole) => ROLES.find((x) => x.value === r)!.label;
@@ -37,12 +40,14 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(intro ? (intro.detected ? "The wording in your design was found. Check each area, then save." : `${intro.reason || "The wording could not be found."} Mark the areas yourself below.`) : null);
   const [changed, setChanged] = useState(false);
+  // an organizer's own design is the card as it is: only the places for the QR code and the guest's details are set; an admin's also has the event's wording
+  const [dynamic, setDynamic] = useState(true);
   const stage = useRef<HTMLDivElement>(null);
   const drag = useRef<{ index: number; mode: "move" | "size"; px: number; py: number; start: TextZone } | null>(null);
 
   const load = useCallback(async () => {
     const res = await templateService.getTextZones(templateId);
-    if (res.success && res.data) { setZones(res.data.zones); setCanvas(res.data.canvas ?? null); setImageKey(res.data.imageKey ?? null); }
+    if (res.success && res.data) { setZones(res.data.zones); setCanvas(res.data.canvas ?? null); setImageKey(res.data.imageKey ?? null); setDynamic(res.data.dynamic !== false); }
     else setError(res.message || "The text areas could not be loaded.");
     setLoading(false);
   }, [templateId]);
@@ -64,6 +69,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
     const k = scale();
     const dx = (e.clientX - d.px) / k, dy = (e.clientY - d.py) / k;
     if (d.mode === "move") update(d.index, { x: Math.round(Math.min(Math.max(0, d.start.x + dx), canvas.width - d.start.w)), y: Math.round(Math.min(Math.max(0, d.start.y + dy), canvas.height - d.start.h)) });
+    else if (d.start.role === "qr") { const side = Math.round(Math.min(Math.max(60, d.start.w + Math.max(dx, dy)), canvas.width - d.start.x, canvas.height - d.start.y)); update(d.index, { w: side, h: side }); }
     else update(d.index, { w: Math.round(Math.min(Math.max(20, d.start.w + dx), canvas.width - d.start.x)), h: Math.round(Math.min(Math.max(16, d.start.h + dy), canvas.height - d.start.y)) });
   };
   const end = () => { drag.current = null; };
@@ -71,8 +77,11 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
   const add = (role: TextZoneRole) => {
     if (!canvas || zones.some((z) => z.role === role)) return;
     const h = role === "title" ? 0.08 : 0.04;
-    const y = role === "title" ? 0.42 : role === "dateTime" ? 0.62 : 0.72;
-    setZones((zs) => [...zs, { role, x: Math.round(canvas.width * 0.1), y: Math.round(canvas.height * y), w: Math.round(canvas.width * 0.8), h: Math.round(canvas.height * h), lines: 1, color: "#222222", fontFamily: role === "title" ? "Playfair Display" : "Inter", fontWeight: role === "title" ? 700 : 500, align: "center" }]);
+    const y = role === "title" ? 0.42 : role === "dateTime" ? 0.62 : role === "venue" ? 0.72 : role === "inviteeName" ? 0.82 : 0.87;
+    const side = Math.round(canvas.width * 0.27);
+    setZones((zs) => [...zs, role === "qr"
+      ? { role, x: Math.round((canvas.width - side) / 2), y: Math.round(canvas.height * 0.6), w: side, h: side, lines: 1, color: "#000000", fontFamily: "Inter", fontWeight: 400, align: "center" }
+      : { role, x: Math.round(canvas.width * 0.1), y: Math.round(canvas.height * y), w: Math.round(canvas.width * 0.8), h: Math.round(canvas.height * h), lines: 1, color: "#222222", fontFamily: role === "title" ? "Playfair Display" : "Inter", fontWeight: role === "title" ? 700 : 500, align: "center" }]);
     setSelected(zones.length);
     setChanged(true);
   };
@@ -131,13 +140,14 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
 
           <div className="space-y-4 min-w-0">
             <div className="flex flex-wrap gap-2">
-              {ROLES.map((r) => (
+              {ROLES.filter((r) => dynamic || !r.wording).map((r) => (
                 <button key={r.value} type="button" disabled={zones.some((z) => z.role === r.value) || loading} onClick={() => add(r.value)} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#DDD] hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+ {r.label}</button>
               ))}
               <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] cursor-pointer disabled:opacity-60">{busy === "detect" ? "Looking…" : "Find the wording again"}</button>
             </div>
 
-            {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. Add the event name, the date and time and the venue, then drag each box over the wording in your picture.</p>}
+            {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. {dynamic ? "Add the event name, the date and time and the venue, then drag each box over the wording in your picture." : "Add the QR code, then drag it to the place your design has for it."}</p>}
+            <p className="text-xs text-[#6B6B6B]">{dynamic ? "The guest's name and details are only added if you mark a place for them: nothing is put on top of your artwork." : "Nothing is put on top of your artwork except the QR code (and the guest's name only where you mark a place for it)."}</p>
 
             {sel && selected !== null && (
               <div className="rounded-md border border-[#E0E0E0] p-4 space-y-3">
@@ -145,6 +155,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
                   <h3 className="text-sm font-semibold text-[#15191C]">{labelOf(sel.role)}</h3>
                   <button type="button" onClick={() => remove(selected)} className="text-xs font-semibold text-[#D92D20] hover:underline cursor-pointer">Remove this area</button>
                 </div>
+                {sel.role === "qr" ? <p className="text-xs text-[#6B6B6B]">{sel.frame ? "The code sits in your design's own QR box." : "The code is printed straight on the picture at this spot."} Drag it to move it; drag the corner to resize it (it stays square).</p> : (
                 <div className="grid grid-cols-2 gap-3">
                   <label className="text-xs font-medium text-[#4B4F52]">Font
                     <CustomDropdown value={sel.fontFamily} onChange={(v) => update(selected, { fontFamily: v })} options={FONTS.map((f) => ({ value: f, label: f }))} ariaLabel="Font" compact />
@@ -162,7 +173,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
                     <input type="color" value={sel.color} onChange={(e) => update(selected, { color: e.target.value })} className="h-9 w-14 p-0.5 border border-[#E0E0E0] rounded-md cursor-pointer" aria-label="Text colour" />
                     <span className="text-xs text-[#6B6B6B]">{sel.color.toUpperCase()}</span>
                   </label>
-                </div>
+                </div>)}
               </div>
             )}
 

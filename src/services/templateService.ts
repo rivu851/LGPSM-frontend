@@ -74,7 +74,7 @@ export interface TemplatePreviewPayload {
   cardInfo?: { primary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; secondary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null; showIdentityLabel?: boolean; showSecondaryIdentityLabel?: boolean };
 }
 
-export type TextZoneRole = "title" | "dateTime" | "venue";
+export type TextZoneRole = "title" | "dateTime" | "venue" | "inviteeName" | "inviteeMeta" | "qr";
 export interface TextZone {
   role: TextZoneRole;
   x: number; y: number; w: number; h: number;
@@ -83,8 +83,11 @@ export interface TextZone {
   fontFamily: string;
   fontWeight: 400 | 500 | 600 | 700;
   align: "left" | "center" | "right";
+  erase?: boolean;
+  /** qr only: the code sits in the design's own QR box */
+  frame?: boolean;
 }
-export interface TextZonesData { imageKey?: string; canvas?: { width: number; height: number }; zones: TextZone[]; mode: "AUTO" | "MANUAL" | "NONE" }
+export interface TextZonesData { imageKey?: string; canvas?: { width: number; height: number }; zones: TextZone[]; mode: "AUTO" | "MANUAL" | "NONE"; /** an admin upload (its wording is replaced by the event's details) */ dynamic?: boolean }
 
 export const templateService = {
   /**

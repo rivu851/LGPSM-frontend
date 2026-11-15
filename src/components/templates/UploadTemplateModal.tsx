@@ -46,8 +46,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
     setSaving(false);
     if (res.success && res.data) {
       const made = res.data as Template & { detection?: { detected: boolean; reason?: string } | null };
-      if (made.templateData?.dynamicDetails) setAreas({ template: made, intro: made.detection ?? null });
-      else onCreated(res.data);
+      setAreas({ template: made, intro: made.templateData?.dynamicDetails ? made.detection ?? null : null });
     }
     else setError(res.message || "The template could not be saved. Please try again.");
   };
