@@ -9,8 +9,8 @@ import { profileCompleteness } from "@/utils/profileCompleteness";
 const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-[13px] text-[#15191C] placeholder:text-[#6B6B6B] focus:outline-none focus:border-black";
 
 /**
- * Shown on the dashboard to an organizer whose profile is not complete yet (for example right after signing up with Google, which
- * gives only a name and an email). It cannot be closed until the required details are filled in; the percentage shows how far along the
+ * Shown on the dashboard to an organizer who signed up with Google and whose profile is not complete yet (Google gives only a name
+ * and an email). It cannot be closed until the required details are filled in; the percentage shows how far along the
  * profile is, and follows what is being typed. The only other way out is signing out.
  */
 export default function CompleteProfileModal() {
@@ -24,7 +24,8 @@ export default function CompleteProfileModal() {
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!user || user.role !== "ORGANIZER" || saved.complete) return null;
+  // Only for organizers who signed up with Google (which gives just a name and an email). Everyone else already gave these details.
+  if (!user || user.role !== "ORGANIZER" || user.authProvider !== "GOOGLE" || saved.complete) return null;
 
   const current = {
     fullName: name ?? user.fullName ?? "",
