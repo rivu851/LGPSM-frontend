@@ -24,7 +24,7 @@ import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { CARD_DISPLAY_DEFAULTS, isStaticTemplate, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, cardDisplayOfDraft, isStaticTemplate, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
 import { sessionTimeProblem, sessionsOutsideEvent } from "@/utils/sessionWindow";
@@ -367,7 +367,7 @@ export default function EventWizard({
   };
 
   // one stable object per choice, so the card preview is only redrawn when a tick actually changes
-  const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+  const cd = cardDisplayOfDraft(draft);
   const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location, inviteeName: cd.inviteeName, logo: cd.logo }), [cd.title, cd.qr, cd.dateTime, cd.location, cd.inviteeName, cd.logo]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;

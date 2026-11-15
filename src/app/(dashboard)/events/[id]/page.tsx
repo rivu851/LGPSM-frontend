@@ -36,7 +36,7 @@ interface EventDetail {
   subcategory?: { name?: string } | null;
   organizerId?: { fullName?: string; profile?: { organizationName?: string } } | string;
   location?: { address?: string } | string;
-  templateId?: { name?: string; previewImageKey?: string } | string | null;
+  templateId?: { name?: string; previewImageKey?: string; templateData?: { uploaded?: boolean; dynamicDetails?: boolean } } | string | null;
   operationalDataCleared?: boolean;
   cancelledAt?: string;
   cancellationReason?: string;
@@ -544,7 +544,7 @@ export default function EventDetailsPage() {
         </section>
       </div>
 
-      {cardExpanded && <CardPreviewModal eventId={eventId} onClose={() => setCardExpanded(false)} />}
+      {cardExpanded && <CardPreviewModal eventId={eventId} staticCard={typeof event.templateId === "object" && event.templateId?.templateData?.uploaded === true && event.templateId?.templateData?.dynamicDetails !== true} onClose={() => setCardExpanded(false)} />}
       <EventCancelModal
         isOpen={cancelOpen}
         onClose={() => setCancelOpen(false)}

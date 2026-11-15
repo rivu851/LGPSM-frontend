@@ -158,7 +158,7 @@ export default function PricingFaqSection() {
           <div className="lg:col-span-5 flex justify-center lg:justify-end lg:pt-4">
             <div
               ref={cardRef}
-              className="bg-[#F7F8FA] rounded-2xl p-7 sm:p-8 border border-gray-100/80 shadow-sm w-full max-w-sm text-left"
+              className="bg-[#F7F8FA] rounded-2xl p-7 sm:p-8 border border-gray-100/80 w-full max-w-sm text-left"
             >
               <h3 className="text-xs font-bold uppercase tracking-[0.15em] text-[#1C2228] mb-3">
                 CONTACT US

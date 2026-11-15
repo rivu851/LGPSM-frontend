@@ -248,7 +248,7 @@ export default function NotificationsPage() {
 
       {openItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpenId(null)}>
-          <div role="dialog" aria-modal="true" aria-label={openItem.title} className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" aria-label={openItem.title} className="relative w-full max-w-md rounded-xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
             <ModalClose onClick={() => setOpenId(null)} />
             <h2 className="pr-8 text-base font-semibold text-[#15191C] break-words">{openItem.title}</h2>
             {openItem.timestamp && <p className="mt-1 text-xs text-[#6B7280]">{openItem.timestamp}</p>}

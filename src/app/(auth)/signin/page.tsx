@@ -57,7 +57,7 @@ function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect
             onClick={() => onSelect(tab.mode)}
             className={`flex-1 py-2 px-1 sm:px-2 text-center rounded-lg transition-all cursor-pointer ${
               isActive
-                ? "bg-white text-[#C44200] shadow-sm font-bold border border-gray-200/60"
+                ? "bg-white text-[#C44200] font-bold border border-gray-200/60"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >

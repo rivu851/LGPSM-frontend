@@ -10,6 +10,7 @@ import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
 import { useEventSessions } from "@/hooks/useEventSessions";
@@ -69,10 +70,14 @@ export default function AllUsersPage() {
     return () => { live = false; };
   }, [isAdminView]);
   const loadedOnce = useRef(false);
+  // an automatic refresh updates the rows quietly: no skeleton, and a failed request keeps what is on screen without raising an error
+  const quietRef = useRef(false);
   const fetchUsersAndAssignments = async () => {
+    const quiet = quietRef.current;
+    quietRef.current = false;
     try {
       if (!loadedOnce.current) setIsLoading(true);
-      setErrorFeedback(null);
+      if (!quiet) setErrorFeedback(null);
 
       // 1. Fetch system users only (role === SYSTEM_USER)
       const [usersRes, eventsRes] = await Promise.all([
@@ -80,6 +85,7 @@ export default function AllUsersPage() {
         eventService.getEvents(),
       ]);
       if (!usersRes?.success) {
+        if (quiet) return;
         setErrorFeedback(usersRes?.message || "Failed to load system users.");
       }
       const rawUsers = Array.isArray(usersRes?.data) ? usersRes.data : [];
@@ -156,7 +162,7 @@ export default function AllUsersPage() {
       loadedOnce.current = true;
     } catch (err: any) {
       console.error("Error loading system users:", err);
-      setErrorFeedback(err.message || "Failed to load system users.");
+      if (!quiet) setErrorFeedback(err.message || "Failed to load system users.");
     } finally {
       setIsLoading(false);
     }
@@ -165,6 +171,18 @@ export default function AllUsersPage() {
   useEffect(() => {
     fetchUsersAndAssignments();
   }, []);
+
+  // a refresh can remove someone who was ticked (their account was switched off elsewhere): they are no longer selected
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- prunes the ticks after a refresh brought a new list
+  useEffect(() => { setSelectedIds((ids) => { const kept = ids.filter((id) => users.some((u) => u.id === id)); return kept.length === ids.length ? ids : kept; }); }, [users]);
+
+  // assignments change elsewhere (an organizer or admin on another screen or device, a session removed, a staff account switched off): the list
+  // follows without anyone pressing refresh, and never while a window is open or a change is being saved
+  useLiveRefresh(() => {
+    if (isAssignModalOpen || isEditModalOpen || isAssignSuccessModalOpen || submittingAssign || submittingEdit || addOpen) return;
+    quietRef.current = true;
+    return fetchUsersAndAssignments();
+  }, 45_000);
 
   const toggleExpand = (id: string) => {
     if (expandedUserIds.includes(id)) {
@@ -569,7 +587,7 @@ aria-label={`Select ${u.name}`}
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -795,7 +813,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

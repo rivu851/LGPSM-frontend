@@ -59,7 +59,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     inviteeService.getInviteeSets(eventId)
       .then((r) => {
         if (!live) return;
-        const list = r.success && r.data ? r.data.sets : [];
+        const list = r.success && r.data ? [...r.data.sets, ...(r.data.sessionLists ?? [])] : [];
         setSets(list);
         knownSets.current = new Set(list.map((x) => x.id));
         // opens on "All" (every guest of the event); a single dataset can be chosen from the dropdown
@@ -93,7 +93,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     if (!reloadSignal) return;
     inviteeService.getInviteeSets(eventId).then((r) => {
       if (!r.success || !r.data) return;
-      const fresh = r.data.sets;
+      const fresh = [...r.data.sets, ...(r.data.sessionLists ?? [])];
       // a dataset that was not there before (a new Excel upload) is added to the dropdown and chosen, so its guests show straight away
       const before = knownSets.current;
       const added = before ? fresh.find((x) => !before.has(x.id)) : undefined;
@@ -113,7 +113,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
   const options = [
     // "All" is always offered, even when there is only one dataset
-    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.reduce((n, x) => n + x.total, 0)})` }] : []),
+    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.filter((x) => x.source !== "SESSION").reduce((n, x) => n + x.total, 0)})` }] : []),
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
   // every guest can be edited and deleted (unless the page is read-only); a guest something has happened to is set aside, not erased

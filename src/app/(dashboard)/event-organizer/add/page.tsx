@@ -250,7 +250,7 @@ export default function AddEventOrganizerPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Adding...' : 'Add Organizer'}
               </button>

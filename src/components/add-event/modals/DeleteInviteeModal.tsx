@@ -83,7 +83,7 @@ export default function DeleteInviteeModal({
                 onConfirm();
                 onClose();
               }}
-              className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer"
+              className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all cursor-pointer"
             >
               Yes, Delete
             </button>

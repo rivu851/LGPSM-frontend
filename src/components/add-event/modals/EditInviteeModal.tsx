@@ -127,7 +127,7 @@ export default function EditInviteeModal({
           <div className="pt-4 border-t border-gray-200 flex justify-end gap-3">
             <button
               type="submit"
-              className="px-6 py-2 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all shadow-xs cursor-pointer"
+              className="px-6 py-2 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all cursor-pointer"
             >
               Save Changes
             </button>

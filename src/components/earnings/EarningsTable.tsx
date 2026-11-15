@@ -47,7 +47,7 @@ export default function EarningsTable({
 }: EarningsTableProps) {
   const router = useRouter();
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-5">
+    <div className="bg-white border border-gray-200 rounded-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-medium text-[#15191C]">Earnings</h2>
         <div className="flex items-center gap-2 text-xs">
@@ -67,7 +67,7 @@ export default function EarningsTable({
           type="button"
           onClick={() => setActiveTab("organizer")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "organizer"
-              ? "bg-white text-gray-900 font-semibold shadow-2xs"
+              ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
         >
@@ -77,7 +77,7 @@ export default function EarningsTable({
           type="button"
           onClick={() => setActiveTab("event")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "event"
-              ? "bg-white text-gray-900 font-semibold shadow-2xs"
+              ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
         >

@@ -192,7 +192,7 @@ export function CategoryModal({
   // Figma 2050:2411 / 2050:2142: a 486px card in the upper third, a divider above the footer, 47px field, solid Add button
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/50 p-4 pt-[14vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
-      <div className="w-full max-w-[486px] bg-white rounded-lg shadow-xl">
+      <div className="w-full max-w-[486px] bg-white rounded-lg">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 id="category-modal-title" className="text-base font-medium text-[#15191C]">
             {api.isOrganizer ? (isSub ? "Add Custom Subcategory" : "Add Custom Category") : isSub ? "Add Subcategory" : "Add Category"}

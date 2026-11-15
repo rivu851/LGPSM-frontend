@@ -164,7 +164,7 @@ export default function FaqSection() {
 
           {/* Right Column: Contact Us Card */}
           <div className="lg:col-span-5 flex justify-center lg:justify-end lg:pt-10">
-            <div ref={cardRef} className="bg-[#F7F8FA] rounded-md p-7 sm:p-8 border border-gray-100/80 shadow-sm w-full max-w-sm text-left">
+            <div ref={cardRef} className="bg-[#F7F8FA] rounded-md p-7 sm:p-8 border border-gray-100/80 w-full max-w-sm text-left">
               {/* Icon */}
               <div className="mb-5">
                 <svg className="w-9 h-9 text-[#C44200]" viewBox="0 0 32 32" fill="none">
@@ -188,7 +188,7 @@ export default function FaqSection() {
               {/* Contact Button */}
               <a
                 href="#contact"
-                className="inline-block py-2.5 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all hover:scale-105 shadow-sm font-[family-name:var(--font-space-grotesk)]"
+                className="inline-block py-2.5 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all hover:scale-105 font-[family-name:var(--font-space-grotesk)]"
               >
                 Contact Us
               </a>

@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { sessionService } from "@/services/sessionService";
 import { userService } from "@/services/userService";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
@@ -43,7 +44,9 @@ export default function EventAssignUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   // Which staff to list: everyone on this event, the staff of one session, or every system user
   const [userFilter, setUserFilter] = useState<string>(USERS_ON_EVENT);
-  const showAllSystemUsers = userFilter === ALL_SYSTEM_USERS;
+  // (a session that was deleted elsewhere while it was the chosen filter falls back to everyone on the event instead of an empty list)
+  const effectiveFilter = userFilter === USERS_ON_EVENT || userFilter === ALL_SYSTEM_USERS || sessions.some((x: { _id?: string; id?: string }) => (x._id || x.id) === userFilter) ? userFilter : USERS_ON_EVENT;
+  const showAllSystemUsers = effectiveFilter === ALL_SYSTEM_USERS;
   const [page, setPage] = useState(1);
   const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
 
@@ -64,10 +67,14 @@ export default function EventAssignUsersPage() {
   // the overlap lookup that is still running (a submit waits for it, so a warning is never skipped) and its latest result
   const overlapsPending = useRef<Promise<unknown> | null>(null);
   const overlapsLatest = useRef<typeof elsewhere>({});
+  // an automatic refresh updates quietly: no skeleton, and a failed request keeps what is on screen without raising an error
+  const quietRef = useRef(false);
   const fetchAssignmentsAndSessions = async () => {
+    const quiet = quietRef.current;
+    quietRef.current = false;
     try {
       if (loadedFor.current !== eventId) setIsLoading(true);
-      setErrorFeedback(null);
+      if (!quiet) setErrorFeedback(null);
 
       // These resources are independent; load them together instead of serializing four network round trips.
       const [sessionsRes, eventRes, usersRes, assignRes] = await Promise.all([
@@ -144,7 +151,7 @@ export default function EventAssignUsersPage() {
       loadedFor.current = eventId;
     } catch (err: any) {
       console.error("Error fetching event system user assignments:", err);
-      setErrorFeedback(err.message || "Failed to load system user assignments.");
+      if (!quiet) setErrorFeedback(err.message || "Failed to load system user assignments.");
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +162,18 @@ export default function EventAssignUsersPage() {
       fetchAssignmentsAndSessions();
     }
   }, [eventId]);
+
+  // a refresh can remove someone who was ticked (their account was switched off elsewhere): they are no longer selected
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- prunes the ticks after a refresh brought a new list
+  useEffect(() => { setSelectedUserIds((ids) => { const kept = ids.filter((id) => users.some((u) => u.id === id)); return kept.length === ids.length ? ids : kept; }); }, [users]);
+
+  // who is on the event, their sessions, and the sessions themselves follow changes made elsewhere (another screen or device, a session
+  // deleted, a staff account switched off); never while the assign window is open or a change is being saved
+  useLiveRefresh(() => {
+    if (isAssignModalOpen || isAssignSuccessModalOpen || submittingAssign) return;
+    quietRef.current = true;
+    return fetchAssignmentsAndSessions();
+  }, 30_000, !!eventId);
 
   // Someone already on this event is not assigned a second time: choosing them again changes which sessions they cover
   const selectedRows = users.filter((u) => selectedUserIds.includes(u.id));
@@ -286,7 +305,7 @@ export default function EventAssignUsersPage() {
     }
   };
 
-  const eventUsers = filterSystemUsers(users, eventId, userFilter);
+  const eventUsers = filterSystemUsers(users, eventId, effectiveFilter);
   const filteredUsers = eventUsers.filter((u) => {
     return (
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -299,7 +318,7 @@ export default function EventAssignUsersPage() {
   // 10 people per page (the old bottom-left "1" was a fixed, inert button)
   const { current: currentPage, totalPages, rows: pageUsers } = paginate(filteredUsers, page, 10);
   // Figma 217:19768 shows only the empty state (no select-all row or table headers) when nobody is assigned yet
-  const showEmptyAssigned = !isLoading && users.length > 0 && filteredUsers.length === 0 && userFilter === USERS_ON_EVENT && !searchQuery.trim();
+  const showEmptyAssigned = !isLoading && users.length > 0 && filteredUsers.length === 0 && effectiveFilter === USERS_ON_EVENT && !searchQuery.trim();
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
@@ -342,7 +361,7 @@ export default function EventAssignUsersPage() {
             <CustomDropdown
               variant="plain"
               ariaLabel="Which system users to show"
-              value={userFilter}
+              value={effectiveFilter}
               onChange={(v) => { setUserFilter(v); setSelectedUserIds([]); setPage(1); }}
               options={[
                 // with a single session, "All sessions" and that session are the same choice: show its name once
@@ -396,9 +415,9 @@ export default function EventAssignUsersPage() {
                   <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     {users.length === 0 ? (
                       <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#C44200] underline">Add User</Link>.</span>
-                    ) : userFilter !== USERS_ON_EVENT && userFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
+                    ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
                       <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
-                    ) : userFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
+                    ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
                       // Figma 217:19798 empty state; "Assign User" lists every system user to pick from
                       <div className="flex flex-col items-center gap-[26px] py-16 max-w-[344px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
@@ -473,7 +492,7 @@ export default function EventAssignUsersPage() {
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -640,7 +659,7 @@ export default function EventAssignUsersPage() {
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

@@ -587,7 +587,7 @@ aria-label={`Select ${u.name}`}
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -916,7 +916,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

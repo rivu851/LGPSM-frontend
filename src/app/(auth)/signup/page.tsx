@@ -540,7 +540,7 @@ export default function SignupPage() {
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     disabled={isVerifying}
-                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl border-2 transition-all shadow-sm ${
+                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl border-2 transition-all ${
                       digit
                         ? "border-[#FF651D] bg-white text-gray-950"
                         : "border-gray-200 bg-[#FAFAFA] text-gray-900"

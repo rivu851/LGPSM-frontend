@@ -96,7 +96,7 @@ export default function PricingSectionHome() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch text-left">
               
               {/* Card 1: Main Pricing Offer Card (White) */}
-              <div className="lg:col-span-7 bg-white text-gray-900 rounded-md p-6 sm:p-8 shadow-xl flex flex-col justify-between">
+              <div className="lg:col-span-7 bg-white text-gray-900 rounded-md p-6 sm:p-8 flex flex-col justify-between">
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
                     
@@ -163,7 +163,7 @@ export default function PricingSectionHome() {
                 <div className="mt-6">
                   <a
                     href="#signup"
-                    className="block w-full text-center py-3 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs sm:text-sm rounded-md shadow-md transition-colors font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                    className="block w-full text-center py-3 px-6 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs sm:text-sm rounded-md transition-colors font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                   >
                     Sign Up Free
                   </a>
@@ -171,7 +171,7 @@ export default function PricingSectionHome() {
               </div>
 
               {/* Card 2: Contact Us Card (Dark Card Background) */}
-              <div id="contact" className="lg:col-span-5 bg-[#1C2228] text-white rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col justify-between border border-gray-800/60">
+              <div id="contact" className="lg:col-span-5 bg-[#1C2228] text-white rounded-2xl p-6 sm:p-8 flex flex-col justify-between border border-gray-800/60">
                 <div>
                   {/* Address Book Icon */}
                   <div className="mb-4">
@@ -196,7 +196,7 @@ export default function PricingSectionHome() {
                 <div className="mt-6">
                   <button
                     onClick={() => setContactSubmitted(true)}
-                    className="w-full py-3 px-6 bg-white hover:bg-gray-100 text-[#C44200] font-bold text-xs sm:text-sm rounded-md transition-colors shadow-md font-[family-name:var(--font-space-grotesk)] cursor-pointer"
+                    className="w-full py-3 px-6 bg-white hover:bg-gray-100 text-[#C44200] font-bold text-xs sm:text-sm rounded-md transition-colors font-[family-name:var(--font-space-grotesk)] cursor-pointer"
                   >
                     {contactSubmitted ? "Message Sent!" : "Contact Us"}
                   </button>

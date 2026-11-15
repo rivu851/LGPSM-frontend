@@ -73,7 +73,7 @@ export default function ReportsLogsTable({
     );
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
       {/* Tabs Header */}
       <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 text-xs">
         <div className="flex items-center justify-between gap-3 mb-0">

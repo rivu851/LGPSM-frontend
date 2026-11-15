@@ -218,7 +218,7 @@ export default function MobileCardPreview({
           <button
             type="button"
             onClick={onOpenTemplateModal}
-            className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md shadow-xs cursor-pointer"
+            className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
           >
             {template ? "Change Template" : "Select Template"}
           </button>
@@ -226,7 +226,7 @@ export default function MobileCardPreview({
             <button
               type="button"
               onClick={() => onOpenAdditionalInfo(payload)}
-              className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md shadow-xs cursor-pointer"
+              className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
             >
               {cardInfo ? "Edit Additional Info" : "Additional Info"}
             </button>

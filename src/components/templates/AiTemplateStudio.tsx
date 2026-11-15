@@ -431,8 +431,8 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                     </div>
                     {variant.ready && variant.conceptImageKey && (
                       <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-[#F4F5F8] p-1 text-xs" role="tablist">
-                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}>Your template</button>
-                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}>Original concept</button>
+                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Your template</button>
+                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Original concept</button>
                       </div>
                     )}
                     <p className="mt-2 text-xs text-[#6B6B6B]">{variant.ready ? "Preview uses sample details. Your real event, venue and QR code are filled in when you use it." : "Concept only, not a template."}</p>

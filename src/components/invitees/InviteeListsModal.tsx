@@ -53,7 +53,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
     setSetsError(null);
     try {
       const res = await inviteeService.getInviteeSets(eventId);
-      if (res.success && res.data) setSets(res.data.sets);
+      if (res.success && res.data) setSets([...res.data.sets, ...(res.data.sessionLists ?? [])]);
       else setSetsError(res.message || "The invitee lists could not be loaded.");
     } catch { setSetsError("The invitee lists could not be loaded. Check your connection and try again."); }
   }, [eventId]);
@@ -168,6 +168,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                         <tr className="align-top">
                           <td className="py-3 pr-3 max-w-[220px]">
                             <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#A83800] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
+                            {s.source === "SESSION" && <span className="block text-xs text-[#6B6B6B]">The guests of this session, taken from the other lists (not an upload)</span>}
                             {s.createdAt && <span className="block text-xs text-[#6B6B6B]">{s.source === "MANUAL" ? "Added" : "Uploaded"} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
                             <span className="sm:hidden mt-1 inline-block">{s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked") : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open")}</span>
                           </td>
@@ -179,14 +180,14 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                           </td>
                           <td className="py-3 pr-3">{s.setAside}</td>
                           <td className="py-3">
-                            {s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open", "No invitation has been sent successfully from this list.")}
+                            {s.source === "SESSION" ? pill("bg-[#EDEDED] text-[#4B4F52]", "From other lists", "This session uses guests from the lists above, so it has no list of its own to change.") : s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked", "Invitations were sent, a guest answered, or a guest checked in. This list is kept as it is.", <Lock />) : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open", "No invitation has been sent successfully from this list.")}
                           </td>
                         </tr>
                         {open === s.id && (
                           <tr>
                             <td colSpan={6} className="pb-4">
                               <div className="rounded-md bg-[#F8F8F8] border border-[#E5E5E5] p-4 text-sm">
-                                <p className="text-[#4B4F52]">{stateExplanation(s)}</p>
+                                <p className="text-[#4B4F52]">{s.source === "SESSION" ? "These are the guests who can attend this session, taken from the lists above. To change them, change the lists they came from." : stateExplanation(s)}</p>
                                 <GuestTable state={members[s.id]} />
                               </div>
                             </td>

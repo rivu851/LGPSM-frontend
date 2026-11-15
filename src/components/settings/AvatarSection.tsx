@@ -74,7 +74,7 @@ export default function AvatarSection({
       {/* Main Avatar Trigger Button */}
       <div
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="relative w-32 h-32 rounded-full overflow-hidden shrink-0 border-2 border-gray-200 bg-gray-100 flex items-center justify-center cursor-pointer group shadow-sm transition-all hover:bg-[#EEF3FF]"
+        className="relative w-32 h-32 rounded-full overflow-hidden shrink-0 border-2 border-gray-200 bg-gray-100 flex items-center justify-center cursor-pointer group transition-all hover:bg-[#EEF3FF]"
         title="Click to change profile photo"
       >
         {avatarUrl ? (

@@ -138,7 +138,7 @@ export default function SubHeroIntro() {
 
         {/* Book a Demo Button & Animated Spiralled Arrow SVG */}
         <div className="pt-2 flex flex-col items-center justify-center relative">
-          <Link href="/contact" className="inline-block px-6 py-2.5 bg-[#171D22] hover:bg-[#0F1418] text-white text-sm font-normal rounded-[10px] shadow-sm transition-all hover:scale-105 active:scale-95 font-sans tracking-wide cursor-pointer">
+          <Link href="/contact" className="inline-block px-6 py-2.5 bg-[#171D22] hover:bg-[#0F1418] text-white text-sm font-normal rounded-[10px] transition-all hover:scale-105 active:scale-95 font-sans tracking-wide cursor-pointer">
             Book a Demo
           </Link>
           
@@ -166,7 +166,7 @@ export default function SubHeroIntro() {
 
         {/* Dashboard Preview Image */}
         <div ref={dashboardRef} className="pt-2 max-w-[900px] mx-auto">
-          <div className="rounded-2xl overflow-hidden shadow-xl border border-gray-100 transition-shadow hover:shadow-xl">
+          <div className="rounded-2xl overflow-hidden border border-gray-100 transition-shadow hover:">
             <Image
               src="/images/home/mid_hero.webp"
               alt="LGPSM Interactive App Dashboard Preview"

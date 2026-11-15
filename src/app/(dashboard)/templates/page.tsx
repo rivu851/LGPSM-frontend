@@ -150,7 +150,7 @@ function TemplatesPageContent() {
         <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Template list" className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
           {([["all", "All templates"], ["mine", "My templates"]] as const).map(([key, label]) => (
-            <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white shadow-sm font-medium text-gray-900" : "text-gray-600"}`}>
+            <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white font-medium text-gray-900" : "text-gray-600"}`}>
               {label}
             </button>
           ))}
@@ -283,9 +283,9 @@ function TemplatesPageContent() {
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
-                  {preview.isMine && preview.isUploaded && (
+                  {preview.isMine && preview.isDynamic && (
                     <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] text-sm font-medium rounded-md cursor-pointer">
-                      {preview.isDynamic ? "Text areas" : "QR placement"}
+                      Text areas
                     </button>
                   )}
                   {!preview.isDraft && preview.kind === "INVITATION" && (

@@ -199,7 +199,7 @@ export default function PublicInvitationPage() {
   if (error && !invitationData) {
     return (
       <main className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl border border-slate-100 text-center space-y-4">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 border border-slate-100 text-center space-y-4">
           <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -220,7 +220,7 @@ export default function PublicInvitationPage() {
   if (passStatus === "REPLACED") {
     return (
       <main style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
-        <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden">
+        <div className="max-w-lg w-full bg-white rounded-3xl border border-[color:var(--inv-line)] overflow-hidden">
           <div className="px-7 pt-7 pb-8 text-center text-[color:var(--inv-on-primary)]" style={{ background: "linear-gradient(135deg, var(--inv-primary) 0%, color-mix(in srgb, var(--inv-primary) 72%, var(--inv-accent)) 100%)" }}>
             <span className="inline-block px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.18em] mb-3 border border-current/30 bg-white/15">Access pass replaced</span>
             <h1 style={{ fontFamily: "var(--inv-heading)" }} className="mx-auto max-w-[24rem] px-2 text-2xl font-bold leading-tight [overflow-wrap:anywhere]">{event.title}</h1>
@@ -275,7 +275,7 @@ export default function PublicInvitationPage() {
 
   return (
     <main style={themeCssVars(theme)} className="min-h-screen bg-[color:var(--inv-bg)] text-[color:var(--inv-ink)] flex items-center justify-center p-4 sm:p-6 font-sans">
-      <div data-inv-card className={`${showPass ? "max-w-[400px]" : "max-w-lg"} w-full bg-white rounded-3xl shadow-xl border border-[color:var(--inv-line)] overflow-hidden`}>
+      <div data-inv-card className={`${showPass ? "max-w-[400px]" : "max-w-lg"} w-full bg-white rounded-3xl border border-[color:var(--inv-line)] overflow-hidden`}>
         {!showPass && (
           <>
         {/* Header: the colours and character of the invitation card the guest was sent */}
@@ -408,7 +408,7 @@ export default function PublicInvitationPage() {
                 }}
                 className={`group flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-200 ${
                   selectedRsvp === "ACCEPTED"
-                    ? "border-emerald-600 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/25"
+                    ? "border-emerald-600 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white"
                     : "border-emerald-200 bg-white text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50"
                 }`}
               >
@@ -425,7 +425,7 @@ export default function PublicInvitationPage() {
                 onClick={() => { setSelectedRsvp("DECLINED"); setDietaryChoices({}); setError(null); }}
                 className={`group flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 px-3 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.97] focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-200 ${
                   selectedRsvp === "DECLINED"
-                    ? "border-rose-600 bg-gradient-to-br from-rose-500 to-rose-600 text-white shadow-lg shadow-rose-600/25"
+                    ? "border-rose-600 bg-gradient-to-br from-rose-500 to-rose-600 text-white"
                     : "border-rose-200 bg-white text-rose-700 hover:!border-rose-500 hover:bg-rose-50"
                 }`}
               >
@@ -470,7 +470,7 @@ export default function PublicInvitationPage() {
                   ? "border-2 border-emerald-200 bg-emerald-50 text-emerald-700"
                   : !selectedRsvp
                     ? "border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400"
-                    : "bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-lg shadow-black/15 hover:brightness-95 disabled:opacity-80"
+                    : "bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] hover:brightness-95 disabled:opacity-80"
               }`}
             >
               {submitting ? (
@@ -519,7 +519,7 @@ export default function PublicInvitationPage() {
               type="submit"
               disabled={submitting || foodSaved}
               className={`flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-full px-5 py-3.5 text-sm font-bold transition-all duration-200 active:scale-[0.98] focus:outline-none focus-visible:ring-4 focus-visible:ring-[color:var(--inv-line)] disabled:cursor-not-allowed ${
-                foodSaved ? "border-2 border-emerald-200 bg-emerald-50 text-emerald-700" : "bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] shadow-lg shadow-black/15 hover:brightness-95"
+                foodSaved ? "border-2 border-emerald-200 bg-emerald-50 text-emerald-700" : "bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)] hover:brightness-95"
               }`}
             >
               {submitting ? (

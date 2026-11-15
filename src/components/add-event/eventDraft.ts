@@ -125,6 +125,19 @@ export interface CardDisplay {
 }
 export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: true, logo: true };
 /** What is sent to the server: the logo flag only when it is switched off, so an older server never sees a key it does not know */
+/**
+ * What the card prints, with the guest's name decided by the Additional Information choices: it is printed exactly when "Invitee Name" is chosen
+ * for the primary or the secondary line. Before anything is chosen (no Additional Information saved) the name prints, as every card always has.
+ * Read from here everywhere (the preview, the saved event), so the two can never disagree.
+ */
+export function cardDisplayOfDraft(draft: { cardDisplay?: Partial<CardDisplay> | null; cardInfo?: { primary?: string | null; secondary?: string | null } | null }): CardDisplay {
+  const base = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
+  const info = draft.cardInfo;
+  if (info) {
+    return { ...base, inviteeName: info.primary === "INVITEE_NAME" || info.secondary === "INVITEE_NAME" };
+  }
+  return base;
+}
 export const cardDisplayForServer = <T extends Partial<CardDisplay>>(d: T): T => {
   const { logo, ...rest } = d;
   return (logo === false ? d : rest) as T;
@@ -222,8 +235,9 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
-    // A new event starts with nothing printed under the title: the guest lines stay blank until Additional Information is chosen in Settings
-    cardInfo: { primary: null, secondary: null },
+    // A new event prints the guest's name, as every card always has: "Invitee Name" is the primary choice under Additional Information until the
+    // person changes it (unticking it takes the name off the card)
+    cardInfo: { primary: "INVITEE_NAME", secondary: null },
     cardDisplay: { ...CARD_DISPLAY_DEFAULTS },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
@@ -394,7 +408,7 @@ function commonPayload(draft: EventDraft) {
     dietaryPreference: buildDietaryPreference(draft),
     ...(draft.template ? { templateId: draft.template.id } : {}),
     ...(draft.cardInfo ? { cardInfo: draft.cardInfo } : {}),
-    cardDisplay: cardDisplayForServer({ ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) }),
+    cardDisplay: cardDisplayForServer(cardDisplayOfDraft(draft)),
     // An empty key clears a previously saved logo
     media: { logoKey: draft.logoKey || "" },
   };

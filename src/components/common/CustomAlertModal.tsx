@@ -82,7 +82,7 @@ export default function CustomAlertModal({
           <button
             type="button"
             onClick={() => { onAction?.(); onClose(); }}
-            className={`w-full py-2.5 font-bold text-xs rounded-md transition-colors cursor-pointer shadow-2xs text-white ${
+            className={`w-full py-2.5 font-bold text-xs rounded-md transition-colors cursor-pointer text-white ${
               type === "success"
                 ? "bg-emerald-600 hover:bg-emerald-700"
                 : type === "error"

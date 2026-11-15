@@ -46,7 +46,9 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
     setSaving(false);
     if (res.success && res.data) {
       const made = res.data as Template & { detection?: { detected: boolean; reason?: string } | null };
-      setAreas({ template: made, intro: made.templateData?.dynamicDetails ? made.detection ?? null : null });
+      // only an admin's design (whose wording the event's details replace) has areas to check; an organizer's own design is the card as it is
+      if (made.templateData?.dynamicDetails) setAreas({ template: made, intro: made.detection ?? null });
+      else onCreated(res.data);
     }
     else setError(res.message || "The template could not be saved. Please try again.");
   };

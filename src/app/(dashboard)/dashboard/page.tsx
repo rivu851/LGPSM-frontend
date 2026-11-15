@@ -490,12 +490,12 @@ export default function DashboardPage() {
 
         {/* Bottom Section: Top Organizers Table Card Container */}
         {user?.role === "ADMIN" && (
-          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
+          <div className="bg-white border border-gray-200 rounded-md p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">Top Organizers</h2>
               <Link
                 href="/event-organizer/add"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

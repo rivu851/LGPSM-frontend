@@ -102,7 +102,7 @@ export default function BillingPage() {
                 <div className="flex justify-end px-[21px]" aria-hidden>
                   <svg width="19.5" height="8.5" viewBox="0 0 19.5 8.5" fill="none"><path d="M0 8.5L10 0L19.5 8.5H0Z" fill="#F4F4F4" /></svg>
                 </div>
-                <div className="bg-[#F4F4F4] rounded-lg shadow-lg overflow-hidden">
+                <div className="bg-[#F4F4F4] rounded-lg overflow-hidden">
                   <div className="px-6 py-5 border-b border-[#E0E0E0] text-base font-medium text-[#15191C]">Filter by date</div>
                   <div className="p-6 space-y-4">
                     <div className="space-y-2">

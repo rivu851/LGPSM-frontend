@@ -9,11 +9,13 @@ interface CardPreviewModalProps {
   eventId: string;
   inviteeId?: string;
   inviteeName?: string;
+  /** an organizer's own uploaded design: the card is the picture as it is, so no note about the sample QR is shown */
+  staticCard?: boolean;
   onClose: () => void;
 }
 
 // Shows the card exactly as the backend renders it for email/WhatsApp (one source of truth)
-export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onClose }: CardPreviewModalProps) {
+export default function CardPreviewModal({ eventId, inviteeId, inviteeName, staticCard = false, onClose }: CardPreviewModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [qr, setQr] = useState<"ISSUED" | "SAMPLE" | null>(null);
@@ -60,7 +62,7 @@ export default function CardPreviewModal({ eventId, inviteeId, inviteeName, onCl
             <p className="text-sm text-[#6B6B6B]">Generating preview...</p>
           )}
         </div>
-        {url && qr && (
+        {url && qr && !staticCard && (
           <p className={`px-5 py-2.5 text-xs border-t ${qr === "ISSUED" ? "bg-emerald-50 border-emerald-100 text-emerald-800" : "bg-amber-50 border-amber-100 text-amber-800"}`}>
             {qr === "ISSUED"
               ? "This QR is the guest's current check-in pass. Sending the invitation again replaces it."

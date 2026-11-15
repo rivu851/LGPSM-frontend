@@ -52,7 +52,8 @@ export interface InviteeSetInfo {
   /** "legacy" is the list of guests added by hand or before lists were tracked */
   id: string;
   name: string;
-  source: "EXCEL" | "MANUAL";
+  /** SESSION: a session's own view of the guests who come from other lists (not an upload) */
+  source: "EXCEL" | "MANUAL" | "SESSION";
   /** The session the list was uploaded for; null for the whole event */
   sessionId?: string | null;
   mode: ImportMode;
@@ -231,7 +232,7 @@ export const inviteeService = {
    * POST /api/v1/events/:eventId/invitees/import
    */
   // The latest upload replaces the not-yet-invited list (for the event, or for one session when sessionId is given)
-  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; hasSent: boolean; archivedCount: number }>> {
+  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; hasSent: boolean; archivedCount: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets`, { method: "GET" }, true);
   },
 

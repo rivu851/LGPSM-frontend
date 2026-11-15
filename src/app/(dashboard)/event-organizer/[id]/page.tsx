@@ -214,7 +214,7 @@ export default function OrganizerDetailsPage() {
         {/* Page Content */}
         <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Organizer Detail Banner Card */}
-          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="bg-white border border-gray-200 rounded-md p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               {/* Logo Avatar */}
               {organizer.logoUrl ? (
@@ -395,7 +395,7 @@ export default function OrganizerDetailsPage() {
             </div>
 
             {/* Table Container */}
-            <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-x-auto">
+            <div className="bg-white border border-gray-200 rounded-md overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm bg-white">
