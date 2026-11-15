@@ -6,6 +6,7 @@ import CategoryFields from "@/components/categories/CategoryFields";
 import ImageUploadField from "@/components/common/ImageUploadField";
 import { useCategories } from "@/hooks/useCategories";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
+import TextAreasEditor from "@/components/templates/TextAreasEditor";
 import { templateService, type Template } from "@/services/templateService";
 
 interface Props {
@@ -25,7 +26,9 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
   const [saving, setSaving] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const overlayClose = useOverlayClose(onClose, saving);
+  // an administrator's upload is dynamic: right after saving, the wording in the picture is checked (and fixed or marked by hand) here
+  const [areas, setAreas] = useState<{ template: Template; intro: { detected: boolean; reason?: string } | null } | null>(null);
+  const overlayClose = useOverlayClose(onClose, saving || !!areas);
 
   const errors = {
     // the name is optional; an organizer's upload has no event type (it suits every event), an admin's shared one needs it
@@ -41,11 +44,16 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
     setError(null);
     const res = await templateService.uploadOwnTemplate({ ...(name.trim() ? { name: name.trim() } : {}), imageKey: imageKey!, ...(!categories.isOrganizer && cat.categoryId ? { categoryId: cat.categoryId } : {}), ...(!categories.isOrganizer && cat.subcategoryId ? { subcategoryId: cat.subcategoryId } : {}) });
     setSaving(false);
-    if (res.success && res.data) onCreated(res.data);
+    if (res.success && res.data) {
+      const made = res.data as Template & { detection?: { detected: boolean; reason?: string } | null };
+      if (made.templateData?.dynamicDetails) setAreas({ template: made, intro: made.detection ?? null });
+      else onCreated(res.data);
+    }
     else setError(res.message || "The template could not be saved. Please try again.");
   };
 
   const shown: Partial<typeof errors> = showErrors ? errors : {};
+  if (areas) return <TextAreasEditor templateId={areas.template._id || areas.template.id || ""} intro={areas.intro} onClose={() => onCreated(areas.template)} />;
   return (
     <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="upload-template-title" {...overlayClose}>
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto">
@@ -59,7 +67,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
           <p className="text-sm text-[#4B4F52]">
             {categories.isOrganizer
               ? "Upload your finished invitation design. Your artwork is the card; each guest's own QR code and name are placed at the bottom of it, so leave that area calm. Only you can use this template."
-              : "Upload a background picture. Like the other templates, each event's own title, date and time, venue, and the guest's name and QR code are filled in automatically on a panel at the bottom, so leave that area calm. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
+              : "Upload a background picture. Like the other templates, each event's own name, date and time and venue are written over the wording already in your picture (the picture around them is kept), and the guest's name and QR code are added at the bottom. After saving you check where that wording is. Pick the event category and subcategory it is for: every organizer can then use it for those events."}
           </p>
           <div>
             <label htmlFor="own-template-name" className="block text-sm font-medium text-gray-900 mb-1.5">Template name <span className="font-normal text-[#6B6B6B]">(optional)</span></label>

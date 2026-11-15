@@ -74,6 +74,18 @@ export interface TemplatePreviewPayload {
   cardInfo?: { primary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; secondary: "INVITEE_NAME" | "COMPANY_NAME" | "PROFESSIONAL_IDENTITY" | "SECONDARY_IDENTITY" | null; identityLabel?: string | null; secondaryIdentityLabel?: string | null; showIdentityLabel?: boolean; showSecondaryIdentityLabel?: boolean };
 }
 
+export type TextZoneRole = "title" | "dateTime" | "venue";
+export interface TextZone {
+  role: TextZoneRole;
+  x: number; y: number; w: number; h: number;
+  lines: number;
+  color: string;
+  fontFamily: string;
+  fontWeight: 400 | 500 | 600 | 700;
+  align: "left" | "center" | "right";
+}
+export interface TextZonesData { imageKey?: string; canvas?: { width: number; height: number }; zones: TextZone[]; mode: "AUTO" | "MANUAL" | "NONE" }
+
 export const templateService = {
   /**
    * The card this template makes for the event being entered, rendered by the server (nothing is saved).
@@ -176,6 +188,17 @@ export const templateService = {
   /** "Upload your own template": an image the person uploaded as a TEMPLATE becomes a private template of theirs */
   async uploadOwnTemplate(payload: { name?: string; imageKey: string; categoryId?: string; subcategoryId?: string }): Promise<ApiResponse<Template>> {
     return apiClient<Template>("/api/v1/templates/upload", { method: "POST", body: JSON.stringify(payload) }, true);
+  },
+
+  /** The wording of an uploaded design that the event's own details replace: read, set by hand, or looked for again */
+  async getTextZones(id: string): Promise<ApiResponse<TextZonesData>> {
+    return apiClient<TextZonesData>(`/api/v1/templates/${id}/text-zones`, { method: "GET" }, true);
+  },
+  async saveTextZones(id: string, zones: TextZone[]): Promise<ApiResponse<Template>> {
+    return apiClient<Template>(`/api/v1/templates/${id}/text-zones`, { method: "PUT", body: JSON.stringify({ zones }) }, true);
+  },
+  async detectText(id: string): Promise<ApiResponse<{ template: Template; detected: boolean; reason?: string }>> {
+    return apiClient<{ template: Template; detected: boolean; reason?: string }>(`/api/v1/templates/${id}/detect-text`, { method: "POST" }, true);
   },
 
   async deleteTemplate(id: string): Promise<ApiResponse<Template>> {

@@ -10,6 +10,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import TemplateThumb from "@/components/settings/TemplateThumb";
 import { useCategories } from "@/hooks/useCategories";
 import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
+import TextAreasEditor from "@/components/templates/TextAreasEditor";
 import { templateService, Template } from "@/services/templateService";
 import { eventService, EventData } from "@/services/eventService";
 import { useAlert } from "@/context/AlertContext";
@@ -32,6 +33,8 @@ interface TemplateCard {
   isCustom: boolean;
   /** the organizer's own uploaded design */
   isUploaded: boolean;
+  /** an administrator's upload whose own wording the event's details replace */
+  isDynamic: boolean;
   kind: "INVITATION" | "POSTER";
   /** made by the signed-in user: they can publish, unpublish and delete it */
   isMine: boolean;
@@ -57,6 +60,7 @@ function TemplatesPageContent() {
   const [preview, setPreview] = useState<TemplateCard | null>(null);
   // "My templates" is a link target (the AI studio sends people there after saving)
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [areasFor, setAreasFor] = useState<string | null>(null);
   const [view, setView] = useState<"all" | "mine">(searchParams.get("view") === "mine" ? "mine" : "all");
   const [reload, setReload] = useState(0);
   // the template drawn with the event chosen in the preview panel (null = show the stored sample preview)
@@ -77,6 +81,7 @@ function TemplatesPageContent() {
       isDraft: t.isPublished === false,
       isCustom: t.cardDesign === "CUSTOM",
       isUploaded: !!t.templateData?.uploaded,
+      isDynamic: !!t.templateData?.dynamicDetails,
       kind: t.kind === "POSTER" ? "POSTER" : "INVITATION",
       isMine: mine || (!!user?._id && t.ownerId === user._id),
     });
@@ -232,6 +237,8 @@ function TemplatesPageContent() {
         )}
       </div>
 
+      {areasFor && <TextAreasEditor templateId={areasFor} onClose={(changed) => { setAreasFor(null); if (changed) setReload((n) => n + 1); }} />}
+
       {preview && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-preview-title">
           <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full my-auto">
@@ -276,6 +283,11 @@ function TemplatesPageContent() {
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
+                  {preview.isMine && preview.isDynamic && (
+                    <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] text-sm font-medium rounded-md cursor-pointer">
+                      Text areas
+                    </button>
+                  )}
                   {!preview.isDraft && preview.kind === "INVITATION" && (
                     <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
                       Create an Event
