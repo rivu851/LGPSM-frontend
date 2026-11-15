@@ -5,7 +5,6 @@ import Link from "next/link";
 import { SelectedTemplate, cardDisplayForServer } from "./eventDraft";
 import { templateService, TemplatePreviewPayload } from "@/services/templateService";
 import CustomDropdown from "@/components/common/CustomDropdown";
-import DeviceFrame, { DEVICES, DEFAULT_DEVICE } from "./DeviceFrame";
 import { resolveImageUrl } from "@/utils/mediaUrl";
 
 interface MobileCardPreviewProps {
@@ -28,7 +27,6 @@ interface MobileCardPreviewProps {
   awaitingTemplate?: boolean;
 }
 
-const DEVICE_STORAGE_KEY = "lgpsm-card-preview-device";
 const ZOOM_SCALE: Record<string, number> = { "100%": 1, "75%": 0.75, "50%": 0.5 };
 
 function formatEventDateRange(start: string, end: string): string | null {
@@ -61,21 +59,6 @@ export default function MobileCardPreview({
   awaitingTemplate = false,
 }: MobileCardPreviewProps) {
   const [zoomLevel, setZoomLevel] = useState("100%");
-  const [deviceKey, setDeviceKeyState] = useState(DEFAULT_DEVICE);
-  // the chosen device is remembered in this browser, so it is still selected after a reload
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(DEVICE_STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- read once after mount (reading it during render would differ from the server's HTML)
-      if (saved && DEVICES[saved]) setDeviceKeyState(saved);
-    } catch { /* storage blocked: the default device is used */ }
-  }, []);
-  const setDeviceKey = (key: string) => {
-    setDeviceKeyState(key);
-    try { window.localStorage.setItem(DEVICE_STORAGE_KEY, key); } catch { /* not remembered */ }
-  };
-  const device = DEVICES[deviceKey] ?? DEVICES[DEFAULT_DEVICE];
-  const deviceOptions = [...new Set(Object.values(DEVICES).map((d) => d.group))].flatMap((g) => Object.entries(DEVICES).filter(([, d]) => d.group === g).map(([value, d]) => ({ value, label: `${g} · ${d.label} (${d.w} × ${d.h})` })));
   // An uploaded design is the card exactly as it is: no data is drawn on it, so there is nothing to render. Its own picture is shown.
   const staticUrl = template?.staticCard ? resolveImageUrl(template.previewKey) : null;
 
@@ -146,6 +129,7 @@ export default function MobileCardPreview({
   );
 
   const showLive = !awaitingTemplate && !staticUrl && live?.key === (template?.id ?? "by-event-type");
+  const hasCard = (showLive && !!live) || !!staticUrl;
   const usesSamplePhoto = !payload.logoKey;
   const eventDateRange = formatEventDateRange(eventStart, eventEnd);
 
@@ -153,16 +137,7 @@ export default function MobileCardPreview({
     <div className="h-full bg-[#F7F3F0] p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
         <h2 className="text-base font-medium text-gray-900">Card Preview</h2>
-        <div className="flex items-center gap-2">
-        <div className="w-60">
-          <CustomDropdown
-            value={deviceKey}
-            onChange={setDeviceKey}
-            options={deviceOptions}
-            ariaLabel="Preview device"
-          />
-        </div>
-        <div className="w-24">
+        <div className="w-28">
           <CustomDropdown
             value={zoomLevel}
             onChange={setZoomLevel}
@@ -170,18 +145,21 @@ export default function MobileCardPreview({
             ariaLabel="Preview zoom"
           />
         </div>
-        </div>
       </div>
 
       <div className="flex flex-col items-center">
-        <div className="w-full origin-top transition-transform" style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}>
-        <DeviceFrame deviceKey={deviceKey} label={`Invitation card preview on ${device.label}`}>
-          {/* the card is always shown completely inside the device's screen, whatever its height */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            {(showLive && live) || staticUrl ? (
+        <div
+          className={`relative ${hasCard ? "w-fit max-w-full" : "w-[230px] sm:w-[250px] aspect-[9/18.5]"} bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
+          style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
+          aria-label="Invitation card preview"
+        >
+          <div className={`relative w-full ${hasCard ? "" : "h-full"} rounded-[30px] overflow-hidden bg-[#EFEFEF]`}>
+            {/* the phone takes the card's own proportions (it is taller when the guest name band and details are added) and the card is
+                sized to the space available, so all of it is visible without any scrolling */}
+            {hasCard && (
               // eslint-disable-next-line @next/next/no-img-element -- invitation card is a blob URL rendered by the API, or the uploaded design
-              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block max-w-full max-h-full w-auto h-auto object-contain" />
-            ) : null}
+              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-auto w-auto max-w-[234px] max-h-[max(380px,calc(100vh-340px))] mx-auto" />
+            )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
                 <svg className="h-4 w-4 animate-spin text-[#C44200]" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -210,7 +188,6 @@ export default function MobileCardPreview({
               </div>
             )}
           </div>
-        </DeviceFrame>
         </div>
 
         {/* Figma Event_Add event-1: "Change Template" and "Additional Info" side by side ("Edit Additional Info" once set) */}
