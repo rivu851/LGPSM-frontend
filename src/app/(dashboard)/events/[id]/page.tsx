@@ -165,6 +165,21 @@ export default function EventDetailsPage() {
   const [reportLoaded, setReportLoaded] = useState(false);
   const [accessLogs, setAccessLogs] = useState<AccessLogRow[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
+  // the session the Analysis section is showing: its health rings and its access logs always describe this one session
+  const analysisRef = useRef("");
+  const logRequestRef = useRef(0);
+  const loadAccessLogs = useCallback(async (forSession: string) => {
+    const id = ++logRequestRef.current;
+    const logRes = await checkInService.getCheckIns(eventId, { limit: 10, sessionId: forSession || undefined });
+    if (id !== logRequestRef.current) return; // a newer choice of session has taken over
+    setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
+  }, [eventId]);
+  const chooseAnalysisSession = (id: string) => {
+    analysisRef.current = id;
+    setAnalysisSession(id);
+    setAccessLogs([]); // never leave the previous session's guests on screen while this one's load
+    void loadAccessLogs(id);
+  };
   const [cardExpanded, setCardExpanded] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -200,7 +215,10 @@ export default function EventDetailsPage() {
     }
     const ss = sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : [];
     setSessions(ss);
-    setAnalysisSession((prev) => prev || ss[0]?._id || "");
+    // keep the chosen session, unless it no longer exists
+    const analysisId = ss.some((x) => x._id === analysisRef.current) ? analysisRef.current : ss[0]?._id || "";
+    analysisRef.current = analysisId;
+    setAnalysisSession(analysisId);
     loadedFor.current = eventId;
     setLoading(false);
 
@@ -216,12 +234,9 @@ export default function EventDetailsPage() {
       setReport(repRes.success && repRes.data ? repRes.data : null);
       setReportLoaded(true);
     });
-    void checkInService.getCheckIns(eventId, { limit: 10 }).then((logRes) => {
-      if (requestId !== requestIdRef.current) return;
-      setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
-    });
+    void loadAccessLogs(analysisId);
 
-  }, [eventId]);
+  }, [eventId, loadAccessLogs]);
 
   useEffect(() => {
     if (eventId) load();
@@ -498,7 +513,7 @@ export default function EventDetailsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[#4B4F52]">Session:</span>
                 <div className="w-48">
-                  <CustomDropdown value={analysisSession} onChange={setAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
+                  <CustomDropdown value={analysisSession} onChange={chooseAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
                 </div>
               </div>
             )}
@@ -525,7 +540,7 @@ export default function EventDetailsPage() {
                   </thead>
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {accessLogs.length === 0 ? (
-                      <tr><td colSpan={4} className="py-6 text-center text-[#6B6B6B]">No guests have entered yet.</td></tr>
+                      <tr><td colSpan={4} className="py-6 text-center text-[#6B6B6B]">No guests have entered this session yet.</td></tr>
                     ) : (
                       accessLogs.map((log) => (
                         <tr key={log.id}>
