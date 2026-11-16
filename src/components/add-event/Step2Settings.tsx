@@ -119,7 +119,8 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
           <InfoTip label="About the data on the card" text="Untick a detail to leave it off every guest's card. The card preview shows the result." align="left" />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName").map(({ key, label }) => {
+          {/* the event location is mandatory on the card (the master card always prints it), so it is not a choice */}
+          {CARD_DISPLAY_OPTIONS.filter(({ key }) => key !== "inviteeName" && key !== "location").map(({ key, label }) => {
             const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
             return (
               <label key={key} htmlFor={`card-show-${key}`} className="flex items-center gap-2.5 rounded-md border border-[#E0E0E0] px-3 py-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
