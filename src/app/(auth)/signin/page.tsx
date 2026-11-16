@@ -1,5 +1,6 @@
 "use client";
 
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import React, { Suspense, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -56,7 +57,7 @@ function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect
             onClick={() => onSelect(tab.mode)}
             className={`flex-1 py-2 px-1 sm:px-2 text-center rounded-lg transition-all cursor-pointer ${
               isActive
-                ? "bg-white text-[#C44200] shadow-sm font-bold border border-gray-200/60"
+                ? "bg-white text-[#C44200] font-bold border border-gray-200/60"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -71,7 +72,7 @@ function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect
 function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const { showAlert } = useAlert();
 
   const initial = parsePortalMode(searchParams.get("mode"));
@@ -121,6 +122,21 @@ function SigninContent() {
   };
 
   const isVerifiedParam = searchParams.get("verified") === "true";
+
+  // "Sign in with Google" (organizers): the server verifies Google's token and signs the organizer in, or creates the account
+  const handleGoogle = async (credential: string) => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+    try {
+      const res = await googleLogin(credential);
+      if (res.success) onSuccess(res.data?.user?.role);
+      else showAlert(res.message || "Google sign-in did not work. Please try again.", "error", "Google sign-in");
+    } catch {
+      setErrorMessage(ERROR_MESSAGES.network.genericFailure);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -245,6 +261,7 @@ function SigninContent() {
           {isVerifiedParam && <AuthAlert tone="success">Email verified successfully! Please sign in to access your dashboard.</AuthAlert>}
           {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
           {sharedForm}
+          <GoogleAuthButton mode="signin" onCredential={handleGoogle} disabled={isSubmitting} />
           <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-[#C44200] font-bold underline underline-offset-2 hover:text-[#A83800]">

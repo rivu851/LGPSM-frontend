@@ -36,8 +36,8 @@ interface Step1EventDetailsProps {
 }
 
 const labelClass = "text-sm font-medium text-gray-900";
-const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#828282] focus:outline-none";
-const border = (err?: string) => (err ? "border-rose-400" : "border-[#E0E0E0]");
+const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black";
+const border = (err?: string) => (err ? "!border-rose-500" : "border-[#E0E0E0]");
 const Err = ({ msg }: { msg?: string }) => (msg ? <p className="mt-1 text-xs font-medium text-rose-600">{msg}</p> : null);
 const Req = () => <span className="text-[#FF651D] ml-0.5">*</span>;
 
@@ -121,8 +121,8 @@ function OrganizerSelectField({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full min-h-[44px] px-3.5 py-2 bg-[#FAFAFA] border rounded-md text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer focus:border-[#16A34A] ${
-            error ? "border-rose-400" : "border-[#E0E0E0]"
+          className={`w-full min-h-[44px] px-3.5 py-2 bg-[#FAFAFA] border rounded-md text-sm text-left flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+            error ? "!border-rose-500" : "border-[#E0E0E0] focus:border-black"
           }`}
         >
           {selectedIds.length === 0 ? (
@@ -177,7 +177,7 @@ function OrganizerSelectField({
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search organizer by name or email..."
-                className="w-full px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-[#FF651D]"
+                className="w-full px-3 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-black"
               />
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -255,6 +255,11 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
 export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
   // what to tell the person when something other than a digit was typed in the contact number
   const [contactNote, setContactNote] = useState<string | null>(null);
+  // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
+  const titleMax = draft.template?.titleMaxChars ?? TITLE_MAX;
+  // an organizer's own uploaded design is the card as it is, so there is no place on it for an event logo/image
+  const staticDesign = draft.template?.staticCard === true;
+  useEffect(() => { if (staticDesign && draft.logoKey) onChange({ logoKey: null }); }, [staticDesign, draft.logoKey, onChange]);
   return (
     <form
       onSubmit={(e) => {
@@ -274,13 +279,13 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
           <label htmlFor="event-title" className={labelClass}>Title<Req /></label>
-          <span className="text-xs text-[#828282]">{TITLE_MAX - draft.title.length} Chars remaining</span>
+          <span className="text-xs text-[#828282]">{titleMax - draft.title.length} Chars remaining</span>
         </div>
         <input
           id="event-title"
           type="text"
           value={draft.title}
-          maxLength={TITLE_MAX}
+          maxLength={titleMax}
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Product Launch Event 2026"
           aria-invalid={!!errors.title}
@@ -350,8 +355,8 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       <div className="grid grid-cols-1 sm:grid-cols-2 sm:grid-rows-[auto_1fr] gap-4">
         <div>
           <label htmlFor="event-contact" className={`block ${labelClass} mb-1.5`}>Contact Number<Req /></label>
-          <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-[#FF651D] ${border(errors.contactNumber)}`}>
-            <span className="px-3 text-sm text-[#828282] border-r border-[#E0E0E0]">+91</span>
+          <div className={`flex items-center bg-[#FAFAFA] border rounded-md overflow-hidden focus-within:border-black ${border(errors.contactNumber)}`}>
+            <span className="px-3 text-sm text-[#6B6B6B] border-r border-[#E0E0E0]">+91</span>
             <PhoneInput
               id="event-contact"
               value={draft.contactNumber}
@@ -393,14 +398,16 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         )}
         <div className="sm:col-start-2 sm:row-start-1 sm:row-span-2">
           <ImageUploadField
-            label={<span className="flex items-center justify-between gap-2">Event Logo/image<InfoTip label="About the event logo" text="Shown on the invitation card. Use a JPG, PNG or WEBP image up to 5 MB." /></span>}
+            label={<span className="flex items-center justify-between gap-2"><span>Event Logo/image <span className="font-normal text-[#6B6B6B]">(optional)</span></span><InfoTip label="About the event logo" text="Shown on the invitation card. Use a JPG, PNG or WEBP image up to 5 MB." /></span>}
             value={draft.logoKey}
             onChange={(logoKey) => onChange({ logoKey })}
             purpose="EVENT_LOGO"
+            squareCrop
             aspectClassName="aspect-[2/1]"
             fill
             optional
-            hint="Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"
+            disabled={staticDesign}
+            hint={staticDesign ? "Not used: your uploaded design is the card exactly as it is." : "Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"}
           />
         </div>
       </div>

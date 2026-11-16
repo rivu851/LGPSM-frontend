@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -9,8 +11,8 @@ import { sessionService, SessionData } from "@/services/sessionService";
 import { assignmentService } from "@/services/assignmentService";
 import { reportService, EventReportData } from "@/services/reportService";
 import { checkInService } from "@/services/checkInService";
-import { AccessLogRow, EXIT_NOT_RECORDED, toAccessLogRow } from "@/utils/accessLogRows";
-import { formatCompactDateTime, formatDateTime, formatTime } from "@/utils/dateTime";
+import { AccessLogRow, toAccessLogRow } from "@/utils/accessLogRows";
+import { formatCompactDateTime, formatDateTime } from "@/utils/dateTime";
 import EventCardPreview from "@/components/events/EventCardPreview";
 import { getDynamicEventStatus } from "@/utils/eventUtils";
 import PageHeader from "@/components/common/PageHeader";
@@ -34,7 +36,7 @@ interface EventDetail {
   subcategory?: { name?: string } | null;
   organizerId?: { fullName?: string; profile?: { organizationName?: string } } | string;
   location?: { address?: string } | string;
-  templateId?: { name?: string; previewImageKey?: string } | string | null;
+  templateId?: { name?: string; previewImageKey?: string; templateData?: { uploaded?: boolean; dynamicDetails?: boolean } } | string | null;
   operationalDataCleared?: boolean;
   cancelledAt?: string;
   cancellationReason?: string;
@@ -47,13 +49,13 @@ const card = "bg-white border border-[#E0E0E0] rounded-lg";
 // corner is the one real link and is stretched across the card, so there is still a single link per card for keyboards and screen readers.
 // The Sessions card holds a table that can scroll sideways, so there only the arrow is the link: dragging its scroll bar or selecting text
 // must never be taken for "open this page".
-function ArrowLink({ href, label, stretch = false }: { href: string; label: string; stretch?: boolean }) {
+function ArrowLink({ href, label, stretch = false, arrow }: { href: string; label: string; stretch?: boolean; arrow?: string }) {
   return (
     <Link
       href={href}
       aria-label={label}
       title={label}
-      className={`p-1.5 -m-1.5 rounded-full text-gray-900 hover:text-[#A83800] hover:bg-[#FFF3EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF651D] ${stretch ? "after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}
+      className={`p-1.5 -m-1.5 rounded-full text-gray-900 ${arrow ? arrow : "hover:text-[#15191C] hover:bg-[#EEF3FF]"} transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-black ${stretch ? "after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}
     >
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 17L17 7M17 7H9M17 7v8" />
@@ -63,16 +65,19 @@ function ArrowLink({ href, label, stretch = false }: { href: string; label: stri
 }
 
 // the look of a card that is clickable all over
-const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
+// the three totals hover in their own colour; the other cards hover light blue
+const clickableCard = "relative cursor-pointer transition-colors hover:bg-[#EEF3FF] focus-within:border-black";
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
   const tones = { peach: "bg-[#FFDCCF] text-[#C44200]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
+  const arrow = { peach: "group-hover:text-[#C44200]", mint: "group-hover:text-[#15803D]", lavender: "group-hover:text-[#2C2EB5]" };
+  const hover = { peach: "hover:bg-[#FFDCCF]/60", mint: "hover:bg-[#C9F6E6]/60", lavender: "hover:bg-[#DCE1FF]/60" };
   return (
-    <div className={`${card} ${clickableCard} p-4 flex flex-col gap-3`}>
+    <div className={`group ${card} relative cursor-pointer transition-colors focus-within:border-black ${hover[tone]} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
         <span className={`size-10 rounded-full flex items-center justify-center ${tones[tone]}`}>{icon}</span>
-        <ArrowLink href={href} label={`Open ${label}`} stretch />
+        <ArrowLink href={href} label={`Open ${label}`} stretch arrow={arrow[tone]} />
       </div>
       <div>
         <p className="text-3xl font-medium text-black leading-none">{value === null ? <span role="status" aria-label="Loading" className="inline-block h-[30px] w-12 rounded bg-gray-200 animate-pulse align-top" /> : String(value).padStart(2, "0")}</p>
@@ -160,6 +165,21 @@ export default function EventDetailsPage() {
   const [reportLoaded, setReportLoaded] = useState(false);
   const [accessLogs, setAccessLogs] = useState<AccessLogRow[]>([]);
   const [analysisSession, setAnalysisSession] = useState("");
+  // the session the Analysis section is showing: its health rings and its access logs always describe this one session
+  const analysisRef = useRef("");
+  const logRequestRef = useRef(0);
+  const loadAccessLogs = useCallback(async (forSession: string) => {
+    const id = ++logRequestRef.current;
+    const logRes = await checkInService.getCheckIns(eventId, { limit: 10, sessionId: forSession || undefined });
+    if (id !== logRequestRef.current) return; // a newer choice of session has taken over
+    setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
+  }, [eventId]);
+  const chooseAnalysisSession = (id: string) => {
+    analysisRef.current = id;
+    setAnalysisSession(id);
+    setAccessLogs([]); // never leave the previous session's guests on screen while this one's load
+    void loadAccessLogs(id);
+  };
   const [cardExpanded, setCardExpanded] = useState(false);
   const [cleanupOpen, setCleanupOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -169,16 +189,21 @@ export default function EventDetailsPage() {
 
   // The skeleton is for the first load of an event; a refresh after cancelling or editing keeps the page on screen
   const loadedFor = useRef<string | null>(null);
+  // a background refresh must never replace the page with an error when one request fails
+  const quietRef = useRef(false);
   const load = useCallback(async () => {
+    const quiet = quietRef.current;
+    quietRef.current = false;
     const requestId = ++requestIdRef.current;
     if (loadedFor.current !== eventId) setLoading(true);
-    setLoadError(null);
+    if (!quiet) setLoadError(null);
     const [evRes, sessRes] = await Promise.all([
       eventService.getEvent(eventId),
       sessionService.getSessions(eventId),
     ]);
     if (requestId !== requestIdRef.current) return;
     if (!evRes.success || !evRes.data) {
+      if (quiet) return;
       setLoadError(evRes.message || "Event not found or you do not have access to it.");
       setLoading(false);
       return;
@@ -190,7 +215,10 @@ export default function EventDetailsPage() {
     }
     const ss = sessRes.success && Array.isArray(sessRes.data) ? sessRes.data : [];
     setSessions(ss);
-    setAnalysisSession((prev) => prev || ss[0]?._id || "");
+    // keep the chosen session, unless it no longer exists
+    const analysisId = ss.some((x) => x._id === analysisRef.current) ? analysisRef.current : ss[0]?._id || "";
+    analysisRef.current = analysisId;
+    setAnalysisSession(analysisId);
     loadedFor.current = eventId;
     setLoading(false);
 
@@ -206,17 +234,17 @@ export default function EventDetailsPage() {
       setReport(repRes.success && repRes.data ? repRes.data : null);
       setReportLoaded(true);
     });
-    void checkInService.getCheckIns(eventId, { limit: 10 }).then((logRes) => {
-      if (requestId !== requestIdRef.current) return;
-      setAccessLogs(logRes.success && Array.isArray(logRes.data) ? logRes.data.map(toAccessLogRow) : []);
-    });
+    void loadAccessLogs(analysisId);
 
-  }, [eventId]);
+  }, [eventId, loadAccessLogs]);
 
   useEffect(() => {
     if (eventId) load();
     return () => { requestIdRef.current += 1; };
   }, [eventId, load]);
+
+  // check-ins, guest logs, totals and the status all follow what is happening at the door
+  useLiveRefresh(() => { quietRef.current = true; return load(); }, 15_000, !!eventId);
 
   if (loading) {
     return (
@@ -279,12 +307,7 @@ export default function EventDetailsPage() {
     <div className="w-full min-h-full bg-white">
       <PageHeader title={pageTitle} icon={<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
       <div className="px-4 sm:px-6 py-4 sm:py-6 w-full space-y-6 pb-24">
-        {notice && (
-          <div role="status" className="p-3 bg-emerald-50 border border-emerald-200 rounded-md text-sm text-emerald-800 flex justify-between gap-3">
-            <span>{notice}</span>
-            <button type="button" onClick={() => setNotice(null)} className="font-medium cursor-pointer">Dismiss</button>
-          </div>
-        )}
+        <PopupMessage message={notice} type="success" onClose={() => setNotice(null)} />
         {event.status === "CANCELLED" && (
           <div role="status" className="p-3 bg-gray-100 border border-gray-300 rounded-md text-sm text-gray-800">
             <p className="font-medium">This event was cancelled{event.cancelledAt ? ` on ${formatDateTime(event.cancelledAt)}` : ""}.</p>
@@ -298,32 +321,36 @@ export default function EventDetailsPage() {
         )}
 
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 md:flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-2xl sm:text-[28px] font-medium text-black break-words">{event.title}</h2>
               {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#C44200] text-xs font-medium rounded">{categoryPill}</span>}
             </div>
-            <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap text-xs text-[#4B4F52]">
-              <span className={`px-3 py-1 rounded-full font-medium ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
+            {/* from tablet width up the status, organizer, dates and venue stay on one line, whatever the status says; a long venue is shortened, not moved down */}
+            <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap md:flex-nowrap text-xs text-[#4B4F52]">
+              <span className={`px-3 py-1 rounded-full font-medium whitespace-nowrap shrink-0 ${statusTone[status] || statusTone.Upcoming}`}>{status}</span>
               {/* the event ID is for administrators; organizers don't see it */}
               {user?.role === "ADMIN" && <span className="text-[#6B6B6B]">{formatEventId(event._id)}</span>}
-              {organizer && <span><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
+              {organizer && <span className="whitespace-nowrap shrink-0"><span className="font-medium text-gray-900">Organized by:</span> {organizer}</span>}
               <span className="text-[#D3D3D3] hidden sm:inline">|</span>
-              <span className="whitespace-nowrap">
+              <span className="whitespace-nowrap shrink-0">
                 <span className="font-medium text-gray-900">Start:</span> {formatDateTime(event.schedule?.start, "—")}
                 <span className="mx-2 text-[#D3D3D3]">|</span>
                 <span className="font-medium text-gray-900">End:</span> {formatDateTime(event.schedule?.end, "—")}
               </span>
+              {venue && (
+                <>
+                  <span className="text-[#D3D3D3] hidden sm:inline">|</span>
+                  <span className="inline-flex items-start gap-1.5 min-w-0 md:items-center" title={venue}>
+                    <svg className="w-4 h-4 shrink-0 text-[#C44200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
+                      <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
+                      <circle cx="12" cy="9.5" r="2.5" />
+                    </svg>
+                    <span className="min-w-0 break-words md:truncate text-[#6B6B6B]">{venue}</span>
+                  </span>
+                </>
+              )}
             </div>
-            {venue && (
-              <p className="mt-2 flex items-start gap-1.5 text-xs text-[#6B6B6B]">
-                <svg className="w-4 h-4 shrink-0 text-[#C44200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
-                  <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
-                  <circle cx="12" cy="9.5" r="2.5" />
-                </svg>
-                <span className="min-w-0 break-words">{venue}</span>
-              </p>
-            )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {eventEnded && (
@@ -402,7 +429,8 @@ export default function EventDetailsPage() {
                         <tr>
                           <th className="py-2 pr-2 font-medium">#</th>
                           <th className="py-2 pr-3 font-medium">Session Name</th>
-                          <th className="py-2 pr-3 font-medium">Date &amp; Time</th>
+                          <th className="py-2 pr-3 font-medium">Start Date &amp; Time</th>
+                          <th className="py-2 pr-3 font-medium">End Date &amp; Time</th>
                           <th className="py-2 pr-3 font-medium">No. of Guests</th>
                           <th className="py-2 font-medium">Checked in</th>
                         </tr>
@@ -414,7 +442,8 @@ export default function EventDetailsPage() {
                             <tr key={s._id}>
                               <td className="py-2.5 pr-3 align-top">{i + 1}</td>
                               <td className="py-2.5 pr-4 text-gray-900 break-words align-top">{s.name}</td>
-                              <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}{s.schedule?.end ? ` to ${formatTime(s.schedule.end)}` : ""}</td>
+                              <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.start, "—")}</td>
+                              <td className="py-2.5 pr-4">{formatCompactDateTime(s.schedule?.end, "—")}</td>
                               <td className="py-2.5 pr-4">{reportLoaded ? r?.invitedCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
                               <td className="py-2.5">{reportLoaded ? r?.attendeeCount ?? 0 : <span role="status" aria-label="Loading" className="inline-block h-3 w-6 rounded bg-gray-200 animate-pulse align-middle" />}</td>
                             </tr>
@@ -437,7 +466,15 @@ export default function EventDetailsPage() {
                 </svg>
               </button>
             </div>
-            <div className="rounded-md overflow-hidden border border-[#EEEEEE] xl:flex-1 xl:min-h-0 xl:flex">
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Open the card preview"
+              title="Click to enlarge"
+              onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setCardExpanded(true); }}
+              onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) setCardExpanded(true); }}
+              className="rounded-md overflow-hidden border border-[#EEEEEE] xl:flex-1 xl:min-h-0 xl:flex focus-visible:outline-2 focus-visible:outline-black cursor-pointer"
+            >
               <EventCardPreview
                 heightClassName="h-52 sm:h-60 xl:h-auto xl:flex-1 xl:min-h-[160px]"
                 eventId={eventId}
@@ -476,7 +513,7 @@ export default function EventDetailsPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-[#4B4F52]">Session:</span>
                 <div className="w-48">
-                  <CustomDropdown value={analysisSession} onChange={setAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
+                  <CustomDropdown value={analysisSession} onChange={chooseAnalysisSession} options={sessions.map((s) => ({ value: s._id!, label: s.name }))} ariaLabel="Analysis session" />
                 </div>
               </div>
             )}
@@ -497,20 +534,19 @@ export default function EventDetailsPage() {
             <div className="border border-[#E0E0E0] rounded-lg p-4 min-w-0">
               <h4 className="text-sm font-medium text-gray-900 mb-3">Access Logs</h4>
               <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
-                <table className="w-full text-left text-sm min-w-[520px]">
+                <table className="w-full text-left text-sm min-w-[440px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
-                    <tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">Session</th><th className="py-2 pr-3 font-medium">Entry Time</th><th className="py-2 pr-3 font-medium">Exit Time</th><th className="py-2 font-medium">Staff</th></tr>
+                    <tr><th className="py-2 pr-3 font-medium">Guest</th><th className="py-2 pr-3 font-medium">Mobile</th><th className="py-2 pr-3 font-medium">Entry Time</th><th className="py-2 font-medium">Staff</th></tr>
                   </thead>
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {accessLogs.length === 0 ? (
-                      <tr><td colSpan={5} className="py-6 text-center text-[#6B6B6B]">No guests have entered yet.</td></tr>
+                      <tr><td colSpan={4} className="py-6 text-center text-[#6B6B6B]">No guests have entered this session yet.</td></tr>
                     ) : (
                       accessLogs.map((log) => (
                         <tr key={log.id}>
                           <td className="py-2 pr-3 max-w-[160px] truncate" title={log.guest}>{log.guest}</td>
-                          <td className="py-2 pr-3 whitespace-nowrap">{log.session}</td>
+                          <td className="py-2 pr-3 whitespace-nowrap">{log.mobile}</td>
                           <td className="py-2 pr-3 whitespace-nowrap">{formatDateTime(log.entryAt)}</td>
-                          <td className="py-2 pr-3 whitespace-nowrap">{log.exitAt ? formatDateTime(log.exitAt) : <span title={EXIT_NOT_RECORDED} aria-label="No exit time recorded">—</span>}</td>
                           <td className="py-2 max-w-[140px] truncate" title={log.staff}>{log.staff}</td>
                         </tr>
                       ))
@@ -523,7 +559,7 @@ export default function EventDetailsPage() {
         </section>
       </div>
 
-      {cardExpanded && <CardPreviewModal eventId={eventId} onClose={() => setCardExpanded(false)} />}
+      {cardExpanded && <CardPreviewModal eventId={eventId} staticCard={typeof event.templateId === "object" && event.templateId?.templateData?.uploaded === true && event.templateId?.templateData?.dynamicDetails !== true} onClose={() => setCardExpanded(false)} />}
       <EventCancelModal
         isOpen={cancelOpen}
         onClose={() => setCancelOpen(false)}

@@ -57,7 +57,7 @@ export default function GuideMascot({ tips, name }: { tips: string[]; name?: str
   return (
     <div className="flex w-full items-end justify-between gap-2">
       <style>{CSS}</style>
-      <div key={index} role="status" aria-live="polite" className="pip-bubble relative mb-5 min-w-0 flex-1 rounded-[20px] rounded-br-md border border-[color:var(--inv-line)] bg-white px-3.5 py-2.5 text-[12px] font-medium leading-snug text-[color:var(--inv-ink)] shadow-sm" style={{ animation: "pipBubble .35s ease-out" }}>
+      <div key={index} role="status" aria-live="polite" className="pip-bubble relative mb-5 min-w-0 flex-1 rounded-[20px] rounded-br-md border border-[color:var(--inv-line)] bg-white px-3.5 py-2.5 text-[12px] font-medium leading-snug text-[color:var(--inv-ink)]" style={{ animation: "pipBubble .35s ease-out" }}>
         {tip}
         {list.length > 1 && <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-[color:var(--inv-accent-text)]">Tap me for another tip</span>}
       </div>

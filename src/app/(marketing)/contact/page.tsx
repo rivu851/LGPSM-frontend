@@ -1,6 +1,7 @@
 "use client";
 
 import PhoneInput from "@/components/common/PhoneInput";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import TopBanner from "@/components/TopBanner";
@@ -160,7 +161,7 @@ export default function ContactPage() {
             {/* ── Right Form Card: Sharp Rectangular Card with Thin Border ── */}
             <div
               ref={formCardRef}
-              className="w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[680px] bg-transparent border border-[#AAAAAA] shadow-sm p-8 sm:p-10 relative z-20 mt-[-40px] md:mt-72 md:-mb-24 md:-ml-6 shrink-0 rounded-none"
+              className="w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[680px] bg-transparent border border-[#AAAAAA] p-8 sm:p-10 relative z-20 mt-[-40px] md:mt-72 md:-mb-24 md:-ml-6 shrink-0 rounded-none"
             >
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -255,14 +256,7 @@ export default function ContactPage() {
                   </label>
                 </div>
 
-                {feedback && (
-                  <p
-                    role={feedback.type === "error" ? "alert" : "status"}
-                    className={`text-sm font-medium ${feedback.type === "error" ? "text-[#B3261E]" : "text-[#1a7f37]"}`}
-                  >
-                    {feedback.message}
-                  </p>
-                )}
+                <PopupMessage message={feedback?.message} type={feedback?.type === "error" ? "error" : "success"} />
 
                 <button
                   type="submit"

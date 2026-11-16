@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import Image from "next/image";
 import Link from "next/link";
 import { resolveImageUrl } from "@/utils/mediaUrl";
@@ -36,7 +37,7 @@ const PROMPT_EXAMPLES: Record<TemplateKind, string[]> = {
   POSTER: ["Bold modern poster for a two-day technology summit", "Festive poster for a charity fundraiser dinner", "Minimal poster for an alumni meet-up"],
 };
 
-const inputClass = "w-full rounded-md border border-[#D9D9D9] bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[#FF651D] focus:outline-none focus:ring-1 focus:ring-[#FF651D]";
+const inputClass = "w-full rounded-md border border-[#D9D9D9] bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-500 focus:border-black focus:outline-none focus:ring-1 focus:ring-black";
 
 type Busy = null | "starting" | "saving" | "discarding";
 
@@ -302,7 +303,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {PROMPT_EXAMPLES[kind].map((ex) => (
-              <button key={ex} type="button" onClick={() => setPrompt(ex)} className="rounded-full border border-[#E0E0E0] px-2.5 py-1 text-xs text-gray-700 hover:border-[#FF651D] cursor-pointer text-left">
+              <button key={ex} type="button" onClick={() => setPrompt(ex)} className="rounded-full border border-[#E0E0E0] px-2.5 py-1 text-xs text-gray-700 hover:bg-[#EEF3FF] cursor-pointer text-left">
                 {ex}
               </button>
             ))}
@@ -350,7 +351,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
             <p className="text-xs font-medium uppercase tracking-wide text-[#6B6B6B] mb-2">Recent</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {recent.map((j) => (
-                <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] hover:border-[#FF651D]"}`}>
+                <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
                   <span className="block text-xs font-medium text-gray-900 truncate">{j.prompt}</span>
                   <span className="block text-xs text-[#6B6B6B]">{jobSummary(j)}</span>
                 </button>
@@ -404,7 +405,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 const badge = variantBadge(v);
                 const active = v.index === selected;
                 return (
-                  <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#FF651D]" : "border-[#E0E0E0] hover:border-[#FF651D]/60"}`}>
+                  <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#FF651D]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
                     <div className="relative w-full aspect-[9/16] bg-[#F4F5F8]">
                       {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#6B6B6B]">No preview</span>}
                     </div>
@@ -430,8 +431,8 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                     </div>
                     {variant.ready && variant.conceptImageKey && (
                       <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-[#F4F5F8] p-1 text-xs" role="tablist">
-                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}>Your template</button>
-                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white shadow-sm font-medium" : "text-gray-600"}`}>Original concept</button>
+                        <button type="button" role="tab" aria-selected={!showConcept} onClick={() => setShowConcept(false)} className={`rounded px-2 py-1.5 cursor-pointer ${!showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Your template</button>
+                        <button type="button" role="tab" aria-selected={showConcept} onClick={() => setShowConcept(true)} className={`rounded px-2 py-1.5 cursor-pointer ${showConcept ? "bg-white font-medium" : "text-gray-600"}`}>Original concept</button>
                       </div>
                     )}
                     <p className="mt-2 text-xs text-[#6B6B6B]">{variant.ready ? "Preview uses sample details. Your real event, venue and QR code are filled in when you use it." : "Concept only, not a template."}</p>
@@ -495,14 +496,8 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 }
 
 function ErrorBanner({ error }: { error: ErrorView }) {
-  const tone = error.kind === "quota" || error.kind === "unavailable" || error.kind === "busy" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-rose-200 bg-rose-50 text-rose-800";
-  return (
-    <div role="alert" className={`rounded-md border p-3 text-sm ${tone}`}>
-      <p className="font-medium">{error.title}</p>
-      <p className="mt-0.5 break-words">{error.message}</p>
-      {error.retryable && <p className="mt-1 text-xs opacity-80">You can try again.</p>}
-    </div>
-  );
+  const soft = error.kind === "quota" || error.kind === "unavailable" || error.kind === "busy";
+  return <PopupMessage message={`${error.message}${error.retryable ? "\nYou can try again." : ""}`} title={error.title} type={soft ? "warning" : "error"} />;
 }
 
 function Panel({ tone, title, message, action }: { tone: "error" | "info"; title: string; message: string; action?: { href: string; label: string } }) {

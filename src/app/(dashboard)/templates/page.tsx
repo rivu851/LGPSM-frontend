@@ -1,6 +1,8 @@
 "use client";
 
 import React, { Suspense, useState, useEffect } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -9,6 +11,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import TemplateThumb from "@/components/settings/TemplateThumb";
 import { useCategories } from "@/hooks/useCategories";
 import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
+import TextAreasEditor from "@/components/templates/TextAreasEditor";
 import { templateService, Template } from "@/services/templateService";
 import { eventService, EventData } from "@/services/eventService";
 import { useAlert } from "@/context/AlertContext";
@@ -31,6 +34,8 @@ interface TemplateCard {
   isCustom: boolean;
   /** the organizer's own uploaded design */
   isUploaded: boolean;
+  /** an administrator's upload whose own wording the event's details replace */
+  isDynamic: boolean;
   kind: "INVITATION" | "POSTER";
   /** made by the signed-in user: they can publish, unpublish and delete it */
   isMine: boolean;
@@ -56,8 +61,12 @@ function TemplatesPageContent() {
   const [preview, setPreview] = useState<TemplateCard | null>(null);
   // "My templates" is a link target (the AI studio sends people there after saving)
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [areasFor, setAreasFor] = useState<string | null>(null);
   const [view, setView] = useState<"all" | "mine">(searchParams.get("view") === "mine" ? "mine" : "all");
   const [reload, setReload] = useState(0);
+  // bumped by the live refresh: the list is fetched again quietly (the request key is unchanged, so no loading state shows)
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
   // the template drawn with the event chosen in the preview panel (null = show the stored sample preview)
   const [livePreview, setLivePreview] = useState<LivePreview | null>(null);
   const requestKey = `${view}:${reload}:${user?._id || ""}`;
@@ -76,6 +85,7 @@ function TemplatesPageContent() {
       isDraft: t.isPublished === false,
       isCustom: t.cardDesign === "CUSTOM",
       isUploaded: !!t.templateData?.uploaded,
+      isDynamic: !!t.templateData?.dynamicDetails,
       kind: t.kind === "POSTER" ? "POSTER" : "INVITATION",
       isMine: mine || (!!user?._id && t.ownerId === user._id),
     });
@@ -98,7 +108,7 @@ function TemplatesPageContent() {
     };
     // requestKey is derived from the three values below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, reload, user?._id]);
+  }, [view, reload, user?._id, liveTick]);
 
   const togglePublish = async (t: TemplateCard) => {
     const res = await templateService.updateTemplate(t.id, { isPublished: t.isDraft });
@@ -144,7 +154,7 @@ function TemplatesPageContent() {
         <div className="flex flex-wrap items-center justify-between gap-3">
         <div role="tablist" aria-label="Template list" className="inline-flex rounded-md bg-[#F4F5F8] p-1 text-sm">
           {([["all", "All templates"], ["mine", "My templates"]] as const).map(([key, label]) => (
-            <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white shadow-sm font-medium text-gray-900" : "text-gray-600"}`}>
+            <button key={key} type="button" role="tab" aria-selected={view === key} onClick={() => { setView(key); setPreview(null); }} className={`rounded px-4 py-1.5 cursor-pointer ${view === key ? "bg-white font-medium text-gray-900" : "text-gray-600"}`}>
               {label}
             </button>
           ))}
@@ -216,7 +226,7 @@ function TemplatesPageContent() {
                 title={`${t.name} · ${labelFor(t)}${t.isCustom && !t.isMine && !t.isUploaded ? " · AI design shared with all organizers" : t.isMine ? " · Yours" : ""}`}
                 aria-label={`Preview template ${t.name}`}
                 onClick={() => { setLivePreview(null); setPreview(t); }}
-                className="group relative text-left bg-white border border-[#E0E0E0] rounded-md overflow-hidden hover:border-[#FF651D] focus-visible:border-[#FF651D] focus:outline-none transition-colors cursor-pointer"
+                className="group relative text-left bg-white border border-[#E0E0E0] rounded-md overflow-hidden hover:bg-[#EEF3FF] focus-visible:border-black focus:outline-none transition-colors cursor-pointer"
               >
                 <TemplateThumb imageKey={t.imageKey} name={t.name} className="aspect-[2/3]!" />
                 <span aria-hidden className="absolute top-2 right-2 size-6 rounded bg-black/55 text-white flex items-center justify-center">
@@ -230,6 +240,8 @@ function TemplatesPageContent() {
           </div>
         )}
       </div>
+
+      {areasFor && <TextAreasEditor templateId={areasFor} onClose={(changed) => { setAreasFor(null); if (changed) setReload((n) => n + 1); }} />}
 
       {preview && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="template-preview-title">
@@ -275,6 +287,11 @@ function TemplatesPageContent() {
                   </p>
                 ) : null}
                 <div className="flex flex-wrap gap-3">
+                  {preview.isMine && preview.isDynamic && (
+                    <button type="button" onClick={() => setAreasFor(preview.id)} className="px-5 py-2.5 border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] text-sm font-medium rounded-md cursor-pointer">
+                      Text areas
+                    </button>
+                  )}
                   {!preview.isDraft && preview.kind === "INVITATION" && (
                     <Link href={`/events/add?template=${preview.id}`} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
                       Create an Event
@@ -421,7 +438,7 @@ function EventRenderPanel({ template, onLivePreview }: { template: TemplateCard;
           </button>
         ))}
       </div>
-      {message && <p role={message.tone === "error" ? "alert" : "status"} className={`text-xs ${message.tone === "error" ? "text-rose-600" : "text-[#4B4F52]"}`}>{message.text}</p>}
+      <PopupMessage message={message?.text} type={message?.tone === "error" ? "error" : "info"} />
     </div>
   );
 }

@@ -47,7 +47,7 @@ const ACCESS_OPTIONS: { value: AccessControl; label: string }[] = [
 ];
 
 const labelClass = "block text-sm font-medium text-gray-900 mb-1.5";
-const fieldClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 focus:outline-none focus:border-[#FF651D]";
+const fieldClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 focus:outline-none focus:border-black";
 
 function ExcelLogo({ className = "w-4 h-4 shrink-0" }: { className?: string }) {
   return (
@@ -176,7 +176,7 @@ export default function Step3Sessions({
                 onChange={(e) => updateSession(sess.key, { name: e.target.value })}
                 placeholder="Entry Session"
                 aria-invalid={!!nameError}
-                className={`${fieldClass} ${nameError ? "border-rose-400" : "border-[#E0E0E0]"}`}
+                className={`${fieldClass} ${nameError ? "!border-rose-500" : "border-[#E0E0E0]"}`}
               />
               {nameError && <p className="mt-1 text-xs font-medium text-rose-600">{nameError}</p>}
             </div>
@@ -203,7 +203,7 @@ export default function Step3Sessions({
                     type="button"
                     aria-label={`${sess.name || "Session"} ${field === "start" ? "start" : "end"} time`}
                     onClick={() => onOpenSessionPicker(sess.key, field)}
-                    className={`${fieldClass} flex items-center justify-between gap-2 text-left cursor-pointer ${timeError ? "border-rose-400" : "border-[#E0E0E0]"}`}
+                    className={`${fieldClass} flex items-center justify-between gap-2 text-left cursor-pointer ${timeError ? "!border-rose-500" : "border-[#E0E0E0]"}`}
                   >
                     <span className="truncate">{formatDateTime(field === "start" ? sess.start : sess.end, "Select date and time")}</span>
                     <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -263,8 +263,11 @@ export default function Step3Sessions({
 
             {!copies && (
               <div>
-                <span className={labelClass}>Add Invitees List <span className="font-normal text-[#828282]">(optional)</span></span>
-                <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] ? "border-rose-400" : "border-[#E0E0E0]"}`}>
+                {(() => {
+                  const mustAdd = !skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean) && isPrimary;
+                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-[#C44200]">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
+                })()}
+                <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] || (errors[`session:${sess.key}:invitees`] && !fileInfo) ? "border-rose-400" : "border-[#E0E0E0]"}`}>
                   <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">
                     Choose File
                     <input
@@ -302,6 +305,7 @@ export default function Step3Sessions({
                     )}
                   </div>
                 </div>
+                {errors[`session:${sess.key}:invitees`] && !fileInfo && <p className="mt-1 text-xs font-medium text-rose-600">{errors[`session:${sess.key}:invitees`]}</p>}
                 {fileInfo && <p className="mt-1 text-xs text-[#6B6B6B]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
                 {(() => {
                   // A list uploaded for this session; lists without a session (the whole event) show on the primary session
@@ -339,7 +343,7 @@ export default function Step3Sessions({
       <button
         type="button"
         onClick={handleAddSession}
-        className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-orange-50 text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
+        className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#D6F5E1] hover:text-[#0F7A33] text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
       >
         <span aria-hidden>+</span> Add Sessions
       </button>

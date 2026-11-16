@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
+import ModalClose from "@/components/common/ModalClose";
 import { CancelEventResult, CancellationPreview, eventService } from "@/services/eventService";
 import { previewLines } from "@/utils/cancellationSummary";
 
@@ -48,8 +50,9 @@ export default function EventCancelModal({ isOpen, onClose, eventId, eventTitle,
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="cancel-event-title">
-      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 space-y-4 my-auto">
-        <h3 id="cancel-event-title" className="text-base font-medium text-gray-900">Cancel event</h3>
+      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-6 space-y-4 my-auto relative">
+        <ModalClose onClick={onClose} disabled={busy} />
+        <h3 id="cancel-event-title" className="pr-8 text-base font-medium text-gray-900">Cancel event</h3>
         <p className="text-sm text-[#4B4F52] break-words">Cancel “{eventTitle || "this event"}”? <strong className="font-medium text-gray-900">This is permanent.</strong></p>
 
         <ul className="text-sm text-[#4B4F52] list-disc pl-5 space-y-1.5">
@@ -71,15 +74,14 @@ export default function EventCancelModal({ isOpen, onClose, eventId, eventTitle,
             onChange={(e) => setReason(e.target.value.slice(0, REASON_MAX))}
             rows={3}
             disabled={busy}
-            className="w-full px-3 py-2 border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-[#FF651D] resize-none"
+            className="w-full px-3 py-2 border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-black resize-none"
             placeholder="For example: the venue is no longer available"
           />
           <span className="block text-right text-xs text-[#6B6B6B]">{reason.length}/{REASON_MAX}</span>
         </label>
 
-        {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
+        <PopupMessage message={error} />
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose} disabled={busy} className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer disabled:opacity-50">Keep event</button>
           <button type="button" onClick={submit} disabled={busy} className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{busy ? "Cancelling…" : "Cancel event permanently"}</button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import PhoneInput from "@/components/common/PhoneInput";
+import PopupMessage from "@/components/common/PopupMessage";
 import type { InvitationChannel } from "@/utils/invitationChannel";
 // import { INVITATION_CHANNEL_OPTIONS } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
 // import CustomDropdown from "@/components/common/CustomDropdown"; (only used by the hidden invitation channel field)
@@ -126,7 +127,7 @@ export default function AddEventOrganizerPage() {
                   placeholder={formData.organizationType === "ORGANIZATION" ? "Type Organisation Name" : "Type the organizer's name"}
                   value={formData.organizationName}
                   onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
-                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -141,7 +142,7 @@ export default function AddEventOrganizerPage() {
                   placeholder="Type Email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -155,7 +156,7 @@ export default function AddEventOrganizerPage() {
                   placeholder="Type Phone Number"
                   value={formData.phone}
                   onValueChange={(v) => setFormData({ ...formData, phone: v })}
-                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
             </div>
@@ -173,7 +174,7 @@ export default function AddEventOrganizerPage() {
                   placeholder="At least 8 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                  className="w-full h-[47px] px-3.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -188,7 +189,7 @@ export default function AddEventOrganizerPage() {
               {/* Organizer Logo Box */}
               <div className="space-y-2">
                 {/* an individual has a profile picture; an organization has a logo */}
-                <label className="block text-sm font-medium text-[#15191C]">{formData.organizationType === "INDIVIDUAL" ? "Profile Picture" : "Organizer Logo"}</label>
+                <label className="block text-sm font-medium text-[#15191C]">{formData.organizationType === "INDIVIDUAL" ? "Profile Picture" : "Organizer Logo"} <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
                 <input
                   ref={logoInputRef}
                   type="file"
@@ -249,24 +250,16 @@ export default function AddEventOrganizerPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Adding...' : 'Add Organizer'}
               </button>
             </div>
           </form>
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-md text-xs font-semibold text-center animate-fadeIn">
-              {error}
-            </div>
-          )}
+          <PopupMessage message={error} onClose={() => setError("")} />
 
-          {isSuccess && (
-            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold text-center animate-fadeIn">
-              Organizer added successfully! Redirecting to list...
-            </div>
-          )}
+          <PopupMessage message={isSuccess ? "Organizer added successfully! Redirecting to the list…" : null} type="success" onClose={() => undefined} />
         </div>
     </div>
   );

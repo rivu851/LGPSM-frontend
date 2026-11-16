@@ -83,6 +83,21 @@ export const authService = {
     return response;
   },
 
+  /** "Sign in with Google" (organizers): the credential is Google's signed ID token; the server verifies it and signs the organizer in or creates the account */
+  async googleSignIn(credential: string): Promise<ApiResponse<AuthResponseData & { isNewUser?: boolean }>> {
+    const response = await apiClient<AuthResponseData & { isNewUser?: boolean }>("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+    if (response.success && response.data) {
+      const { user, accessToken, refreshToken } = response.data;
+      if (user) tokenStorage.setUser(user);
+      if (accessToken) tokenStorage.setAccessToken(accessToken);
+      if (refreshToken) tokenStorage.setRefreshToken(refreshToken);
+    }
+    return response;
+  },
+
   async logout(): Promise<ApiResponse> {
     const refreshToken = tokenStorage.getRefreshToken();
     let response: ApiResponse = { success: true };

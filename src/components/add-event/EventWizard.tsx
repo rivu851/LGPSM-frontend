@@ -1,6 +1,8 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import { templateColumnsFor } from "@/utils/inviteeTemplate";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { gsap } from "gsap";
 import StepHeader from "./StepHeader";
@@ -8,6 +10,7 @@ import Step1EventDetails, { EventDateField } from "./Step1EventDetails";
 import Step2Settings from "./Step2Settings";
 import Step3Sessions, { SessionInviteeFile } from "./Step3Sessions";
 import MobileCardPreview from "./MobileCardPreview";
+import ChoiceModal from "@/components/common/ChoiceModal";
 import SelectTemplateModal from "./modals/SelectTemplateModal";
 import DateTimePickerModal from "./modals/DateTimePickerModal";
 import ListResetWarningModal from "./modals/ListResetWarningModal";
@@ -21,9 +24,11 @@ import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { CARD_DISPLAY_DEFAULTS, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, cardDisplayOfDraft, isStaticTemplate, titleLimitOf, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
+import { sessionTimeProblem, sessionsOutsideEvent } from "@/utils/sessionWindow";
+import { formatDateTime } from "@/utils/dateTime";
 
 type PickerTarget =
   | { kind: "event"; field: EventDateField }
@@ -84,7 +89,7 @@ export default function EventWizard({
   onSubmit,
   onCancel,
 }: EventWizardProps) {
-  const { confirm } = useAlert();
+  const { confirm, showAlert } = useAlert();
   const { user } = useAuth();
   const categories = useCategories(extraCategory);
   const stepContentRef = useRef<HTMLDivElement>(null);
@@ -97,6 +102,8 @@ export default function EventWizard({
   const [featuresError, setFeaturesError] = useState<string | null>(null);
   const [featuresLoading, setFeaturesLoading] = useState(true);
   const [pickerTarget, setPickerTarget] = useState<PickerTarget | null>(null);
+  // a session time that does not fit the event: change the event's dates (step 1) or the session's own times (step 3)
+  const [timeConflict, setTimeConflict] = useState<{ title: string; message: string; eventStep: number; target: PickerTarget | null } | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   // Set while "Customize Information" is open: the payload the card preview was rendering
   // The columns of the Excel sample when it was last downloaded here: changing a custom title afterwards earns a warning
@@ -137,7 +144,8 @@ export default function EventWizard({
 
   useEffect(() => {
     if (stepContentRef.current) {
-      gsap.fromTo(stepContentRef.current, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out" });
+      // (clearProps: a transform left on this container would make every popup inside it position itself against the container, not the screen)
+      gsap.fromTo(stepContentRef.current, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.35, ease: "power2.out", clearProps: "transform,opacity" });
     }
   }, [currentStep]);
 
@@ -178,7 +186,10 @@ export default function EventWizard({
   }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
   const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt }), [draft, subcategoryRequired, eventId]);
-  const visibleErrors: DraftErrors = showErrors ? allErrors : {};
+  // "I don't have any invitees list yet" unticked means a list is expected: one has to be attached to the first session (or the event already has one)
+  const inviteesMissing = !eventId && !draft.skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean);
+  const requiredErrors: DraftErrors = inviteesMissing && draft.sessions[0] ? { [`session:${draft.sessions[0].key}:invitees`]: "Add the invitees list, or tick \"I don't have any invitees list yet\" to skip it for later." } : {};
+  const visibleErrors: DraftErrors = showErrors ? { ...allErrors, ...requiredErrors } : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
   const step2Valid = useMemo(() => step1Valid && !Object.keys(allErrors).some((k) => stepOfError(k) === 2), [allErrors, step1Valid]);
@@ -206,13 +217,14 @@ export default function EventWizard({
       const subcategory = "subcategoryId" in p ? p.subcategoryId || "" : draft.subcategoryId;
       const suggestion = suggestTemplate(availableTemplates.current, category, subcategory);
       autoTemplateId.current = suggestion ? suggestion._id : null;
-      templatePatch = { template: suggestion ? { id: suggestion._id, name: suggestion.name, previewKey: suggestion.previewImageKey || null } : null };
+      templatePatch = { template: suggestion ? { id: suggestion._id, name: suggestion.name, previewKey: suggestion.previewImageKey || null, staticCard: isStaticTemplate((suggestion as { templateData?: { uploaded?: boolean; dynamicDetails?: boolean } }).templateData), titleMaxChars: titleLimitOf((suggestion as { templateData?: { titleMaxChars?: number | null } }).templateData) } : null };
     }
     setDraft((prev) => ({ ...prev, ...p, ...templatePatch }));
   };
 
   // A new event starts by choosing a template (the dialog cannot be closed until one is chosen); the template then
   // sets the event category and subcategory. Editing a saved event does not ask again.
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
   const mustPickTemplate = !eventId && draftHydrated && !draft.template;
   const chooseTemplate = (template: SelectedTemplate | null, suggested?: { categoryId: string; subcategoryId: string }) => {
     // an explicit choice is never swapped out by the automatic suggestion that follows a category change
@@ -220,8 +232,16 @@ export default function EventWizard({
     setDraft((prev) => ({
       ...prev,
       template,
+      // an uploaded design is the whole card: nothing about the card's data is chosen for it
+      ...(template?.staticCard ? { cardInfo: null, cardDisplay: { ...CARD_DISPLAY_DEFAULTS } } : {}),
       // the template's event type fills the category and subcategory; a general template leaves what is there
-      ...(suggested?.categoryId ? { categoryId: suggested.categoryId, subcategoryId: suggested.subcategoryId } : {}),
+      ...(suggested?.categoryId
+        ? {
+            categoryId: suggested.categoryId,
+            // a category with a single subcategory has it selected for them
+            subcategoryId: suggested.subcategoryId || (categories.subcategoryOptionsFor(suggested.categoryId).length === 1 ? categories.subcategoryOptionsFor(suggested.categoryId)[0].value : ""),
+          }
+        : {}),
     }));
   };
 
@@ -252,7 +272,7 @@ export default function EventWizard({
   };
 
   const handleFinish = () => {
-    const keys = Object.keys(allErrors);
+    const keys = [...Object.keys(allErrors), ...Object.keys(requiredErrors)];
     if (keys.length > 0) {
       setShowErrors(true);
       setCurrentStep(Math.min(...keys.map(stepOfError)));
@@ -299,8 +319,22 @@ export default function EventWizard({
     if (target.kind === "event") {
       if (target.field === "rsvpDeadline") patch({ rsvpDeadline: iso });
       // choosing the start sets the end to the same time the next day; the end can still be changed afterwards
-      else if (target.field === "start") setDraft((prev) => applyEventWindow(prev, { start: iso, end: new Date(new Date(iso).getTime() + 24 * 60 * 60 * 1000).toISOString() }));
-      else setDraft((prev) => applyEventWindow(prev, { [target.field]: iso }));
+      else {
+        const windowPatch = target.field === "start" ? { start: iso, end: new Date(new Date(iso).getTime() + 24 * 60 * 60 * 1000).toISOString() } : { [target.field]: iso };
+        const next = applyEventWindow(draft, windowPatch);
+        setDraft(() => next);
+        // sessions with their own times can be left outside the new dates: tell the organizer which ones
+        const outside = sessionsOutsideEvent(next.sessions, next.start, next.end);
+        if (outside.length) setTimeConflict({ title: "Check your session times", message: `${outside.map((s) => `"${s.name || "Untitled session"}"`).join(", ")} ${outside.length === 1 ? "now falls" : "now fall"} outside the event's dates. Open the Sessions step and set ${outside.length === 1 ? "its" : "their"} start and end times within the event (${formatDateTime(next.start, "")} to ${formatDateTime(next.end, "")}). Do you want to change the event time or the session time?`, eventStep: 1, target: null });
+      }
+      return;
+    }
+    // a session has to fall within its event: say so right away instead of accepting a time that cannot be saved
+    const session = draft.sessions.find((s) => s.key === target.key);
+    const problem = sessionTimeProblem({ field: target.field, value: iso, start: session?.start, end: session?.end, eventStart: draft.start, eventEnd: draft.end });
+    if (problem) {
+      // either the session's time or the event's dates can be changed to fix it
+      setTimeConflict({ title: "Session time is outside the event", message: `${problem} Do you want to change the event time or the session time?`, eventStep: 1, target });
       return;
     }
     setDraft((prev) => ({
@@ -336,8 +370,8 @@ export default function EventWizard({
   };
 
   // one stable object per choice, so the card preview is only redrawn when a tick actually changes
-  const cd = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
-  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location, inviteeName: cd.inviteeName }), [cd.title, cd.qr, cd.dateTime, cd.location, cd.inviteeName]);
+  const cd = cardDisplayOfDraft(draft);
+  const cardDisplay = useMemo(() => ({ title: cd.title, qr: cd.qr, dateTime: cd.dateTime, location: cd.location, inviteeName: cd.inviteeName, logo: cd.logo }), [cd.title, cd.qr, cd.dateTime, cd.location, cd.inviteeName, cd.logo]);
 
   const previewSession = previewKey ? draft.sessions.find((s) => s.key === previewKey) : undefined;
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
@@ -352,11 +386,7 @@ export default function EventWizard({
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="restored-draft-title" aria-describedby="restored-draft-description">
           <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
             <div className="px-6 pt-7 pb-6 text-center sm:px-8">
-              <span className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-orange-100 text-[#E5520F]" aria-hidden="true">
-                <svg className="size-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </span>
+              <AlertIcon kind="info" className="w-14 h-14 mx-auto mb-4" />
               <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">Your unsaved event draft was restored</h2>
               <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">
                 This draft was saved temporarily.<br />
@@ -400,31 +430,13 @@ export default function EventWizard({
         </div>
       )}
 
-      {(draftStatus !== "idle" || draftSavedAt || submitError || currentStepHasErrors) && (
+      {/* Problems are shown as popups, not banners */}
+      <PopupMessage message={currentStepHasErrors ? `Please complete all required details on Step ${currentStep} before proceeding to the next step.` : null} type="warning" title="Required details missing" onClose={() => setShowErrors(false)} />
+      <PopupMessage message={draftStatus === "discarded-stale" ? "An older unsaved draft was discarded because this event was changed since it was saved." : null} type="info" title="Draft discarded" onClose={onDismissDraftStatus} />
+      <PopupMessage message={submitError && submitError !== dismissedError ? `${submitError} Your entries are kept, so you can fix the problem and try again.` : null} title="The event could not be saved" onClose={() => setDismissedError(submitError)} />
+      {(draftSavedAt && draftStatus !== "restored") && (
         <div className="px-4 sm:px-6 pt-4 space-y-2">
-          {currentStepHasErrors && (
-            <div role="alert" className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                <span>Please complete all required details on Step {currentStep} before proceeding to the next step.</span>
-              </div>
-              <button type="button" onClick={() => setShowErrors(false)} className="text-amber-700 hover:text-amber-900 font-medium text-xs cursor-pointer shrink-0">Dismiss</button>
-            </div>
-          )}
-          {draftStatus === "discarded-stale" && (
-            <div role="status" className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm flex items-center justify-between gap-2">
-              <span>An older unsaved draft was discarded because this event was changed since it was saved.</span>
-              <button type="button" onClick={onDismissDraftStatus} className="font-medium cursor-pointer shrink-0">OK</button>
-            </div>
-          )}
-          {submitError && (
-            <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-sm break-words">
-              {submitError} Your entries are kept, so you can fix the problem and try again.
-            </div>
-          )}
-          {draftSavedAt && draftStatus !== "restored" && (
+          {(
             <p className="text-xs text-[#6B6B6B]">
               Draft saved on this device at {new Date(draftSavedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
               {canDiscard && (
@@ -458,7 +470,7 @@ export default function EventWizard({
                   onChange={patch}
                   onOpenDatePicker={(field) => setPickerTarget({ kind: "event", field })}
                   categories={categories}
-                  canManageCategories={isAdmin || user?.role === "ORGANIZER"}
+                  canManageCategories={isAdmin}
                   isAdmin={isAdmin}
                   isEditing={!!eventId}
                   rsvpAllowed={features.allowEventRSVP}
@@ -543,6 +555,18 @@ export default function EventWizard({
         <ListResetWarningModal busy={resetBusy} error={resetError} onCancel={() => setPendingCardInfo(null)} onConfirm={() => void confirmListReset()} />
       )}
 
+      {timeConflict && (
+        <ChoiceModal
+          title={timeConflict.title}
+          message={timeConflict.message}
+          onClose={() => setTimeConflict(null)}
+          first={{ label: "Change event time", onClick: () => { setTimeConflict(null); setCurrentStep(1); } }}
+          second={{
+            label: "Change session time",
+            onClick: () => { const t = timeConflict.target; setTimeConflict(null); handleStepChange(3); if (t) setPickerTarget(t); },
+          }}
+        />
+      )}
       <DateTimePickerModal
         key={pickerTarget ? `${JSON.stringify(pickerTarget)}-${pickerValue ?? ""}` : "picker-closed"}
         isOpen={!!pickerTarget}

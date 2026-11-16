@@ -12,6 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginPayload) => Promise<ApiResponse<AuthResponseData>>;
+  googleLogin: (credential: string) => Promise<ApiResponse<AuthResponseData & { isNewUser?: boolean }>>;
   register: (payload: RegisterPayload) => Promise<ApiResponse<AuthResponseData>>;
   logout: () => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<ApiResponse>;
@@ -100,6 +101,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
+  const googleLogin = async (credential: string) => {
+    const res = await authService.googleSignIn(credential);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      rememberPortal(res.data.user.role);
+    }
+    return res;
+  };
+
   const register = async (payload: RegisterPayload): Promise<ApiResponse<AuthResponseData>> => {
     const res = await authService.register(payload);
     if (!res.success) return res;
@@ -143,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        googleLogin,
         register,
         logout,
         updateProfile,

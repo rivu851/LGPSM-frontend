@@ -1,11 +1,15 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import { isHistoricalEvent } from "@/utils/eventUtils";
+import PopupMessage from "@/components/common/PopupMessage";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { sessionService } from "@/services/sessionService";
 import { userService } from "@/services/userService";
 import { assignmentService, AssignmentData } from "@/services/assignmentService";
@@ -41,7 +45,9 @@ export default function EventAssignUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   // Which staff to list: everyone on this event, the staff of one session, or every system user
   const [userFilter, setUserFilter] = useState<string>(USERS_ON_EVENT);
-  const showAllSystemUsers = userFilter === ALL_SYSTEM_USERS;
+  // (a session that was deleted elsewhere while it was the chosen filter falls back to everyone on the event instead of an empty list)
+  const effectiveFilter = userFilter === USERS_ON_EVENT || userFilter === ALL_SYSTEM_USERS || sessions.some((x: { _id?: string; id?: string }) => (x._id || x.id) === userFilter) ? userFilter : USERS_ON_EVENT;
+  const showAllSystemUsers = effectiveFilter === ALL_SYSTEM_USERS;
   const [page, setPage] = useState(1);
   const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
 
@@ -62,10 +68,14 @@ export default function EventAssignUsersPage() {
   // the overlap lookup that is still running (a submit waits for it, so a warning is never skipped) and its latest result
   const overlapsPending = useRef<Promise<unknown> | null>(null);
   const overlapsLatest = useRef<typeof elsewhere>({});
+  // an automatic refresh updates quietly: no skeleton, and a failed request keeps what is on screen without raising an error
+  const quietRef = useRef(false);
   const fetchAssignmentsAndSessions = async () => {
+    const quiet = quietRef.current;
+    quietRef.current = false;
     try {
       if (loadedFor.current !== eventId) setIsLoading(true);
-      setErrorFeedback(null);
+      if (!quiet) setErrorFeedback(null);
 
       // These resources are independent; load them together instead of serializing four network round trips.
       const [sessionsRes, eventRes, usersRes, assignRes] = await Promise.all([
@@ -135,6 +145,7 @@ export default function EventAssignUsersPage() {
         email: u.email || "",
         phone: u.phone || u.contactNo || "--",
         role: u.role,
+        createdAt: u.createdAt,
         assignments: userAssignmentsMap[u._id || u.id] || [],
       }));
 
@@ -142,7 +153,7 @@ export default function EventAssignUsersPage() {
       loadedFor.current = eventId;
     } catch (err: any) {
       console.error("Error fetching event system user assignments:", err);
-      setErrorFeedback(err.message || "Failed to load system user assignments.");
+      if (!quiet) setErrorFeedback(err.message || "Failed to load system user assignments.");
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +164,18 @@ export default function EventAssignUsersPage() {
       fetchAssignmentsAndSessions();
     }
   }, [eventId]);
+
+  // a refresh can remove someone who was ticked (their account was switched off elsewhere): they are no longer selected
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- prunes the ticks after a refresh brought a new list
+  useEffect(() => { setSelectedUserIds((ids) => { const kept = ids.filter((id) => users.some((u) => u.id === id)); return kept.length === ids.length ? ids : kept; }); }, [users]);
+
+  // who is on the event, their sessions, and the sessions themselves follow changes made elsewhere (another screen or device, a session
+  // deleted, a staff account switched off); never while the assign window is open or a change is being saved
+  useLiveRefresh(() => {
+    if (isAssignModalOpen || isAssignSuccessModalOpen || submittingAssign) return;
+    quietRef.current = true;
+    return fetchAssignmentsAndSessions();
+  }, 30_000, !!eventId);
 
   // Someone already on this event is not assigned a second time: choosing them again changes which sessions they cover
   const selectedRows = users.filter((u) => selectedUserIds.includes(u.id));
@@ -284,20 +307,45 @@ export default function EventAssignUsersPage() {
     }
   };
 
-  const eventUsers = filterSystemUsers(users, eventId, userFilter);
+  // Filters & Sorting (the same panel as User Management): activity and sort order, applied together with the search and the list picker
+  type UsersFilters = { activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
+  const DEFAULT_FILTERS: UsersFilters = { activity: null, sort: "RECENT" };
+  const [filters, setFilters] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [draft, setDraft] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
+  const isUpcoming = (a: SystemUserRow["assignments"][number]) => !!a.eventEnd && new Date(a.eventEnd).getTime() >= Date.now();
+  const upcomingOf = (u: SystemUserRow) => u.assignments.filter(isUpcoming).length;
+  const pastOf = (u: SystemUserRow) => u.assignments.filter((a) => !!a.eventEnd && !isUpcoming(a)).length;
+  const eventUsers = filterSystemUsers(users, eventId, effectiveFilter);
   const filteredUsers = eventUsers.filter((u) => {
+    if (filters.activity === "UPCOMING" && upcomingOf(u) === 0) return false;
+    if (filters.activity === "PAST" && pastOf(u) === 0) return false;
     return (
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.phone.includes(searchQuery)
     );
+  }).sort((a, b) => {
+    switch (filters.sort) {
+      case "MOST_EVENTS": return b.assignments.length - a.assignments.length;
+      case "MOST_UPCOMING": return upcomingOf(b) - upcomingOf(a);
+      case "NAME": return a.name.localeCompare(b.name);
+      default: return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    }
   });
+  const option = (label: string, selected: boolean, onPick: () => void) => (
+    <button key={label} type="button" role="radio" aria-checked={selected} onClick={onPick} className="flex w-full items-center gap-3 py-2.5 text-left text-base text-[#15191C] cursor-pointer hover:bg-gray-50 rounded-md">
+      <span className={`size-6 shrink-0 rounded-full border-2 ${selected ? "border-[#1A9242] border-[7px]" : "border-[#C9C9C9]"}`} aria-hidden />
+      {label}
+    </button>
+  );
 
   const isAllSelected = selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0;
   // 10 people per page (the old bottom-left "1" was a fixed, inert button)
   const { current: currentPage, totalPages, rows: pageUsers } = paginate(filteredUsers, page, 10);
   // Figma 217:19768 shows only the empty state (no select-all row or table headers) when nobody is assigned yet
-  const showEmptyAssigned = !isLoading && users.length > 0 && filteredUsers.length === 0 && userFilter === USERS_ON_EVENT && !searchQuery.trim();
+  const showEmptyAssigned = !isLoading && users.length > 0 && filteredUsers.length === 0 && effectiveFilter === USERS_ON_EVENT && !searchQuery.trim();
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans select-none">
@@ -317,17 +365,7 @@ export default function EventAssignUsersPage() {
         <ClosedEventNotice status={eventStatus} />
 
         {/* Error Notification Banner */}
-        {errorFeedback && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
-            <span>{errorFeedback}</span>
-            <button
-              onClick={() => setErrorFeedback(null)}
-              className="font-bold text-rose-600 hover:text-rose-800 ml-4 cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        )}
+        <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
 
         {/* Controls (Figma 217:19779): "System Users" + search, assigned/all filter, Add User. Assigning starts from
             the selected rows (bottom "Assign N users"), so the separate top "Assign Users" button is gone (organiser feedback). */}
@@ -342,15 +380,15 @@ export default function EventAssignUsersPage() {
                 placeholder="Search system user"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
-                className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
+                className="w-full h-[47px] pl-12 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
               />
             </div>
           </div>
-          <div className="flex items-center shrink-0 w-fit">
+          <div className="flex items-center gap-3 shrink-0 w-fit">
             <CustomDropdown
               variant="plain"
               ariaLabel="Which system users to show"
-              value={userFilter}
+              value={effectiveFilter}
               onChange={(v) => { setUserFilter(v); setSelectedUserIds([]); setPage(1); }}
               options={[
                 // with a single session, "All sessions" and that session are the same choice: show its name once
@@ -360,12 +398,53 @@ export default function EventAssignUsersPage() {
                 { value: ALL_SYSTEM_USERS, label: "All system users" },
               ]}
             />
+            <button
+              type="button"
+              onClick={() => { setDraft(filters); setFiltersOpen(true); }}
+              aria-label={`Filters and sorting${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
+              title="Filters & Sorting"
+              className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
+            >
+              <Icon name="events/filter" width={20} height={20} />
+              {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+            </button>
             <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
               <Icon name="events/add-white" width={24} height={24} />
               Add User
             </Link>
           </div>
         </div>
+
+        {filtersOpen && typeof document !== "undefined" && createPortal(
+          <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="user-filter-title">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+            <div className="relative w-full max-w-[380px] bg-white h-full flex flex-col shadow-2xl">
+              <div className="flex items-center justify-between px-6 pt-6 pb-3">
+                <h2 id="user-filter-title" className="text-xl font-semibold text-[#15191C]">Filters &amp; Sorting</h2>
+                <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">Reset</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
+                  {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
+                  {option("Has past events", draft.activity === "PAST", () => setDraft((d) => ({ ...d, activity: d.activity === "PAST" ? null : "PAST" })))}
+                </section>
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Sort By</h3>
+                  {option("Recently added", draft.sort === "RECENT", () => setDraft((d) => ({ ...d, sort: "RECENT" })))}
+                  {option("Most events assigned", draft.sort === "MOST_EVENTS", () => setDraft((d) => ({ ...d, sort: "MOST_EVENTS" })))}
+                  {option("Most upcoming events assigned", draft.sort === "MOST_UPCOMING", () => setDraft((d) => ({ ...d, sort: "MOST_UPCOMING" })))}
+                  {option("User name (A-Z)", draft.sort === "NAME", () => setDraft((d) => ({ ...d, sort: "NAME" })))}
+                </section>
+              </div>
+              <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
+                <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#FF651D] hover:bg-[#E5560F] text-sm font-semibold text-white cursor-pointer">Apply</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Select All Row */}
         <div className={`${showEmptyAssigned ? "hidden" : "flex"} items-center gap-2.5 text-sm text-[#4B4F52] font-medium pt-2 pb-2`}>
@@ -374,7 +453,7 @@ export default function EventAssignUsersPage() {
             id="selectAll"
             checked={isAllSelected}
             onChange={handleSelectAll}
-            className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
           />
           <label htmlFor="selectAll" className="cursor-pointer">
             Select All ({selectedUserIds.length} selected)
@@ -404,9 +483,9 @@ export default function EventAssignUsersPage() {
                   <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     {users.length === 0 ? (
                       <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#C44200] underline">Add User</Link>.</span>
-                    ) : userFilter !== USERS_ON_EVENT && userFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
+                    ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
                       <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
-                    ) : userFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
+                    ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
                       // Figma 217:19798 empty state; "Assign User" lists every system user to pick from
                       <div className="flex flex-col items-center gap-[26px] py-16 max-w-[344px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
@@ -439,7 +518,7 @@ export default function EventAssignUsersPage() {
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
                           aria-label={`Select ${u.name}`}
-                          className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer mt-0.5 check-orange"
+                          className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer mt-0.5 check-orange"
                         />
                       </td>
 
@@ -481,7 +560,7 @@ export default function EventAssignUsersPage() {
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -622,18 +701,9 @@ export default function EventAssignUsersPage() {
                 onChange={setSessionScope}
               />
 
-              {errorFeedback && (
-                <p role="alert" className="text-xs font-medium text-rose-600 break-words">{errorFeedback}</p>
-              )}
+              <PopupMessage message={errorFeedback} />
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={closeAssignModal}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 <button
                   type="submit"
                   disabled={submittingAssign}
@@ -651,17 +721,13 @@ export default function EventAssignUsersPage() {
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
-            <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+            <AlertIcon kind="success" />
 
             <h3 className="text-lg font-bold text-gray-900">Assigned Successfully!</h3>
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

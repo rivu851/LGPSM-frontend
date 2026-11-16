@@ -73,7 +73,7 @@ export default function ReportsLogsTable({
     );
 
   return (
-    <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
       {/* Tabs Header */}
       <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 text-xs">
         <div className="flex items-center justify-between gap-3 mb-0">
@@ -134,7 +134,7 @@ export default function ReportsLogsTable({
       <div className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 max-w-lg">
-            <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 items-center gap-2.5 focus-within:border-[#FF651D] transition-colors">
+            <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 items-center gap-2.5 focus-within:border-black transition-colors">
               <span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]">
                 <Icon name="reports/search" width={18.4} height={18.4} />
               </span>
@@ -167,7 +167,7 @@ export default function ReportsLogsTable({
           <button
             type="button"
             onClick={onDownloadCSV}
-            className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#FFF3EC] transition-colors"
+            className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#EEF3FF] transition-colors"
           >
             <Icon name="reports/download" width={15.83} height={19.22} />
             <span>Download List</span>

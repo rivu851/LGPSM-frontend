@@ -18,6 +18,9 @@ export interface NotificationPreferences {
   dayBeforeEventAlert: boolean;
   reportDownload: boolean;
   customTemplateRequest: boolean;
+  guestCheckIns: boolean;
+  invitationsSent: boolean;
+  eventCancelled: boolean;
 }
 
 export interface PriceRateChange {

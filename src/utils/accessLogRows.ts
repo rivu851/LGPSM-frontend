@@ -7,6 +7,7 @@ import type { CheckInRecord } from "@/services/checkInService";
 export interface AccessLogRow {
   id: string;
   guest: string;
+  mobile: string;
   session: string;
   entryAt: string;
   exitAt: string | null;
@@ -20,6 +21,7 @@ export function toAccessLogRow(r: CheckInRecord): AccessLogRow {
   return {
     id: r._id,
     guest: r.invitee?.name || "Guest",
+    mobile: r.invitee?.mobile || "—",
     session: r.session?.name || "Whole event",
     entryAt: r.checkInAt,
     // a real exit time would come from a recorded check-out; none exists today

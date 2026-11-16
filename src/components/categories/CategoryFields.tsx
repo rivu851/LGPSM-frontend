@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import { createPortal } from "react-dom";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { CategoriesApi, CategoryOption } from "@/hooks/useCategories";
@@ -92,7 +93,11 @@ export default function CategoryFields({
           </label>
           <CustomDropdown
             value={categoryId}
-            onChange={(v) => onChange({ categoryId: v, subcategoryId: "" })}
+            onChange={(v) => {
+              // a category with only one subcategory has nothing to choose between: it is selected for them
+              const only = v ? api.subcategoryOptionsFor(v) : [];
+              onChange({ categoryId: v, subcategoryId: only.length === 1 ? only[0].value : "" });
+            }}
             options={withDelete(api.categoryOptions, deleteCategory)}
             placeholder={api.loading ? "Loading..." : api.categoryOptions.length ? "- Category -" : "No categories yet"}
             topAction={canManage ? { label: api.isOrganizer ? "Add custom category" : "Add New Category", onClick: () => setModal({ kind: "category" }) } : undefined}
@@ -187,7 +192,7 @@ export function CategoryModal({
   // Figma 2050:2411 / 2050:2142: a 486px card in the upper third, a divider above the footer, 47px field, solid Add button
   return (
     <div className="fixed inset-0 z-[80] flex items-start justify-center bg-black/50 p-4 pt-[14vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="category-modal-title">
-      <div className="w-full max-w-[486px] bg-white rounded-lg shadow-xl">
+      <div className="w-full max-w-[486px] bg-white rounded-lg">
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 id="category-modal-title" className="text-base font-medium text-[#15191C]">
             {api.isOrganizer ? (isSub ? "Add Custom Subcategory" : "Add Custom Category") : isSub ? "Add Subcategory" : "Add Category"}
@@ -201,7 +206,7 @@ export function CategoryModal({
         <form onSubmit={submit} noValidate>
           <div className="px-6 pt-5 pb-6 space-y-5">
             {api.isOrganizer && <p className="text-xs text-[#828282]">Only you will see this {isSub ? "subcategory" : "category"}. It will not appear for other organizers.</p>}
-            {error && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-sm text-rose-700">{error}</p>}
+            <PopupMessage message={error} />
             {isSub && (
               <div>
                 <label className="block text-sm font-medium text-[#15191C] mb-2">Category</label>
@@ -220,14 +225,11 @@ export function CategoryModal({
                 placeholder="Type"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full h-[47px] px-3.5 text-xs border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D] text-gray-900 placeholder:text-[#828282]"
+                className="w-full h-[47px] px-3.5 text-xs border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black text-gray-900 placeholder:text-[#6B6B6B]"
               />
             </div>
           </div>
           <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[#E0E0E0]">
-            <button type="button" onClick={onClose} className="px-6 py-[11px] text-base font-semibold text-[#15191C] bg-white border border-[#E0E0E0] rounded-lg hover:bg-gray-50 cursor-pointer">
-              Cancel
-            </button>
             <button
               type="submit"
               disabled={submitting}

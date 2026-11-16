@@ -123,7 +123,7 @@ export default function DashboardPopupModal({
                 className="flex items-center gap-3.5 text-sm font-medium text-gray-800 hover:translate-x-1.5 transition-transform duration-200 group cursor-default welcome-popup-item"
                 style={{ animationDelay: `${460 + idx * 70}ms` }}
               >
-                <div className="w-8 h-8 rounded-lg bg-[#FFF0EB] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110 shadow-xs">
+                <div className="w-8 h-8 rounded-lg bg-[#FFF0EB] flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110">
                   {item.icon}
                 </div>
                 <span className="group-hover:text-[#A83800] transition-colors duration-200">{item.label}</span>

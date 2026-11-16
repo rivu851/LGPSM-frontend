@@ -14,6 +14,9 @@ const ITEMS: { key: keyof NotificationPreferences; label: string }[] = [
   { key: "dayBeforeEventAlert", label: "Day before event alert" },
   { key: "reportDownload", label: "Report download" },
   { key: "customTemplateRequest", label: "Custom template request" },
+  { key: "guestCheckIns", label: "Guests checking in (running count)" },
+  { key: "invitationsSent", label: "Invitations sent by an organizer" },
+  { key: "eventCancelled", label: "Event cancelled by an organizer" },
 ];
 
 // Admin-only email alert preferences, stored on the server

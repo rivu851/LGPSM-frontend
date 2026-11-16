@@ -1,8 +1,10 @@
 "use client";
 
 import { csvRow, csvBlob } from "@/utils/csv";
+import PopupMessage from "@/components/common/PopupMessage";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { EarningsRecord } from "@/types/earnings";
 import EarningsOverviewCard from "@/components/earnings/EarningsOverviewCard";
 import EarningsStatsRow from "@/components/earnings/EarningsStatsRow";
@@ -27,16 +29,20 @@ export default function EarningsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Worked out on the server: invitations actually sent x the rate locked on each event
+  // Worked out on the server: invitations actually sent x the rate locked on each event. The figures refresh themselves (quietly, and
+  // without touching a rate that is being typed).
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
   useEffect(() => {
     let cancelled = false;
+    const quiet = liveTick > 0;
     platformSettingsService.getEarnings().then((res) => {
       if (cancelled) return;
       if (res.success && res.data) {
         setEarnings(res.data);
         setRate(res.data.currentRate);
-        if (res.data.currentRate !== null) setTempRate(res.data.currentRate);
-      } else {
+        if (!quiet && res.data.currentRate !== null) setTempRate(res.data.currentRate);
+      } else if (!quiet) {
         setLoadError(res.message || "Failed to load earnings.");
       }
       setLoading(false);
@@ -44,7 +50,7 @@ export default function EarningsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [liveTick]);
 
   const fromDate = startDate.trim() ? parseEventDate(startDate) : null;
   const toDate = endDate.trim() ? parseEventDate(endDate) : null;
@@ -169,9 +175,7 @@ export default function EarningsPage() {
           These are amounts due, not payments: online payments are not configured.
         </p>
 
-        {loadError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">{loadError}</div>
-        )}
+        <PopupMessage message={loadError} onClose={() => setLoadError(null)} />
 
         <EarningsStatsRow estimatedTotal={estimatedTotal} organizersBilled={organizersBilled} loading={loading} />
 

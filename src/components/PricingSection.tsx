@@ -281,7 +281,7 @@ export default function PricingSection() {
               className="w-12 h-6 bg-gray-200 rounded-full p-0.5 transition-colors relative focus:outline-none cursor-pointer"
             >
               <div
-                className={`w-5 h-5 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                className={`w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
                   billingCycle === "monthly" ? "translate-x-6" : "translate-x-0"
                 }`}
               />
@@ -303,7 +303,7 @@ export default function PricingSection() {
         <div ref={cardsRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
           
           {/* 1. Standard Plan Card */}
-          <div className="bg-white border border-gray-200 rounded-none p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white border border-gray-200 rounded-none p-8 flex flex-col justify-between hover: transition-shadow">
             <div>
               <h2 className="text-xl font-bold text-[#1C2228] mb-2">Standard Plan</h2>
               <div className="flex items-baseline gap-1 mb-1">
@@ -369,7 +369,7 @@ export default function PricingSection() {
               <p className="text-xs text-gray-300 font-medium mb-8">Up to 1,500 Attendees per month</p>
 
               {/* CTA Button */}
-              <Link href="/signup" className="block w-full text-center py-3 px-4 bg-[#c65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer shadow-md mb-8">
+              <Link href="/signup" className="block w-full text-center py-3 px-4 bg-[#c65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </Link>
 
@@ -399,7 +399,7 @@ export default function PricingSection() {
           </div>
 
           {/* 3. Enterprise Plan Card */}
-          <div className="bg-white border border-gray-200 rounded-none p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+          <div className="bg-white border border-gray-200 rounded-none p-8 flex flex-col justify-between hover: transition-shadow">
             <div>
               <h2 className="text-xl font-bold text-[#1C2228] mb-2">Enterprise Plan</h2>
               <div className="flex items-baseline gap-1 mb-1">

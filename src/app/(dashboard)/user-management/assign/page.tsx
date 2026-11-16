@@ -1,6 +1,8 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import PhoneInput from "@/components/common/PhoneInput";
+import PopupMessage from "@/components/common/PopupMessage";
 import PasswordField from "@/components/common/PasswordField";
 import PageHeader from "@/components/common/PageHeader";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
@@ -403,12 +405,27 @@ export default function AssignedSystemUsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.phone.includes(searchQuery)
-  );
+  // Filters: the event, then (once an event is chosen) one of its sessions. A user assigned to an event without listing sessions covers all of them.
+  const [filterEvent, setFilterEvent] = useState("");
+  const [filterSession, setFilterSession] = useState("");
+  const eventFilterOptions = (() => {
+    const seen = new Map<string, string>();
+    users.forEach((u) => u.assignments.forEach((a) => { if (a.eventId && !seen.has(a.eventId)) seen.set(a.eventId, a.eventName); }));
+    return [{ value: "", label: "All events" }, ...[...seen].map(([value, label]) => ({ value, label })).sort((x, y) => x.label.localeCompare(y.label))];
+  })();
+  const sessionFilterOptions = (() => {
+    const seen = new Map<string, string>();
+    if (filterEvent) users.forEach((u) => u.assignments.filter((a) => a.eventId === filterEvent).forEach((a) => a.sessions.forEach((x) => { if (!seen.has(x.id)) seen.set(x.id, x.name); })));
+    return [{ value: "", label: "All sessions" }, ...[...seen].map(([value, label]) => ({ value, label }))];
+  })();
+  const query = searchQuery.trim().toLowerCase();
+  const queryDigits = query.replace(/\D/g, "");
+  const filteredUsers = users.filter((u) => {
+    // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
+    if (query && !(u.name.toLowerCase().includes(query) || (queryDigits.length > 0 && u.phone.replace(/\D/g, "").includes(queryDigits)))) return false;
+    if (!filterEvent) return true;
+    return u.assignments.some((a) => a.eventId === filterEvent && (!filterSession || a.sessions.length === 0 || a.sessions.some((x) => x.id === filterSession)));
+  });
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
@@ -418,17 +435,7 @@ export default function AssignedSystemUsersPage() {
       {/* Page Content */}
       <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6 bg-white pb-24">
         {/* Error Feedback Banner */}
-        {errorFeedback && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
-            <span>{errorFeedback}</span>
-            <button
-              onClick={() => setErrorFeedback(null)}
-              className="font-bold text-rose-600 hover:text-rose-800 ml-4 cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        )}
+        <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
 
         <div className="max-w-sm space-y-1.5">
           <label className="block text-sm font-medium text-[#15191C]">Organizer</label>
@@ -449,7 +456,10 @@ export default function AssignedSystemUsersPage() {
           />
         </div>
 
-        <ListControls label="System Users" searchId="assign-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
+        <ListControls label="System Users" searchId="assign-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
+          {/* the same borderless pickers as the Invitees page: event, then session */}
+          <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
+          <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder="Select Session" options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
           <button
             type="button"
             onClick={() => {
@@ -577,7 +587,7 @@ aria-label={`Select ${u.name}`}
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -689,7 +699,7 @@ aria-label={`Select ${u.name}`}
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -702,7 +712,7 @@ aria-label={`Select ${u.name}`}
                   required
                   value={editFormData.email}
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -711,18 +721,11 @@ aria-label={`Select ${u.name}`}
                 <PhoneInput
                   value={editFormData.phone}
                   onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 <button
                   type="submit"
                   disabled={submittingEdit}
@@ -777,7 +780,7 @@ aria-label={`Select ${u.name}`}
                   />
                 </div>
               )}
-              {addUserFormError && <p role="alert" className="text-xs text-rose-700">{addUserFormError}</p>}
+              <PopupMessage message={addUserFormError} />
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
                   User Name<span className="text-[#C44200] ml-0.5">*</span>
@@ -788,7 +791,7 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Full Name"
                   value={addUserData.userName}
                   onChange={(e) => setAddUserData({ ...addUserData, userName: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -801,7 +804,7 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Contact No"
                   value={addUserData.contactNo}
                   onValueChange={(v) => setAddUserData({ ...addUserData, contactNo: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -815,7 +818,7 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Email"
                   value={addUserData.email}
                   onChange={(e) => setAddUserData({ ...addUserData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -828,18 +831,11 @@ aria-label={`Select ${u.name}`}
                   placeholder="Enter Initial Password"
                   value={addUserData.password}
                   onChange={(e) => setAddUserData({ ...addUserData, password: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddUserModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 <button
                   type="submit"
                   disabled={submittingUser}
@@ -898,13 +894,6 @@ aria-label={`Select ${u.name}`}
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
                 <button
-                  type="button"
-                  onClick={() => setIsAssignModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
                   type="submit"
                   disabled={submittingAssign || !selectedEventId}
                   className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
@@ -921,17 +910,13 @@ aria-label={`Select ${u.name}`}
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
-            <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+            <AlertIcon kind="success" />
 
             <h3 className="text-lg font-bold text-gray-900">Assigned Successfully!</h3>
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

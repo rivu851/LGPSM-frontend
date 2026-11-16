@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 
@@ -33,7 +35,8 @@ export default function DeleteInviteeModal({
 
   if (!isOpen) return null;
 
-  return (
+  // drawn on the page itself (not inside the form's layout), so the dim layer and the window cover the whole screen
+  return typeof document === "undefined" ? null : createPortal(
     <div
       ref={overlayRef}
       className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto font-sans"
@@ -58,16 +61,7 @@ export default function DeleteInviteeModal({
         {/* Modal Body */}
         <div className="p-6 flex flex-col items-center">
           {/* Warning Triangle Icon */}
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-500 mb-4">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
+          <AlertIcon kind="warning" className="w-14 h-14 mb-4" />
 
           <h3 className="text-lg font-bold text-gray-900 mb-2">Warning</h3>
           <p className="text-xs text-gray-600 leading-relaxed max-w-xs mb-6">
@@ -89,13 +83,14 @@ export default function DeleteInviteeModal({
                 onConfirm();
                 onClose();
               }}
-              className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md shadow-xs transition-all cursor-pointer"
+              className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all cursor-pointer"
             >
               Yes, Delete
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

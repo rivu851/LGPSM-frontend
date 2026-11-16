@@ -125,19 +125,12 @@ export default function CameraCaptureModal({
         )}
 
         <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            onClick={handleClose}
-            className="px-5 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
           {!error && (
             <button
               type="button"
               onClick={handleSnap}
               disabled={!isCameraReady}
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md transition-colors cursor-pointer disabled:opacity-50"
             >
               Capture Photo
             </button>

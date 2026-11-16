@@ -1,5 +1,6 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useId, useRef, useState } from "react";
 
 export interface ConfirmModalProps {
@@ -8,6 +9,8 @@ export interface ConfirmModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  /** show "no" as a button beside the confirm button (the close icon is always there too) */
+  cancelButton?: boolean;
   // "danger" for destructive actions (delete, discard, clear): red confirm button and warning icon
   tone?: "danger" | "default";
   onResolve: (confirmed: boolean) => void;
@@ -23,6 +26,7 @@ export default function ConfirmModal({
   message,
   confirmText = "Confirm",
   cancelText = "Cancel",
+  cancelButton = false,
   tone = "default",
   onResolve,
 }: ConfirmModalProps) {
@@ -93,46 +97,39 @@ export default function ConfirmModal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={messageId}
-        className={`bg-white rounded-xl border border-gray-100 shadow-2xl max-w-sm w-full p-6 text-center space-y-4 confirm-modal-panel ${closing ? "is-closing" : ""}`}
+        className={`bg-white rounded-xl border border-gray-100 shadow-2xl max-w-sm w-full p-6 text-center space-y-4 relative confirm-modal-panel ${closing ? "is-closing" : ""}`}
       >
-        <div
-          className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto shadow-2xs ${
-            danger ? "bg-rose-100 text-rose-600" : "bg-orange-100 text-[#C44200]"
-          }`}
+        {/* closing the window is the same as answering no: the close icon replaces a Cancel button */}
+        <button
+          ref={cancelRef}
+          type="button"
+          onClick={() => resolve(false)}
+          aria-label={cancelText}
+          title={cancelText}
+          className="absolute right-3 top-3 size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer focus-visible:outline-2 focus-visible:outline-black"
         >
-          {danger ? (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          )}
-        </div>
+          <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        <AlertIcon kind={danger ? "warning" : "question"} />
 
         <h3 id={titleId} className="text-base font-bold text-gray-900">{title}</h3>
         <p id={messageId} className="text-xs text-gray-600 leading-relaxed font-medium px-2 whitespace-pre-line">{message}</p>
 
         <div className="pt-2 flex items-center gap-3">
-          <button
-            ref={cancelRef}
-            type="button"
-            onClick={() => resolve(false)}
-            className="flex-1 py-2.5 font-bold text-xs rounded-md border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF5B22]"
-          >
-            {cancelText}
-          </button>
+          {cancelButton && (
+            <button
+              type="button"
+              onClick={() => resolve(false)}
+              className="w-full py-2.5 font-bold text-xs rounded-md bg-white border border-[#DDD] text-gray-900 hover:bg-gray-50 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+            >
+              {cancelText}
+            </button>
+          )}
           <button
             ref={confirmRef}
             type="button"
             onClick={() => resolve(true)}
-            className={`flex-1 py-2.5 font-bold text-xs rounded-md text-white shadow-2xs transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 ${
+            className={`w-full py-2.5 font-bold text-xs rounded-md text-white transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 ${
               danger ? "bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600" : "bg-[#C65318] hover:bg-[#A83800] focus-visible:outline-[#FF5B22]"
             }`}
           >

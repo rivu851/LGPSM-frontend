@@ -78,7 +78,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
               value={name}
               onChange={(e) => setName(e.target.value)}
               aria-invalid={!!shown.name}
-              className="w-full h-[44px] px-3.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D] text-gray-900"
+              className="w-full h-[44px] px-3.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black text-gray-900"
             />
             {shown.name && <p className="mt-1 text-xs font-medium text-rose-600">{shown.name}</p>}
           </div>

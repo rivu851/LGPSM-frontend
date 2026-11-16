@@ -7,7 +7,7 @@ export interface UpdateProfilePayload {
   fullName?: string;
   phone?: string;
   profile?: Record<string, unknown>;
-  organization?: { name: string; phone?: string; email?: string; address?: string; website?: string };
+  organization?: { name: string; phone?: string; whatsapp?: string; email?: string; address?: string; website?: string };
 }
 
 export const userService = {

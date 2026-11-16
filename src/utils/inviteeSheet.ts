@@ -1,5 +1,6 @@
 // The spreadsheet library is by far the largest thing these screens use (500 KB), and most visits never touch a spreadsheet: it loads when needed
 const loadXlsx = () => import("xlsx");
+import { meaningOf, meaningsOf } from "./columnMeaning.ts";
 import type { ExpectedColumn, InviteeFieldKey } from "@/utils/inviteeFields";
 
 // Parses an invitee sheet with the same header rules as the backend import
@@ -42,12 +43,16 @@ export async function parseInviteeSheet(file: File, sessionNames: string[] = [],
   const header = nonBlank[0].map((c) => clean(c).toLowerCase());
   const customIdentity = (expected?.find((c) => c.key === "identity")?.header || "").toLowerCase();
   const customIdentity2 = (expected?.find((c) => c.key === "identity2")?.header || "second identity").toLowerCase();
-  const hasHeader = header.some((c) => c.includes("name") || c.includes("email") || c.includes("mobile") || c.includes("phone") || c.includes("company"));
+  const hasHeader = header.some((c) => c.includes("name") || c.includes("email") || c.includes("mobile") || c.includes("phone") || c.includes("company") || meaningsOf(c).length > 0);
   if (hasHeader) {
     header.forEach((c, i) => {
       if (!c) return;
       if (c === customIdentity2 || c === "second identity") identity2Idx = i;
       else if (c.includes("identity") || c.includes("designation") || (customIdentity && c === customIdentity)) identityIdx = i;
+      // a heading is read by what it means: "Ph No", "Telephone" and "Contact no" are the mobile column, "Guest" the name column
+      else if (meaningOf(c) === "mobile" && mobileIdx === -1) mobileIdx = i;
+      else if (meaningOf(c) === "email" && emailIdx === -1) emailIdx = i;
+      else if (meaningOf(c) === "name" && nameIdx === -1) nameIdx = i;
       else if (c.includes("company") || c.includes("organization") || c.includes("organisation")) companyIdx = i;
       else if (c.includes("name")) nameIdx = i;
       else if (c.includes("email") || c.includes("mail")) emailIdx = i;
