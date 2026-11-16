@@ -37,6 +37,12 @@ export interface PreferenceCategory {
 /** A template the organizer uploaded as the finished card (the admin's uploads draw the event's details instead) */
 export const isStaticTemplate = (data?: { uploaded?: boolean; dynamicDetails?: boolean } | null): boolean => data?.uploaded === true && data?.dynamicDetails !== true;
 
+/** How many characters the event title may have on this template (an admin's uploaded design sets it from what its title area holds); none for the rest */
+export const titleLimitOf = (templateData?: unknown): number | undefined => {
+  const n = (templateData as { titleMaxChars?: unknown } | null | undefined)?.titleMaxChars;
+  return typeof n === "number" && n > 0 ? Math.min(EVENT_TITLE_MAX_LENGTH, n) : undefined;
+};
+
 export interface SelectedTemplate {
   id: string;
   name: string;
@@ -44,6 +50,8 @@ export interface SelectedTemplate {
   previewKey?: string | null;
   /** An organizer's own uploaded design: the picture is the card, so no card data or additional information is chosen for it */
   staticCard?: boolean;
+  /** the longest title this template's design can hold (shorter than the usual limit for a small title area) */
+  titleMaxChars?: number;
 }
 
 // "Additional Info" (Figma Event_Add event-5): guest details printed on the card's two guest lines
@@ -306,7 +314,7 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   const createdMs: number | null = options.isNew ? Date.now() - 60_000 : options.createdAt && !Number.isNaN(Date.parse(options.createdAt)) ? Date.parse(options.createdAt) : null;
   if (options.templateRequired && !draft.template) errors.template = "Select a template to continue.";
   if (!draft.title.trim()) errors.title = "Title is required.";
-  else if (draft.title.trim().length > EVENT_TITLE_MAX_LENGTH) errors.title = `Title cannot exceed ${EVENT_TITLE_MAX_LENGTH} characters.`;
+  else if (draft.title.trim().length > (draft.template?.titleMaxChars ?? EVENT_TITLE_MAX_LENGTH)) errors.title = `Title cannot exceed ${draft.template?.titleMaxChars ?? EVENT_TITLE_MAX_LENGTH} characters${draft.template?.titleMaxChars ? " on this template" : ""}.`;
   if (draft.description.length > EVENT_DESCRIPTION_MAX_LENGTH) errors.description = `Description cannot exceed ${EVENT_DESCRIPTION_MAX_LENGTH} characters.`; // optional: empty is fine
   if (!draft.categoryId) errors.categoryId = "Choose an event category.";
   else if (options.subcategoryRequired && !draft.subcategoryId) errors.subcategoryId = "Choose a subcategory.";
@@ -493,7 +501,7 @@ export function eventToDraft(event: ServerEvent, sessions: ServerSession[]): Eve
     : [{ id: newClientKey("pref"), title: event?.dietaryPreference?.title || "Dietary Preference", options: rawOptions.length ? rawOptions.map(String) : [""] }];
 
   const template = event?.templateId && typeof event.templateId === "object"
-    ? { id: event.templateId._id, name: event.templateId.name, previewKey: event.templateId.previewImageKey || null, staticCard: isStaticTemplate(event.templateId.templateData) }
+    ? { id: event.templateId._id, name: event.templateId.name, previewKey: event.templateId.previewImageKey || null, staticCard: isStaticTemplate(event.templateId.templateData), titleMaxChars: titleLimitOf(event.templateId.templateData) }
     : event?.templateId
       ? { id: String(event.templateId), name: "Selected template", previewKey: null }
       : null;

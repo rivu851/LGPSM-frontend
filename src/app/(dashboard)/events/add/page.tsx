@@ -1,6 +1,6 @@
 "use client";
 
-import { isStaticTemplate } from "@/components/add-event/eventDraft";
+import { isStaticTemplate, titleLimitOf } from "@/components/add-event/eventDraft";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { createSingleFlight } from "@/utils/singleFlight";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -55,7 +55,7 @@ function AddEventContent() {
         const found = eventTypeForTemplate(t, categories.categoryOptions, categories.subcategoryOptionsFor);
         const cat = found?.categoryId || "";
         // the template also sets the event category and subcategory (a general template leaves them as they are)
-        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null, staticCard: isStaticTemplate(t.templateData) }, ...(cat ? { categoryId: cat, subcategoryId: found?.subcategoryId || "" } : {}) }));
+        update((prev: EventDraft) => ({ ...prev, template: { id: t._id, name: t.name, previewKey: t.previewImageKey || null, staticCard: isStaticTemplate(t.templateData), titleMaxChars: titleLimitOf(t.templateData) }, ...(cat ? { categoryId: cat, subcategoryId: found?.subcategoryId || "" } : {}) }));
       }
     }).finally(() => setTemplateLoading(false));
   }, [hydrated, templateParam, update, categories.loading, categories.categoryOptions]);

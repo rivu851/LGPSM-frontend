@@ -6,7 +6,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import TemplateThumb from "@/components/settings/TemplateThumb";
 import { templateService, Template } from "@/services/templateService";
 import { useCategories, ExtraCategory } from "@/hooks/useCategories";
-import { SelectedTemplate, isStaticTemplate } from "../eventDraft";
+import { SelectedTemplate, isStaticTemplate, titleLimitOf } from "../eventDraft";
 import { eventTypeForChoice, eventTypeForTemplate } from "@/utils/templateEventType";
 import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
@@ -133,7 +133,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
     const chosen = templates.find((t) => t._id === pendingId && usable(t));
     if (required && !chosen) return;
     onSelectTemplate(
-      chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null, staticCard: isStaticTemplate(chosen.templateData) } : null,
+      chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null, staticCard: isStaticTemplate(chosen.templateData), titleMaxChars: titleLimitOf(chosen.templateData) } : null,
       chosen ? eventTypeForChoice(eventTypeForTemplate(chosen, categories.categoryOptions, categories.subcategoryOptionsFor), filterCategory, filterSub) ?? undefined : undefined
     );
     onClose();

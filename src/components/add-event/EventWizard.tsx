@@ -24,7 +24,7 @@ import { suggestTemplate, SuggestableTemplate } from "@/utils/templateSuggestion
 import { rowProblem, rowsToSheetFile } from "@/utils/inviteeSheet";
 import { excelColumnsFor, headerFor } from "@/utils/inviteeFields";
 import { inviteeService, type InviteeSetInfo } from "@/services/inviteeService";
-import { CARD_DISPLAY_DEFAULTS, cardDisplayOfDraft, isStaticTemplate, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
+import { CARD_DISPLAY_DEFAULTS, cardDisplayOfDraft, isStaticTemplate, titleLimitOf, DraftErrors, EventDraft, SelectedTemplate, applyEventWindow, stepOfError, validateEventDraft } from "./eventDraft";
 import { DraftStatus } from "@/hooks/useFormDraft";
 import { useAlert } from "@/context/AlertContext";
 import { sessionTimeProblem, sessionsOutsideEvent } from "@/utils/sessionWindow";
@@ -214,7 +214,7 @@ export default function EventWizard({
       const subcategory = "subcategoryId" in p ? p.subcategoryId || "" : draft.subcategoryId;
       const suggestion = suggestTemplate(availableTemplates.current, category, subcategory);
       autoTemplateId.current = suggestion ? suggestion._id : null;
-      templatePatch = { template: suggestion ? { id: suggestion._id, name: suggestion.name, previewKey: suggestion.previewImageKey || null, staticCard: isStaticTemplate((suggestion as { templateData?: { uploaded?: boolean; dynamicDetails?: boolean } }).templateData) } : null };
+      templatePatch = { template: suggestion ? { id: suggestion._id, name: suggestion.name, previewKey: suggestion.previewImageKey || null, staticCard: isStaticTemplate((suggestion as { templateData?: { uploaded?: boolean; dynamicDetails?: boolean } }).templateData), titleMaxChars: titleLimitOf((suggestion as { templateData?: { titleMaxChars?: number | null } }).templateData) } : null };
     }
     setDraft((prev) => ({ ...prev, ...p, ...templatePatch }));
   };

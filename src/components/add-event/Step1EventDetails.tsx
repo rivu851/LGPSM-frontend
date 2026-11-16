@@ -255,6 +255,8 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
 export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
   // what to tell the person when something other than a digit was typed in the contact number
   const [contactNote, setContactNote] = useState<string | null>(null);
+  // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
+  const titleMax = draft.template?.titleMaxChars ?? TITLE_MAX;
   return (
     <form
       onSubmit={(e) => {
@@ -274,13 +276,13 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
       <div>
         <div className="flex justify-between items-center mb-1.5 gap-2">
           <label htmlFor="event-title" className={labelClass}>Title<Req /></label>
-          <span className="text-xs text-[#828282]">{TITLE_MAX - draft.title.length} Chars remaining</span>
+          <span className="text-xs text-[#828282]">{titleMax - draft.title.length} Chars remaining</span>
         </div>
         <input
           id="event-title"
           type="text"
           value={draft.title}
-          maxLength={TITLE_MAX}
+          maxLength={titleMax}
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Product Launch Event 2026"
           aria-invalid={!!errors.title}

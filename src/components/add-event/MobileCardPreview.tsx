@@ -80,11 +80,17 @@ export default function MobileCardPreview({
     }),
     [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
   );
+  // the parent builds cardDisplay/cardInfo afresh on every render, so the payload's identity changes constantly even when nothing was
+  // typed: depend on its content, or the card is re-requested (and the spinner flashes) over and over
+  const payloadKey = JSON.stringify(payload);
+  const payloadRef = useRef(payload);
   const [live, setLive] = useState<{ key: string; url: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const liveUrl = useRef<string | null>(null);
+
+  useEffect(() => { payloadRef.current = payload; });
 
   useEffect(() => {
     // No template chosen: the card is still shown, in the design that suits the event type
@@ -96,7 +102,7 @@ export default function MobileCardPreview({
     const timer = setTimeout(() => {
       setLoading(true);
       templateService
-        .previewCard(templateId, payload, controller.signal)
+        .previewCard(templateId, payloadRef.current, controller.signal)
         .then((blob) => {
           const url = URL.createObjectURL(blob);
           if (liveUrl.current) URL.revokeObjectURL(liveUrl.current);
@@ -119,7 +125,7 @@ export default function MobileCardPreview({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [template?.id, payload, attempt, awaitingTemplate, staticUrl]);
+  }, [template?.id, payloadKey, attempt, awaitingTemplate, staticUrl]);
 
   useEffect(
     () => () => {
@@ -178,8 +184,8 @@ export default function MobileCardPreview({
                 <p className="text-[11px] text-[#6B6B6B]">Your card appears here once you choose one.</p>
               </div>
             )}
-            {!awaitingTemplate && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
-            {!awaitingTemplate && !showLive && failed && (
+            {!awaitingTemplate && !staticUrl && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
+            {!awaitingTemplate && !staticUrl && !showLive && failed && (
               <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center">
                 <p className="text-xs text-[#4B4F52]">The card preview could not be loaded.</p>
                 <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">

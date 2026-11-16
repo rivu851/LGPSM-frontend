@@ -5,6 +5,7 @@ import { isHistoricalEvent } from "@/utils/eventUtils";
 import PopupMessage from "@/components/common/PopupMessage";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -144,6 +145,7 @@ export default function EventAssignUsersPage() {
         email: u.email || "",
         phone: u.phone || u.contactNo || "--",
         role: u.role,
+        createdAt: u.createdAt,
         assignments: userAssignmentsMap[u._id || u.id] || [],
       }));
 
@@ -305,14 +307,39 @@ export default function EventAssignUsersPage() {
     }
   };
 
+  // Filters & Sorting (the same panel as User Management): activity and sort order, applied together with the search and the list picker
+  type UsersFilters = { activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
+  const DEFAULT_FILTERS: UsersFilters = { activity: null, sort: "RECENT" };
+  const [filters, setFilters] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [draft, setDraft] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
+  const isUpcoming = (a: SystemUserRow["assignments"][number]) => !!a.eventEnd && new Date(a.eventEnd).getTime() >= Date.now();
+  const upcomingOf = (u: SystemUserRow) => u.assignments.filter(isUpcoming).length;
+  const pastOf = (u: SystemUserRow) => u.assignments.filter((a) => !!a.eventEnd && !isUpcoming(a)).length;
   const eventUsers = filterSystemUsers(users, eventId, effectiveFilter);
   const filteredUsers = eventUsers.filter((u) => {
+    if (filters.activity === "UPCOMING" && upcomingOf(u) === 0) return false;
+    if (filters.activity === "PAST" && pastOf(u) === 0) return false;
     return (
       u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.phone.includes(searchQuery)
     );
+  }).sort((a, b) => {
+    switch (filters.sort) {
+      case "MOST_EVENTS": return b.assignments.length - a.assignments.length;
+      case "MOST_UPCOMING": return upcomingOf(b) - upcomingOf(a);
+      case "NAME": return a.name.localeCompare(b.name);
+      default: return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    }
   });
+  const option = (label: string, selected: boolean, onPick: () => void) => (
+    <button key={label} type="button" role="radio" aria-checked={selected} onClick={onPick} className="flex w-full items-center gap-3 py-2.5 text-left text-base text-[#15191C] cursor-pointer hover:bg-gray-50 rounded-md">
+      <span className={`size-6 shrink-0 rounded-full border-2 ${selected ? "border-[#1A9242] border-[7px]" : "border-[#C9C9C9]"}`} aria-hidden />
+      {label}
+    </button>
+  );
 
   const isAllSelected = selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0;
   // 10 people per page (the old bottom-left "1" was a fixed, inert button)
@@ -357,7 +384,7 @@ export default function EventAssignUsersPage() {
               />
             </div>
           </div>
-          <div className="flex items-center shrink-0 w-fit">
+          <div className="flex items-center gap-3 shrink-0 w-fit">
             <CustomDropdown
               variant="plain"
               ariaLabel="Which system users to show"
@@ -371,12 +398,53 @@ export default function EventAssignUsersPage() {
                 { value: ALL_SYSTEM_USERS, label: "All system users" },
               ]}
             />
+            <button
+              type="button"
+              onClick={() => { setDraft(filters); setFiltersOpen(true); }}
+              aria-label={`Filters and sorting${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
+              title="Filters & Sorting"
+              className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
+            >
+              <Icon name="events/filter" width={20} height={20} />
+              {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+            </button>
             <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
               <Icon name="events/add-white" width={24} height={24} />
               Add User
             </Link>
           </div>
         </div>
+
+        {filtersOpen && typeof document !== "undefined" && createPortal(
+          <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="user-filter-title">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+            <div className="relative w-full max-w-[380px] bg-white h-full flex flex-col shadow-2xl">
+              <div className="flex items-center justify-between px-6 pt-6 pb-3">
+                <h2 id="user-filter-title" className="text-xl font-semibold text-[#15191C]">Filters &amp; Sorting</h2>
+                <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">Reset</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
+                  {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
+                  {option("Has past events", draft.activity === "PAST", () => setDraft((d) => ({ ...d, activity: d.activity === "PAST" ? null : "PAST" })))}
+                </section>
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Sort By</h3>
+                  {option("Recently added", draft.sort === "RECENT", () => setDraft((d) => ({ ...d, sort: "RECENT" })))}
+                  {option("Most events assigned", draft.sort === "MOST_EVENTS", () => setDraft((d) => ({ ...d, sort: "MOST_EVENTS" })))}
+                  {option("Most upcoming events assigned", draft.sort === "MOST_UPCOMING", () => setDraft((d) => ({ ...d, sort: "MOST_UPCOMING" })))}
+                  {option("User name (A-Z)", draft.sort === "NAME", () => setDraft((d) => ({ ...d, sort: "NAME" })))}
+                </section>
+              </div>
+              <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
+                <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#FF651D] hover:bg-[#E5560F] text-sm font-semibold text-white cursor-pointer">Apply</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Select All Row */}
         <div className={`${showEmptyAssigned ? "hidden" : "flex"} items-center gap-2.5 text-sm text-[#4B4F52] font-medium pt-2 pb-2`}>
