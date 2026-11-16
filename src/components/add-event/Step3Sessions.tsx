@@ -263,8 +263,11 @@ export default function Step3Sessions({
 
             {!copies && (
               <div>
-                <span className={labelClass}>Add Invitees List <span className="font-normal text-[#828282]">(optional)</span></span>
-                <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] ? "border-rose-400" : "border-[#E0E0E0]"}`}>
+                {(() => {
+                  const mustAdd = !skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean) && isPrimary;
+                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-[#C44200]">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
+                })()}
+                <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] || (errors[`session:${sess.key}:invitees`] && !fileInfo) ? "border-rose-400" : "border-[#E0E0E0]"}`}>
                   <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">
                     Choose File
                     <input
@@ -302,6 +305,7 @@ export default function Step3Sessions({
                     )}
                   </div>
                 </div>
+                {errors[`session:${sess.key}:invitees`] && !fileInfo && <p className="mt-1 text-xs font-medium text-rose-600">{errors[`session:${sess.key}:invitees`]}</p>}
                 {fileInfo && <p className="mt-1 text-xs text-[#6B6B6B]">These invitees are added to the event's list when you create the event. People who appear twice are imported once.</p>}
                 {(() => {
                   // A list uploaded for this session; lists without a session (the whole event) show on the primary session

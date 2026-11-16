@@ -257,6 +257,9 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
   const [contactNote, setContactNote] = useState<string | null>(null);
   // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
   const titleMax = draft.template?.titleMaxChars ?? TITLE_MAX;
+  // an organizer's own uploaded design is the card as it is, so there is no place on it for an event logo/image
+  const staticDesign = draft.template?.staticCard === true;
+  useEffect(() => { if (staticDesign && draft.logoKey) onChange({ logoKey: null }); }, [staticDesign, draft.logoKey, onChange]);
   return (
     <form
       onSubmit={(e) => {
@@ -403,7 +406,8 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             aspectClassName="aspect-[2/1]"
             fill
             optional
-            hint="Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"
+            disabled={staticDesign}
+            hint={staticDesign ? "Not used: your uploaded design is the card exactly as it is." : "Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"}
           />
         </div>
       </div>

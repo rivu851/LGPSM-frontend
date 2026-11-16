@@ -155,16 +155,20 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className={`relative w-[250px] max-w-full aspect-[9/17] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
+          className={`relative w-[250px] max-w-full aspect-[1/2] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
           style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
           aria-label="Invitation card preview"
         >
           <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-[#EFEFEF] flex items-center justify-center">
-            {/* the phone takes the card's own proportions (it is taller when the guest name band and details are added) and the card is
-                sized to the space available, so all of it is visible without any scrolling */}
             {hasCard && (
-              // eslint-disable-next-line @next/next/no-img-element -- invitation card is a blob URL rendered by the API, or the uploaded design
-              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-full w-full object-cover object-top" />
+              <>
+                {/* the phone is always the same size: a card that is taller or shorter than the screen (more details, no QR) is fitted inside it,
+                    and the room left over is filled with a blurred copy of the card's own artwork, so nothing is cropped and no gap shows */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- blob URL rendered by the API, or the uploaded design */}
+                <img src={staticUrl ?? live!.url} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover scale-125 blur-2xl opacity-90" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="relative block max-h-full max-w-full object-contain" />
+              </>
             )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">

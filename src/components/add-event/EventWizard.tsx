@@ -186,7 +186,10 @@ export default function EventWizard({
   }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
   const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt }), [draft, subcategoryRequired, eventId]);
-  const visibleErrors: DraftErrors = showErrors ? allErrors : {};
+  // "I don't have any invitees list yet" unticked means a list is expected: one has to be attached to the first session (or the event already has one)
+  const inviteesMissing = !eventId && !draft.skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean);
+  const requiredErrors: DraftErrors = inviteesMissing && draft.sessions[0] ? { [`session:${draft.sessions[0].key}:invitees`]: "Add the invitees list, or tick \"I don't have any invitees list yet\" to skip it for later." } : {};
+  const visibleErrors: DraftErrors = showErrors ? { ...allErrors, ...requiredErrors } : {};
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
   const step2Valid = useMemo(() => step1Valid && !Object.keys(allErrors).some((k) => stepOfError(k) === 2), [allErrors, step1Valid]);
@@ -269,7 +272,7 @@ export default function EventWizard({
   };
 
   const handleFinish = () => {
-    const keys = Object.keys(allErrors);
+    const keys = [...Object.keys(allErrors), ...Object.keys(requiredErrors)];
     if (keys.length > 0) {
       setShowErrors(true);
       setCurrentStep(Math.min(...keys.map(stepOfError)));
