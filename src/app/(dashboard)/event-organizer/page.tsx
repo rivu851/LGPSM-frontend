@@ -3,6 +3,7 @@
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { userService } from "@/services/userService";
@@ -35,16 +36,23 @@ export default function AllOrganizersPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // the list refreshes itself (quietly: no loading state, and a failed refresh keeps what is shown)
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
+
   useEffect(() => {
+    const quiet = liveTick > 0;
     async function loadOrganizers() {
-      setLoading(true);
+      if (!quiet) setLoading(true);
       let list: OrganizerRow[] = [];
-      setLoadError(null);
+      if (!quiet) setLoadError(null);
+      let failed = false;
 
       try {
         const res = await userService.getUsers("ORGANIZER");
         if (!res?.success) {
-          setLoadError(res?.message || "Failed to load organizers.");
+          failed = true;
+          if (!quiet) setLoadError(res?.message || "Failed to load organizers.");
         }
         if (res?.success && Array.isArray(res.data)) {
           const organizerUsersOnly = res.data.filter((u: any) => u.role === "ORGANIZER");
@@ -62,15 +70,16 @@ export default function AllOrganizersPage() {
           list = apiOrgs;
         }
       } catch (e) {
-        setLoadError("Could not reach the server. Please try again.");
+        failed = true;
+        if (!quiet) setLoadError("Could not reach the server. Please try again.");
       }
 
-      setOrganizers(list);
+      if (!(quiet && failed)) setOrganizers(list);
       setLoading(false);
     }
 
     loadOrganizers();
-  }, []);
+  }, [liveTick]);
 
   const toggleSelectAll = () => {
     if (selectedIds.length === organizers.length) {

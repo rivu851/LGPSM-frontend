@@ -4,6 +4,7 @@ import PageHeader from "@/components/common/PageHeader";
 import PopupMessage from "@/components/common/PopupMessage";
 import DateField from "@/components/common/DateField";
 import React, { useState, useEffect, useRef } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import Link from "next/link";
 import { addButtonClass } from "@/components/common/ListControls";
 import { useParams, useRouter } from "next/navigation";
@@ -59,14 +60,20 @@ export default function OrganizerDetailsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
+  // refreshes itself (quietly: no loading state, and a failed refresh keeps what is shown)
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
+
   useEffect(() => {
+    const quiet = liveTick > 0;
     async function loadOrganizerAndEvents() {
-      setLoading(true);
-      setLoadError(null);
+      if (!quiet) setLoading(true);
+      if (!quiet) setLoadError(null);
 
       // 1. Organizer account (only active organizers are returned by the backend)
       const usersRes = await userService.getUsers("ORGANIZER");
       if (!usersRes.success) {
+        if (quiet) return;
         setLoadError(usersRes.message || "Failed to load organizer.");
         setOrganizer(null);
         setLoading(false);
@@ -77,6 +84,7 @@ export default function OrganizerDetailsPage() {
       ) as any;
 
       if (!matched) {
+        if (quiet && !organizer) return;
         setLoadError("Organizer not found or already deactivated.");
         setOrganizer(null);
         setLoading(false);
@@ -98,6 +106,8 @@ export default function OrganizerDetailsPage() {
       const evRes = await eventService.getEvents({ organizerId: foundOrg.id });
       const rawList: any[] = evRes.success && Array.isArray(evRes.data) ? (evRes.data as any[]) : [];
       if (!evRes.success) {
+        // (a failed quiet refresh keeps the events already shown)
+        if (quiet) return;
         setLoadError(evRes.message || "Failed to load this organizer's events.");
       }
 
@@ -125,7 +135,8 @@ export default function OrganizerDetailsPage() {
     }
 
     loadOrganizerAndEvents();
-  }, [organizerId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizerId, liveTick]);
 
   // Deactivation is a soft delete on the backend (isActive = false); the account is kept
   const handleDeactivate = async (e: React.FormEvent) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useState, useEffect } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -63,6 +64,9 @@ function TemplatesPageContent() {
   const [areasFor, setAreasFor] = useState<string | null>(null);
   const [view, setView] = useState<"all" | "mine">(searchParams.get("view") === "mine" ? "mine" : "all");
   const [reload, setReload] = useState(0);
+  // bumped by the live refresh: the list is fetched again quietly (the request key is unchanged, so no loading state shows)
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
   // the template drawn with the event chosen in the preview panel (null = show the stored sample preview)
   const [livePreview, setLivePreview] = useState<LivePreview | null>(null);
   const requestKey = `${view}:${reload}:${user?._id || ""}`;
@@ -104,7 +108,7 @@ function TemplatesPageContent() {
     };
     // requestKey is derived from the three values below
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, reload, user?._id]);
+  }, [view, reload, user?._id, liveTick]);
 
   const togglePublish = async (t: TemplateCard) => {
     const res = await templateService.updateTemplate(t.id, { isPublished: t.isDraft });
