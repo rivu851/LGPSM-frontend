@@ -5,7 +5,7 @@ import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
 import { sessionTimeProblem } from "@/utils/sessionWindow";
 import ChoiceModal from "@/components/common/ChoiceModal";
-import { isHistoricalEvent } from "@/utils/eventUtils";
+import { isEventOver } from "@/utils/eventUtils";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -67,7 +67,8 @@ export default function EventSessionsPage() {
   const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
   const eventWindow = useRef<{ start: string; end: string } | null>(null);
   const [eventStatus, setEventStatus] = useState<string | undefined>();
-  const historical = isHistoricalEvent(eventStatus);
+  const [eventEnd, setEventEnd] = useState<unknown>();
+  const historical = isEventOver({ status: eventStatus, schedule: { end: eventEnd } });
 
   // DatePicker Modal State
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function EventSessionsPage() {
         eventService.getEvent(eventId),
       ]);
       setEventStatus((eventRes.data as { status?: string } | undefined)?.status);
+      setEventEnd((eventRes.data as { schedule?: { end?: unknown } } | undefined)?.schedule?.end);
       // "System Users" column (Figma 217:22014): staff assigned to each session
       const assignments = assignRes.success && Array.isArray(assignRes.data) ? assignRes.data : [];
       setAssignedUsers(assignments.length);
@@ -410,7 +412,7 @@ export default function EventSessionsPage() {
             </button>
           </div>
 
-          <ClosedEventNotice status={eventStatus} />
+          <ClosedEventNotice status={eventStatus} endsAt={eventEnd} />
 
           {/* Sessions Data Table matching Image 2 */}
           <div className="overflow-x-auto">

@@ -216,9 +216,9 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                         aria-pressed={selected}
                         aria-label={t.name}
                         title={t.name}
-                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
+                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#2563EB]" : "border-transparent hover:border-gray-300"}`}
                       >
-                        <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="aspect-[2/3]!" />
+                        <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="" />
                       </button>
                       {!usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
                       {canDelete(t) && (

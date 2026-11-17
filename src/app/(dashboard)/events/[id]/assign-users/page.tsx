@@ -1,7 +1,7 @@
 "use client";
 
 import AlertIcon from "@/components/common/AlertIcon";
-import { isHistoricalEvent } from "@/utils/eventUtils";
+import { isEventOver } from "@/utils/eventUtils";
 import PopupMessage from "@/components/common/PopupMessage";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
@@ -37,7 +37,8 @@ export default function EventAssignUsersPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStatus, setEventStatus] = useState<string | undefined>();
-  const historical = isHistoricalEvent(eventStatus);
+  const [eventEnd, setEventEnd] = useState<unknown>();
+  const historical = isEventOver({ status: eventStatus, schedule: { end: eventEnd } });
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -96,6 +97,7 @@ export default function EventAssignUsersPage() {
       if (eventRes.success && eventRes.data) {
         setEventTitle(eventRes.data.title || "");
         setEventStatus((eventRes.data as { status?: string }).status);
+        setEventEnd((eventRes.data as { schedule?: { end?: unknown } }).schedule?.end);
       }
 
       // System users only (role === SYSTEM_USER)
@@ -362,7 +364,7 @@ export default function EventAssignUsersPage() {
           sessionsCount={isLoading ? undefined : sessions.length}
         />
 
-        <ClosedEventNotice status={eventStatus} />
+        <ClosedEventNotice status={eventStatus} endsAt={eventEnd} />
 
         {/* Error Notification Banner */}
         <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
@@ -482,7 +484,16 @@ export default function EventAssignUsersPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     {users.length === 0 ? (
-                      <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#C44200] underline">Add User</Link>.</span>
+                      // nobody has been added yet: said in the middle of the page; "Add User" carries on into adding one, who is then put on this event
+                      <div className="flex flex-col items-center gap-4 py-16 max-w-[360px] mx-auto whitespace-normal">
+                        <Icon name="events/users-empty" width={80} height={67} />
+                        <p className="text-lg font-medium text-black/60">You have not added any system users yet.</p>
+                        <p className="text-sm text-gray-500">Add one now and they are assigned to this event straight away.</p>
+                        <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          Add User
+                        </Link>
+                      </div>
                     ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
                       <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
                     ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (

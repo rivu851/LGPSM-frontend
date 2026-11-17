@@ -1,7 +1,7 @@
 "use client";
 
 import ModalClose from "@/components/common/ModalClose";
-import { eventCanIssuePasses, isHistoricalEvent } from "@/utils/eventUtils";
+import { eventCanIssuePasses, isEventOver } from "@/utils/eventUtils";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
@@ -287,7 +287,7 @@ export default function InviteesManagementPage() {
   const lifecycleStarted = invitees.some((i) => i.invitationStatus !== "PENDING") || history.length > 0;
   // Cleared entries stay in `history` (Resend needs their ids) but are not shown in the delivery history
   const visibleHistory = history.filter((h) => !h.clearedAt);
-  const historical = isHistoricalEvent(event?.status);
+  const historical = isEventOver(event);
   const canIssue = eventCanIssuePasses(event);
   const notInvited = invitees.filter((i) => i.invitationStatus === "PENDING");
   // The list is newest-first, so keep the first record seen per guest: the latest delivery is the one to resend
@@ -649,7 +649,7 @@ export default function InviteesManagementPage() {
           </div>
         ) : (
           <>
-            <ClosedEventNotice status={event?.status} />
+            <ClosedEventNotice status={event?.status} endsAt={event?.schedule?.end} />
             {/* Controls (Figma 217:21076 / 217:20587): Invitees + search, event, session, Add Invitees, then Send — or Resend
                 once everyone has been invited */}
             <div className="flex flex-col 2xl:flex-row 2xl:items-center gap-3">

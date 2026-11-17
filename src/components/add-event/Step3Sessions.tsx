@@ -37,6 +37,7 @@ interface Step3SessionsProps {
   onOpenInviteesPreview: (sessionKey: string) => void;
   onFinish: () => void;
   onBack: () => void;
+  readOnly?: boolean;
   submitting?: boolean;
   submitLabel?: string;
 }
@@ -87,6 +88,7 @@ export default function Step3Sessions({
   onOpenInviteesPreview,
   onFinish,
   onBack,
+  readOnly = false,
   submitting = false,
   submitLabel = "Save",
 }: Step3SessionsProps) {
@@ -348,7 +350,7 @@ export default function Step3Sessions({
         <span aria-hidden>+</span> Add Sessions
       </button>
 
-      <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+      {!readOnly && <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-end gap-3">
         {!Object.values(sessionFiles).some(Boolean) && existingLists.length === 0 && (
           <Checkbox id="skip-invitees" checked={skipInvitees} onChange={onSkipInviteesChange}>
             I don&apos;t have any invitees list yet, skip for later
@@ -366,7 +368,7 @@ export default function Step3Sessions({
             {submitting ? "Saving..." : submitLabel}
           </button>
         </div>
-      </div>
+      </div>}
     </form>
   );
 }

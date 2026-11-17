@@ -44,6 +44,8 @@ export default function AssignedSystemUsersPage() {
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isAssignSuccessModalOpen, setIsAssignSuccessModalOpen] = useState(false);
+  // the person just added: the popup offers adding another, or assigning this one to an event right away
+  const [addedUser, setAddedUser] = useState<{ id: string; name: string } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SystemUserRow | null>(null);
   const [editFormData, setEditFormData] = useState({ name: "", email: "", phone: "" });
@@ -53,7 +55,7 @@ export default function AssignedSystemUsersPage() {
 
   // Form states
   const [addUserData, setAddUserData] = useState({ userName: "", contactNo: "", email: "", password: "" });
-  const [eventsList, setEventsList] = useState<{ id: string; title: string; status?: string }[]>([]);
+  const [eventsList, setEventsList] = useState<{ id: string; title: string; status?: string; end?: string }[]>([]);
   // only events that can still take staff are offered (the server refuses cancelled and closed ones)
   const assignableEvents = eventsList.filter(isAssignableEvent);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -94,10 +96,11 @@ export default function AssignedSystemUsersPage() {
 
       // Events loaded alongside users above.
       const rawEvents = Array.isArray(eventsRes?.data) ? eventsRes.data : ((eventsRes?.data as any)?.events || []);
-      const formattedEvents: { id: string; title: string; status?: string }[] = rawEvents.map((ev: any) => ({
+      const formattedEvents: { id: string; title: string; status?: string; end?: string }[] = rawEvents.map((ev: any) => ({
         id: String(ev._id || ev.id || ""),
         title: ev.title || ev.eventName || "Untitled Event",
         status: ev.status ? String(ev.status) : undefined,
+        end: ev.schedule?.end || ev.endDate || undefined,
       }));
       setEventsList(formattedEvents);
       // Preselect an event only when there is no doubt which one (never a closed or cancelled one); otherwise the person chooses
@@ -201,10 +204,12 @@ export default function AssignedSystemUsersPage() {
       });
 
       if (res.success) {
+        const createdId = (res.data as { _id?: string } | undefined)?._id;
         setIsAddUserModalOpen(false);
         setAddUserData({ userName: "", contactNo: "", email: "", password: "" });
         setAddUserOrganizerId("");
         await loadData();
+        if (createdId) setAddedUser({ id: createdId, name: addUserData.userName });
       } else {
         const message = res.message || "Failed to create system user account.";
         setErrorFeedback(message);
@@ -524,8 +529,25 @@ aria-label="Select all"
             <tbody className="divide-y divide-gray-200 text-[#4B4F52]">
               {filteredUsers.length === 0 ? (
                 loadFailed ? null : <tr>
-                  <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
-                    No system users yet. Add one with the Add User button.
+                  <td colSpan={6} className="py-16">
+                    {/* nobody to assign: said in the middle of the page, with the way forward (adding a user, then assigning them) */}
+                    <div className="flex flex-col items-center justify-center gap-3 text-center">
+                      <AlertIcon kind="userAdded" />
+                      <p className="text-base font-medium text-[#15191C]">{searchQuery.trim() || filterEvent ? "No system users match" : "No system users to assign yet"}</p>
+                      <p className="text-sm text-gray-500 max-w-sm whitespace-normal">
+                        {searchQuery.trim() || filterEvent ? "Try another name, phone number or event." : "Add a system user now and you can assign them to an event's sessions straight away."}
+                      </p>
+                      {!searchQuery.trim() && !filterEvent ? (
+                        <button
+                          type="button"
+                          onClick={() => { setAddUserOrganizerId(selectedOrganizerId === "all" ? "" : selectedOrganizerId); setAddUserFormError(null); setIsAddUserModalOpen(true); }}
+                          className={`${addButtonClass} cursor-pointer`}
+                        >
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          Add User
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -902,6 +924,33 @@ aria-label={`Select ${u.name}`}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User added: add another, or assign this one now (the assign dialog opens with them ticked) */}
+      {addedUser && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="user-added-title">
+          <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-5 animate-modal">
+            <AlertIcon kind="userAdded" />
+            <h3 id="user-added-title" className="text-lg font-bold text-gray-900">User added</h3>
+            <p className="text-sm text-[#4B4F52]">{addedUser.name} was added and can sign in with the email and the password you set. Share the password with them and ask them to change it after signing in.</p>
+            <div className="flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={() => { setSelectedIds([addedUser.id]); setSessionScope(null); setErrorFeedback(null); setAddedUser(null); setIsAssignModalOpen(true); }}
+                className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+              >
+                Assign User
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAddedUser(null); setAddUserFormError(null); setIsAddUserModalOpen(true); }}
+                className="w-full py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF1E8] font-bold text-xs rounded-md transition-colors cursor-pointer"
+              >
+                Add another user
+              </button>
+            </div>
           </div>
         </div>
       )}

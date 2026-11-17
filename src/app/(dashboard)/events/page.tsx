@@ -136,7 +136,7 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
     if (open) { setOpen(false); return; }
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const menuItems = 1 + (row.canEdit && !row.ended ? 1 : 0) + (row.ended || row.status !== "Cancelled" ? 1 : 0);
+    const menuItems = 2 + (row.ended || row.status !== "Cancelled" ? 1 : 0);
     const menuHeight = menuItems * 36 + 8;
     const top = rect.bottom + menuHeight + 8 > window.innerHeight ? Math.max(8, rect.top - menuHeight - 4) : rect.bottom + 4;
     setPosition({ top, left: Math.max(8, Math.min(rect.right - 150, window.innerWidth - 158)) });
@@ -151,7 +151,8 @@ function RowActions({ row, onDelete }: { row: EventRow; onDelete: (row: EventRow
       {open && position && createPortal(
         <div ref={menuRef} onClick={(e) => e.stopPropagation()} style={{ position: "fixed", ...position }} className="z-[9999] min-w-[150px] rounded-md bg-[#1E232A] text-white py-1 shadow-xl">
           <Link href={`/events/${row.id}`} className={item}>View Event</Link>
-          {row.status !== "Cancelled" && !row.ended && row.canEdit && <Link href={`/events/${row.id}/edit`} className={item}>Edit Event</Link>}
+          {/* always there: once editing is closed (invitations sent, cancelled, or over) it opens the three steps as saved, with nothing to change */}
+          <Link href={`/events/${row.id}/edit`} className={item}>{row.status !== "Cancelled" && !row.ended && row.canEdit ? "Edit Event" : "View Details"}</Link>
           {/* a past event can only be deleted; one still to come can be cancelled */}
           {(row.ended || row.status !== "Cancelled") && (
             <button type="button" onClick={() => { setOpen(false); onDelete(row); }} className={`${item} text-rose-300 cursor-pointer`}>
@@ -199,12 +200,10 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
         <div ref={menuRef} onClick={(e) => e.stopPropagation()} style={{ position: "fixed", ...position }} className="z-[9999] w-[155px] flex flex-col items-center">
           <Icon name="events/menu-arrow" width={16} height={8} />
           <div className="w-full bg-[#15191C] rounded-xl px-4 py-3 flex flex-col gap-[3px]">
-            {active && row.canEdit && (
-              <Link href={`/events/${row.id}/edit`} className={item}>
-                <Icon name="events/edit" width={16} height={16} />
-                Edit
-              </Link>
-            )}
+            <Link href={`/events/${row.id}/edit`} className={item}>
+              <Icon name="events/edit" width={16} height={16} />
+              {active && row.canEdit ? "Edit" : "View Details"}
+            </Link>
             {active && (
               <Link href={`/events/${row.id}/invitees`} className={item}>
                 <Icon name="events/send" width={16} height={16} />

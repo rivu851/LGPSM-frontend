@@ -33,6 +33,8 @@ interface Step1EventDetailsProps {
   errors: DraftErrors;
   onNext: () => void;
   onCancel: () => void;
+  /** the event can no longer be changed: shown as saved, with no footer buttons of its own */
+  readOnly?: boolean;
 }
 
 const labelClass = "text-sm font-medium text-gray-900";
@@ -252,7 +254,7 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
 }
 
 // Controlled step: all values live in the wizard draft owned by the page
-export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel, readOnly = false }: Step1EventDetailsProps) {
   // what to tell the person when something other than a digit was typed in the contact number
   const [contactNote, setContactNote] = useState<string | null>(null);
   // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
@@ -441,14 +443,14 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         />
       </div>
 
-      <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
+      {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
         <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Cancel
         </button>
         <button type="submit" className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
-      </div>
+      </div>}
     </form>
   );
 }

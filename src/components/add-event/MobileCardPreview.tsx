@@ -18,7 +18,8 @@ interface MobileCardPreviewProps {
   logoKey: string | null;
   categoryName: string;
   subcategoryName: string;
-  onOpenTemplateModal: () => void;
+  /** left out when the card can no longer be changed: there is then no "Change Template" button */
+  onOpenTemplateModal?: () => void;
   /** Saved "Additional Info" choice (null = not set), printed on the preview with sample labels */
   cardInfo?: TemplatePreviewPayload["cardInfo"] | null;
   /** Opens "Customize Information" with the payload this preview renders */
@@ -28,19 +29,6 @@ interface MobileCardPreviewProps {
 }
 
 const ZOOM_SCALE: Record<string, number> = { "100%": 1, "75%": 0.75, "50%": 0.5 };
-
-function formatEventDateRange(start: string, end: string): string | null {
-  if (!start || !end) return null;
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
-  const format = (date: Date) => new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-  return format(startDate) === format(endDate) ? format(startDate) : `${format(startDate)} – ${format(endDate)}`;
-}
 
 export default function MobileCardPreview({
   template,
@@ -136,8 +124,6 @@ export default function MobileCardPreview({
 
   const showLive = !awaitingTemplate && !staticUrl && live?.key === (template?.id ?? "by-event-type");
   const hasCard = (showLive && !!live) || !!staticUrl;
-  const usesSamplePhoto = !payload.logoKey;
-  const eventDateRange = formatEventDateRange(eventStart, eventEnd);
 
   return (
     <div className="h-full bg-[#F7F3F0] p-4 sm:p-6 flex flex-col items-center">
@@ -155,14 +141,15 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className={`relative w-[250px] max-w-full aspect-[250/422] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
+          className={`relative w-[270px] max-w-full aspect-[1/2] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
           style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
           aria-label="Invitation card preview"
         >
-          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-[#EFEFEF] flex items-center justify-center">
+          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-black flex items-center justify-center">
             {hasCard && (
+              // The screen is taller than the card, so the card is shown whole (nothing trimmed) and the space above and below it is black, like the phone
               // eslint-disable-next-line @next/next/no-img-element -- blob URL rendered by the API, or the uploaded design
-              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-full w-full object-cover object-top" />
+              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-full w-full object-contain" />
             )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
@@ -196,6 +183,7 @@ export default function MobileCardPreview({
 
         {/* Figma Event_Add event-1: "Change Template" and "Additional Info" side by side ("Edit Additional Info" once set) */}
         <div className="mt-5 flex flex-wrap justify-center gap-3">
+          {onOpenTemplateModal && (
           <button
             type="button"
             onClick={onOpenTemplateModal}
@@ -203,6 +191,7 @@ export default function MobileCardPreview({
           >
             {template ? "Change Template" : "Select Template"}
           </button>
+          )}
           {onOpenAdditionalInfo && (
             <button
               type="button"
@@ -213,25 +202,6 @@ export default function MobileCardPreview({
             </button>
           )}
         </div>
-        <p className="mt-2 text-xs text-[#4B4F52] text-center break-words">
-          {awaitingTemplate
-            ? "Choose a template to see your invitation card."
-            : template
-            ? `Template: ${template.name}`
-            : categoryName
-              ? `No template chosen: the design follows the event type (${[categoryName, subcategoryName].filter(Boolean).join(" › ")}).`
-              : "No event type chosen yet, so this is a sample design. Choose a category, or select a template, to see the real card."}
-        </p>
-        {eventDateRange && (
-          <p className="mt-1 text-xs font-medium text-[#25216F] text-center" aria-label="Event date range">
-            {eventDateRange}
-          </p>
-        )}
-        {(showLive || staticUrl) && (
-          <p className="mt-1 text-[11px] text-[#6B6B6B] text-center max-w-[260px]">
-            {staticUrl ? "Your uploaded design is used as it is for every guest." : <>{usesSamplePhoto ? "Sample photo, guest and QR. Add an event image to use your own." : "Sample guest and QR."} Each guest gets their own QR when invitations are sent.</>}
-          </p>
-        )}
         <p className="text-xs text-[#4B4F52] mt-3 text-center">
           Looking for custom card design?{" "}
           <Link href="/contact" className="text-[#15803D] font-medium underline">

@@ -33,7 +33,9 @@ export default function EditEventPage() {
 
   const [isFetchingEvent, setIsFetchingEvent] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [lockedAfterInvitation, setLockedAfterInvitation] = useState(false);
+  // Why editing is closed (invitations went out, the event is cancelled or closed, or it is over); then the saved event is only shown
+  const [lockReason, setLockReason] = useState<string | null>(null);
+  const [canStillAdd, setCanStillAdd] = useState({ invitees: false, users: false });
   const [baseVersion, setBaseVersion] = useState<string | undefined>(undefined);
   // the version of the event this editor was opened on (its updatedAt), sent with the save so a newer version is never overwritten
   const serverVersion = useRef<string | undefined>(undefined);
@@ -44,7 +46,7 @@ export default function EditEventPage() {
   const draftState = useFormDraft<EventDraft>(
     `lgpsm:event-edit-draft:${eventId}`,
     () => serverDraftRef.current || createEmptyEventDraft(),
-    { version: EVENT_DRAFT_VERSION, baseVersion, enabled: !!baseVersion, normalize: normalizeEventDraft }
+    { version: EVENT_DRAFT_VERSION, baseVersion, enabled: !!baseVersion && !lockReason, normalize: normalizeEventDraft }
   );
   const { reset } = draftState;
 
@@ -75,11 +77,16 @@ export default function EditEventPage() {
         setIsFetchingEvent(false);
         return;
       }
-      if (reportRes.success && reportRes.data && (reportRes.data.deliverySummary.SENT > 0 || reportRes.data.deliverySummary.FAILED > 0)) {
-        setLockedAfterInvitation(true);
-        setIsFetchingEvent(false);
-        return;
-      }
+      const ev = eventRes.data as unknown as { status?: string; schedule?: { end?: string } };
+      const ended = !!ev.schedule?.end && new Date(ev.schedule.end).getTime() <= Date.now();
+      const invitationsOut = !!(reportRes.success && reportRes.data && (reportRes.data.deliverySummary.SENT > 0 || reportRes.data.deliverySummary.FAILED > 0));
+      const why =
+        ev.status === "CANCELLED" ? "This event was cancelled, so it can no longer be edited." :
+        ev.status === "COMPLETED" || ended ? "This event is over, so it can no longer be edited." :
+        invitationsOut ? "This event can’t be edited after invitations have been sent, because guests already hold passes made from its details." : null;
+      setLockReason(why);
+      // adding to a closed event is still possible while it has not ended and was not cancelled
+      setCanStillAdd({ invitees: !!why && ev.status !== "CANCELLED" && ev.status !== "COMPLETED" && !ended, users: !!why && ev.status !== "CANCELLED" && ev.status !== "COMPLETED" && !ended });
       const sessions = sessionsRes.success && Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
       const serverEvent = eventRes.data as unknown as { categoryId?: { _id?: string; name?: string; ownerId?: string } | string; subcategory?: { _id?: string; name?: string; isCustom?: boolean } | null };
       const populated = serverEvent.categoryId && typeof serverEvent.categoryId === "object" ? serverEvent.categoryId : null;
@@ -154,18 +161,6 @@ export default function EditEventPage() {
     );
   }
 
-  if (lockedAfterInvitation) {
-    return (
-      <div className="w-full min-h-full flex items-center justify-center bg-[#F4F5F8] p-6">
-        <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
-          <h1 className="text-lg font-bold text-gray-900">Event details are locked</h1>
-          <p className="text-sm text-gray-600">This event can’t be edited after invitations have been sent.</p>
-          <Link href={`/events/${eventId}`} className="inline-block px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-semibold">Back to Event</Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
     <PopupMessage message={conflict ? "This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten." : null} type="warning" title="Event changed by someone else" action={{ label: "Reload the latest version (discards my edits)", onClick: () => { draftState.clearDraft(); window.location.reload(); } }} />
@@ -180,6 +175,14 @@ export default function EditEventPage() {
       draftSavedAt={draftState.savedAt}
       onDismissDraftStatus={draftState.dismissStatus}
       onDiscardDraft={draftState.discardDraft}
+      readOnly={!!lockReason}
+      readOnlyReason={lockReason ?? undefined}
+      readOnlyActions={lockReason ? (
+        <>
+          {canStillAdd.users && <Link href={`/events/${eventId}/assign-users`} className="px-5 py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF1E8] text-sm font-medium rounded-md">Assign Users</Link>}
+          {canStillAdd.invitees && <Link href={`/events/${eventId}/invitees`} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">Add Invitees</Link>}
+        </>
+      ) : undefined}
       canDiscard
       submitLabel="Save Changes"
       submitting={submitting}

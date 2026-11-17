@@ -61,6 +61,12 @@ interface EventWizardProps {
   submitError: string | null;
   onSubmit: (input: EventWizardSubmit) => void;
   onCancel: () => void;
+  /** Editing is closed (invitations sent, or the event is over): every step is shown as saved, nothing can be changed, the steps can still be walked through */
+  readOnly?: boolean;
+  /** why it is closed (shown above the steps) */
+  readOnlyReason?: string;
+  /** what can still be done (for example assigning users and adding invitees) */
+  readOnlyActions?: React.ReactNode;
 }
 
 // Shared create/edit event wizard. The page owns the draft (and its persistence); the steps are controlled.
@@ -88,6 +94,9 @@ export default function EventWizard({
   submitError,
   onSubmit,
   onCancel,
+  readOnly = false,
+  readOnlyReason,
+  readOnlyActions,
 }: EventWizardProps) {
   const { confirm, showAlert } = useAlert();
   const { user } = useAuth();
@@ -193,7 +202,7 @@ export default function EventWizard({
 
   const step1Valid = useMemo(() => !Object.keys(allErrors).some((k) => stepOfError(k) === 1), [allErrors]);
   const step2Valid = useMemo(() => step1Valid && !Object.keys(allErrors).some((k) => stepOfError(k) === 2), [allErrors, step1Valid]);
-  const maxUnlockedStep = step2Valid ? 3 : step1Valid ? 2 : 1;
+  const maxUnlockedStep = readOnly ? 3 : step2Valid ? 3 : step1Valid ? 2 : 1;
 
   // Choosing an event type pre-selects the template made for it. Only a template this form chose itself is ever
   // replaced: once the organizer picks one by hand, their choice stays.
@@ -225,7 +234,7 @@ export default function EventWizard({
   // A new event starts by choosing a template (the dialog cannot be closed until one is chosen); the template then
   // sets the event category and subcategory. Editing a saved event does not ask again.
   const [dismissedError, setDismissedError] = useState<string | null>(null);
-  const mustPickTemplate = !eventId && draftHydrated && !draft.template;
+  const mustPickTemplate = !readOnly && !eventId && draftHydrated && !draft.template;
   const chooseTemplate = (template: SelectedTemplate | null, suggested?: { categoryId: string; subcategoryId: string }) => {
     // an explicit choice is never swapped out by the automatic suggestion that follows a category change
     autoTemplateId.current = null;
@@ -250,6 +259,8 @@ export default function EventWizard({
 
   const handleStepChange = (targetStep: number) => {
     if (targetStep === currentStep) return;
+    // nothing is being entered, so there is nothing to check: the steps are simply walked through
+    if (readOnly) { setCurrentStep(targetStep); return; }
 
     // Moving backward is always allowed
     if (targetStep < currentStep) {
@@ -288,6 +299,7 @@ export default function EventWizard({
       confirmText: "Discard",
       cancelText: "Keep editing",
       tone: "danger",
+      icon: "discard",
     });
     if (!confirmed) return;
     setSessionFiles({});
@@ -386,7 +398,7 @@ export default function EventWizard({
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="restored-draft-title" aria-describedby="restored-draft-description">
           <div className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-100 bg-white shadow-2xl">
             <div className="px-6 pt-7 pb-6 text-center sm:px-8">
-              <AlertIcon kind="info" className="w-14 h-14 mx-auto mb-4" />
+              <AlertIcon kind="draft" className="w-14 h-14 mx-auto mb-4" />
               <h2 id="restored-draft-title" className="text-xl font-semibold text-[#15191C]">Your unsaved event draft was restored</h2>
               <p id="restored-draft-description" className="mt-3 text-sm leading-6 text-[#4B4F52]">
                 This draft was saved temporarily.<br />
@@ -456,6 +468,14 @@ export default function EventWizard({
         <div className="border border-[#E0E0E0] rounded-lg overflow-clip flex flex-col xl:flex-row bg-white">
           <div className="w-full xl:w-[62%] flex flex-col min-w-0">
             <StepHeader currentStep={currentStep} onStepClick={handleStepChange} maxUnlockedStep={maxUnlockedStep} />
+            {readOnly && (
+              <div role="status" className="mx-6 mt-5 rounded-md border border-[#FDBA74] bg-[#FFF7ED] px-4 py-3 text-sm text-[#7C2D12]">
+                <p className="font-semibold text-[#9A3412]">Editing is closed</p>
+                <p className="mt-0.5">{readOnlyReason ? `${readOnlyReason} ` : ""}Everything is shown as it was saved. You can look through the three steps, but nothing can be changed.</p>
+              </div>
+            )}
+            {/* closed for editing: a disabled fieldset turns every field in the step off; the few controls that are not form fields are switched off too */}
+            <fieldset disabled={readOnly} className={`min-w-0 border-0 p-0 m-0 flex-1 ${readOnly ? "[&_[role=checkbox]]:pointer-events-none [&_[role=switch]]:pointer-events-none [&_[role=radio]]:pointer-events-none [&_[role=combobox]]:pointer-events-none [&_[role=option]]:pointer-events-none [&_[role=button]]:pointer-events-none" : ""}`}>
             <div ref={stepContentRef} className="flex-1">
               {featuresLoading ? (
                 <div className="p-8 text-center text-sm text-[#667085]" role="status">Loading saved event settings…</div>
@@ -477,9 +497,10 @@ export default function EventWizard({
                   errors={visibleErrors}
                   onNext={() => handleStepChange(2)}
                   onCancel={onCancel}
+                  readOnly={readOnly}
                 />
               ) : currentStep === 2 ? (
-                <Step2Settings draft={draft} onChange={step2Change} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} />
+                <Step2Settings draft={draft} onChange={step2Change} errors={visibleErrors} features={features} sampleColumnsChanged={!!downloadedColumns && downloadedColumns.join("|") !== excelColumnsFor(inviteeConfig).join("|")} onNext={() => handleStepChange(3)} onBack={() => setCurrentStep(1)} readOnly={readOnly} />
               ) : (
                 <Step3Sessions
                   sessions={draft.sessions}
@@ -508,9 +529,20 @@ export default function EventWizard({
                   onBack={() => setCurrentStep(2)}
                   submitting={submitting}
                   submitLabel={submitLabel}
+                  readOnly={readOnly}
                 />
               )}
             </div>
+            </fieldset>
+            {readOnly && (
+              <div className="px-6 pb-6 pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5]">
+                <div className="flex items-center gap-3 pt-4">
+                  {currentStep > 1 ? <button type="button" onClick={() => setCurrentStep(currentStep - 1)} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back</button> : <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
+                  {currentStep < 3 ? <button type="button" onClick={() => setCurrentStep(currentStep + 1)} className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">Next</button> : <button type="button" onClick={onCancel} className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
+                </div>
+                {readOnlyActions && <div className="flex items-center gap-3 pt-4">{readOnlyActions}</div>}
+              </div>
+            )}
           </div>
           {/* The column runs the full height of the form; only its contents stick, 16px below the 68px sticky page
               header, so the preview stays in view however long the current step is (admin feedback: sticky preview). It never scrolls itself:
@@ -527,7 +559,7 @@ export default function EventWizard({
               logoKey={draft.logoKey}
               categoryName={categories.categoryName(draft.categoryId)}
               subcategoryName={categories.subcategoryName(draft.categoryId, draft.subcategoryId)}
-              onOpenTemplateModal={() => setIsTemplateModalOpen(true)}
+              onOpenTemplateModal={readOnly ? undefined : () => setIsTemplateModalOpen(true)}
               cardInfo={draft.cardInfo ?? null}
               cardDisplay={cardDisplay}
               awaitingTemplate={!eventId && !draft.template}

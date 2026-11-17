@@ -405,7 +405,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                 const badge = variantBadge(v);
                 const active = v.index === selected;
                 return (
-                  <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#FF651D]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
+                  <button key={v.index} type="button" onClick={() => { setSelected(v.index); setShowConcept(false); setSaved(null); setError(null); }} aria-pressed={active} className={`text-left rounded-lg border-2 overflow-hidden bg-white cursor-pointer ${active ? "border-[#2563EB]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
                     <div className="relative w-full aspect-[9/16] bg-[#F4F5F8]">
                       {src ? <Image src={src} alt={`Design option ${v.index + 1}`} fill unoptimized sizes="(max-width: 640px) 50vw, 240px" className="object-contain" /> : <span className="absolute inset-0 flex items-center justify-center text-xs text-[#6B6B6B]">No preview</span>}
                     </div>

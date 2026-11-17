@@ -21,10 +21,11 @@ interface Step2SettingsProps {
   sampleColumnsChanged?: boolean;
   onNext: () => void;
   onBack: () => void;
+  readOnly?: boolean;
 }
 
 // Controlled step: values live in the wizard draft owned by the page
-export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
+export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack, readOnly = false }: Step2SettingsProps) {
   const { showAlert, confirm } = useAlert();
   const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
   // "Invitee Name" is one of the choices for the two lines; before anything is saved the name is on the primary line, as every card has always had it
@@ -307,14 +308,14 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         </div>
       )}
 
-      <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
+      {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
         <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Back
         </button>
         <button type="submit" className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
-      </div>
+      </div>}
     </form>
   );
 }

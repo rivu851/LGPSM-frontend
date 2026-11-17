@@ -44,7 +44,7 @@ interface TemplateCard {
 // Browse templates; organizers see published ones (backend-enforced), admins also see drafts
 export default function TemplatesPage() {
   return (
-    <Suspense fallback={<SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[2/3]" />)}</SkeletonRegion>}>
+    <Suspense fallback={<SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}</SkeletonRegion>}>
       <TemplatesPageContent />
     </Suspense>
   );
@@ -193,7 +193,7 @@ function TemplatesPageContent() {
 
         {loading ? (
           <SkeletonRegion label="Loading templates" className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
-{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[2/3]" />)}
+{Array.from({ length: 12 }).map((_, i) => <Skeleton key={i} className="aspect-[393/682]" />)}
 </SkeletonRegion>
         ) : loadError ? (
           <p role="alert" className="py-16 text-center text-sm text-rose-600 break-words">{loadError}</p>
@@ -228,7 +228,7 @@ function TemplatesPageContent() {
                 onClick={() => { setLivePreview(null); setPreview(t); }}
                 className="group relative text-left bg-white border border-[#E0E0E0] rounded-md overflow-hidden hover:bg-[#EEF3FF] focus-visible:border-black focus:outline-none transition-colors cursor-pointer"
               >
-                <TemplateThumb imageKey={t.imageKey} name={t.name} className="aspect-[2/3]!" />
+                <TemplateThumb imageKey={t.imageKey} name={t.name} className="" />
                 <span aria-hidden className="absolute top-2 right-2 size-6 rounded bg-black/55 text-white flex items-center justify-center">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
                 </span>

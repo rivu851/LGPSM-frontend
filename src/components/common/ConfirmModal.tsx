@@ -1,6 +1,6 @@
 "use client";
 
-import AlertIcon from "@/components/common/AlertIcon";
+import AlertIcon, { type AlertIconKind } from "@/components/common/AlertIcon";
 import React, { useEffect, useId, useRef, useState } from "react";
 
 export interface ConfirmModalProps {
@@ -13,6 +13,8 @@ export interface ConfirmModalProps {
   cancelButton?: boolean;
   // "danger" for destructive actions (delete, discard, clear): red confirm button and warning icon
   tone?: "danger" | "default";
+  /** a symbol drawn for what the dialog says; without it the tone decides (warning for danger, question otherwise) */
+  icon?: AlertIconKind;
   onResolve: (confirmed: boolean) => void;
 }
 
@@ -28,6 +30,7 @@ export default function ConfirmModal({
   cancelText = "Cancel",
   cancelButton = false,
   tone = "default",
+  icon,
   onResolve,
 }: ConfirmModalProps) {
   const [closing, setClosing] = useState(false);
@@ -110,7 +113,7 @@ export default function ConfirmModal({
         >
           <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
-        <AlertIcon kind={danger ? "warning" : "question"} />
+        <AlertIcon kind={icon ?? (danger ? "warning" : "question")} />
 
         <h3 id={titleId} className="text-base font-bold text-gray-900">{title}</h3>
         <p id={messageId} className="text-xs text-gray-600 leading-relaxed font-medium px-2 whitespace-pre-line">{message}</p>
