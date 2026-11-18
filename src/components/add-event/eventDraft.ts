@@ -306,6 +306,8 @@ export interface DraftValidationOptions {
   createdAt?: string | null;
   // True when this is a new event (the reference is the current time)
   isNew?: boolean;
+  // True when RSVP acceptance is offered on this platform: with it ticked, the last date is required
+  rsvpOffered?: boolean;
 }
 
 export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
@@ -329,7 +331,9 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   if (!isValidIso(draft.end)) errors.end = "Choose an end date and time.";
   else if (!isAfter(draft.end, draft.start)) errors.end = "End must be after the start.";
   else if (createdMs !== null && new Date(draft.end as string).getTime() <= createdMs) errors.end = options.isNew ? "The event cannot end in the past." : "The event must end after it was created.";
-  if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
+  // RSVP acceptance itself is optional; once it is ticked its last date is required
+  if (draft.rsvpEnabled && options.rsvpOffered && !isValidIso(draft.rsvpDeadline)) errors.rsvpDeadline = "Choose the last date to accept RSVPs, or untick Event RSVP Acceptance.";
+  else if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
     errors.rsvpDeadline = "RSVP deadline should be before the event ends.";
   }
   if (draft.dietaryEnabled) {

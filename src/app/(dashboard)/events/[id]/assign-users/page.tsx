@@ -310,16 +310,20 @@ export default function EventAssignUsersPage() {
   };
 
   // Filters & Sorting (the same panel as User Management): activity and sort order, applied together with the search and the list picker
-  type UsersFilters = { activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
-  const DEFAULT_FILTERS: UsersFilters = { activity: null, sort: "RECENT" };
+  type UsersFilters = { status: "ALL" | "ASSIGNED" | "UNASSIGNED"; activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
+  const DEFAULT_FILTERS: UsersFilters = { status: "ALL", activity: null, sort: "RECENT" };
   const [filters, setFilters] = useState<UsersFilters>(DEFAULT_FILTERS);
   const [draft, setDraft] = useState<UsersFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const activeFilterCount = (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
+  const activeFilterCount = (filters.status !== "ALL" ? 1 : 0) + (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
   const isUpcoming = (a: SystemUserRow["assignments"][number]) => !!a.eventEnd && new Date(a.eventEnd).getTime() >= Date.now();
   const upcomingOf = (u: SystemUserRow) => u.assignments.filter(isUpcoming).length;
   const pastOf = (u: SystemUserRow) => u.assignments.filter((a) => !!a.eventEnd && !isUpcoming(a)).length;
-  const eventUsers = filterSystemUsers(users, eventId, effectiveFilter);
+  // Status is about this event: Assigned = already on it, Unassigned = a system user not on it yet (so every system user is considered)
+  const onThisEvent = (u: SystemUserRow) => u.assignments.some((a) => a.eventId === eventId);
+  const eventUsers = filters.status === "UNASSIGNED"
+    ? filterSystemUsers(users, eventId, ALL_SYSTEM_USERS).filter((u) => !onThisEvent(u))
+    : filterSystemUsers(users, eventId, effectiveFilter).filter((u) => filters.status !== "ASSIGNED" || onThisEvent(u));
   const filteredUsers = eventUsers.filter((u) => {
     if (filters.activity === "UPCOMING" && upcomingOf(u) === 0) return false;
     if (filters.activity === "PAST" && pastOf(u) === 0) return false;
@@ -426,6 +430,12 @@ export default function EventAssignUsersPage() {
                 <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">Reset</button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Users Status</h3>
+                  {option("All users", draft.status === "ALL", () => setDraft((d) => ({ ...d, status: "ALL" })))}
+                  {option("Assigned to this event", draft.status === "ASSIGNED", () => setDraft((d) => ({ ...d, status: "ASSIGNED" })))}
+                  {option("Not assigned to this event", draft.status === "UNASSIGNED", () => setDraft((d) => ({ ...d, status: "UNASSIGNED" })))}
+                </section>
                 <section>
                   <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
                   {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
@@ -652,21 +662,21 @@ export default function EventAssignUsersPage() {
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className={`pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${selectedUserIds.length > 0 && !historical ? "sticky bottom-0 z-20 bg-white border-t border-[#EEE] py-3 -mx-1 px-1" : ""}`}>
           <div className="flex items-center gap-1 text-xs">
             <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label="System user pages" />
           </div>
 
           {/* Nothing ticked, nothing to act on: the button appears once someone is selected */}
           {selectedUserIds.length > 0 && !historical && (
-            <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-3 shrink-0 self-start sm:order-first">
               <button
                 type="button"
                 onClick={openAssignModal}
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer"
               >
                 <span>{allAlreadyOnEvent ? `Change sessions for ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}` : `Assign ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}`}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </button>

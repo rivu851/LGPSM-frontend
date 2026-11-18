@@ -204,7 +204,7 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
               <Icon name="events/edit" width={16} height={16} />
               {active && row.canEdit ? "Edit" : "View Details"}
             </Link>
-            {active && (
+            {active && row.phase === "Upcoming" && (
               <Link href={`/events/${row.id}/invitees`} className={item}>
                 <Icon name="events/send" width={16} height={16} />
                 Send Invitation

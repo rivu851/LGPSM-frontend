@@ -194,7 +194,7 @@ export default function EventWizard({
     else if (subcategoryGone) setDraft((prev) => ({ ...prev, subcategoryId: "" }));
   }, [categoryGone, subcategoryGone, setDraft]);
   const isAdmin = user?.role === "ADMIN";
-  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt }), [draft, subcategoryRequired, eventId]);
+  const allErrors = useMemo(() => validateEventDraft(draft, { subcategoryRequired, templateRequired: !eventId, isNew: !eventId, createdAt, rsvpOffered: features?.allowEventRSVP === true }), [draft, subcategoryRequired, eventId, features?.allowEventRSVP]);
   // "I don't have any invitees list yet" unticked means a list is expected: one has to be attached to the first session (or the event already has one)
   const inviteesMissing = !eventId && !draft.skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean);
   const requiredErrors: DraftErrors = inviteesMissing && draft.sessions[0] ? { [`session:${draft.sessions[0].key}:invitees`]: "Add the invitees list, or tick \"I don't have any invitees list yet\" to skip it for later." } : {};
@@ -389,6 +389,19 @@ export default function EventWizard({
   const previewFile = previewKey ? sessionFiles[previewKey] : undefined;
 
   const currentStepHasErrors = showErrors && Object.keys(allErrors).some((k) => stepOfError(k) === currentStep);
+  // what is actually wrong on this step, in the words shown under each field (the popup used to say only "complete all required details")
+  const stepProblems = (() => {
+    const seen = new Set<string>();
+    return Object.entries({ ...allErrors, ...requiredErrors })
+      .filter(([key]) => stepOfError(key) === currentStep)
+      .map(([, message]) => String(message ?? "").trim())
+      .filter((message) => message && !seen.has(message) && !!seen.add(message));
+  })();
+  const stepProblemMessage = stepProblems.length === 0
+    ? `Please complete all required details on Step ${currentStep} before proceeding to the next step.`
+    : stepProblems.length === 1
+      ? stepProblems[0]
+      : `Please fix these on Step ${currentStep} before continuing:\n${stepProblems.slice(0, 6).map((m) => `• ${m}`).join("\n")}${stepProblems.length > 6 ? `\n…and ${stepProblems.length - 6} more` : ""}`;
 
   return (
     <div className="w-full flex-1 flex flex-col bg-white">
@@ -443,7 +456,7 @@ export default function EventWizard({
       )}
 
       {/* Problems are shown as popups, not banners */}
-      <PopupMessage message={currentStepHasErrors ? `Please complete all required details on Step ${currentStep} before proceeding to the next step.` : null} type="warning" title="Required details missing" onClose={() => setShowErrors(false)} />
+      <PopupMessage message={currentStepHasErrors ? stepProblemMessage : null} type="warning" title={stepProblems.length === 1 ? "Please check this" : `Please check Step ${currentStep}`} onClose={() => setShowErrors(false)} />
       <PopupMessage message={draftStatus === "discarded-stale" ? "An older unsaved draft was discarded because this event was changed since it was saved." : null} type="info" title="Draft discarded" onClose={onDismissDraftStatus} />
       <PopupMessage message={submitError && submitError !== dismissedError ? `${submitError} Your entries are kept, so you can fix the problem and try again.` : null} title="The event could not be saved" onClose={() => setDismissedError(submitError)} />
       {(draftSavedAt && draftStatus !== "restored") && (

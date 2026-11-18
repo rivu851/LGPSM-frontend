@@ -275,6 +275,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                           placeholder={`Option ${optIdx + 1}`}
                           className="flex-1 max-w-xs border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent"
                         />
+                        {optIdx === 0 && <span className="shrink-0 text-xs text-[#6B6B6B]">(Stays selected by default for invitees)</span>}
                         {category.options.length > 1 && (
                           <button
                             type="button"

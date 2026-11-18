@@ -112,6 +112,11 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
               onUploadingChange={setUploading}
             />
             {shown.image && <p className="mt-1 text-xs font-medium text-rose-600">{shown.image}</p>}
+            {categories.isOrganizer && imageKey && (
+              <p role="status" className="mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">
+                Your uploaded card is used exactly as it is, so the event logo is not added to it. The Event Logo option in Event Details is turned off for this card.
+              </p>
+            )}
           </div>
           <PopupMessage message={error} />
           <div className="flex justify-end gap-3 pt-1">

@@ -649,7 +649,7 @@ aria-label={`Select ${u.name}`}
 
         {/* Admin selection bar (Figma 453:7298): trash + "Assign N users →" under the table */}
         {isAdminView && (
-          <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-end gap-3">
+          <div className="sticky bottom-0 z-20 mt-4 border-t border-[#EEE] bg-white py-3 flex flex-col sm:flex-row sm:items-center justify-start gap-3">
             <button
               type="button"
               onClick={handleBulkDelete}
@@ -666,10 +666,10 @@ aria-label={`Select ${u.name}`}
               type="button"
               onClick={() => { setErrorFeedback(null); setIsAssignModalOpen(true); }}
               disabled={selectedIds.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#A83800] disabled:cursor-not-allowed"
+              className="order-first inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#A83800] disabled:cursor-not-allowed"
             >
               <span>Assign {selectedIds.length} {selectedIds.length === 1 ? "user" : "users"}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
               </svg>
             </button>
