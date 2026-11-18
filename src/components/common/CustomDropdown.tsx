@@ -144,9 +144,10 @@ export default function CustomDropdown({
                 : `bg-[#FAFAFA] border-[#E0E0E0] ${optional ? "hover:border-[#E0E0E0]" : "hover:border-gray-500"} text-gray-700`
         }`}
       >
-        <span className={`inline-flex items-center gap-2 min-w-0 ${plain ? "" : selectedOption && value !== "" ? "text-gray-900" : "text-gray-400"}`}>
+        <span className={`inline-flex items-center gap-2 min-w-0 max-w-full ${plain ? "" : selectedOption && value !== "" ? "text-gray-900" : "text-gray-400"}`}>
           {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
-          <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+          {/* min-w-0: a flex child only shrinks (and so only truncates) when it may be narrower than its text; without it a long title ran over the next control */}
+          <span className="truncate min-w-0" title={selectedOption && typeof selectedOption.label === "string" && plain ? selectedOption.label : undefined}>{selectedOption ? selectedOption.label : placeholder}</span>
         </span>
         {caret ? (
           <span className={`shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}>{caret}</span>
