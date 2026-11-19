@@ -6,6 +6,7 @@ import { inviteeService, type InviteeSetInfo, type InviteeSetMember } from "@/se
 import { listDisplayName } from "@/utils/inviteeLists";
 import EditInviteeModal from "@/components/add-event/modals/EditInviteeModal";
 import { useAlert } from "@/context/AlertContext";
+import DeleteInviteeModal, { type RemovalDetails } from "@/components/add-event/modals/DeleteInviteeModal";
 
 interface Props {
   eventId: string;
@@ -33,7 +34,9 @@ const PAGE_SIZE = 10;
 // a guest who was already invited, answered or attended is set aside instead (their history is kept, their pass stops working, and
 // they can be restored from Uploaded Lists > Set-aside guests). The confirmation says which of the two will happen.
 export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false, onAddInvitees, reloadSignal = 0 }: Props) {
-  const { confirm, showAlert } = useAlert();
+  const { showAlert } = useAlert();
+  // the guests being deleted: asked for a reason (and where to send it) first
+  const [removing, setRemoving] = useState<InviteeSetMember[] | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -117,39 +120,34 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
   // every guest can be edited and deleted (unless the page is read-only); a guest something has happened to is set aside, not erased
-  const untouched = (m: InviteeSetMember) => m.delivery === "NOT_SENT" && m.rsvpStatus === "PENDING" && !m.checkedIn;
   const canDelete = (m: InviteeSetMember) => !readOnly && !!m.id;
-  const canEdit = () => !readOnly;
+  // a guest invitations were already sent to is no longer edited here, only deleted
+  const canEdit = (m: InviteeSetMember) => !readOnly && (m.delivery === "NOT_SENT" || m.delivery === "FAILED");
   const deletable = members.filter(canDelete);
   const allOnPage = deletable.length > 0 && deletable.every((m) => selected.includes(m.id));
   const refresh = () => { setSelected([]); setTick((t) => t + 1); onChanged?.(); };
 
-  const removeOne = async (m: InviteeSetMember) => {
-    const message = untouched(m)
-      ? `Delete ${m.name} from this event?`
-      : `${m.name} has already been invited. Deleting removes them from the guest list and their QR pass stops working. Their invitation history is kept under Set-aside guests, where they can be restored.`;
-    if (!(await confirm({ title: "Delete invitee", message, confirmText: "Delete", tone: "danger" }))) return;
-    const res = await inviteeService.deleteInvitee(m.id);
-    if (!res.success) return showAlert(res.message || "The invitee could not be deleted.", "error");
-    showAlert(untouched(m) ? "Invitee deleted." : `${m.name} removed. Their history is kept under Set-aside guests.`, "success");
-    refresh();
+  const noticeNote = (notice?: { email: string; whatsapp: string; reasons?: string[] }) => {
+    if (!notice) return "";
+    const sent = [notice.email === "SENT" && "email", notice.whatsapp === "SENT" && "WhatsApp"].filter(Boolean).join(" and ");
+    const bad = [notice.email, notice.whatsapp].some((v) => v === "FAILED" || v === "UNAVAILABLE");
+    return `${sent ? ` Message sent by ${sent}.` : ""}${bad ? ` Some messages could not be sent${notice.reasons?.length ? `: ${notice.reasons.join("; ")}` : ""}.` : ""}`;
   };
 
-  const removeSelected = async () => {
-    const ids = selected.slice();
-    if (!ids.length) return;
-    const invited = members.filter((m) => ids.includes(m.id) && !untouched(m)).length;
-    const note = invited ? ` ${invited} of them ${invited === 1 ? "has" : "have"} already been invited: their QR ${invited === 1 ? "pass stops" : "passes stop"} working and their history is kept under Set-aside guests.` : "";
-    if (!(await confirm({ title: "Delete selected invitees", message: `Delete ${ids.length} selected ${ids.length === 1 ? "invitee" : "invitees"} from this event?${note}`, confirmText: "Delete all", tone: "danger" }))) return;
+  const removeGuests = async (removal: RemovalDetails) => {
+    const list = removing || [];
+    if (!list.length) return;
     setBusy(true);
     let failed = 0;
-    for (const id of ids) {
-      const res = await inviteeService.deleteInvitee(id);
+    let lastNotice: { email: string; whatsapp: string; reasons?: string[] } | undefined;
+    for (const m of list) {
+      const res = await inviteeService.deleteInvitee(m.id, removal);
       if (!res.success) failed += 1;
+      else if (list.length === 1) lastNotice = (res.data as { notice?: typeof lastNotice } | undefined)?.notice;
     }
     setBusy(false);
-    if (failed) showAlert(`${ids.length - failed} deleted; ${failed} could not be deleted. Please try again.`, "warning");
-    else showAlert(`${ids.length} ${ids.length === 1 ? "invitee" : "invitees"} deleted.`, "success");
+    if (failed) showAlert(`${list.length - failed} deleted; ${failed} could not be deleted. Please try again.`, "warning");
+    else showAlert(`${list.length} ${list.length === 1 ? "invitee" : "invitees"} deleted.${noticeNote(lastNotice)}`, "success");
     refresh();
   };
 
@@ -209,9 +207,9 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
             <>
             {!readOnly && (
               <div className="flex items-center justify-between gap-3 py-2">
-                <p className="text-xs text-[#6B6B6B]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
-                <button type="button" onClick={() => void removeSelected()} disabled={!selected.length || busy} className="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-                  <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
+                <p className="min-w-0 flex-1 text-[11px] leading-snug text-[#6B6B6B]">Select invitees to delete them together. Guests who were already invited are set aside with their history, and their pass stops working.</p>
+                <button type="button" onClick={() => setRemoving(members.filter((m) => selected.includes(m.id)).concat(selected.filter((id) => !members.some((m) => m.id === id)).map((id) => ({ id, name: "Invitee" } as InviteeSetMember))))} disabled={!selected.length || busy} className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium rounded-md border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
+                  <svg className="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                   {busy ? "Deleting…" : `Delete all selected${selected.length ? ` (${selected.length})` : ""}`}
                 </button>
               </div>
@@ -249,10 +247,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                     {showCompany && <td className="py-2.5 pr-3 break-words">{m.company || "—"}</td>}
                     {!readOnly && (
                       <td className="py-2.5 text-right whitespace-nowrap">
-                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit()} aria-label={`Edit ${m.name}`} title="Edit" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => setEditing({ id: m.id, name: m.name, email: m.email || "", phone: m.mobile || "" })} disabled={!canEdit(m)} title={canEdit(m) ? "Edit" : "Invitations were already sent to this guest, so they can only be deleted"} aria-label={`Edit ${m.name}`} className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M4 20h4l10.5-10.5a2.5 2.5 0 00-3.536-3.536L4.5 16.5V20z" /></svg>
                         </button>
-                        <button type="button" onClick={() => void removeOne(m)} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
+                        <button type="button" onClick={() => setRemoving([m])} disabled={!canDelete(m)} aria-label={`Delete ${m.name}`} title="Delete" className="inline-flex size-8 items-center justify-center rounded-md text-gray-500 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">
                           <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" /></svg>
                         </button>
                       </td>
@@ -284,6 +282,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
           </div>
         </div>
       </div>
+      <DeleteInviteeModal isOpen={!!removing} askReason={!!removing?.some((m) => m.delivery === "SENT" || m.delivery === "UNKNOWN")} defaultChannels={{ email: true, whatsapp: !!removing?.some((m) => !!m.mobile) && !removing?.every((m) => !!m.email) }} count={removing?.length || 1} onClose={() => setRemoving(null)} onConfirm={removeGuests} />
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={(row) => void saveEdit(row)} />
     </div>
   );

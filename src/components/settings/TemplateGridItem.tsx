@@ -15,7 +15,7 @@ export default function TemplateGridItem({ template, categoryLabel, onEdit }: Te
   return (
     <div className="group relative bg-white rounded-lg overflow-hidden" title={[template.name, categoryLabel].filter(Boolean).join(" — ")}>
       <div className="relative">
-        <TemplateThumb imageKey={template.imageKey} name={template.name} className="aspect-[2/3]!" />
+        <TemplateThumb imageKey={template.imageKey} name={template.name} className="" />
         {onEdit && (
           <button
             type="button"

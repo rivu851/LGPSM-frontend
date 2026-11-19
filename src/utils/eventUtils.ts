@@ -89,6 +89,17 @@ export function eventDisplayStatus(event: { status?: string; schedule?: { start?
 /** A closed or cancelled event is a record: its guests, sessions and staff no longer change (the server enforces this). */
 export const isHistoricalEvent = (status?: string): boolean => status === "COMPLETED" || status === "CANCELLED";
 
+/**
+ * Over: closed, cancelled, or its end time has passed (nobody has to press anything). The server refuses changes to the guests, sessions and
+ * staff of such an event, so the screens stop offering them. (isHistoricalEvent looks at the status only.)
+ */
+export const isEventOver = (event?: { status?: string; schedule?: { end?: unknown } | null } | null): boolean => {
+  if (!event) return false;
+  if (isHistoricalEvent(event.status)) return true;
+  const end = parseEventDate(event.schedule?.end);
+  return !!end && end.getTime() <= Date.now();
+};
+
 /** No new pass is issued once an event is over: the server refuses to send for it. */
 export function eventCanIssuePasses(event?: { status?: string; schedule?: { end?: unknown } | null; admission?: { closesAt?: unknown } | null } | null): boolean {
   if (!event || isHistoricalEvent(event.status)) return false;

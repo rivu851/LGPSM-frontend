@@ -1,10 +1,11 @@
-// Staff can only be assigned to an event that is still taking place. The server refuses a cancelled event and a closed (completed) one,
-// so offering them just sends the organizer down a path that can only end in an error.
-export interface EventWithStatus { id: string; title: string; status?: string }
+import { isEventOver } from "./eventUtils.ts";
 
-export function isAssignableEvent(event: { status?: string }): boolean {
-  const status = String(event.status ?? "").toUpperCase();
-  return status !== "CANCELLED" && status !== "COMPLETED";
+// Staff can only be assigned to an event that is still taking place. The server refuses a cancelled event, a closed (completed) one and
+// one whose end time has passed, so offering them just sends the organizer down a path that can only end in an error.
+export interface EventWithStatus { id: string; title: string; status?: string; end?: unknown }
+
+export function isAssignableEvent(event: { status?: string; end?: unknown }): boolean {
+  return !isEventOver({ status: String(event.status ?? "").toUpperCase(), schedule: { end: event.end } });
 }
 
 /** The event to preselect: the current choice while it is still open, the only open event if there is exactly one, otherwise none (the person chooses). */

@@ -21,13 +21,14 @@ interface Step2SettingsProps {
   sampleColumnsChanged?: boolean;
   onNext: () => void;
   onBack: () => void;
+  readOnly?: boolean;
 }
 
 // Controlled step: values live in the wizard draft owned by the page
-export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack }: Step2SettingsProps) {
+export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack, readOnly = false }: Step2SettingsProps) {
   const { showAlert, confirm } = useAlert();
   const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
-  // "Invitee Name" is one of the choices for the two lines; before anything is saved the name is on the primary line, as every card has always had it
+  // "Invitee Name" is one of the choices for the two lines; nothing is chosen by default (the name is not printed until it is picked)
   const cardInfo: CardInfo = draft.cardInfo ?? { primary: display.inviteeName ? "INVITEE_NAME" : null, secondary: null };
   // the name is printed exactly when it is chosen for one of the lines
   const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next, cardDisplay: { ...display, inviteeName: next.primary === "INVITEE_NAME" || next.secondary === "INVITEE_NAME" } });
@@ -271,8 +272,8 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                           value={opt}
                           maxLength={60}
                           onChange={(e) => updateCategory(category.id, { options: category.options.map((o, i) => (i === optIdx ? e.target.value : o)) })}
-                          placeholder={`Option ${optIdx + 1}`}
-                          className="flex-1 max-w-xs border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent"
+                          placeholder={optIdx === 0 ? "Option 1 (stays selected by default for invitees)" : `Option ${optIdx + 1}`}
+                          className={`flex-1 ${optIdx === 0 ? "max-w-sm" : "max-w-xs"} border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent`}
                         />
                         {category.options.length > 1 && (
                           <button
@@ -307,14 +308,14 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         </div>
       )}
 
-      <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
+      {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
         <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Back
         </button>
         <button type="submit" className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
-      </div>
+      </div>}
     </form>
   );
 }

@@ -369,8 +369,8 @@ export default function EventDetailsPage() {
               </button>
             )}
             {/* After sending, Figma 426:2 keeps Edit visible but faded: the event is locked (the API refuses edits too) */}
-            {!editLocked && reportLoaded ? (
-              <Link href={`/events/${eventId}/edit`} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
+            {reportLoaded ? (
+              <Link href={`/events/${eventId}/edit`} title={editLocked ? "Editing is closed for this event: its details are shown as saved" : undefined} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -482,9 +482,6 @@ export default function EventDetailsPage() {
                 label={event.title}
               />
             </div>
-            <p className="mt-2 text-xs text-[#6B6B6B] truncate">
-              {typeof event.templateId === "object" && event.templateId?.name ? `Template: ${event.templateId.name}` : "Design chosen from the event type"}
-            </p>
             {/* Faded once invitations have gone out (Figma 426:2); resends happen per guest on the Invitees tab */}
             {event.status === "CANCELLED" ? (
               <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">

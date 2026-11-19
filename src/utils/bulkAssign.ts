@@ -1,11 +1,13 @@
 // Selection-based staff assignment on User Management. The server decides who may be assigned to what (own staff, own events,
 // active accounts, not a cancelled event); this only keeps the toolbar and the result messages honest.
 
-export interface AssignableEvent { id: string; name: string; status?: string }
+import { isAssignableEvent } from "./assignableEvent.ts";
 
-/** Events staff can still be assigned to: not cancelled, not completed. */
+export interface AssignableEvent { id: string; name: string; status?: string; end?: unknown }
+
+/** Events staff can still be assigned to: not cancelled, not completed, and whose end time has not passed. */
 export function assignableEvents<T extends AssignableEvent>(events: T[]): T[] {
-  return events.filter((e) => !["CANCELLED", "COMPLETED"].includes(String(e.status || "").toUpperCase()));
+  return events.filter(isAssignableEvent);
 }
 
 export function selectionLabel(count: number): string {

@@ -48,6 +48,18 @@ export interface BulkSessionAccessPayload {
 
 export type ImportMode = "REPLACE" | "APPEND";
 
+/** An uploaded list the organizer deleted once it had no guests: kept as history */
+export interface RemovedInviteeList {
+  id: string;
+  name: string;
+  createdAt?: string | null;
+  importedCount: number | null;
+  removedAt: string;
+  uploadedBy?: { name: string } | null;
+  removedBy?: { name: string } | null;
+  setAside: number;
+}
+
 export interface InviteeSetInfo {
   /** "legacy" is the list of guests added by hand or before lists were tracked */
   id: string;
@@ -221,9 +233,11 @@ export const inviteeService = {
    * Delete invitee
    * DELETE /api/v1/invitees/:inviteeId
    */
-  async deleteInvitee(inviteeId: string): Promise<ApiResponse> {
+  /** The reason (and where to send it) is told to the guest when a channel is chosen */
+  async deleteInvitee(inviteeId: string, removal?: { reason: string; email: boolean; whatsapp: boolean }): Promise<ApiResponse> {
     return apiClient(`/api/v1/invitees/${inviteeId}`, {
       method: "DELETE",
+      ...(removal ? { body: JSON.stringify({ reason: removal.reason, notify: { email: removal.email, whatsapp: removal.whatsapp } }) } : {}),
     }, true);
   },
 
@@ -232,9 +246,20 @@ export const inviteeService = {
    * POST /api/v1/events/:eventId/invitees/import
    */
   // The latest upload replaces the not-yet-invited list (for the event, or for one session when sessionId is given)
-  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; hasSent: boolean; archivedCount: number }>> {
+  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; removedLists?: RemovedInviteeList[]; hasSent: boolean; archivedCount: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets`, { method: "GET" }, true);
   },
+
+  /** Deletes an open uploaded list together with its never-contacted guests; the list stays as history. A locked list is refused. */
+  async removeList(eventId: string, setId: string): Promise<ApiResponse> {
+    return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}`, { method: "DELETE" }, true);
+  },
+
+  /** Renames an open uploaded list */
+  async renameList(eventId: string, setId: string, name: string): Promise<ApiResponse> {
+    return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}`, { method: "PATCH", body: JSON.stringify({ name }) }, true);
+  },
+
 
   /** Deletes all of the event's invitee lists, only while nothing has been sent (the card's guest details changed after the Excel sample was downloaded) */
   async clearUnusedLists(eventId: string): Promise<ApiResponse<{ deletedInvitees: number; deletedLists: number }>> {

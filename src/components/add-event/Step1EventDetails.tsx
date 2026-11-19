@@ -33,6 +33,8 @@ interface Step1EventDetailsProps {
   errors: DraftErrors;
   onNext: () => void;
   onCancel: () => void;
+  /** the event can no longer be changed: shown as saved, with no footer buttons of its own */
+  readOnly?: boolean;
 }
 
 const labelClass = "text-sm font-medium text-gray-900";
@@ -252,7 +254,7 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
 }
 
 // Controlled step: all values live in the wizard draft owned by the page
-export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel }: Step1EventDetailsProps) {
+export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, categories, canManageCategories, isAdmin, isEditing, rsvpAllowed, errors, onNext, onCancel, readOnly = false }: Step1EventDetailsProps) {
   // what to tell the person when something other than a digit was typed in the contact number
   const [contactNote, setContactNote] = useState<string | null>(null);
   // an admin's uploaded design can hold fewer characters than the usual limit: it sets the title's limit
@@ -383,12 +385,12 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
                 />
                 <span className={labelClass}>Event RSVP Acceptance</span>
               </label>
-              <InfoTip label="About RSVP acceptance" text="Lets invitees accept or decline from their invitation. Set a last date to stop accepting responses after it." />
+              <InfoTip label="About RSVP acceptance" text="Lets invitees accept or decline from their invitation. RSVP acceptance is optional, but once it is ticked a last date is required: responses stop after it." />
             </div>
             {draft.rsvpEnabled && (
               <div>
-                <span className={`block ${labelClass} mb-1.5`}>Acceptance Last Date <span className="font-normal text-[#828282]">(optional)</span></span>
-                <DateButton label="RSVP acceptance last date" value={draft.rsvpDeadline} placeholder="Select last date to respond" onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} optional />
+                <span className={`block ${labelClass} mb-1.5`}>Acceptance Last Date<Req /></span>
+                <DateButton label="RSVP acceptance last date" value={draft.rsvpDeadline} placeholder="Select last date to respond" onClick={() => onOpenDatePicker("rsvpDeadline")} error={errors.rsvpDeadline} />
                 <Err msg={errors.rsvpDeadline} />
               </div>
             )}
@@ -396,7 +398,8 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         ) : (
           <p className="p-4 border border-[#E0E0E0] rounded-md text-sm text-[#828282]">RSVP collection is turned off by the platform administrator.</p>
         )}
-        <div className="sm:col-start-2 sm:row-start-1 sm:row-span-2">
+        <div className="sm:col-start-2 sm:row-start-1 sm:row-span-2 flex flex-col">
+          <div className="flex-1 min-h-0">
           <ImageUploadField
             label={<span className="flex items-center justify-between gap-2"><span>Event Logo/image <span className="font-normal text-[#6B6B6B]">(optional)</span></span><InfoTip label="About the event logo" text="Shown on the invitation card. Use a JPG, PNG or WEBP image up to 5 MB." /></span>}
             value={draft.logoKey}
@@ -409,6 +412,12 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
             disabled={staticDesign}
             hint={staticDesign ? "Not used: your uploaded design is the card exactly as it is." : "Shown on the invitation card. JPG, PNG or WEBP, up to 5 MB"}
           />
+          </div>
+          {staticDesign && (
+            <p role="status" className="shrink-0 mt-2 rounded-md border border-[#C7D7FE] bg-[#EEF4FF] px-3 py-2 text-xs text-[#1D3A8A]">
+              Your uploaded card is used exactly as it is, so the Event Logo/image is not added to it. This option is turned off for this card. Choose another template if you want the logo printed on the card.
+            </p>
+          )}
         </div>
       </div>
 
@@ -441,14 +450,14 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         />
       </div>
 
-      <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
+      {!readOnly && <div className="pt-5 border-t border-[#E5E5E5] flex items-center justify-end gap-3">
         <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Cancel
         </button>
         <button type="submit" className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
-      </div>
+      </div>}
     </form>
   );
 }

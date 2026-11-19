@@ -1,7 +1,7 @@
 "use client";
 
 import AlertIcon from "@/components/common/AlertIcon";
-import { isHistoricalEvent } from "@/utils/eventUtils";
+import { isEventOver } from "@/utils/eventUtils";
 import PopupMessage from "@/components/common/PopupMessage";
 import ClosedEventNotice from "@/components/events/ClosedEventNotice";
 import React, { useState, useEffect, useRef } from "react";
@@ -37,7 +37,8 @@ export default function EventAssignUsersPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [eventTitle, setEventTitle] = useState("");
   const [eventStatus, setEventStatus] = useState<string | undefined>();
-  const historical = isHistoricalEvent(eventStatus);
+  const [eventEnd, setEventEnd] = useState<unknown>();
+  const historical = isEventOver({ status: eventStatus, schedule: { end: eventEnd } });
   const [isLoading, setIsLoading] = useState(true);
 
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -96,6 +97,7 @@ export default function EventAssignUsersPage() {
       if (eventRes.success && eventRes.data) {
         setEventTitle(eventRes.data.title || "");
         setEventStatus((eventRes.data as { status?: string }).status);
+        setEventEnd((eventRes.data as { schedule?: { end?: unknown } }).schedule?.end);
       }
 
       // System users only (role === SYSTEM_USER)
@@ -308,16 +310,20 @@ export default function EventAssignUsersPage() {
   };
 
   // Filters & Sorting (the same panel as User Management): activity and sort order, applied together with the search and the list picker
-  type UsersFilters = { activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
-  const DEFAULT_FILTERS: UsersFilters = { activity: null, sort: "RECENT" };
+  type UsersFilters = { status: "ALL" | "ASSIGNED" | "UNASSIGNED"; activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
+  const DEFAULT_FILTERS: UsersFilters = { status: "ALL", activity: null, sort: "RECENT" };
   const [filters, setFilters] = useState<UsersFilters>(DEFAULT_FILTERS);
   const [draft, setDraft] = useState<UsersFilters>(DEFAULT_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const activeFilterCount = (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
+  const activeFilterCount = (filters.status !== "ALL" ? 1 : 0) + (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
   const isUpcoming = (a: SystemUserRow["assignments"][number]) => !!a.eventEnd && new Date(a.eventEnd).getTime() >= Date.now();
   const upcomingOf = (u: SystemUserRow) => u.assignments.filter(isUpcoming).length;
   const pastOf = (u: SystemUserRow) => u.assignments.filter((a) => !!a.eventEnd && !isUpcoming(a)).length;
-  const eventUsers = filterSystemUsers(users, eventId, effectiveFilter);
+  // Status is about this event: Assigned = already on it, Unassigned = a system user not on it yet (so every system user is considered)
+  const onThisEvent = (u: SystemUserRow) => u.assignments.some((a) => a.eventId === eventId);
+  const eventUsers = filters.status === "UNASSIGNED"
+    ? filterSystemUsers(users, eventId, ALL_SYSTEM_USERS).filter((u) => !onThisEvent(u))
+    : filterSystemUsers(users, eventId, effectiveFilter).filter((u) => filters.status !== "ASSIGNED" || onThisEvent(u));
   const filteredUsers = eventUsers.filter((u) => {
     if (filters.activity === "UPCOMING" && upcomingOf(u) === 0) return false;
     if (filters.activity === "PAST" && pastOf(u) === 0) return false;
@@ -362,7 +368,7 @@ export default function EventAssignUsersPage() {
           sessionsCount={isLoading ? undefined : sessions.length}
         />
 
-        <ClosedEventNotice status={eventStatus} />
+        <ClosedEventNotice status={eventStatus} endsAt={eventEnd} />
 
         {/* Error Notification Banner */}
         <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
@@ -425,6 +431,12 @@ export default function EventAssignUsersPage() {
               </div>
               <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
                 <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Users Status</h3>
+                  {option("All users", draft.status === "ALL", () => setDraft((d) => ({ ...d, status: "ALL" })))}
+                  {option("Assigned to this event", draft.status === "ASSIGNED", () => setDraft((d) => ({ ...d, status: "ASSIGNED" })))}
+                  {option("Not assigned to this event", draft.status === "UNASSIGNED", () => setDraft((d) => ({ ...d, status: "UNASSIGNED" })))}
+                </section>
+                <section>
                   <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
                   {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
                   {option("Has past events", draft.activity === "PAST", () => setDraft((d) => ({ ...d, activity: d.activity === "PAST" ? null : "PAST" })))}
@@ -482,7 +494,16 @@ export default function EventAssignUsersPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-500 text-sm">
                     {users.length === 0 ? (
-                      <span>No SYSTEM_USER accounts found. <Link href={`/user-management/add?new=1&event=${eventId}`} className="font-semibold text-[#C44200] underline">Add User</Link>.</span>
+                      // nobody has been added yet: said in the middle of the page; "Add User" carries on into adding one, who is then put on this event
+                      <div className="flex flex-col items-center gap-4 py-16 max-w-[360px] mx-auto whitespace-normal">
+                        <Icon name="events/users-empty" width={80} height={67} />
+                        <p className="text-lg font-medium text-black/60">You have not added any system users yet.</p>
+                        <p className="text-sm text-gray-500">Add one now and they are assigned to this event straight away.</p>
+                        <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                          Add User
+                        </Link>
+                      </div>
                     ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
                       <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
                     ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
@@ -641,21 +662,21 @@ export default function EventAssignUsersPage() {
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className={`pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${selectedUserIds.length > 0 && !historical ? "sticky bottom-0 z-20 bg-white border-t border-[#EEE] py-3 -mx-1 px-1" : ""}`}>
           <div className="flex items-center gap-1 text-xs">
             <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} label="System user pages" />
           </div>
 
           {/* Nothing ticked, nothing to act on: the button appears once someone is selected */}
           {selectedUserIds.length > 0 && !historical && (
-            <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+            <div className="flex items-center gap-3 shrink-0 self-start sm:order-first">
               <button
                 type="button"
                 onClick={openAssignModal}
-                className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer"
               >
                 <span>{allAlreadyOnEvent ? `Change sessions for ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}` : `Assign ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}`}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                 </svg>
               </button>

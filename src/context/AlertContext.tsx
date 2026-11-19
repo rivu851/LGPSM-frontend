@@ -3,6 +3,7 @@
 import React, { createContext, useCallback, useContext, useRef, useState, ReactNode } from "react";
 import CustomAlertModal, { AlertType } from "@/components/common/CustomAlertModal";
 import ConfirmModal from "@/components/common/ConfirmModal";
+import type { AlertIconKind } from "@/components/common/AlertIcon";
 
 interface AlertState {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export interface ConfirmOptions {
   cancelText?: string;
   cancelButton?: boolean;
   tone?: "danger" | "default";
+  icon?: AlertIconKind;
 }
 
 interface AlertContextType {
@@ -88,6 +90,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         cancelText={confirmState?.cancelText}
         cancelButton={confirmState?.cancelButton}
         tone={confirmState?.tone}
+        icon={confirmState?.icon}
         onResolve={resolveConfirm}
       />
     </AlertContext.Provider>

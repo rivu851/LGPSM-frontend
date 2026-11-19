@@ -131,7 +131,7 @@ export interface CardDisplay {
   /** the event's logo / picture */
   logo: boolean;
 }
-export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: true, logo: true };
+export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: false, logo: true };
 /** What is sent to the server: the logo flag only when it is switched off, so an older server never sees a key it does not know */
 /**
  * What the card prints, with the guest's name decided by the Additional Information choices: it is printed exactly when "Invitee Name" is chosen
@@ -243,9 +243,9 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
-    // A new event prints the guest's name, as every card always has: "Invitee Name" is the primary choice under Additional Information until the
-    // person changes it (unticking it takes the name off the card)
-    cardInfo: { primary: "INVITEE_NAME", secondary: null },
+    // A new event starts with nothing chosen under Additional Information, so the guest's name is not printed until the organizer picks "Invitee Name"
+    // for the primary (large) or the secondary (smaller) line
+    cardInfo: { primary: null, secondary: null },
     cardDisplay: { ...CARD_DISPLAY_DEFAULTS },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],
@@ -306,6 +306,8 @@ export interface DraftValidationOptions {
   createdAt?: string | null;
   // True when this is a new event (the reference is the current time)
   isNew?: boolean;
+  // True when RSVP acceptance is offered on this platform: with it ticked, the last date is required
+  rsvpOffered?: boolean;
 }
 
 export function validateEventDraft(draft: EventDraft, options: DraftValidationOptions = {}): DraftErrors {
@@ -329,7 +331,9 @@ export function validateEventDraft(draft: EventDraft, options: DraftValidationOp
   if (!isValidIso(draft.end)) errors.end = "Choose an end date and time.";
   else if (!isAfter(draft.end, draft.start)) errors.end = "End must be after the start.";
   else if (createdMs !== null && new Date(draft.end as string).getTime() <= createdMs) errors.end = options.isNew ? "The event cannot end in the past." : "The event must end after it was created.";
-  if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
+  // RSVP acceptance itself is optional; once it is ticked its last date is required
+  if (draft.rsvpEnabled && options.rsvpOffered && !isValidIso(draft.rsvpDeadline)) errors.rsvpDeadline = "Choose the last date to accept RSVPs, or untick Event RSVP Acceptance.";
+  else if (draft.rsvpEnabled && draft.rsvpDeadline && isAfter(draft.rsvpDeadline, draft.end)) {
     errors.rsvpDeadline = "RSVP deadline should be before the event ends.";
   }
   if (draft.dietaryEnabled) {

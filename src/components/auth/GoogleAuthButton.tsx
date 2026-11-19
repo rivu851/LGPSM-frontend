@@ -70,7 +70,7 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
           theme: "outline",
           size: "large",
           shape: "rectangular",
-          text: mode === "signup" ? "signup_with" : "signin_with",
+          text: "continue_with",
           logo_alignment: "left",
           width: Math.min(400, Math.max(200, slot.current.parentElement?.clientWidth || 320)),
         });
@@ -92,7 +92,7 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
         {CLIENT_ID ? (
           <div className="min-h-[44px] flex flex-col items-center justify-center">
             {/* Google's script owns everything inside this empty div: React never renders children into it, so the two cannot fight over its nodes */}
-            <div ref={slot} aria-label={mode === "signup" ? "Sign up with Google" : "Sign in with Google"} />
+            <div ref={slot} aria-label="Continue with Google" />
             {!ready && !problem && <span className="text-xs text-[#6B6B6B]">Loading Google…</span>}
           </div>
         ) : (
@@ -102,7 +102,7 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
             className="w-full max-w-[400px] h-[44px] inline-flex items-center justify-center gap-3 border border-[#DADCE0] rounded-md bg-white text-sm font-medium text-[#3C4043] hover:bg-[#F8F9FA] cursor-pointer"
           >
             <GoogleIcon />
-            {mode === "signup" ? "Sign up with Google" : "Sign in with Google"}
+            Continue with Google
           </button>
         )}
       </div>

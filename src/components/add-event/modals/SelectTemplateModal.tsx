@@ -42,6 +42,8 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
   // everything about templates is done here: pick, upload, and remove the ones the organizer made
   const [scope, setScope] = useState<"all" | "mine">("all");
   const isMine = (t: Template) => !!user?._id && t.ownerId === user._id;
+  const isPublished = (t: Template) => !t.ownerId || !!t.isSystemTemplate;
+  const isOwnCard = (t: Template) => isMine(t) && !t.isSystemTemplate;
   // Every template is listed, as on the Templates page. An admin's list also holds organizers' private designs: those can serve
   // only that organizer's own events, so for anyone else they are shown but cannot be chosen (the one already in use stays usable)
   const usable = (t: Template) => !t.ownerId || isMine(t) || t.isSystemTemplate || t._id === selectedTemplateId || (!!organizerId && t.ownerId === organizerId);
@@ -84,10 +86,11 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
 
   // A template with no category suits every event type, so it is always offered; a category filter narrows the rest.
   // Within a category, templates made for a specific subcategory only show for that subcategory, general ones always do.
-  const mineCount = templates.filter((t) => isMine(t)).length;
+  const mineCount = templates.filter((t) => isOwnCard(t)).length;
   const visible = templates.filter(
     (t) =>
-      (scope === "all" || isMine(t)) &&
+      // "All templates" are the ones the admin published; "My templates" are the organizer's own uploaded cards
+      (scope === "mine" ? isOwnCard(t) : isPublished(t) || t._id === selectedTemplateId) &&
       (!templateCategoryId(t) ||
       ((!filterCategory || templateCategoryId(t) === filterCategory) && (!filterSub || !t.subcategoryId || t.subcategoryId === filterSub)))
   );
@@ -216,9 +219,9 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                         aria-pressed={selected}
                         aria-label={t.name}
                         title={t.name}
-                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#FF651D]" : "border-transparent hover:border-gray-300"}`}
+                        className={`block w-full rounded-md overflow-hidden border-2 ${usable(t) ? "cursor-pointer" : "cursor-not-allowed opacity-50"} ${selected ? "border-[#2563EB]" : "border-transparent hover:border-gray-300"}`}
                       >
-                        <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="aspect-[2/3]!" />
+                        <TemplateThumb imageKey={t.previewImageKey} name={t.name} className="" />
                       </button>
                       {!usable(t) ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Other organizer</span> : t.isPublished === false ? <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] text-white">Draft</span> : isMine(t) && <span className="pointer-events-none absolute left-1 bottom-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">Own</span>}
                       {canDelete(t) && (
