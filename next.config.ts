@@ -11,6 +11,9 @@ const PRIVATE_SECTIONS =
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "https://lgpsm-backend-vzuz.onrender.com";
 const apiHost = new URL(apiUrl).hostname;
 const apiOrigin = new URL(apiUrl).origin;
+// Uploaded images may be served from a media address of their own (the API redirects image requests there); set at build time
+const mediaUrl = (process.env.NEXT_PUBLIC_MEDIA_URL || "").trim();
+const mediaOrigin = /^https:\/\//i.test(mediaUrl) ? new URL(mediaUrl).origin : "";
 
 // Enforced now: directives that cannot break page rendering but close clickjacking, <base> hijack,
 // plugin and cross-site form-post vectors.
@@ -24,7 +27,7 @@ const REPORT_ONLY_CSP = [
   // Google's sign-in button (accounts.google.com/gsi) and the profile picture it shows
   "script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client",
   "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
-  `img-src 'self' data: blob: ${apiOrigin} https://tile.openstreetmap.org https://*.googleusercontent.com`,
+  `img-src 'self' data: blob: ${apiOrigin}${mediaOrigin ? ` ${mediaOrigin}` : ""} https://tile.openstreetmap.org https://*.googleusercontent.com`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin} https://nominatim.openstreetmap.org https://accounts.google.com/gsi/`,
   "frame-src https://accounts.google.com/gsi/",
@@ -41,6 +44,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: apiHost,
       },
+      ...(mediaOrigin ? [{ protocol: "https" as const, hostname: new URL(mediaOrigin).hostname }] : []),
     ],
   },
   async headers() {
