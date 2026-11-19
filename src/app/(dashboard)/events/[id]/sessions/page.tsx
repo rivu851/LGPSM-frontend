@@ -27,7 +27,7 @@ import { excelColumnsFor } from "@/utils/inviteeFields";
 import { missingColumnsMessage, parseInviteeSheet } from "@/utils/inviteeSheet";
 import { downloadInviteeTemplate, templateColumnsFor, type TemplateColumns } from "@/utils/inviteeTemplate";
 import DateTimePickerModal from "@/components/add-event/modals/DateTimePickerModal";
-import EventSubNav from "@/components/EventSubNav";
+import EventSubNav, { notifyDbUpdate } from "@/components/EventSubNav";
 
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { TableSkeletonRows } from "@/components/common/Skeleton";
@@ -299,6 +299,7 @@ export default function EventSessionsPage() {
     // editing a saved session: the same form, saved with an update (the guest list itself is changed on the Invitees page)
     if (editingId) {
       if (copyOn && !copySourceId) { setFormError("Choose the session whose invitees this one keeps."); return; }
+      if (uploadedFile && !copyOn && !(await confirm({ title: "Replace this session's list?", message: `Guests of "${sessionName.trim()}" who are not in "${uploadedFileName}" will be taken off this session, and the new guests will be added. People already invited are never removed.`, confirmText: "Replace list", tone: "danger" }))) return;
       try {
         const res = await sessionService.updateSession(editingId, {
           name: sessionName.trim(),
@@ -307,8 +308,31 @@ export default function EventSessionsPage() {
           ...(copyOn && copySourceId ? { inviteeSource: "COPY_SESSION" as const, sourceSessionId: copySourceId } : { inviteeSource: "NEW_LIST" as const, sourceSessionId: null }),
         });
         if (res.success) {
+          // a file chosen while editing replaces this session's list: guests not in it (and not yet invited) come off the session, new ones are added
+          let importNote: { message: string; tone: "success" | "warning" } | null = null;
+          if (uploadedFile && !copyOn) {
+            try {
+              const imp = await inviteeService.importExcel(eventId, uploadedFile, editingId, "REPLACE");
+              if (!imp.success || !imp.data) {
+                importNote = { message: `The session was saved, but its invitee list was not changed: ${imp.message || "the import failed"}. The earlier list is still in place.`, tone: "warning" };
+              } else {
+                const d = imp.data;
+                const parts = [`${d.imported} added`];
+                if (d.updated) parts.push(`${d.updated} already on the list`);
+                if (d.archived) parts.push(`${d.archived} removed from the session (not in the new file)`);
+                if (d.alreadyInvited) parts.push(`${d.alreadyInvited} already invited and kept`);
+                if (d.duplicateCount) parts.push(`${d.duplicateCount} duplicate row(s) skipped`);
+                if (d.rejected) parts.push(`${d.rejected} row(s) rejected`);
+                importNote = { message: `Session saved. Invitee list updated: ${parts.join(", ")}.`, tone: d.rejected ? "warning" : "success" };
+              }
+            } catch {
+              importNote = { message: "The session was saved, but the invitee file could not reach the server. The earlier list is unchanged; please try again.", tone: "warning" };
+            }
+          }
           closeModal();
           await fetchSessions();
+          notifyDbUpdate();
+          if (importNote) showAlert(importNote.message, importNote.tone);
         } else {
           setFormError(res.message || "Failed to update the session.");
         }
@@ -329,7 +353,11 @@ export default function EventSessionsPage() {
       if (res.success) {
         // Invitees from the uploaded sheet are imported into this event through the backend
         if (uploadedFile && !copyOn) {
-          const importRes = await inviteeService.importExcel(eventId, uploadedFile, undefined, "APPEND");
+          // the list belongs to the session just created: without its id the guests were saved against no session and never reached its list
+          const createdId = res.data?._id || res.data?.id;
+          const importRes = createdId
+            ? await inviteeService.importExcel(eventId, uploadedFile, createdId, "APPEND")
+            : { success: false, message: "the new session could not be identified", data: undefined };
           if (!importRes.success) {
             showAlert(`Session created, but the invitee file could not be imported: ${importRes.message || "unknown error"}`);
           } else if (importRes.data && importRes.data.rejected > 0) {
@@ -343,6 +371,7 @@ export default function EventSessionsPage() {
         setCopySourceId("");
         setIsAddModalOpen(false);
         await fetchSessions();
+        notifyDbUpdate(); // the other tabs' counts (guests, assigned users) follow this change
       } else {
         setFormError(res.message || "Failed to create session on server.");
       }
@@ -357,6 +386,7 @@ export default function EventSessionsPage() {
       const res = await sessionService.deleteSession(sessionId);
       if (res.success) {
         await fetchSessions();
+        notifyDbUpdate(); // the other tabs' counts (guests, assigned users) follow this change
       } else {
         showAlert(res.message || "Failed to delete session.");
       }
@@ -621,9 +651,9 @@ export default function EventSessionsPage() {
                   </div>
                 )}
 
-                {!copyOn && !editingId && (
+                {!copyOn && (
                 <div>
-                  <label className="block text-sm font-medium text-[#15191C] mb-1.5">Add Invitees List <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
+                  <label className="block text-sm font-medium text-[#15191C] mb-1.5">{editingId ? "Change Invitees List" : "Add Invitees List"} <span className="font-normal text-[#6B6B6B]">(optional)</span></label>
                   <div className="border border-[#E0E0E0] rounded-md flex items-center bg-[#FAFAFA] overflow-hidden min-h-[47px]">
                     <button type="button" onClick={askForFile} className="self-stretch flex items-center px-4 bg-[#EDEDED] hover:bg-[#E3E3E3] text-[#4B4F52] text-xs font-medium cursor-pointer transition-colors border-r border-[#E0E0E0]">
                       Choose File
@@ -631,7 +661,9 @@ export default function EventSessionsPage() {
                     <input ref={fileInput} type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
                     <span className="px-3 text-xs text-[#6B6B6B] truncate">{uploadedFileName || "No file chosen"}</span>
                   </div>
-                  <p className="mt-1.5 text-xs text-[#6B6B6B]">The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again.</p>
+                  <p className="mt-1.5 text-xs text-[#6B6B6B]">{editingId
+                    ? "Choosing a file replaces this session's list: guests who are not in the new file are taken off this session, and new guests are added. People already invited are never removed."
+                    : "The invitees are added to this event's existing list. Nobody already on it is removed, and people already invited are not imported again."}</p>
 
                   <div className="flex items-center justify-end gap-2 mt-2 text-sm">
                     <div className="w-4 h-4 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-[9px]">X</div>

@@ -91,8 +91,10 @@ export default function DashboardLayout({
     return <BrandLoader />;
   }
 
+  // overflow-clip, not overflow-hidden: a hidden box can still be scrolled by the browser (scrollIntoView / focus on a field near the bottom of the
+  // page), which slid the sidebar up and left a blank band under the page. A clipped box can never scroll; only <main> does.
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-[#F8F9FA] overflow-hidden font-sans">
+    <div className="flex flex-col md:flex-row h-screen h-dvh bg-[#F8F9FA] overflow-clip font-sans">
       <Sidebar />
       <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
         {children}

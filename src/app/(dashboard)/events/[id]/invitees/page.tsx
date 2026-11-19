@@ -135,8 +135,8 @@ function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; on
 }
 
 // Borderless picker from Figma 217:21076 ("Product Launch Event 2026 ▾", "All Session ▾"): 12px medium grey text
-function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean }) {
-  return <CustomDropdown variant="plain" value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} />;
+function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled, className }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean; className?: string }) {
+  return <CustomDropdown variant="plain" className={className} value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} />;
 }
 
 export default function InviteesManagementPage() {
@@ -611,7 +611,7 @@ export default function InviteesManagementPage() {
                   onChange={(v) => router.replace(`/events/select/invitees?from=sidebar${v ? `&event=${v}` : ""}`)}
                   options={eventsOptions}
                 />
-                <PlainSelect ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
+                <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
                 <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
@@ -673,10 +673,11 @@ export default function InviteesManagementPage() {
                   />
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2 min-w-0 max-w-full 2xl:shrink-0">
                 {/* The Super Admin frame (2114:6535) has no event picker on an event's own tab */}
                 {sidebarFlow && eventsOptions.length > 0 && (
                   <PlainSelect
+                    className="!w-[200px] !max-w-full"
                     ariaLabel="Event"
                     value={eventId}
                     onChange={(v) => router.replace(`/events/select/invitees?from=sidebar${v ? `&event=${v}` : ""}`)}
@@ -685,13 +686,14 @@ export default function InviteesManagementPage() {
                 )}
                 {!sidebarFlow && !isAdmin && eventsOptions.length > 0 && (
                   <PlainSelect
+                    className="!w-[200px] !max-w-full"
                     ariaLabel="Event"
                     value={eventId}
                     onChange={(v) => router.push(`/events/${v}/invitees`)}
                     options={eventsOptions.some((o) => o.value === eventId) ? eventsOptions : [{ value: eventId, label: event?.title || "This event" }, ...eventsOptions]}
                   />
                 )}
-                <PlainSelect ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
+                <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
                 {!historical && (
                 <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">

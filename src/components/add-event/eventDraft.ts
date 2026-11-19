@@ -131,7 +131,7 @@ export interface CardDisplay {
   /** the event's logo / picture */
   logo: boolean;
 }
-export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: true, logo: true };
+export const CARD_DISPLAY_DEFAULTS: CardDisplay = { title: true, qr: true, dateTime: true, location: true, inviteeName: false, logo: true };
 /** What is sent to the server: the logo flag only when it is switched off, so an older server never sees a key it does not know */
 /**
  * What the card prints, with the guest's name decided by the Additional Information choices: it is printed exactly when "Invitee Name" is chosen
@@ -243,9 +243,9 @@ export function createEmptyEventDraft(): EventDraft {
     dietaryEnabled: false,
     preferenceCategories: [{ id: newClientKey("pref"), title: "Dietary Preference", options: [""] }],
     template: null,
-    // A new event prints the guest's name, as every card always has: "Invitee Name" is the primary choice under Additional Information until the
-    // person changes it (unticking it takes the name off the card)
-    cardInfo: { primary: "INVITEE_NAME", secondary: null },
+    // A new event starts with nothing chosen under Additional Information, so the guest's name is not printed until the organizer picks "Invitee Name"
+    // for the primary (large) or the secondary (smaller) line
+    cardInfo: { primary: null, secondary: null },
     cardDisplay: { ...CARD_DISPLAY_DEFAULTS },
     logoKey: null,
     sessions: [createSessionDraft("Entry Session", start, end)],

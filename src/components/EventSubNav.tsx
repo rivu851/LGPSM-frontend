@@ -13,6 +13,12 @@ export function notifyDbUpdate() {
   }
 }
 
+/** Forget the remembered tab counts of an event (after the event's sessions, guests or users were changed away from these tabs, e.g. in the edit form) */
+export function forgetEventCounts(eventId: string) {
+  countsCache.delete(eventId);
+  countsInflight.delete(eventId);
+}
+
 type TabId = "overview" | "sessions" | "invitees" | "assign-users";
 type Counts = { sessions: number; invitees: number; assignments: number };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { forgetEventCounts } from "@/components/EventSubNav";
 import React, { useEffect, useRef, useState } from "react";
 import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
@@ -127,6 +128,7 @@ export default function EditEventPage() {
       }
       draftState.clearDraft();
       const problems = await persistSessionsAndInvitees(eventId, draft, sessionFiles, serverDraftRef.current?.sessions || []);
+      forgetEventCounts(eventId); // the tab counts (sessions, guests) are re-read, not shown from before this save
       if (problems.length > 0) {
         showAlert(`Event updated, but some items were not saved: ${problems.join("; ")}`, "warning");
       }

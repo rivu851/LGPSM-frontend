@@ -1,5 +1,6 @@
 "use client";
 
+import { forgetEventCounts } from "@/components/EventSubNav";
 import { isStaticTemplate, titleLimitOf } from "@/components/add-event/eventDraft";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { createSingleFlight } from "@/utils/singleFlight";
@@ -89,6 +90,7 @@ function AddEventContent() {
       draftState.clearDraft();
 
       const problems = await persistSessionsAndInvitees(createdId, draft, sessionFiles);
+      forgetEventCounts(createdId); // the tab counts (sessions, guests) are re-read, not shown from before this save
       if (problems.length > 0) {
         showAlert(`Event created, but some items were not saved: ${problems.join("; ")}`, "warning");
       }

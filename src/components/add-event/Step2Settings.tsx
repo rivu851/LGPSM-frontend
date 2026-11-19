@@ -28,7 +28,7 @@ interface Step2SettingsProps {
 export default function Step2Settings({ draft, onChange, errors, features, sampleColumnsChanged = false, onNext, onBack, readOnly = false }: Step2SettingsProps) {
   const { showAlert, confirm } = useAlert();
   const display = { ...CARD_DISPLAY_DEFAULTS, ...(draft.cardDisplay || {}) };
-  // "Invitee Name" is one of the choices for the two lines; before anything is saved the name is on the primary line, as every card has always had it
+  // "Invitee Name" is one of the choices for the two lines; nothing is chosen by default (the name is not printed until it is picked)
   const cardInfo: CardInfo = draft.cardInfo ?? { primary: display.inviteeName ? "INVITEE_NAME" : null, secondary: null };
   // the name is printed exactly when it is chosen for one of the lines
   const setCardInfo = (next: CardInfo) => onChange({ cardInfo: next, cardDisplay: { ...display, inviteeName: next.primary === "INVITEE_NAME" || next.secondary === "INVITEE_NAME" } });
@@ -272,10 +272,9 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                           value={opt}
                           maxLength={60}
                           onChange={(e) => updateCategory(category.id, { options: category.options.map((o, i) => (i === optIdx ? e.target.value : o)) })}
-                          placeholder={`Option ${optIdx + 1}`}
-                          className="flex-1 max-w-xs border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent"
+                          placeholder={optIdx === 0 ? "Option 1 (stays selected by default for invitees)" : `Option ${optIdx + 1}`}
+                          className={`flex-1 ${optIdx === 0 ? "max-w-sm" : "max-w-xs"} border-b border-gray-300 focus:border-black focus:outline-none py-1 text-sm text-gray-900 bg-transparent`}
                         />
-                        {optIdx === 0 && <span className="shrink-0 text-xs text-[#6B6B6B]">(Stays selected by default for invitees)</span>}
                         {category.options.length > 1 && (
                           <button
                             type="button"
