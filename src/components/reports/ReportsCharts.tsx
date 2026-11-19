@@ -58,7 +58,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left Donut Chart Card: Invitation delivery */}
-      <div className="lg:col-span-4 bg-white border border-gray-200/80 rounded-md p-6 shadow-xs relative space-y-4 flex flex-col justify-between min-w-0">
+      <div className="lg:col-span-4 bg-white border border-gray-200/80 rounded-md p-6 relative space-y-4 flex flex-col justify-between min-w-0">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-gray-800">Guest Logs</h3>
         </div>
@@ -128,7 +128,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
       </div>
 
       {/* Right Bar Chart Card: Invited vs. Attendees */}
-      <div className="lg:col-span-8 bg-white border border-gray-200/80 rounded-md p-6 shadow-xs relative space-y-4 flex flex-col justify-between min-w-0">
+      <div className="lg:col-span-8 bg-white border border-gray-200/80 rounded-md p-6 relative space-y-4 flex flex-col justify-between min-w-0">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-gray-800">Invited vs. Attendees</h3>
         </div>

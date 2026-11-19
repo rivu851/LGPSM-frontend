@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
+import CompleteProfileModal from "@/components/auth/CompleteProfileModal";
 import BrandLoader from "@/components/common/BrandLoader";
 import { isExplicitLogout, loginRedirectPath } from "@/components/auth/authPortal";
 import { canAccessRoute } from "@/components/sidebar/navConfig";
@@ -96,6 +97,8 @@ export default function DashboardLayout({
       <main data-page-reveal className="flex-1 overflow-y-auto min-w-0 flex flex-col bg-white">
         {children}
       </main>
+      {/* an organizer whose profile is incomplete (for example after signing up with Google) must finish it first */}
+      <CompleteProfileModal />
     </div>
   );
 }

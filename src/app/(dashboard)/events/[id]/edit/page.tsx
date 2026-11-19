@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useAlert } from "@/context/AlertContext";
@@ -167,12 +168,7 @@ export default function EditEventPage() {
 
   return (
     <>
-    {conflict && (
-      <div role="alert" className="mx-6 mt-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 flex flex-wrap items-center justify-between gap-3">
-        <span>This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten.</span>
-        <button type="button" onClick={() => { draftState.clearDraft(); window.location.reload(); }} className="font-medium underline cursor-pointer">Reload the latest version (discards my edits)</button>
-      </div>
-    )}
+    <PopupMessage message={conflict ? "This event was changed by someone else after you opened it. Your changes were not saved, so nothing they did was overwritten." : null} type="warning" title="Event changed by someone else" action={{ label: "Reload the latest version (discards my edits)", onClick: () => { draftState.clearDraft(); window.location.reload(); } }} />
     <EventWizard
       heading="Edit Event"
       eventId={eventId}

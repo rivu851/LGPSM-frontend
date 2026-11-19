@@ -33,10 +33,10 @@ function Chip({ name, tone = "primary" }: { name: IconName; tone?: "primary" | "
   const cls = tone === "primary" ? "bg-[color:var(--inv-primary)] text-[color:var(--inv-on-primary)]"
     : tone === "accent" ? "bg-[color:var(--inv-accent)] text-white"
     : "bg-[color:var(--inv-soft)] text-[color:var(--inv-accent-text)]";
-  return <span className={`flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm ${cls}`}><Ico name={name} /></span>;
+  return <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${cls}`}><Ico name={name} /></span>;
 }
 
-const tile = "rounded-[26px] border border-[color:var(--inv-line)] bg-white p-4 shadow-sm";
+const tile = "rounded-[26px] border border-[color:var(--inv-line)] bg-white p-4";
 
 export default function InvitationBento({ event, invitee, state, closesAt, formatDateTime, locationText, addressDetails, admissionNote, startDate, endDate, foodQuestions, foodDone }: Props) {
   const tel = event.contactNumber ? contactWithCountryCode(event.contactNumber) : "";
@@ -96,9 +96,9 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
   return (
     <div className="space-y-3">
       {/* Guest, with the RSVP status on its own line */}
-      <div className="rounded-[28px] border border-[color:var(--inv-line)] bg-gradient-to-r from-[color:var(--inv-soft)] to-white p-3 shadow-sm">
+      <div className="rounded-[28px] border border-[color:var(--inv-line)] bg-gradient-to-r from-[color:var(--inv-soft)] to-white p-3">
         <div className="flex min-w-0 items-center gap-3">
-          <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-lg font-bold text-[color:var(--inv-on-primary)] shadow-md">{(invitee.name || "?").trim().charAt(0).toUpperCase()}</span>
+          <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[color:var(--inv-primary)] text-lg font-bold text-[color:var(--inv-on-primary)]">{(invitee.name || "?").trim().charAt(0).toUpperCase()}</span>
           <div className="min-w-0">
             <TileLabel hint={<InfoHint title="Your digital access pass">This page is your invitation. The card above carries a QR code made just for you; it is what the host scans to let you in.</InfoHint>}>Invited guest</TileLabel>
             <h2 className="break-words text-base font-bold leading-snug text-[color:var(--inv-ink)]">{invitee.name}</h2>
@@ -120,7 +120,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
 
       {/* What to do (with the guide) */}
       {steps.length > 0 && (
-        <section aria-labelledby="inv-todo" className="relative overflow-hidden rounded-[28px] border border-[color:var(--inv-line)] bg-gradient-to-br from-[color:var(--inv-soft)] via-white to-white p-3 shadow-sm min-[400px]:rounded-[32px] min-[400px]:p-4">
+        <section aria-labelledby="inv-todo" className="relative overflow-hidden rounded-[28px] border border-[color:var(--inv-line)] bg-gradient-to-br from-[color:var(--inv-soft)] via-white to-white p-3 min-[400px]:rounded-[32px] min-[400px]:p-4">
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 id="inv-todo" className="flex items-center gap-1.5 text-sm font-bold text-[color:var(--inv-ink)]">
@@ -150,7 +150,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
               return (
                 <li key={s.title}>
                   {s.href && !s.done
-                    ? <a href={s.href} className={`${cls} transition hover:border-[color:var(--inv-accent)] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--inv-accent)]`}>{inner}</a>
+                    ? <a href={s.href} className={`${cls} transition hover:border-[color:var(--inv-accent)] hover: focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--inv-accent)]`}>{inner}</a>
                     : <div className={cls}>{inner}</div>}
                 </li>
               );
@@ -176,8 +176,8 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
       {/* Bento: when and where, host and contact */}
       <div className="grid grid-cols-2 gap-3">
         {event.schedule && (
-          <div className="col-span-2 flex items-center gap-4 overflow-hidden rounded-l-[48px] rounded-r-[26px] border border-[color:var(--inv-line)] bg-white py-4 pl-3 pr-4 shadow-sm">
-            <span aria-hidden className="flex size-[68px] shrink-0 flex-col items-center justify-center rounded-full bg-[color:var(--inv-primary)] leading-none text-[color:var(--inv-on-primary)] shadow-md">
+          <div className="col-span-2 flex items-center gap-4 overflow-hidden rounded-l-[48px] rounded-r-[26px] border border-[color:var(--inv-line)] bg-white py-4 pl-3 pr-4">
+            <span aria-hidden className="flex size-[68px] shrink-0 flex-col items-center justify-center rounded-full bg-[color:var(--inv-primary)] leading-none text-[color:var(--inv-on-primary)]">
               {validStart ? (<><span className="text-[10px] font-bold tracking-widest">{month}</span><span className="mt-0.5 text-[26px] font-extrabold">{day}</span></>) : <Ico name="calendar" className="size-7" />}
             </span>
             <div className="min-w-0">
@@ -210,7 +210,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
         )}
 
         {event.organizerName && (
-          <div className={`${tel ? "" : "col-span-2"} flex flex-col gap-2 rounded-b-xl rounded-t-[26px] border border-[color:var(--inv-line)] bg-white p-4 shadow-sm`}>
+          <div className={`${tel ? "" : "col-span-2"} flex flex-col gap-2 rounded-b-xl rounded-t-[26px] border border-[color:var(--inv-line)] bg-white p-4`}>
             <Chip name="building" tone="soft" />
             <div className="min-w-0">
               <TileLabel>Hosted by</TileLabel>
@@ -220,7 +220,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
         )}
 
         {tel && (
-          <a href={`tel:${tel.replace(/[^+\d]/g, "")}`} className={`${event.organizerName ? "" : "col-span-2"} group flex flex-col gap-2 rounded-b-xl rounded-t-[26px] border border-[color:var(--inv-line)] bg-white p-4 shadow-sm transition hover:border-[color:var(--inv-accent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--inv-accent)]`}>
+          <a href={`tel:${tel.replace(/[^+\d]/g, "")}`} className={`${event.organizerName ? "" : "col-span-2"} group flex flex-col gap-2 rounded-b-xl rounded-t-[26px] border border-[color:var(--inv-line)] bg-white p-4 transition hover:border-[color:var(--inv-accent)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--inv-accent)]`}>
             <Chip name="phone" tone="soft" />
             <div className="min-w-0">
               <TileLabel>Contact</TileLabel>
@@ -231,7 +231,7 @@ export default function InvitationBento({ event, invitee, state, closesAt, forma
       </div>
 
       {!!event.sessions?.length && (
-        <section aria-labelledby="invitation-sessions-title" className="overflow-hidden rounded-[26px] border border-[color:var(--inv-line)] bg-white shadow-sm">
+        <section aria-labelledby="invitation-sessions-title" className="overflow-hidden rounded-[26px] border border-[color:var(--inv-line)] bg-white">
           <h3 id="invitation-sessions-title" className="flex items-center gap-2 bg-[color:var(--inv-primary)] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[color:var(--inv-on-primary)]">
             <Ico name="sessions" className="size-4" /> Your event sessions
           </h3>

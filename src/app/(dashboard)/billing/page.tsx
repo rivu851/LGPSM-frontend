@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import PageHeader from "@/components/common/PageHeader";
 import Icon from "@/components/icons/Icon";
 import BillingDateField, { formatDay } from "@/components/billing/BillingDateField";
@@ -78,7 +79,7 @@ export default function BillingPage() {
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full h-[47px] pl-11 pr-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D]"
+                className="w-full h-[47px] pl-11 pr-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs font-medium text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black"
               />
             </div>
           </div>
@@ -101,7 +102,7 @@ export default function BillingPage() {
                 <div className="flex justify-end px-[21px]" aria-hidden>
                   <svg width="19.5" height="8.5" viewBox="0 0 19.5 8.5" fill="none"><path d="M0 8.5L10 0L19.5 8.5H0Z" fill="#F4F4F4" /></svg>
                 </div>
-                <div className="bg-[#F4F4F4] rounded-lg shadow-lg overflow-hidden">
+                <div className="bg-[#F4F4F4] rounded-lg overflow-hidden">
                   <div className="px-6 py-5 border-b border-[#E0E0E0] text-base font-medium text-[#15191C]">Filter by date</div>
                   <div className="p-6 space-y-4">
                     <div className="space-y-2">
@@ -217,10 +218,9 @@ export default function BillingPage() {
                 <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#C44200]">*</span></span>
                 <BillingDateField label="Statement to date" placeholder="Select Date" value={statement.to} min={statement.from || undefined} onChange={(to) => { setStatement((s) => ({ ...s, to })); setStatementError(null); }} />
               </div>
-              {statementError && <p role="alert" className="text-sm text-rose-600">{statementError}</p>}
+              <PopupMessage message={statementError} />
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
-              <button type="button" onClick={() => setStatementOpen(false)} className="px-6 py-2.5 bg-white border border-[#DDD] rounded-md text-base font-semibold text-black cursor-pointer">Cancel</button>
               <button type="button" onClick={downloadStatement} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-base font-semibold text-white cursor-pointer">Download Statement</button>
             </div>
           </div>

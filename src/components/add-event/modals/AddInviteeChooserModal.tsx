@@ -100,7 +100,7 @@ export default function AddInviteeChooserModal({
           <button
             type="button"
             onClick={() => { onClose(); onChooseExcel(); }}
-            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/40 transition-all text-left cursor-pointer"
+            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:bg-[#EEF3FF] transition-all text-left cursor-pointer"
           >
             <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-[#E8F5EE] flex items-center justify-center">
               {/* Microsoft Excel mark in its own greens */}
@@ -125,7 +125,7 @@ export default function AddInviteeChooserModal({
           <button
             type="button"
             onClick={() => { onClose(); onChooseManual(); }}
-            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:border-[#FF651D] hover:bg-orange-50/40 transition-all text-left cursor-pointer"
+            className="w-full h-full flex flex-col items-start gap-3 px-4 py-4 rounded-lg border border-gray-200 hover:bg-[#EEF3FF] transition-all text-left cursor-pointer"
           >
             <span className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center">
               {/* Standard profile glyph in neutral grey */}

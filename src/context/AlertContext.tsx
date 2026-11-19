@@ -17,6 +17,7 @@ export interface ConfirmOptions {
   title?: string;
   confirmText?: string;
   cancelText?: string;
+  cancelButton?: boolean;
   tone?: "danger" | "default";
 }
 
@@ -85,6 +86,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         message={confirmState?.message ?? ""}
         confirmText={confirmState?.confirmText}
         cancelText={confirmState?.cancelText}
+        cancelButton={confirmState?.cancelButton}
         tone={confirmState?.tone}
         onResolve={resolveConfirm}
       />

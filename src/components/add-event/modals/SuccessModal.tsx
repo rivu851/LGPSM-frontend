@@ -1,5 +1,7 @@
 "use client";
 
+import { createPortal } from "react-dom";
+import AlertIcon from "@/components/common/AlertIcon";
 import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { gsap } from "gsap";
@@ -35,7 +37,8 @@ export default function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
     router.push("/events");
   };
 
-  return (
+  // drawn on the page itself (not inside the form's layout), so the dim layer and the window cover the whole screen
+  return typeof document === "undefined" ? null : createPortal(
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto font-sans"
@@ -45,11 +48,7 @@ export default function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
         className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-md w-full p-8 text-center overflow-hidden my-auto relative"
       >
         {/* Solid Green Checkmark Circle matching exact screenshot */}
-        <div className="w-14 h-14 bg-[#10B981] text-white rounded-full flex items-center justify-center mx-auto mb-5 shadow-xs">
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
+        <AlertIcon kind="success" className="w-14 h-14 mx-auto mb-5" />
 
         {/* Title */}
         <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
@@ -64,11 +63,12 @@ export default function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
         {/* Action Button */}
         <button
           onClick={handleNavigate}
-          className="w-full py-3 px-6 bg-[#C65318] hover:bg-[#A83800] active:bg-[#C93B0A] text-white font-bold text-xs sm:text-sm rounded-lg transition-all shadow-xs cursor-pointer"
+          className="w-full py-3 px-6 bg-[#C65318] hover:bg-[#A83800] active:bg-[#C93B0A] text-white font-bold text-xs sm:text-sm rounded-lg transition-all cursor-pointer"
         >
           Go to your Invitees Management
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

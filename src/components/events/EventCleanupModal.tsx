@@ -131,7 +131,7 @@ export default function EventCleanupModal({
             type="button"
             onClick={handleClearData}
             disabled={clearing || !canDelete}
-            className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-colors shadow-xs disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-md transition-colors disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {clearing && (
               <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />

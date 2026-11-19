@@ -1,6 +1,7 @@
 "use client";
 
 import PhoneInput from "@/components/common/PhoneInput";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useState, useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { useOverlayClose } from "@/hooks/useOverlayClose";
@@ -27,7 +28,7 @@ interface AddInviteeManualModalProps {
 }
 
 const inputClass =
-  "w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-[#FF651D] transition-colors";
+  "w-full px-3.5 py-2.5 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-black transition-colors";
 
 const labelClass = "block text-sm font-medium text-gray-900 mb-1";
 
@@ -317,23 +318,11 @@ export default function AddInviteeManualModal({
             */}
 
             {/* Error */}
-            {error && (
-              <div role="alert" aria-live="assertive" className="px-3.5 py-2.5 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-sm">
-                {error}
-              </div>
-            )}
+            <PopupMessage message={error} />
           </div>
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={closeModal}
-              disabled={submitting}
-              className="px-4 py-2 text-sm font-medium border border-[#E0E0E0] text-gray-700 rounded-md hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
-            >
-              Cancel
-            </button>
             <button
               type="submit"
               disabled={submitting}

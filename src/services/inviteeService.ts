@@ -52,7 +52,8 @@ export interface InviteeSetInfo {
   /** "legacy" is the list of guests added by hand or before lists were tracked */
   id: string;
   name: string;
-  source: "EXCEL" | "MANUAL";
+  /** SESSION: a session's own view of the guests who come from other lists (not an upload) */
+  source: "EXCEL" | "MANUAL" | "SESSION";
   /** The session the list was uploaded for; null for the whole event */
   sessionId?: string | null;
   mode: ImportMode;
@@ -91,6 +92,9 @@ export interface InviteeSetMember {
   delivery: DeliveryState;
   rsvpStatus: "PENDING" | "ACCEPTED" | "DECLINED";
   checkedIn: boolean;
+  /** the uploaded list the guest belongs to */
+  setId?: string;
+  setName?: string;
 }
 
 export interface SetAsideGuest {
@@ -228,7 +232,7 @@ export const inviteeService = {
    * POST /api/v1/events/:eventId/invitees/import
    */
   // The latest upload replaces the not-yet-invited list (for the event, or for one session when sessionId is given)
-  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; hasSent: boolean; archivedCount: number }>> {
+  async getInviteeSets(eventId: string): Promise<ApiResponse<{ sets: InviteeSetInfo[]; sessionLists?: InviteeSetInfo[]; hasSent: boolean; archivedCount: number }>> {
     return apiClient(`/api/v1/events/${eventId}/invitees/sets`, { method: "GET" }, true);
   },
 
@@ -238,8 +242,8 @@ export const inviteeService = {
   },
 
   /** One page (50) of the guests in a list; setId "all" covers every list. `q` searches name, email, mobile and company on the server. */
-  async getSetMembers(eventId: string, setId: string, page = 1, q = ""): Promise<ApiResponse<{ members: InviteeSetMember[]; total: number; page: number; limit: number }>> {
-    return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}/members?page=${page}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`, { method: "GET" }, true);
+  async getSetMembers(eventId: string, setId: string, page = 1, q = "", limit?: number): Promise<ApiResponse<{ members: InviteeSetMember[]; total: number; page: number; limit: number }>> {
+    return apiClient(`/api/v1/events/${eventId}/invitees/sets/${setId}/members?page=${page}${limit ? `&limit=${limit}` : ""}${q.trim() ? `&q=${encodeURIComponent(q.trim())}` : ""}`, { method: "GET" }, true);
   },
 
   async getSetAside(eventId: string, opts: { q?: string; page?: number } = {}): Promise<ApiResponse<{ guests: SetAsideGuest[]; total: number; page: number; limit: number; restorable: boolean; notRestorableReason: string | null }>> {

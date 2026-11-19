@@ -232,7 +232,7 @@ function VerifyEmailContent() {
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 disabled={isSubmitting}
-                className="flex-1 min-w-0 max-w-12 sm:max-w-14 h-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 border-gray-200 bg-[#FAFAFA] text-[#15191C] focus:bg-white focus:border-[#FF651D] focus:outline-none transition-all shadow-sm"
+                className="flex-1 min-w-0 max-w-12 sm:max-w-14 h-14 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 border-gray-200 bg-[#FAFAFA] text-[#15191C] focus:bg-white focus:border-black focus:outline-none transition-all"
               />
             ))}
           </div>

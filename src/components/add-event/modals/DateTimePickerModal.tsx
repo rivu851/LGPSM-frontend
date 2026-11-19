@@ -224,9 +224,6 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-[#E5E5E5] flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="px-6 py-2 border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] font-semibold text-sm rounded-lg transition-colors cursor-pointer">
-            Cancel
-          </button>
           <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#C65318] hover:bg-[#A83800] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
             Save
           </button>

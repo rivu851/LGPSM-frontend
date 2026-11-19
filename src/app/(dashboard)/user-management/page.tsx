@@ -1,11 +1,16 @@
 "use client";
 
+import AlertIcon from "@/components/common/AlertIcon";
 import PhoneInput from "@/components/common/PhoneInput";
+import PopupMessage from "@/components/common/PopupMessage";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import PageHeader from "@/components/common/PageHeader";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import { userService } from "@/services/userService";
 import { eventService } from "@/services/eventService";
 import { useEventSessions } from "@/hooks/useEventSessions";
@@ -26,6 +31,7 @@ import { formatDate } from "@/utils/dateTime";
 export default function AllUsersPage() {
   const { confirm } = useAlert();
   const { user } = useAuth();
+  const router = useRouter();
   const [users, setUsers] = useState<SystemUserRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedUserIds, setExpandedUserIds] = useState<string[]>([]);
@@ -64,10 +70,14 @@ export default function AllUsersPage() {
     return () => { live = false; };
   }, [isAdminView]);
   const loadedOnce = useRef(false);
+  // an automatic refresh updates the rows quietly: no skeleton, and a failed request keeps what is on screen without raising an error
+  const quietRef = useRef(false);
   const fetchUsersAndAssignments = async () => {
+    const quiet = quietRef.current;
+    quietRef.current = false;
     try {
       if (!loadedOnce.current) setIsLoading(true);
-      setErrorFeedback(null);
+      if (!quiet) setErrorFeedback(null);
 
       // 1. Fetch system users only (role === SYSTEM_USER)
       const [usersRes, eventsRes] = await Promise.all([
@@ -75,6 +85,7 @@ export default function AllUsersPage() {
         eventService.getEvents(),
       ]);
       if (!usersRes?.success) {
+        if (quiet) return;
         setErrorFeedback(usersRes?.message || "Failed to load system users.");
       }
       const rawUsers = Array.isArray(usersRes?.data) ? usersRes.data : [];
@@ -82,8 +93,9 @@ export default function AllUsersPage() {
 
       // Events loaded alongside users above.
       const rawEvents = Array.isArray(eventsRes?.data) ? eventsRes.data : ((eventsRes?.data as any)?.events || []);
-      const formattedEvents: { id: string; name: string; status?: string }[] = rawEvents.map((ev: any) => ({
+      const formattedEvents: { id: string; name: string; status?: string; end?: string }[] = rawEvents.map((ev: any) => ({
         status: ev.status,
+        end: ev.schedule?.end || ev.endDate || undefined,
         id: String(ev._id || ev.id || ""),
         name: ev.title || ev.eventName || "Untitled Event",
       }));
@@ -128,6 +140,7 @@ export default function AllUsersPage() {
               assignmentId: asn._id,
               eventId: ev.id,
               eventName: ev.name,
+              eventEnd: ev.end,
               assignedBy: assignedByName,
               assignedAt: asn.createdAt ? formatDate(asn.createdAt) : undefined,
               sessions,
@@ -141,6 +154,7 @@ export default function AllUsersPage() {
         email: u.email || "",
         phone: u.phone || u.contactNo || "--",
         role: u.role,
+        createdAt: u.createdAt,
         assignments: userAssignmentsMap[u._id || u.id] || [],
       }));
 
@@ -148,7 +162,7 @@ export default function AllUsersPage() {
       loadedOnce.current = true;
     } catch (err: any) {
       console.error("Error loading system users:", err);
-      setErrorFeedback(err.message || "Failed to load system users.");
+      if (!quiet) setErrorFeedback(err.message || "Failed to load system users.");
     } finally {
       setIsLoading(false);
     }
@@ -157,6 +171,18 @@ export default function AllUsersPage() {
   useEffect(() => {
     fetchUsersAndAssignments();
   }, []);
+
+  // a refresh can remove someone who was ticked (their account was switched off elsewhere): they are no longer selected
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- prunes the ticks after a refresh brought a new list
+  useEffect(() => { setSelectedIds((ids) => { const kept = ids.filter((id) => users.some((u) => u.id === id)); return kept.length === ids.length ? ids : kept; }); }, [users]);
+
+  // assignments change elsewhere (an organizer or admin on another screen or device, a session removed, a staff account switched off): the list
+  // follows without anyone pressing refresh, and never while a window is open or a change is being saved
+  useLiveRefresh(() => {
+    if (isAssignModalOpen || isEditModalOpen || isAssignSuccessModalOpen || submittingAssign || submittingEdit || addOpen) return;
+    quietRef.current = true;
+    return fetchUsersAndAssignments();
+  }, 45_000);
 
   const toggleExpand = (id: string) => {
     if (expandedUserIds.includes(id)) {
@@ -328,14 +354,42 @@ export default function AllUsersPage() {
     if (filterEvent) users.forEach((u) => u.assignments.filter((a) => a.eventId === filterEvent).forEach((a) => a.sessions.forEach((x) => { if (!seen.has(x.id)) seen.set(x.id, x.name); })));
     return [{ value: "", label: "All sessions" }, ...[...seen].map(([value, label]) => ({ value, label }))];
   })();
+  // Filters & Sorting (the same choices as the mobile app): status, activity and sort order, set in a panel and applied together
+  type UsersFilters = { status: "ALL" | "ASSIGNED" | "UNASSIGNED"; activity: "UPCOMING" | "PAST" | null; sort: "RECENT" | "MOST_EVENTS" | "MOST_UPCOMING" | "NAME" };
+  const DEFAULT_FILTERS: UsersFilters = { status: "ALL", activity: null, sort: "RECENT" };
+  const [filters, setFilters] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [draft, setDraft] = useState<UsersFilters>(DEFAULT_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = (filters.status !== "ALL" ? 1 : 0) + (filters.activity ? 1 : 0) + (filters.sort !== "RECENT" ? 1 : 0);
+  const isUpcoming = (a: SystemUserRow["assignments"][number]) => !!a.eventEnd && new Date(a.eventEnd).getTime() >= Date.now();
+  const upcomingOf = (u: SystemUserRow) => u.assignments.filter(isUpcoming).length;
+  const pastOf = (u: SystemUserRow) => u.assignments.filter((a) => !!a.eventEnd && !isUpcoming(a)).length;
   const query = searchQuery.trim().toLowerCase();
   const queryDigits = query.replace(/\D/g, "");
   const filteredUsers = users.filter((u) => {
     // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
     if (query && !(u.name.toLowerCase().includes(query) || (queryDigits.length > 0 && u.phone.replace(/\D/g, "").includes(queryDigits)))) return false;
+    if (filters.status === "ASSIGNED" && u.assignments.length === 0) return false;
+    if (filters.status === "UNASSIGNED" && u.assignments.length > 0) return false;
+    if (filters.activity === "UPCOMING" && upcomingOf(u) === 0) return false;
+    if (filters.activity === "PAST" && pastOf(u) === 0) return false;
     if (!filterEvent) return true;
     return u.assignments.some((a) => a.eventId === filterEvent && (!filterSession || a.sessions.length === 0 || a.sessions.some((x) => x.id === filterSession)));
+  }).sort((a, b) => {
+    switch (filters.sort) {
+      case "MOST_EVENTS": return b.assignments.length - a.assignments.length;
+      case "MOST_UPCOMING": return upcomingOf(b) - upcomingOf(a);
+      case "NAME": return a.name.localeCompare(b.name);
+      default: return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    }
   });
+  const radio = (selected: boolean) => `size-6 shrink-0 rounded-full border-2 ${selected ? "border-[#1A9242] border-[7px]" : "border-[#C9C9C9]"}`;
+  const option = (label: string, selected: boolean, onPick: () => void) => (
+    <button key={label} type="button" role="radio" aria-checked={selected} onClick={onPick} className="flex w-full items-center gap-3 py-2.5 text-left text-base text-[#15191C] cursor-pointer hover:bg-gray-50 rounded-md">
+      <span className={radio(selected)} aria-hidden />
+      {label}
+    </button>
+  );
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-white select-none font-sans">
@@ -344,36 +398,66 @@ export default function AllUsersPage() {
 
       {/* Page Content */}
       <div className="px-4 sm:px-6 pt-[30px] w-full space-y-6 bg-white pb-24">
-        {added && (
-          <div role="status" className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex flex-wrap items-center justify-between gap-2">
-            <span className="break-words">User &quot;{added.name}&quot; added{added.organizerName ? ` under ${added.organizerName}` : ""}.</span>
-            {isAdminView && added.organizerId && (
-              <Link href={`/user-management/add?organizer=${added.organizerId}`} className="underline whitespace-nowrap">View {added.organizerName ? `${added.organizerName}'s` : "the organizer's"} system users</Link>
-            )}
-          </div>
-        )}
-        {errorFeedback && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between">
-            <span>{errorFeedback}</span>
-            <button
-              onClick={() => setErrorFeedback(null)}
-              className="font-bold text-rose-600 hover:text-rose-800 ml-4 cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        )}
+        <PopupMessage message={added ? `User “${added.name}” added${added.organizerName ? ` under ${added.organizerName}` : ""}.` : null} type="success" title="User added" action={isAdminView && added?.organizerId ? { label: `View ${added.organizerName ? `${added.organizerName}'s` : "the organizer's"} system users`, onClick: () => router.push(`/user-management/add?organizer=${added.organizerId}`) } : undefined} onClose={() => setAdded(null)} />
+        <PopupMessage message={errorFeedback} onClose={() => setErrorFeedback(null)} />
 
         {/* Controls (Figma 450:6796 / 217:23029) */}
         <ListControls label="Search" searchId="system-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
           {/* the same borderless pickers as the Invitees page: event, then session */}
           <CustomDropdown variant="plain" value={filterEvent} onChange={(v) => { setFilterEvent(v); setFilterSession(""); }} options={eventFilterOptions} ariaLabel="Filter users by event" placeholder="Select Event" />
           <CustomDropdown variant="plain" value={filterSession} onChange={setFilterSession} disabled={!filterEvent} placeholder="Select Session" options={filterEvent ? sessionFilterOptions : []} ariaLabel="Filter users by session" />
+          <button
+            type="button"
+            onClick={() => { setDraft(filters); setFiltersOpen(true); }}
+            aria-label={`Filters and sorting${activeFilterCount ? ` (${activeFilterCount} active)` : ""}`}
+            title="Filters & Sorting"
+            className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
+          >
+            <Icon name="events/filter" width={20} height={20} />
+            {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+          </button>
           <button type="button" onClick={() => setAddOpen(true)} className={`${addButtonClass} cursor-pointer`}>
             <Icon name="events/add-white" width={24} height={24} />
             Add User
           </button>
         </ListControls>
+
+        {filtersOpen && typeof document !== "undefined" && createPortal(
+          <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-labelledby="user-filter-title">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setFiltersOpen(false)} />
+            <div className="relative w-full max-w-[380px] bg-white h-full flex flex-col shadow-2xl">
+              <div className="flex items-center justify-between px-6 pt-6 pb-3">
+                <h2 id="user-filter-title" className="text-xl font-semibold text-[#15191C]">Filters &amp; Sorting</h2>
+                <button type="button" onClick={() => setDraft(DEFAULT_FILTERS)} className="text-sm font-medium text-[#6B6B6B] hover:text-black cursor-pointer">Reset</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-6" role="radiogroup">
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Users Status</h3>
+                  {option("All users", draft.status === "ALL", () => setDraft((d) => ({ ...d, status: "ALL" })))}
+                  {option("Assigned", draft.status === "ASSIGNED", () => setDraft((d) => ({ ...d, status: "ASSIGNED" })))}
+                  {option("Unassigned", draft.status === "UNASSIGNED", () => setDraft((d) => ({ ...d, status: "UNASSIGNED" })))}
+                </section>
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">User Activity</h3>
+                  {option("Has upcoming events", draft.activity === "UPCOMING", () => setDraft((d) => ({ ...d, activity: d.activity === "UPCOMING" ? null : "UPCOMING" })))}
+                  {option("Has past events", draft.activity === "PAST", () => setDraft((d) => ({ ...d, activity: d.activity === "PAST" ? null : "PAST" })))}
+                </section>
+                <section>
+                  <h3 className="text-sm font-medium text-[#4B4F52] mb-1">Sort By</h3>
+                  {option("Recently added", draft.sort === "RECENT", () => setDraft((d) => ({ ...d, sort: "RECENT" })))}
+                  {option("Most events assigned", draft.sort === "MOST_EVENTS", () => setDraft((d) => ({ ...d, sort: "MOST_EVENTS" })))}
+                  {option("Most upcoming events assigned", draft.sort === "MOST_UPCOMING", () => setDraft((d) => ({ ...d, sort: "MOST_UPCOMING" })))}
+                  {option("User name (A-Z)", draft.sort === "NAME", () => setDraft((d) => ({ ...d, sort: "NAME" })))}
+                </section>
+              </div>
+              <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
+                <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
+                <button type="button" onClick={() => { setFilters(draft); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#FF651D] hover:bg-[#E5560F] text-sm font-semibold text-white cursor-pointer">Apply</button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
         {/* Custom Green/White Tick Select All Checkbox */}
         <div className="flex items-center justify-between gap-2 text-sm text-[#6B6B6B] pt-1">
@@ -503,7 +587,7 @@ aria-label={`Select ${u.name}`}
                             {u.assignments.map((asn) => (
                               <div
                                 key={asn.assignmentId}
-                                className="bg-white border border-gray-200 rounded-md p-3 shadow-2xs space-y-2 whitespace-normal"
+                                className="bg-white border border-gray-200 rounded-md p-3 space-y-2 whitespace-normal"
                               >
                                 <div className="flex items-center justify-between gap-2">
                                   <div className="text-sm font-medium text-[#15191C]">
@@ -620,7 +704,7 @@ aria-label={`Select ${u.name}`}
                   required
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -633,7 +717,7 @@ aria-label={`Select ${u.name}`}
                   required
                   value={editFormData.email}
                   onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
@@ -642,18 +726,11 @@ aria-label={`Select ${u.name}`}
                 <PhoneInput
                   value={editFormData.phone}
                   onValueChange={(v) => setEditFormData({ ...editFormData, phone: v })}
-                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#FF651D] transition-colors"
+                  className="w-full min-h-[47px] px-3.5 py-3 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsEditModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 <button
                   type="submit"
                   disabled={submittingEdit}
@@ -709,18 +786,9 @@ aria-label={`Select ${u.name}`}
                 onChange={setSessionScope}
               />
 
-              {errorFeedback && (
-                <p role="alert" className="text-xs font-medium text-rose-600 break-words">{errorFeedback}</p>
-              )}
+              <PopupMessage message={errorFeedback} />
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAssignModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 <button
                   type="submit"
                   disabled={submittingAssign || selectedIds.length === 0 || !selectedEventId || assignableEvents(eventsList).length === 0}
@@ -738,18 +806,14 @@ aria-label={`Select ${u.name}`}
       {isAssignSuccessModalOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4 animate-overlay">
           <div className="bg-white rounded-md border border-gray-200 shadow-2xl max-w-sm w-full p-8 text-center space-y-6 animate-modal overflow-y-auto max-h-[calc(100dvh-2rem)]">
-            <div className="w-14 h-14 bg-emerald-500 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
+            <AlertIcon kind={assignPartial ? "warning" : "success"} />
 
             <h3 className="text-lg font-bold text-gray-900">{assignPartial ? "Partly assigned" : "Assigned Successfully!"}</h3>
             {assignMessage && <p role="status" className="text-sm text-[#4B4F52] break-words">{assignMessage}</p>}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer shadow-xs"
+              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

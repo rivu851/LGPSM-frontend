@@ -47,7 +47,7 @@ export default function EarningsTable({
 }: EarningsTableProps) {
   const router = useRouter();
   return (
-    <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-5">
+    <div className="bg-white border border-gray-200 rounded-md p-6 space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-medium text-[#15191C]">Earnings</h2>
         <div className="flex items-center gap-2 text-xs">
@@ -67,7 +67,7 @@ export default function EarningsTable({
           type="button"
           onClick={() => setActiveTab("organizer")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "organizer"
-              ? "bg-white text-gray-900 font-semibold shadow-2xs"
+              ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
         >
@@ -77,7 +77,7 @@ export default function EarningsTable({
           type="button"
           onClick={() => setActiveTab("event")}
           className={`px-3.5 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === "event"
-              ? "bg-white text-gray-900 font-semibold shadow-2xs"
+              ? "bg-white text-gray-900 font-semibold"
               : "text-gray-600 hover:text-gray-800"
             }`}
         >
@@ -106,7 +106,7 @@ export default function EarningsTable({
             aria-label="Search earnings"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
           />
         </div>
 
@@ -150,7 +150,7 @@ export default function EarningsTable({
             id="selectAllEarnings"
             checked={selectedIds.length === records.length && records.length > 0}
             onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
           />
           <label htmlFor="selectAllEarnings" className="cursor-pointer">
             Select All
@@ -162,7 +162,7 @@ export default function EarningsTable({
             type="button"
             onClick={onDeleteSelected}
             title="Delete Selected Records"
-            className="p-1.5 text-[#C44200] hover:bg-orange-50 rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-[#C44200] hover:bg-[#EEF3FF] rounded-md transition-colors cursor-pointer"
           >
             <svg className="w-5 h-5 text-[#C44200]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -199,7 +199,7 @@ export default function EarningsTable({
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
                     aria-label="Select this row"
-                    className="rounded border-gray-300 text-[#C44200] focus:ring-[#FF5B22] cursor-pointer check-orange"
+                    className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
                   />
                 </td>
                 <td className="py-4 px-4 font-semibold text-gray-900">

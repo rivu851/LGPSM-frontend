@@ -1,7 +1,10 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
+import PopupMessage from "@/components/common/PopupMessage";
+import DateField from "@/components/common/DateField";
 import React, { useState, useEffect, useRef } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import Link from "next/link";
 import { addButtonClass } from "@/components/common/ListControls";
 import { useParams, useRouter } from "next/navigation";
@@ -57,14 +60,20 @@ export default function OrganizerDetailsPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDeactivating, setIsDeactivating] = useState(false);
 
+  // refreshes itself (quietly: no loading state, and a failed refresh keeps what is shown)
+  const [liveTick, setLiveTick] = useState(0);
+  useLiveRefresh(() => setLiveTick((n) => n + 1), 30_000);
+
   useEffect(() => {
+    const quiet = liveTick > 0;
     async function loadOrganizerAndEvents() {
-      setLoading(true);
-      setLoadError(null);
+      if (!quiet) setLoading(true);
+      if (!quiet) setLoadError(null);
 
       // 1. Organizer account (only active organizers are returned by the backend)
       const usersRes = await userService.getUsers("ORGANIZER");
       if (!usersRes.success) {
+        if (quiet) return;
         setLoadError(usersRes.message || "Failed to load organizer.");
         setOrganizer(null);
         setLoading(false);
@@ -75,6 +84,7 @@ export default function OrganizerDetailsPage() {
       ) as any;
 
       if (!matched) {
+        if (quiet && !organizer) return;
         setLoadError("Organizer not found or already deactivated.");
         setOrganizer(null);
         setLoading(false);
@@ -96,6 +106,8 @@ export default function OrganizerDetailsPage() {
       const evRes = await eventService.getEvents({ organizerId: foundOrg.id });
       const rawList: any[] = evRes.success && Array.isArray(evRes.data) ? (evRes.data as any[]) : [];
       if (!evRes.success) {
+        // (a failed quiet refresh keeps the events already shown)
+        if (quiet) return;
         setLoadError(evRes.message || "Failed to load this organizer's events.");
       }
 
@@ -123,7 +135,8 @@ export default function OrganizerDetailsPage() {
     }
 
     loadOrganizerAndEvents();
-  }, [organizerId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [organizerId, liveTick]);
 
   // Deactivation is a soft delete on the backend (isActive = false); the account is kept
   const handleDeactivate = async (e: React.FormEvent) => {
@@ -212,7 +225,7 @@ export default function OrganizerDetailsPage() {
         {/* Page Content */}
         <div className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Organizer Detail Banner Card */}
-          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="bg-white border border-gray-200 rounded-md p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
               {/* Logo Avatar */}
               {organizer.logoUrl ? (
@@ -255,7 +268,7 @@ export default function OrganizerDetailsPage() {
               <button
                 onClick={() => setIsDeactivateModalOpen(true)}
                 disabled={isDeactivated}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE8E1] hover:bg-[#FCD8CC] text-[#A83800] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FEE8E1] hover:bg-[#EEF3FF] text-[#A83800] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
@@ -265,9 +278,7 @@ export default function OrganizerDetailsPage() {
             </div>
           </div>
 
-          {actionError && !isDeactivateModalOpen && (
-            <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">{actionError}</div>
-          )}
+          <PopupMessage message={!isDeactivateModalOpen ? actionError : null} onClose={() => setActionError(null)} />
 
           {/* Stats tiles: separate bordered cards (Figma 592:1790) */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -331,7 +342,7 @@ export default function OrganizerDetailsPage() {
                     placeholder="Search event.."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-[47px] pl-10 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] transition-colors"
+                    className="w-full h-[47px] pl-10 pr-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black transition-colors"
                   />
                 </div>
               </div>
@@ -368,11 +379,11 @@ export default function OrganizerDetailsPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts from
-                          <input type="date" value={draftFilters.from} onChange={(e) => setDraftFilters((f) => ({ ...f, from: e.target.value, to: f.to && e.target.value > f.to ? e.target.value : f.to }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.from} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, from: v, to: f.to && v > f.to ? v : f.to }))} />
                         </label>
                         <label className="text-xs font-medium text-[#4B4F52]">
                           Starts until
-                          <input type="date" value={draftFilters.to} min={draftFilters.from || undefined} onChange={(e) => setDraftFilters((f) => ({ ...f, to: e.target.value }))} className="mt-1 w-full h-[40px] px-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-xs text-gray-800 focus:outline-none focus:border-[#FF651D]" />
+                          <DateField className="mt-1" placeholder="Select date" value={draftFilters.to} min={draftFilters.from || undefined} rangeFrom={draftFilters.from} rangeTo={draftFilters.to} onChange={(v) => setDraftFilters((f) => ({ ...f, to: v }))} />
                         </label>
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
@@ -395,7 +406,7 @@ export default function OrganizerDetailsPage() {
             </div>
 
             {/* Table Container */}
-            <div className="bg-white border border-gray-200 rounded-md shadow-2xs overflow-x-auto">
+            <div className="bg-white border border-gray-200 rounded-md overflow-x-auto">
               <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-gray-200 text-[#6B6B6B] font-medium text-sm bg-white">
@@ -500,19 +511,12 @@ export default function OrganizerDetailsPage() {
                   placeholder="Type"
                   value={deactivateMessage}
                   onChange={(e) => setDeactivateMessage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-[#FF5B22] resize-none"
+                  className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-500 focus:outline-none focus:border-black resize-none"
                 />
               </div>
 
               {/* Modal Buttons */}
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsDeactivateModalOpen(false)}
-                  className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 text-[#15191C] text-base font-semibold rounded-lg transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
                 {actionError && (
                   <p className="text-xs text-rose-600 font-medium break-words flex-1">{actionError}</p>
                 )}

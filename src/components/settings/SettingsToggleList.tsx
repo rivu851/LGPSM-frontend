@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import { ApiResponse } from "@/services/apiClient";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
 
@@ -40,6 +41,9 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
 
   const handleSave = async () => {
     if (!values) return;
+    // what the person is about to change, so the confirmation says exactly that
+    const turnedOn = items.filter((i) => saved && !saved[i.key] && values[i.key]).map((i) => i.label);
+    const turnedOff = items.filter((i) => saved && saved[i.key] && !values[i.key]).map((i) => i.label);
     setSaving(true);
     setStatus(null);
     const res = await save(values);
@@ -47,7 +51,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
     if (res.success && res.data) {
       setSaved(res.data);
       setValues(res.data);
-      setStatus({ type: "success", message: "Settings saved." });
+      setStatus({ type: "success", message: ["Settings updated.", turnedOn.length ? `Turned on: ${turnedOn.join(", ")}.` : "", turnedOff.length ? `Turned off: ${turnedOff.join(", ")}.` : ""].filter(Boolean).join("\n") });
     } else {
       setStatus({ type: "error", message: res.message || "Settings could not be saved. Your changes are still here." });
     }
@@ -61,12 +65,8 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
         <h2 id="settings-list-title" className="text-[22px] font-medium text-[#15191C]">{title}</h2>
         {description && <p className="text-xs text-[#6B6B6B] mt-1">{description}</p>}
       </div>
-      {loadError ? (
-        <div role="alert" className="p-4 border border-rose-200 bg-rose-50 rounded-md text-sm text-rose-700 flex items-center justify-between gap-3">
-          <span>{loadError}</span>
-          <button type="button" onClick={fetchSettings} className="font-medium underline cursor-pointer">Retry</button>
-        </div>
-      ) : !values ? (
+      <PopupMessage message={loadError} action={{ label: "Try again", onClick: fetchSettings }} />
+      {loadError ? null : !values ? (
         <SkeletonRegion label="Loading settings" className="space-y-[18px]">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-5" />)}</SkeletonRegion>
       ) : (
           <ul className="space-y-[18px]">
@@ -108,11 +108,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
                 Discard changes
               </button>
             )}
-            {status && (
-              <span role={status.type === "error" ? "alert" : "status"} className={`text-sm ${status.type === "error" ? "text-rose-600" : "text-emerald-700"}`}>
-                {status.message}
-              </span>
-            )}
+            <PopupMessage message={status?.message} type={status?.type === "error" ? "error" : "success"} />
           </div>
       )}
     </section>

@@ -1,7 +1,9 @@
 "use client";
 
 import { csvCell, csvBlob } from "@/utils/csv";
-import React, { useState, useEffect, useCallback } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import PopupMessage from "@/components/common/PopupMessage";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
@@ -73,6 +75,9 @@ export default function ReportsPage() {
   const [loadingAccessDetails, setLoadingAccessDetails] = useState(false);
   const [detailsError, setDetailsError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  // a refresh that runs by itself keeps what is on screen (no skeletons, no blanking when a request fails)
+  const quietUntil = useRef(0);
+  const isQuiet = () => Date.now() < quietUntil.current;
 
   // 1. Organizer filter options (admin only - organizers only see their own events)
   useEffect(() => {
@@ -138,7 +143,8 @@ export default function ReportsPage() {
       setCheckInTotalPages(1);
       return;
     }
-    setLoadingCheckIns(true);
+    const quiet = isQuiet();
+    if (!quiet) setLoadingCheckIns(true);
     const res = await checkInService.getCheckIns(selectedEventId, {
       page: checkInPage,
       limit: checkInLimit,
@@ -149,7 +155,7 @@ export default function ReportsPage() {
       setCheckInLogs(res.data);
       setCheckInTotal(res.meta?.total ?? res.data.length);
       setCheckInTotalPages(res.meta?.totalPages || 1);
-    } else {
+    } else if (!quiet) {
       setCheckInLogs([]);
       setCheckInTotal(0);
       setCheckInTotalPages(1);
@@ -179,11 +185,13 @@ export default function ReportsPage() {
 
     let cancelled = false;
     async function loadEventDetails() {
-      setLoadingDetails(true);
-      setDetailsError(null);
+      const quiet = isQuiet();
+      if (!quiet) setLoadingDetails(true);
+      if (!quiet) setDetailsError(null);
 
       const reportRes = await reportService.getEventReport(selectedEventId);
       if (cancelled) return;
+      if (quiet && (!reportRes.success || !reportRes.data)) { setLoadingDetails(false); return; }
 
       if (!reportRes.success || !reportRes.data) {
         setDetailsError(reportRes.message || "Failed to load the event report.");
@@ -223,7 +231,7 @@ export default function ReportsPage() {
     }
     let cancelled = false;
     async function loadInviteeDetails() {
-      setLoadingInviteeDetails(true);
+      if (!isQuiet()) setLoadingInviteeDetails(true);
       const [inviteesRes, allCheckInsRes] = await Promise.all([
         inviteeService.getInvitees(selectedEventId),
         checkInService.getAllCheckIns(selectedEventId),
@@ -303,7 +311,7 @@ export default function ReportsPage() {
       return;
     }
     let cancelled = false;
-    setLoadingAccessDetails(true);
+    if (!isQuiet()) setLoadingAccessDetails(true);
     setAccessPage(1);
     auditLogService.getAuditLogs({ eventId: selectedEventId, limit: ACCESS_PAGE_SIZE }).then((auditRes) => {
       if (cancelled) return;
@@ -315,6 +323,13 @@ export default function ReportsPage() {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- selectedEvent follows selectedEventId
   }, [selectedEventId, activeTab, reloadKey]);
+
+  // check-ins, the invitee list, the action log and the session totals follow what happens at the door and elsewhere
+  useLiveRefresh(() => {
+    quietUntil.current = Date.now() + 4000;
+    void loadCheckInLogs();
+    setReloadKey((k) => k + 1);
+  }, 20_000, !!selectedEventId);
 
   const downloadReportCSV = () => {
     let content = "";
@@ -402,9 +417,7 @@ export default function ReportsPage() {
           eventOptions={eventOptions.length > 0 ? eventOptions : [{ value: "", label: loadingEvents ? "Loading events..." : "No events" }]}
         />
 
-        {pageError && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">{pageError}</div>
-        )}
+        <PopupMessage message={pageError} onClose={() => setPageError(null)} />
 
         {bodyLoading ? (
           <ReportSkeleton />

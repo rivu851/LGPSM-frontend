@@ -6,7 +6,7 @@ import CustomDropdown from "@/components/common/CustomDropdown";
 import TemplateThumb from "@/components/settings/TemplateThumb";
 import { templateService, Template } from "@/services/templateService";
 import { useCategories, ExtraCategory } from "@/hooks/useCategories";
-import { SelectedTemplate } from "../eventDraft";
+import { SelectedTemplate, isStaticTemplate, titleLimitOf } from "../eventDraft";
 import { eventTypeForChoice, eventTypeForTemplate } from "@/utils/templateEventType";
 import UploadTemplateModal from "@/components/templates/UploadTemplateModal";
 import { Skeleton, SkeletonRegion } from "@/components/common/Skeleton";
@@ -92,6 +92,18 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
       ((!filterCategory || templateCategoryId(t) === filterCategory) && (!filterSub || !t.subcategoryId || t.subcategoryId === filterSub)))
   );
 
+  // Choosing a template shows the event type it is made for in the two dropdowns (the same one "Use this template" fills into the event)
+  const pick = (t: Template, wasSelected: boolean) => {
+    setPendingId(wasSelected ? null : t._id);
+    if (wasSelected) return;
+    const type = eventTypeForTemplate(t, categories.categoryOptions, categories.subcategoryOptionsFor);
+    if (type) {
+      setFilterCategory(type.categoryId);
+      const only = categories.subcategoryOptionsFor(type.categoryId);
+      setFilterSub(type.subcategoryId || (only.length === 1 ? only[0].value : ""));
+    }
+  };
+
   const removeOwn = async (t: Template) => {
     if (!(await confirm({ title: "Delete template", message: `Delete "${t.name}"? Events already using it will switch to the default design for their type.`, confirmText: "Delete", tone: "danger" }))) return;
     const res = await templateService.deleteTemplate(t._id);
@@ -121,7 +133,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
     const chosen = templates.find((t) => t._id === pendingId && usable(t));
     if (required && !chosen) return;
     onSelectTemplate(
-      chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null } : null,
+      chosen ? { id: chosen._id, name: chosen.name, previewKey: chosen.previewImageKey || null, staticCard: isStaticTemplate(chosen.templateData), titleMaxChars: titleLimitOf(chosen.templateData) } : null,
       chosen ? eventTypeForChoice(eventTypeForTemplate(chosen, categories.categoryOptions, categories.subcategoryOptionsFor), filterCategory, filterSub) ?? undefined : undefined
     );
     onClose();
@@ -147,7 +159,9 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
               value={filterCategory}
               onChange={(v) => {
                 setFilterCategory(v);
-                setFilterSub("");
+                // a category with a single subcategory has it selected for them
+                const only = v ? categories.subcategoryOptionsFor(v) : [];
+                setFilterSub(only.length === 1 ? only[0].value : "");
               }}
               options={[{ value: "", label: "All categories" }, ...categories.categoryOptions]}
               ariaLabel="Filter templates by category"
@@ -197,7 +211,7 @@ export default function SelectTemplateModal({ isOpen, onClose, onSelectTemplate,
                     <div key={t._id} className="relative">
                       <button
                         type="button"
-                        onClick={() => setPendingId(selected ? null : t._id)}
+                        onClick={() => pick(t, selected)}
                         disabled={!usable(t)}
                         aria-pressed={selected}
                         aria-label={t.name}

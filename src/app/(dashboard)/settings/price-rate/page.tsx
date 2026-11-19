@@ -1,6 +1,7 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useCallback, useEffect, useState } from "react";
 import PricePerHeadCard from "@/components/settings/PricePerHeadCard";
 import PriceHistoryTable from "@/components/settings/PriceHistoryTable";
@@ -22,6 +23,7 @@ export default function PriceRateSettingsPage() {
   const [pricing, setPricing] = useState<PricingSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await platformSettingsService.getPricing();
@@ -35,7 +37,7 @@ export default function PriceRateSettingsPage() {
     if (saving || newRate === pricing?.ratePerInvitee) return;
     setSaving(true);
     const res = await platformSettingsService.updateRate(newRate);
-    if (res.success && res.data) { setPricing(res.data); setError(null); }
+    if (res.success && res.data) { setPricing(res.data); setError(null); setNotice(`The price per invitee is now ₹${newRate}. It applies to events created from now on; existing events keep their rate.`); }
     else setError(res.message || "The rate could not be saved, so it is unchanged.");
     setSaving(false);
   };
@@ -50,9 +52,8 @@ export default function PriceRateSettingsPage() {
         <p className="text-xs text-[#4B4F52]">
           A new rate applies to events created from now on. Each existing event keeps the rate that was in force when it was created.
         </p>
-        {error && (
-          <div role="alert" className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">{error}</div>
-        )}
+        <PopupMessage message={error} onClose={() => setError(null)} />
+        <PopupMessage message={notice} type="success" title="Price rate updated" onClose={() => setNotice(null)} />
         {pricing && <PricePerHeadCard key={pricing.ratePerInvitee ?? "unset"} currentRate={pricing.ratePerInvitee} saving={saving} onSaveRate={handleSaveRate} />}
         <PriceHistoryTable history={pricing ? toHistory(pricing.history) : []} />
       </div>

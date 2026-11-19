@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import PopupMessage from "@/components/common/PopupMessage";
 import Image from "next/image";
 import Link from "next/link";
 import { gsap } from "gsap";
@@ -141,20 +142,13 @@ export function AuthHeading({ title, subtitle }: { title: string; subtitle: stri
 }
 
 export function AuthAlert({ tone, children }: { tone: "error" | "success" | "info"; children: React.ReactNode }) {
-  const styles = {
-    error: "bg-red-50 border-red-200 text-red-700",
-    success: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    info: "bg-blue-50 border-blue-200 text-blue-800",
-  }[tone];
-  return (
-    <div role={tone === "error" ? "alert" : "status"} className={`mb-4 p-3 border rounded-lg text-sm ${styles}`}>
-      {children}
-    </div>
-  );
+  // shown as a popup so it is never missed; plain text messages only
+  const text = typeof children === "string" ? children : React.Children.toArray(children).filter((c) => typeof c === "string" || typeof c === "number").join("");
+  return <PopupMessage message={text || null} type={tone} />;
 }
 
 export const authInputClass =
-  "w-full h-[47px] px-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg text-[13px] text-[#15191C] placeholder:text-xs placeholder:text-[#6E6E6E] focus:outline-none focus:border-[#FF651D] transition-colors disabled:opacity-60";
+  "w-full h-[47px] px-4 bg-[#FAFAFA] border border-[#E0E0E0] rounded-lg text-[13px] text-[#15191C] placeholder:text-xs placeholder:text-[#6E6E6E] focus:outline-none focus:border-black transition-colors disabled:opacity-60";
 
 export const authLabelClass = "block text-sm leading-5 font-medium text-[#15191C] mb-2";
 

@@ -59,7 +59,7 @@ export default function ChangePasswordModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-overlay">
-      <div className="w-full max-w-[488px] bg-white rounded-lg shadow-xl overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
+      <div className="w-full max-w-[488px] bg-white rounded-lg overflow-y-auto animate-modal max-h-[calc(100dvh-2rem)]">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E0E0E0]">
           <h3 className="text-base font-medium text-[#15191C]">Change Password</h3>
@@ -85,7 +85,7 @@ export default function ChangePasswordModal({
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               wrapperClassName="mx-6"
-              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
               required
             />
           </div>
@@ -97,7 +97,7 @@ export default function ChangePasswordModal({
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               wrapperClassName="mx-6"
-              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
               required
             />
           </div>
@@ -109,21 +109,13 @@ export default function ChangePasswordModal({
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               wrapperClassName="mx-6"
-              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              className="w-full h-[47px] px-4 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
               required
             />
           </div>
 
           {/* Modal Footer Actions */}
           <div className="flex items-center justify-end gap-3 px-4 py-4 mt-6 border-t border-[#E0E0E0]">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-6 py-[11px] text-base font-semibold text-black bg-white border border-[#DDD] rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
             <button
               type="submit"
               disabled={isSubmitting}

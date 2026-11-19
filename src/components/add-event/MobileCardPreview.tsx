@@ -2,9 +2,10 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { SelectedTemplate } from "./eventDraft";
+import { SelectedTemplate, cardDisplayForServer } from "./eventDraft";
 import { templateService, TemplatePreviewPayload } from "@/services/templateService";
 import CustomDropdown from "@/components/common/CustomDropdown";
+import { resolveImageUrl } from "@/utils/mediaUrl";
 
 interface MobileCardPreviewProps {
   template: SelectedTemplate | null;
@@ -58,6 +59,8 @@ export default function MobileCardPreview({
   awaitingTemplate = false,
 }: MobileCardPreviewProps) {
   const [zoomLevel, setZoomLevel] = useState("100%");
+  // An uploaded design is the card exactly as it is: no data is drawn on it, so there is nothing to render. Its own picture is shown.
+  const staticUrl = template?.staticCard ? resolveImageUrl(template.previewKey) : null;
 
   // The card is always the real one: the server renders the chosen template with what has been entered so far (title,
   // dates, address, event type, image), so the wording written for this kind of event is visible while filling in the
@@ -73,27 +76,33 @@ export default function MobileCardPreview({
       subcategoryName: subcategoryName || undefined,
       logoKey: logoKey && /^media:[0-9a-fA-F]{24}$/.test(logoKey) ? logoKey : undefined,
       ...(cardInfo ? { cardInfo } : {}),
-      ...(cardDisplay ? { cardDisplay } : {}),
+      ...(cardDisplay ? { cardDisplay: cardDisplayForServer(cardDisplay) } : {}),
     }),
     [eventTitle, eventStart, eventEnd, venue, contactNumber, categoryName, subcategoryName, logoKey, cardInfo, cardDisplay]
   );
+  // the parent builds cardDisplay/cardInfo afresh on every render, so the payload's identity changes constantly even when nothing was
+  // typed: depend on its content, or the card is re-requested (and the spinner flashes) over and over
+  const payloadKey = JSON.stringify(payload);
+  const payloadRef = useRef(payload);
   const [live, setLive] = useState<{ key: string; url: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const liveUrl = useRef<string | null>(null);
 
+  useEffect(() => { payloadRef.current = payload; });
+
   useEffect(() => {
     // No template chosen: the card is still shown, in the design that suits the event type
     // nothing is drawn until the template has been chosen: no stand-in design is shown meanwhile
-    if (awaitingTemplate) return;
+    if (awaitingTemplate || staticUrl) return;
     const templateId = template?.id ?? null;
     const key = templateId ?? "by-event-type";
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setLoading(true);
       templateService
-        .previewCard(templateId, payload, controller.signal)
+        .previewCard(templateId, payloadRef.current, controller.signal)
         .then((blob) => {
           const url = URL.createObjectURL(blob);
           if (liveUrl.current) URL.revokeObjectURL(liveUrl.current);
@@ -102,7 +111,11 @@ export default function MobileCardPreview({
           setFailed(false);
         })
         .catch(() => {
-          if (!controller.signal.aborted) setFailed(true);
+          // a card that no longer matches what has been entered is worse than none: drop it and offer "Try again"
+          if (controller.signal.aborted) return;
+          if (liveUrl.current) { URL.revokeObjectURL(liveUrl.current); liveUrl.current = null; }
+          setLive(null);
+          setFailed(true);
         })
         .finally(() => {
           if (!controller.signal.aborted) setLoading(false);
@@ -112,7 +125,7 @@ export default function MobileCardPreview({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [template?.id, payload, attempt, awaitingTemplate]);
+  }, [template?.id, payloadKey, attempt, awaitingTemplate, staticUrl]);
 
   useEffect(
     () => () => {
@@ -121,14 +134,15 @@ export default function MobileCardPreview({
     []
   );
 
-  const showLive = !awaitingTemplate && live?.key === (template?.id ?? "by-event-type");
+  const showLive = !awaitingTemplate && !staticUrl && live?.key === (template?.id ?? "by-event-type");
+  const hasCard = (showLive && !!live) || !!staticUrl;
   const usesSamplePhoto = !payload.logoKey;
   const eventDateRange = formatEventDateRange(eventStart, eventEnd);
 
   return (
     <div className="h-full bg-[#F7F3F0] p-4 sm:p-6 flex flex-col items-center">
       <div className="w-full flex items-center justify-between mb-4">
-        <span className="text-xs font-medium px-3 py-1 bg-white border border-[#E0E0E0] rounded-md text-gray-800">Preview</span>
+        <h2 className="text-base font-medium text-gray-900">Card Preview</h2>
         <div className="w-28">
           <CustomDropdown
             value={zoomLevel}
@@ -141,16 +155,14 @@ export default function MobileCardPreview({
 
       <div className="flex flex-col items-center">
         <div
-          className={`relative ${showLive && live ? "w-fit max-w-full" : "w-[230px] sm:w-[250px] aspect-[9/18.5]"} bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
+          className={`relative w-[250px] max-w-full aspect-[250/422] bg-[#1E2A33] rounded-[38px] p-2 shadow-xl origin-top transition-transform`}
           style={{ transform: `scale(${ZOOM_SCALE[zoomLevel] ?? 1})` }}
           aria-label="Invitation card preview"
         >
-          <div className={`relative w-full ${showLive && live ? "" : "h-full"} rounded-[30px] overflow-hidden bg-[#EFEFEF]`}>
-            {/* the phone takes the card's own proportions (it is taller when the guest name band and details are added) and the card is
-                sized to the space available, so all of it is visible without any scrolling */}
-            {showLive && live && (
-              // eslint-disable-next-line @next/next/no-img-element -- invitation card is a blob URL rendered by the API
-              <img src={live.url} alt={`${template?.name || "Template"} invitation card`} className="block h-auto w-auto max-w-[234px] max-h-[max(380px,calc(100vh-340px))] mx-auto" />
+          <div className="relative w-full h-full rounded-[30px] overflow-hidden bg-[#EFEFEF] flex items-center justify-center">
+            {hasCard && (
+              // eslint-disable-next-line @next/next/no-img-element -- blob URL rendered by the API, or the uploaded design
+              <img src={staticUrl ?? live!.url} alt={`${template?.name || "Template"} invitation card`} className="block h-full w-full object-cover object-top" />
             )}
             {!awaitingTemplate && loading && (
               <div role="status" aria-label="Updating preview" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-white/90 shadow flex items-center justify-center">
@@ -170,8 +182,8 @@ export default function MobileCardPreview({
                 <p className="text-[11px] text-[#6B6B6B]">Your card appears here once you choose one.</p>
               </div>
             )}
-            {!awaitingTemplate && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
-            {!awaitingTemplate && !showLive && failed && (
+            {!awaitingTemplate && !staticUrl && !showLive && !failed && <div aria-hidden className="absolute inset-0 animate-pulse bg-gradient-to-b from-[#F3F3F3] to-[#E4E4E4]" />}
+            {!awaitingTemplate && !staticUrl && !showLive && failed && (
               <div role="alert" className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-5 text-center">
                 <p className="text-xs text-[#4B4F52]">The card preview could not be loaded.</p>
                 <button type="button" onClick={() => { setFailed(false); setAttempt((n) => n + 1); }} className="px-3 py-1.5 text-xs font-medium bg-white border border-[#E0E0E0] rounded-md cursor-pointer hover:bg-gray-50">
@@ -187,7 +199,7 @@ export default function MobileCardPreview({
           <button
             type="button"
             onClick={onOpenTemplateModal}
-            className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md shadow-xs cursor-pointer"
+            className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
           >
             {template ? "Change Template" : "Select Template"}
           </button>
@@ -195,7 +207,7 @@ export default function MobileCardPreview({
             <button
               type="button"
               onClick={() => onOpenAdditionalInfo(payload)}
-              className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md shadow-xs cursor-pointer"
+              className="px-4 py-2 bg-white hover:bg-gray-50 border border-[#E0E0E0] text-gray-900 text-sm font-medium rounded-md cursor-pointer"
             >
               {cardInfo ? "Edit Additional Info" : "Additional Info"}
             </button>
@@ -215,9 +227,9 @@ export default function MobileCardPreview({
             {eventDateRange}
           </p>
         )}
-        {showLive && (
+        {(showLive || staticUrl) && (
           <p className="mt-1 text-[11px] text-[#6B6B6B] text-center max-w-[260px]">
-            {usesSamplePhoto ? "Sample photo, guest and QR. Add an event image to use your own." : "Sample guest and QR."} Each guest gets their own QR when invitations are sent.
+            {staticUrl ? "Your uploaded design is used as it is for every guest." : <>{usesSamplePhoto ? "Sample photo, guest and QR. Add an event image to use your own." : "Sample guest and QR."} Each guest gets their own QR when invitations are sent.</>}
           </p>
         )}
         <p className="text-xs text-[#4B4F52] mt-3 text-center">

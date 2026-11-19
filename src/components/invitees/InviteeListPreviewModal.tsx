@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import CustomDropdown from "@/components/common/CustomDropdown";
 import { inviteeService, type InviteeSetInfo, type InviteeSetMember } from "@/services/inviteeService";
 import { listDisplayName } from "@/utils/inviteeLists";
@@ -17,22 +17,29 @@ interface Props {
   onChanged?: () => void;
   /** Past or cancelled events are records: their guests are shown but not changed */
   readOnly?: boolean;
+  /** Opens the add-invitees window (only that window) on top of this list */
+  onAddInvitees?: () => void;
+  /** Changes after guests were added elsewhere, so the list is fetched again */
+  reloadSignal?: number;
 }
 
 const ALL = "all";
 
-const PAGE_SIZE = 50;
+// ten guests to a page; Previous / Next appear when there are more
+const PAGE_SIZE = 10;
 
 // Who is on the event's list, one dataset (uploaded list) or all of them, fetched one page at a time so an event with thousands of
 // invitees never loads them all at once. Guests can be edited or deleted here. Deleting a guest nothing has happened to erases them;
 // a guest who was already invited, answered or attended is set aside instead (their history is kept, their pass stops working, and
 // they can be restored from Uploaded Lists > Set-aside guests). The confirmation says which of the two will happen.
-export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false }: Props) {
+export default function InviteeListPreviewModal({ eventId, title = "Invitee Preview List", subtitle, showCompany = true, onClose, onChanged, readOnly = false, onAddInvitees, reloadSignal = 0 }: Props) {
   const { confirm, showAlert } = useAlert();
   const [selected, setSelected] = useState<string[]>([]);
   const [editing, setEditing] = useState<{ id: string; name: string; email: string; phone: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [sets, setSets] = useState<InviteeSetInfo[] | null>(null);
+  // the datasets the dropdown already offers, to spot a new one after an upload
+  const knownSets = useRef<Set<string> | null>(null);
   const [setId, setSetId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [term, setTerm] = useState("");
@@ -40,7 +47,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
   const [tick, setTick] = useState(0);
   // the page that was last fetched, tagged with the request it answers; "loading" is simply "no answer for the current request yet"
   const [result, setResult] = useState<{ key: string; members: InviteeSetMember[]; total: number; error: string | null } | null>(null);
-  const key = `${setId}|${page}|${term}|${tick}`;
+  const key = `${setId}|${page}|${term}|${tick}|${reloadSignal}`;
   const noLists = setId === "";
   const loading = !noLists && result?.key !== key;
   const members = noLists ? [] : result?.members ?? [];
@@ -52,8 +59,9 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     inviteeService.getInviteeSets(eventId)
       .then((r) => {
         if (!live) return;
-        const list = r.success && r.data ? r.data.sets : [];
+        const list = r.success && r.data ? [...r.data.sets, ...(r.data.sessionLists ?? [])] : [];
         setSets(list);
+        knownSets.current = new Set(list.map((x) => x.id));
         // opens on "All" (every guest of the event); a single dataset can be chosen from the dropdown
         setSetId(list.length ? ALL : "");
       })
@@ -70,7 +78,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
   useEffect(() => {
     if (!setId) return; // still looking up the lists, or the event has none
     let live = true;
-    inviteeService.getSetMembers(eventId, setId, page, term)
+    inviteeService.getSetMembers(eventId, setId, page, term, PAGE_SIZE)
       .then((res) => {
         if (!live) return;
         if (!res.success || !res.data) throw new Error(res.message || "Could not load the list.");
@@ -80,6 +88,23 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
     return () => { live = false; };
   }, [eventId, setId, page, term, key]);
 
+  // the list of datasets changes when guests are added with a new upload or by hand
+  useEffect(() => {
+    if (!reloadSignal) return;
+    inviteeService.getInviteeSets(eventId).then((r) => {
+      if (!r.success || !r.data) return;
+      const fresh = [...r.data.sets, ...(r.data.sessionLists ?? [])];
+      // a dataset that was not there before (a new Excel upload) is added to the dropdown and chosen, so its guests show straight away
+      const before = knownSets.current;
+      const added = before ? fresh.find((x) => !before.has(x.id)) : undefined;
+      knownSets.current = new Set(fresh.map((x) => x.id));
+      setSets(fresh);
+      if (added) { setSetId(added.id); setPage(1); setSelected([]); }
+      else if (fresh.length) setSetId((cur) => (cur === "" ? ALL : cur));
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, reloadSignal]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
@@ -88,7 +113,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
 
   const options = [
     // "All" is always offered, even when there is only one dataset
-    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.reduce((n, x) => n + x.total, 0)})` }] : []),
+    ...(sets && sets.length > 0 ? [{ value: ALL, label: `All (${sets.filter((x) => x.source !== "SESSION").reduce((n, x) => n + x.total, 0)})` }] : []),
     ...(sets || []).map((s) => ({ value: s.id, label: `${listDisplayName(s.name)} (${s.total})` })),
   ];
   // every guest can be edited and deleted (unless the page is read-only); a guest something has happened to is set aside, not erased
@@ -142,11 +167,21 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-overlay" role="dialog" aria-modal="true" aria-labelledby="list-preview-title">
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl flex flex-col max-h-[90vh] animate-modal">
-        <div className="px-6 py-4 border-b border-[#E5E5E5]">
-          <h2 id="list-preview-title" className="text-base font-medium text-gray-900">
-            {title} <span className="text-sm font-normal text-[#6B6B6B]">({total} {total === 1 ? "invitee" : "invitees"})</span>
-          </h2>
-          {subtitle && <p className="text-xs text-[#6B6B6B] mt-0.5 break-words">{subtitle}</p>}
+        <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h2 id="list-preview-title" className="text-base font-medium text-gray-900">
+              {title} <span className="text-sm font-normal text-[#6B6B6B]">({total} {total === 1 ? "invitee" : "invitees"})</span>
+            </h2>
+            {subtitle && <p className="text-xs text-[#6B6B6B] mt-0.5 break-words">{subtitle}</p>}
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {onAddInvitees && !readOnly && (
+              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
+            )}
+            <button type="button" onClick={onClose} aria-label="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
+              <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
         </div>
 
         <div className="px-6 pt-4 grid grid-cols-1 sm:grid-cols-[1fr_260px] gap-3">
@@ -158,7 +193,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
               placeholder="Search by name, email or mobile"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-[#FF651D]"
+              className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black"
             />
           </div>
           <div>
@@ -193,6 +228,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   <th className="py-2.5 pr-3 font-medium">Name</th>
                   <th className="py-2.5 pr-3 font-medium">Email</th>
                   <th className="py-2.5 pr-3 font-medium">Mobile Number</th>
+                  <th className="py-2.5 pr-3 font-medium">Invitee Dataset</th>
                   {showCompany && <th className="py-2.5 pr-3 font-medium">Company Name</th>}
                   {!readOnly && <th className="py-2.5 font-medium text-right w-20">Actions</th>}
                 </tr>
@@ -209,6 +245,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                     <td className="py-2.5 pr-3 text-gray-900 break-words">{m.name}</td>
                     <td className="py-2.5 pr-3 break-all">{m.email || "—"}</td>
                     <td className="py-2.5 pr-3 whitespace-nowrap">{m.mobile || "—"}</td>
+                    <td className="py-2.5 pr-3 break-words" title={m.setName}>{m.setName ? listDisplayName(m.setName) : "—"}</td>
                     {showCompany && <td className="py-2.5 pr-3 break-words">{m.company || "—"}</td>}
                     {!readOnly && (
                       <td className="py-2.5 text-right whitespace-nowrap">
@@ -223,10 +260,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   </tr>
                 ))}
                 {!loading && members.length === 0 && (
-                  <tr><td colSpan={8} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
+                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">{term ? "No invitees match your search." : noLists ? "No lists yet. Upload an Excel file with Add Invitees." : "No invitees in this list."}</td></tr>
                 )}
                 {loading && members.length === 0 && (
-                  <tr><td colSpan={8} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
+                  <tr><td colSpan={9} className="py-8 text-center text-[#6B6B6B]">Loading…</td></tr>
                 )}
               </tbody>
             </table>
@@ -245,7 +282,6 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
               </span>
             )}
           </div>
-          <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-800 hover:bg-gray-50 cursor-pointer">Close</button>
         </div>
       </div>
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={(row) => void saveEdit(row)} />

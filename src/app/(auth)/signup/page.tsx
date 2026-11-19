@@ -1,5 +1,6 @@
 "use client";
 
+import GoogleAuthButton from "@/components/auth/GoogleAuthButton";
 import PhoneInput from "@/components/common/PhoneInput";
 import { NOT_DIGITS_MESSAGE } from "@/utils/phoneInput";
 // import { INVITATION_CHANNEL_OPTIONS, type InvitationChannel } from "@/utils/invitationChannel"; (invitation channel field hidden for now)
@@ -33,7 +34,7 @@ type SignupStep = "details" | "verify";
 // Only organizers can self-register; admin accounts are provisioned and assigned users are created by organizers.
 export default function SignupPage() {
   const router = useRouter();
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const { showAlert } = useAlert();
 
   // Step state
@@ -121,6 +122,25 @@ export default function SignupPage() {
   };
 
   // Step 1: Submit account details
+  // "Sign up with Google": no form to fill in first: the account is made from the Google profile and the organizer completes the rest on the dashboard
+  const handleGoogle = async (credential: string) => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+    try {
+      const res = await googleLogin(credential);
+      if (res.success) {
+        try { sessionStorage.setItem("lgpsm_signing_in", "1"); } catch { /* the dashboard opens without the loader */ }
+        router.push("/dashboard");
+      } else {
+        showAlert(res.message || "Google sign-up did not work. Please try again.", "error", "Google sign-up");
+      }
+    } catch {
+      setErrorMessage("Network error. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (registrationInFlight.current) return;
@@ -312,9 +332,12 @@ export default function SignupPage() {
 
       {step === "details" ? (
         <>
-          <div className="mb-10 lg:mb-[76px]">
+          <div className="mb-6">
             <BackLink href="/" label="Back to Home" />
           </div>
+
+          {/* Google sits above the "Create your account" heading: it needs no form at all */}
+          <GoogleAuthButton mode="signup" onCredential={handleGoogle} disabled={isSubmitting} orBelow />
 
           <AuthHeading
             title="Create your account"
@@ -517,11 +540,11 @@ export default function SignupPage() {
                     onChange={(e) => handleDigitChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     disabled={isVerifying}
-                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl border-2 transition-all shadow-sm ${
+                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl border-2 transition-all ${
                       digit
                         ? "border-[#FF651D] bg-white text-gray-950"
                         : "border-gray-200 bg-[#FAFAFA] text-gray-900"
-                    } focus:bg-white focus:border-[#FF651D] focus:ring-2 focus:ring-[#FF651D]/20 focus:outline-none`}
+                    } focus:bg-white focus:border-black focus:ring-2 focus:ring-black/20 focus:outline-none`}
                   />
                 ))}
               </div>

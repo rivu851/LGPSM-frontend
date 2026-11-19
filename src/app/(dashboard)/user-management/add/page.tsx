@@ -1,6 +1,7 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
+import PopupMessage from "@/components/common/PopupMessage";
 import ListControls, { addButtonClass } from "@/components/common/ListControls";
 import React, { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -121,11 +122,12 @@ function AddUserContent() {
   };
 
   const query = searchQuery.trim().toLowerCase();
+  // the search matches the user's name or mobile number (digits only, so spaces, dashes and +91 do not matter)
+  const queryDigits = query.replace(/\D/g, "");
   const filteredUsers = systemUsers.filter((u) =>
     !query ||
     (u.fullName || "").toLowerCase().includes(query) ||
-    (u.email || "").toLowerCase().includes(query) ||
-    (u.phone || "").includes(query)
+    (queryDigits.length > 0 && (u.phone || "").replace(/\D/g, "").includes(queryDigits))
   );
 
   return (
@@ -149,7 +151,7 @@ function AddUserContent() {
               <p className="text-xs text-[#6B6B6B]">{fromEventId ? "This event's organizer." : "System users shown and added here belong to the selected organizer."}</p>
             </div>
           )}
-          <ListControls label="System Users" searchId="add-user-search" placeholder="Search..." value={searchQuery} onChange={setSearchQuery}>
+          <ListControls label="System Users" searchId="add-user-search" placeholder="Find system users by name or phone number..." value={searchQuery} onChange={setSearchQuery}>
             <button type="button" onClick={() => setIsAddUserModalOpen(true)} className={`${addButtonClass} cursor-pointer`}>
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -158,14 +160,10 @@ function AddUserContent() {
             </button>
           </ListControls>
 
-          {formError && <p role="alert" className="p-3 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium break-words">{formError}</p>}
+          <PopupMessage message={formError} onClose={() => setFormError(null)} />
 
           {/* Success Notification Banner */}
-          {addedUserName && (
-            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-md text-xs font-semibold text-center animate-fadeIn break-words">
-              User &quot;{addedUserName}&quot; added successfully!
-            </div>
-          )}
+          <PopupMessage message={addedUserName ? `User “${addedUserName}” added successfully!` : null} type="success" onClose={() => setAddedUserName("")} />
 
           {loadingUsers ? (
             <TableSkeleton rows={5} cols={3} label="Loading system users" />

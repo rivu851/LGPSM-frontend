@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useEffect, useRef, useState } from "react";
 
 const OUTPUT_WIDTH = 240;
@@ -194,7 +195,7 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
           disabled={!ready || processing}
           className="w-full accent-[#C65318] disabled:opacity-50"
         />
-        {error && <p role="alert" className="text-xs font-medium text-rose-600">{error}</p>}
+        <PopupMessage message={error} />
 
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose} disabled={processing} className="px-4 py-2 border border-[#D2D2D2] rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50">

@@ -38,7 +38,7 @@ export default function ReportsHeaderControls({
 }: ReportsHeaderControlsProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center gap-3 w-full">
-      <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 min-w-[220px] items-center gap-2.5 focus-within:border-[#FF651D] transition-colors">
+      <label className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-md h-[47px] px-4 flex flex-1 min-w-[220px] items-center gap-2.5 focus-within:border-black transition-colors">
         <span className="size-[22px] flex items-center justify-center shrink-0 text-[#6B6B6B]">
           <Icon name="reports/search" width={18.4} height={18.4} />
         </span>
@@ -88,7 +88,7 @@ export default function ReportsHeaderControls({
         <button
           type="button"
           onClick={onDownloadReport}
-          className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#FFF3EC] transition-colors"
+          className="h-[47px] px-3 inline-flex items-center gap-2.5 text-xs font-medium text-black cursor-pointer shrink-0 rounded-md hover:bg-[#EEF3FF] transition-colors"
         >
           <Icon name="reports/download" width={15.83} height={19.22} />
           <span>Download Report</span>

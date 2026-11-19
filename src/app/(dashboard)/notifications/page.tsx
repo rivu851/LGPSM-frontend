@@ -1,6 +1,8 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import PopupMessage from "@/components/common/PopupMessage";
 import React, { useCallback, useEffect, useState } from "react";
 import NotificationCard, { NotificationCardData } from "@/components/notifications/NotificationCard";
 import {
@@ -10,6 +12,7 @@ import {
 } from "@/services/notificationService";
 import { useAlert } from "@/context/AlertContext";
 import { SkeletonRegion, CardSkeleton } from "@/components/common/Skeleton";
+import ModalClose from "@/components/common/ModalClose";
 import { formatDateAndTime, formatDayMonth } from "@/utils/dateTime";
 
 const PAGE_SIZE = 20;
@@ -56,6 +59,8 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [errorFeedback, setErrorFeedback] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openItem = notifications.find((n) => n.id === openId) ?? null;
 
   const loadPage = useCallback(async (targetPage: number) => {
     const res = await notificationService.getUserNotifications(false, targetPage, PAGE_SIZE);
@@ -77,6 +82,9 @@ export default function NotificationsPage() {
     await loadPage(1);
     setLoading(false);
   }, [loadPage]);
+
+  // new notifications appear on their own (only while the first page is open, so reading older ones is never interrupted)
+  useLiveRefresh(() => { if (page === 1) return loadPage(1); }, 30_000);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,7 +135,13 @@ export default function NotificationsPage() {
     notifyNotificationsChanged();
   };
 
+  const handleOpen = (id: string) => {
+    setOpenId(id);
+    if (notifications.find((n) => n.id === id)?.unread) void handleMarkSingleRead(id);
+  };
+
   const handleClearSingleNotification = async (id: string) => {
+    setOpenId((cur) => (cur === id ? null : cur));
     const res = await notificationService.deleteNotification(id);
     if (!res.success) {
       setErrorFeedback(res.message || "Failed to clear notification.");
@@ -189,15 +203,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {errorFeedback && (
-          <div role="alert" className="p-4 rounded-md bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between gap-3">
-            <span className="break-words min-w-0">{errorFeedback}</span>
-            <div className="flex items-center gap-3 shrink-0">
-              <button onClick={reload} className="font-semibold underline cursor-pointer">Retry</button>
-              <button onClick={() => setErrorFeedback(null)} aria-label="Dismiss" className="font-bold cursor-pointer">✕</button>
-            </div>
-          </div>
-        )}
+        <PopupMessage message={errorFeedback} action={{ label: "Try again", onClick: reload }} onClose={() => setErrorFeedback(null)} />
 
         {loading ? (
           <SkeletonRegion label="Loading notifications" className="space-y-3">
@@ -211,6 +217,7 @@ export default function NotificationsPage() {
                 notification={item}
                 onClear={handleClearSingleNotification}
                 onMarkRead={handleMarkSingleRead}
+                onOpen={handleOpen}
               />
             ))}
             {page < totalPages && (
@@ -238,6 +245,21 @@ export default function NotificationsPage() {
           </div>
         ) : null}
       </div>
+
+      {openItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpenId(null)}>
+          <div role="dialog" aria-modal="true" aria-label={openItem.title} className="relative w-full max-w-md rounded-xl bg-white p-6" onClick={(e) => e.stopPropagation()}>
+            <ModalClose onClick={() => setOpenId(null)} />
+            <h2 className="pr-8 text-base font-semibold text-[#15191C] break-words">{openItem.title}</h2>
+            {openItem.timestamp && <p className="mt-1 text-xs text-[#6B7280]">{openItem.timestamp}</p>}
+            <div className="mt-4 max-h-[50vh] overflow-y-auto text-sm text-[#4B4F52] leading-relaxed whitespace-pre-wrap break-words">{openItem.message}</div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => handleClearSingleNotification(openItem.id)} className="px-4 py-2 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold cursor-pointer">Delete</button>
+              <button type="button" onClick={() => setOpenId(null)} className="px-4 py-2 rounded-md bg-[#15191C] hover:bg-black text-white text-xs font-semibold cursor-pointer">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

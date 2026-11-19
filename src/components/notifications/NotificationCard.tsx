@@ -17,15 +17,14 @@ interface NotificationCardProps {
   notification: NotificationCardData;
   onClear?: (id: string) => void;
   onMarkRead?: (id: string) => void;
+  onOpen?: (id: string) => void;
 }
 
-export default function NotificationCard({ notification, onClear, onMarkRead }: NotificationCardProps) {
+export default function NotificationCard({ notification, onClear, onMarkRead, onOpen }: NotificationCardProps) {
   const unread = !!notification.unread;
 
-  // Opening an unread notification marks it as read (like most notification centres)
-  const handleOpen = () => {
-    if (unread && onMarkRead) onMarkRead(notification.id);
-  };
+  // Opening shows the whole message in a window (the page does that and marks an unread one as read)
+  const handleOpen = () => onOpen?.(notification.id);
 
   const [day, time] = notification.timestamp.split(" | ");
 
@@ -34,8 +33,12 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
   return (
     <div
       onClick={handleOpen}
-      className={`rounded-md border border-[#E0E0E0] px-5 pt-[22px] pb-5 flex gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5B22]/40 ${
-        unread ? "bg-white cursor-pointer hover:border-[#FFB08A]" : "bg-[#F8F8F8]"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) handleOpen(); }}
+      aria-label={`Open notification: ${notification.title}`}
+      className={`rounded-md border border-[#E0E0E0] px-5 pt-[22px] pb-5 flex gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-black/40 ${
+        `cursor-pointer hover:bg-[#EEF3FF] ${unread ? "bg-white" : "bg-[#F8F8F8]"}`
       }`}
     >
       <div className="flex-1 min-w-0">
@@ -43,7 +46,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
           {unread && <><span aria-hidden className="size-2 rounded-full bg-[#FF651D] shrink-0" /><span className="sr-only">Unread: </span></>}
           {notification.title}
         </h2>
-        <p className="mt-3 text-xs text-[#6B6B6B] leading-[1.25] break-words">{notification.message}</p>
+        <p className="mt-3 text-xs text-[#6B6B6B] leading-[1.25] break-words line-clamp-2">{notification.message}</p>
         {notification.timestamp && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-[#6B7280]" title={notification.timeAgo}>
             <span>{day}</span>
@@ -57,7 +60,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead }: 
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onMarkRead(notification.id); }}
-            className="text-[11px] font-semibold text-[#C44200] hover:bg-orange-50 px-2 py-1 rounded cursor-pointer whitespace-nowrap"
+            className="text-[11px] font-semibold text-[#C44200] hover:bg-[#EEF3FF] px-2 py-1 rounded cursor-pointer whitespace-nowrap"
             title="Mark as read"
           >
             Mark read

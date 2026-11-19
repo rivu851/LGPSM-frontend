@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import ModalClose from "@/components/common/ModalClose";
 import Image from "next/image";
 import PageHeader from "@/components/common/PageHeader";
 import { useAuth } from "@/context/AuthContext";
+import { useAlert } from "@/context/AlertContext";
 import { mediaService } from "@/services/mediaService";
 import { resolveImageUrl } from "@/utils/mediaUrl";
 import Icon from "@/components/icons/Icon";
@@ -20,13 +22,13 @@ const ACCEPTED_TYPES = ["image/png", "image/jpeg"];
  */
 export default function LogoSettingsPage() {
   const { user, updateProfile } = useAuth();
+  const { showAlert } = useAlert();
   const savedKey = typeof user?.profile?.logoKey === "string" ? (user.profile.logoKey as string) : null;
   // undefined = unchanged; null = restore to default; string = newly uploaded, not yet saved
   const [staged, setStaged] = useState<string | null | undefined>(undefined);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [cropSelection, setCropSelection] = useState<{ file: File; source: string } | null>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -51,9 +53,8 @@ export default function LogoSettingsPage() {
 
   const selectFile = (file: File | undefined) => {
     if (!file) return;
-    setMessage(null);
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setMessage({ type: "error", text: "Only JPG and PNG images can be used as the logo." });
+      showAlert("Only JPG and PNG images can be used as the logo.", "error");
       if (input.current) input.current.value = "";
       return;
     }
@@ -68,16 +69,15 @@ export default function LogoSettingsPage() {
       const res = await mediaService.uploadImage(file, "ORGANIZATION_LOGO");
       if (res.success && res.data?.key) {
         setStaged(res.data.key);
-        setMessage(null);
         return { success: true };
       }
 
       const error = res.message || "The logo could not be uploaded. Please try again.";
-      setMessage({ type: "error", text: error });
+      showAlert(error, "error");
       return { success: false, message: error };
     } catch {
       const error = "The logo could not be uploaded. Please try again.";
-      setMessage({ type: "error", text: error });
+      showAlert(error, "error");
       return { success: false, message: error };
     } finally {
       setUploading(false);
@@ -87,7 +87,6 @@ export default function LogoSettingsPage() {
   const save = async () => {
     if (!dirty || saving) return;
     setSaving(true);
-    setMessage(null);
     // The profile is replaced as a whole on the server, so keep everything else on it (e.g. the organisation name)
     const { logoKey: _previous, ...rest } = (user?.profile || {}) as Record<string, unknown>;
     void _previous;
@@ -95,9 +94,9 @@ export default function LogoSettingsPage() {
     setSaving(false);
     if (res.success) {
       setStaged(undefined);
-      setMessage({ type: "success", text: staged ? "Organiser logo updated." : "Organiser logo restored to default." });
+      showAlert(staged ? "Organiser logo updated." : "Organiser logo restored to default.", "success");
     } else {
-      setMessage({ type: "error", text: res.message || "The logo could not be saved. Please try again." });
+      showAlert(res.message || "The logo could not be saved. Please try again.", "error");
     }
   };
 
@@ -129,7 +128,7 @@ export default function LogoSettingsPage() {
             onDrop={(e) => { e.preventDefault(); setDragOver(false); selectFile(e.dataTransfer.files?.[0]); }}
             aria-label={shownUrl ? "Replace the organiser logo" : "Upload an organiser logo"}
             className={`relative w-full max-w-[541px] h-[109px] rounded-lg border p-4 flex items-center justify-center cursor-pointer disabled:cursor-wait ${
-              dragOver ? "border-[#FF651D] bg-orange-50/40" : "border-[#D2D2D2] hover:border-[#FF651D]"
+              dragOver ? "border-[#FF651D] bg-orange-50/40" : "border-[#D2D2D2] hover:bg-[#EEF3FF]"
             }`}
           >
             {uploading ? (
@@ -150,13 +149,11 @@ export default function LogoSettingsPage() {
             <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed. Select or drag a photo to crop and reposition before upload.</p>
             <p className="text-[#6B6B6B]">
               Organizer Logo:{" "}
-              <button type="button" onClick={() => { setMessage(null); setStaged(null); }} disabled={!shownKey || saving} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={() => { setStaged(null); }} disabled={!shownKey || saving} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                 Reset to default
               </button>
             </p>
           </div>
-
-          {message && <p role={message.type === "error" ? "alert" : "status"} className={`text-xs font-medium ${message.type === "error" ? "text-rose-600" : "text-emerald-700"}`}>{message.text}</p>}
 
           <div className="pt-3">
             <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#C65318] hover:bg-[#A83800] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
@@ -170,17 +167,15 @@ export default function LogoSettingsPage() {
 
       {previewOpen && shownUrl && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="logo-preview-title" onClick={() => setPreviewOpen(false)}>
-          <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)]" onClick={(e) => e.stopPropagation()}>
-            <h3 id="logo-preview-title" className="text-base font-medium text-[#15191C]">Organiser logo preview</h3>
+          <div className="bg-white rounded-lg p-6 w-full max-w-sm space-y-4 overflow-y-auto max-h-[calc(100dvh-2rem)] relative" onClick={(e) => e.stopPropagation()}>
+            <ModalClose onClick={() => setPreviewOpen(false)} />
+            <h3 id="logo-preview-title" className="pr-8 text-base font-medium text-[#15191C]">Organiser logo preview</h3>
             <div className="border border-[#E0E0E0] rounded-md py-6 flex justify-center bg-[#FAFAFA]">
               <span className="relative block w-[240px] h-[50px]">
                 <Image src={shownUrl} alt="Organiser logo at its 240×50 size" fill unoptimized sizes="240px" className="object-contain" />
               </span>
             </div>
             <p className="text-xs text-[#6B6B6B]">Shown at the 240×50 size it is meant for.{dirty ? " Not saved yet — select Update to keep it." : ""}</p>
-            <div className="flex justify-end">
-              <button type="button" onClick={() => setPreviewOpen(false)} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Close</button>
-            </div>
           </div>
         </div>
       )}

@@ -1,7 +1,10 @@
 "use client";
 
 import PageHeader from "@/components/common/PageHeader";
-import React, { useState, useEffect, useMemo } from "react";
+import { useLiveRefresh } from "@/hooks/useLiveRefresh";
+import PopupMessage from "@/components/common/PopupMessage";
+import DateField from "@/components/common/DateField";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -50,9 +53,13 @@ const PHASE_BADGE: Record<OverviewRow["phase"], string> = {
   Past: "bg-[#EDEDED] text-[#4B4F52]",
   Cancelled: "bg-[#FDE2E2] text-[#B42318]",
 };
-const clickableCard = "relative cursor-pointer transition-colors hover:border-[#E8B9A3] hover:bg-[#FFFAF7] focus-within:border-[#C44200]";
-const ArrowOut = ({ href, label, stretch }: { href: string; label: string; stretch?: boolean }) => (
-  <Link href={href} aria-label={label} title={label} className={`text-[#15191C] hover:text-[#A83800] shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
+// a card's hover is its own colour: orange cards go orange, green go green, blue go blue
+const clickableCard = "relative cursor-pointer transition-colors focus-within:border-black";
+const TONE_HOVER = { orange: "hover:bg-[#FFE9DE]", green: "hover:bg-[#DDF6EA]", blue: "hover:bg-[#E1E8FF]" } as const;
+// the arrow takes its card's colour when the card is hovered
+const TONE_ARROW = { orange: "group-hover:text-[#C44200]", green: "group-hover:text-[#117A43]", blue: "group-hover:text-[#2F5BEA]" } as const;
+const ArrowOut = ({ href, label, stretch, tone }: { href: string; label: string; stretch?: boolean; tone?: keyof typeof TONE_ARROW }) => (
+  <Link href={href} aria-label={label} title={label} className={`text-[#15191C] ${tone ? TONE_ARROW[tone] : "hover:text-black"} transition-colors shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
   </Link>
 );
@@ -69,13 +76,13 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
 }) {
   const t = { orange: ["bg-[#FFE9DE]", "text-[#C44200]"], green: ["bg-[#DDF6EA]", "text-[#117A43]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"] }[tone];
   return (
-    <div className={`bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col ${clickableCard}`}>
+    <div className={`group bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col ${clickableCard} ${TONE_HOVER[tone]}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-3">
           <span className={`size-12 rounded-full flex items-center justify-center ${t[0]} ${t[1]}`} aria-hidden>{icon}</span>
           <span className={`text-sm font-semibold ${t[1]}`}>{label}</span>
         </div>
-        <ArrowOut href={href} label={`Open ${label}`} stretch />
+        <ArrowOut href={href} label={`Open ${label}`} stretch tone={tone} />
       </div>
       <div className="mt-4 text-[34px] leading-none font-semibold text-[#15191C] tracking-tight">{loading ? <Skeleton className="h-9 w-24" /> : value}</div>
       <p className="mt-1.5 text-sm text-[#15191C]">{caption}</p>
@@ -127,7 +134,7 @@ export default function DashboardPage() {
   const [report, setReport] = useState<{ title: string; invitees: number; attendees: number } | null>(null);
   const [topOrganizers, setTopOrganizers] = useState<OrganizerSummary[]>([]);
 
-  const [tab, setTab] = useState<Tab>("Upcoming");
+  const [tab, setTab] = useState<Tab>("All");
   // the overview shows one page at a time, so a long list never stretches the page past the cards beside it
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 8;
@@ -147,12 +154,19 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // the dashboard follows what happens (new events, invitations, check-ins, notifications): it reloads by itself, without a skeleton
+  const [liveTick, setLiveTick] = useState(0);
+  const liveQuiet = useRef(false);
+  useLiveRefresh(() => { liveQuiet.current = true; setLiveTick((t) => t + 1); }, 30_000, !!user);
+
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     (async () => {
-      setLoading(true);
-      setError(null);
+      const quiet = liveQuiet.current;
+      liveQuiet.current = false;
+      if (!quiet) setLoading(true);
+      if (!quiet) setError(null);
       // Each role sees only what it may: an organizer their own events, staff and billing; an admin everyone's events, the organizers and platform earnings
       const [eventsRes, peopleRes, earningsRes, notesRes] = await Promise.all([
         eventService.getEvents(),
@@ -163,7 +177,7 @@ export default function DashboardPage() {
       if (cancelled) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const events: any[] = eventsRes?.success && Array.isArray(eventsRes.data) ? (eventsRes.data as any[]) : [];
-      if (!eventsRes?.success) setError(eventsRes?.message || "Failed to load events.");
+      if (!eventsRes?.success) { if (quiet) return; setError(eventsRes?.message || "Failed to load events."); }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const phaseOf = (e: any): OverviewRow["phase"] => {
         if (String(e.status || "").toUpperCase() === "CANCELLED") return "Cancelled";
@@ -224,7 +238,7 @@ export default function DashboardPage() {
       if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user, isAdmin]);
+  }, [user, isAdmin, liveTick]);
 
   const counts = useMemo(() => ({
     upcoming: rows.filter((r) => r.phase === "Upcoming").length,
@@ -247,7 +261,7 @@ export default function DashboardPage() {
   const reservePager = tabCounts.some((c) => c > PAGE_SIZE);
 
   // the tab already says which kind of event it lists, so only "All" needs a status column
-  const showStatus = tab === "All";
+  const showStatus = tab === "All" || !!from || !!to;
   const cols = (isAdmin ? 6 : 5) + (showStatus ? 1 : 0);
   const pageCount = Math.max(1, Math.ceil(overview.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -260,14 +274,13 @@ export default function DashboardPage() {
   const lastBilled = [...(earnings?.events || [])].filter((e) => e.amount).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
   const card = "bg-white border border-[#E0E0E0] rounded-lg";
-  const dateField = "h-9 w-[132px] px-2.5 text-xs border border-[#E0E0E0] rounded-md bg-white text-[#15191C] focus:outline-none focus:border-[#FF651D]";
 
   return (
     <div className="w-full min-h-full bg-white text-gray-900 font-sans">
       <PageHeader title="Dashboard" />
 
       <div className="p-4 sm:p-6 lg:p-8 w-full max-w-[1440px] mx-auto space-y-6 pb-24">
-        {error && <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-md text-xs font-medium break-words">{error}</div>}
+        <PopupMessage message={error} onClose={() => setError(null)} />
 
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_260px] gap-6">
           {/* Left: the three summary cards, then the events overview */}
@@ -319,9 +332,9 @@ export default function DashboardPage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <h2 id="events-overview-title" className="text-base font-medium text-[#15191C]">Events Overview</h2>
                 <div className="flex flex-wrap items-center gap-2">
-                  <input type="date" aria-label="From date" title="Events starting on or after this day" value={from} onChange={(e) => { const r = settleRange({ from: e.target.value, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  <DateField compact className="w-[150px]" placeholder="From" title="Events starting on or after this day" value={from} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from: v, to }, "from"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   <span className="text-xs text-[#6B6B6B]">To</span>
-                  <input type="date" aria-label="To date" title="Events starting on or before this day" value={to} min={from || undefined} onChange={(e) => { const r = settleRange({ from, to: e.target.value }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} className={dateField} />
+                  <DateField compact className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={to} min={from || undefined} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from, to: v }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   {(from || to) && (
                     <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#A83800] cursor-pointer">
                       Clear dates
@@ -423,7 +436,7 @@ export default function DashboardPage() {
               </div>
             </section>
 
-            <section className={`${card} p-5 xl:flex-1 flex flex-col ${clickableCard}`} aria-labelledby="last-report-title">
+            <section className={`group ${card} p-5 xl:flex-1 flex flex-col ${clickableCard} ${TONE_HOVER.orange}`} aria-labelledby="last-report-title">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="size-11 rounded-full bg-[#FFE9DE] text-[#C44200] flex items-center justify-center shrink-0" aria-hidden>
@@ -434,7 +447,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-[#4B4F52] truncate" title={report?.title}>{report?.title || "No finished events yet"}</p>
                   </div>
                 </div>
-                <ArrowOut href="/reports" label="Open reports" stretch />
+                <ArrowOut href="/reports" label="Open reports" stretch tone="orange" />
               </div>
               <div className="mt-5 xl:flex-1 flex flex-col justify-center">
                 {loading ? <Skeleton className="h-32 w-full" /> : report ? <Donut invitees={report.invitees} attendees={report.attendees} /> : <p className="py-6 text-center text-xs text-[#6B6B6B]">Attendance appears here once an event has taken place.</p>}
@@ -477,12 +490,12 @@ export default function DashboardPage() {
 
         {/* Bottom Section: Top Organizers Table Card Container */}
         {user?.role === "ADMIN" && (
-          <div className="bg-white border border-gray-200 rounded-md p-6 shadow-2xs space-y-4">
+          <div className="bg-white border border-gray-200 rounded-md p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-bold text-gray-900">Top Organizers</h2>
               <Link
                 href="/event-organizer/add"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
