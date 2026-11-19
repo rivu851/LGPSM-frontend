@@ -135,8 +135,8 @@ function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; on
 }
 
 // Borderless picker from Figma 217:21076 ("Product Launch Event 2026 ▾", "All Session ▾"): 12px medium grey text
-function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled, className }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean; className?: string }) {
-  return <CustomDropdown variant="plain" className={className} value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} />;
+function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean }) {
+  return <CustomDropdown variant="plain" value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} className="shrink-0" />;
 }
 
 export default function InviteesManagementPage() {
