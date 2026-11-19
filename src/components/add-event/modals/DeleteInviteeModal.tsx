@@ -20,6 +20,8 @@ interface DeleteInviteeModalProps {
   count?: number;
   /** Which message channels start ticked (the page's channel choice, or the channels the invitee was invited through) */
   defaultChannels?: { email: boolean; whatsapp: boolean };
+  /** A reason and a message are only for guests who were sent an invitation. For guests who were not, this is a plain "are you sure" (false). */
+  askReason?: boolean;
 }
 
 // The form is mounted only while the window is open, so it always starts empty
@@ -33,6 +35,7 @@ function DeleteInviteeForm({
   onConfirm,
   count = 1,
   defaultChannels = { email: true, whatsapp: false },
+  askReason = true,
 }: DeleteInviteeModalProps) {
   const [reason, setReason] = useState("");
   const [email, setEmail] = useState(defaultChannels.email);
@@ -88,10 +91,12 @@ function DeleteInviteeForm({
 
           <h3 className="text-lg font-bold text-gray-900 mb-2">Warning</h3>
           <p className="text-xs text-gray-600 leading-relaxed max-w-sm mb-4">
-            Are you sure you want to delete the records of {many ? `these ${count} invitees` : "this invitee"}? All the details of {many ? "these invitees" : "this invitee"} will become invalid once deleted, and any invitation or access pass they were sent stops working.
+            {askReason
+              ? <>Are you sure you want to delete the records of {many ? `these ${count} invitees` : "this invitee"}? All the details of {many ? "these invitees" : "this invitee"} will become invalid once deleted, and any invitation or access pass they were sent stops working.</>
+              : <>Do you want to delete {many ? `these ${count} invitees` : "this invitee"}? Are you sure?</>}
           </p>
 
-          <div className="w-full text-left">
+          {askReason && <div className="w-full text-left">
             <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason <span className="text-[#C65318]">*</span></label>
             <textarea
               id="remove-reason"
@@ -108,7 +113,7 @@ function DeleteInviteeForm({
               <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#C65318]" />WhatsApp</label>
             </div>
             <p className="mt-1 text-[11px] text-gray-500">Tick both to send it on both. Leave both unticked to remove without sending a message.</p>
-          </div>
+          </div>}
 
           <div className="flex flex-col items-stretch gap-3 w-full mt-5">
             <button
@@ -119,10 +124,10 @@ function DeleteInviteeForm({
               No, Cancel
             </button>
             <button
-              disabled={busy || reason.trim().length === 0}
+              disabled={busy || (askReason && reason.trim().length === 0)}
               onClick={async () => {
                 setBusy(true);
-                try { await onConfirm({ reason: reason.trim(), email, whatsapp }); } finally { setBusy(false); }
+                try { await onConfirm(askReason ? { reason: reason.trim(), email, whatsapp } : { reason: "", email: false, whatsapp: false }); } finally { setBusy(false); }
                 onClose();
               }}
               className="w-full px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"

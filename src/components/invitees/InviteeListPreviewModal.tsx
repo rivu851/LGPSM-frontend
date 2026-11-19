@@ -282,7 +282,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
           </div>
         </div>
       </div>
-      <DeleteInviteeModal isOpen={!!removing} defaultChannels={{ email: true, whatsapp: !!removing?.some((m) => !!m.mobile) && !removing?.every((m) => !!m.email) }} count={removing?.length || 1} onClose={() => setRemoving(null)} onConfirm={removeGuests} />
+      <DeleteInviteeModal isOpen={!!removing} askReason={!!removing?.some((m) => m.delivery === "SENT" || m.delivery === "UNKNOWN")} defaultChannels={{ email: true, whatsapp: !!removing?.some((m) => !!m.mobile) && !removing?.every((m) => !!m.email) }} count={removing?.length || 1} onClose={() => setRemoving(null)} onConfirm={removeGuests} />
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={(row) => void saveEdit(row)} />
     </div>
   );

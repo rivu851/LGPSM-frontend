@@ -303,6 +303,8 @@ export default function InviteesManagementPage() {
     if (!email && !whatsapp) return { email: channel !== "WHATSAPP", whatsapp: channel !== "EMAIL" };
     return { email, whatsapp };
   };
+  // A reason and a message are for guests who were sent an invitation; for guests who were not it is a plain "are you sure"
+  const needsReason = (ids: string[]) => invitees.some((i) => ids.includes(i._id) && i.invitationStatus === "SENT");
   const resendTargets = selected.filter((i) => i.invitationStatus === "FAILED").map((i) => historyByInvitee.get(i._id)).filter((h): h is InvitationData => !!h?._id);
   const ownLists = ownListSessions(sessions);
   // the choice of session is only needed when more than one session has its own invitee list
@@ -987,8 +989,8 @@ export default function InviteesManagementPage() {
         />
       )}
       <EditInviteeModal isOpen={!!editing} onClose={() => setEditing(null)} invitee={editing} onSave={saveEdit} />
-      <DeleteInviteeModal isOpen={!!deletingId} defaultChannels={removalDefaults(deletingId ? [deletingId] : [])} onClose={() => setDeletingId(null)} onConfirm={confirmDelete} />
-      <DeleteInviteeModal isOpen={bulkOpen} defaultChannels={removalDefaults(selectedIds)} count={selectedIds.length} onClose={() => setBulkOpen(false)} onConfirm={deleteSelected} />
+      <DeleteInviteeModal isOpen={!!deletingId} askReason={needsReason(deletingId ? [deletingId] : [])} defaultChannels={removalDefaults(deletingId ? [deletingId] : [])} onClose={() => setDeletingId(null)} onConfirm={confirmDelete} />
+      <DeleteInviteeModal isOpen={bulkOpen} askReason={needsReason(selectedIds)} defaultChannels={removalDefaults(selectedIds)} count={selectedIds.length} onClose={() => setBulkOpen(false)} onConfirm={deleteSelected} />
       {sampleReminder && (
         <SampleReminderModal
           columns={sampleColumns}
