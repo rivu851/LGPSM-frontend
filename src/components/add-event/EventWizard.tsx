@@ -467,7 +467,7 @@ export default function EventWizard({
               {canDiscard && (
                 <>
                   {" · "}
-                  <button type="button" onClick={discard} className="underline cursor-pointer bg-[#D92D20] text-white px-2 py-1 rounded">Discard draft</button>
+                  <button type="button" onClick={discard} className="cursor-pointer bg-[#D92D20] text-white px-2 py-1 rounded">Discard draft</button>
                 </>
               )}
             </p>
