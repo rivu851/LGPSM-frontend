@@ -673,7 +673,7 @@ aria-label={`Select ${u.name}`}
             type="button"
             onClick={handleBulkDelete}
             disabled={selectedIds.length === 0}
-            className="p-2.5 text-[#1F65FF] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
+            className="p-2.5 text-[#D92D20] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
             title="Delete Selected Users"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -714,7 +714,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#1F65FF]">*</span>
+                  User Name<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -727,7 +727,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#1F65FF]">*</span>
+                  Email<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -782,7 +782,7 @@ aria-label={`Select ${u.name}`}
               {isAdmin && (
                 <div className="space-y-1.5 pt-4">
                   <label className="text-sm font-medium text-[#15191C]">
-                    Organizer<span className="text-[#1F65FF] ml-0.5">*</span>
+                    Organizer<span className="text-red-500 ml-0.5">*</span>
                   </label>
                   <CustomDropdown
                     portal
@@ -805,7 +805,7 @@ aria-label={`Select ${u.name}`}
               <PopupMessage message={addUserFormError} />
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#1F65FF] ml-0.5">*</span>
+                  User Name<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -819,7 +819,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Contact No<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
@@ -832,7 +832,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Email<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
@@ -846,7 +846,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Password<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Password<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
@@ -891,7 +891,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#1F65FF]">*</span>
+                  Event<span className="text-red-500">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}

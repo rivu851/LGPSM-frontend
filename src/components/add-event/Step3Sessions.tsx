@@ -160,12 +160,12 @@ export default function Step3Sessions({
             <div>
               <div className="flex justify-between items-center mb-1.5 gap-2">
                 <label htmlFor={`session-name-${sess.key}`} className="text-sm font-medium text-gray-900">
-                  Session Name<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Session Name<span className="text-red-500 ml-0.5">*</span>
                   {isPrimary && <span className="ml-2 text-xs font-normal text-[#6B6B6B]">Primary session</span>}
                 </label>
                 <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." className="ml-auto" />
                 {!sess.backendId && sessions.length > 1 && (
-                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#1F65FF] hover:underline cursor-pointer">
+                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#D92D20] hover:underline cursor-pointer">
                     Remove
                   </button>
                 )}
@@ -194,7 +194,7 @@ export default function Step3Sessions({
                   <span className={`${labelClass} flex items-center justify-between gap-2`}>
                     <span>
                       {field === "start" ? "Start Time" : "End Time"}
-                      <span className="text-[#1F65FF] ml-0.5">*</span>
+                      <span className="text-red-500 ml-0.5">*</span>
                     </span>
                     <InfoTip
                       label={`About the session ${field} time`}
@@ -216,7 +216,7 @@ export default function Step3Sessions({
               ))}
               <div className="min-w-0">
                 <span className={`${labelClass} flex items-center justify-between gap-2`}>
-                  <span>Access Control<span className="text-[#1F65FF] ml-0.5">*</span></span>
+                  <span>Access Control<span className="text-red-500 ml-0.5">*</span></span>
                   <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                 </span>
                 <CustomDropdown
@@ -267,7 +267,7 @@ export default function Step3Sessions({
               <div>
                 {(() => {
                   const mustAdd = !skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean) && isPrimary;
-                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-[#1F65FF]">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
+                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-red-500">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
                 })()}
                 <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] || (errors[`session:${sess.key}:invitees`] && !fileInfo) ? "border-rose-400" : "border-[#E0E0E0]"}`}>
                   <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">

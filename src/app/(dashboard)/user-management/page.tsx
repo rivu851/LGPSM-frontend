@@ -697,7 +697,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#1F65FF]">*</span>
+                  User Name<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -710,7 +710,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#1F65FF]">*</span>
+                  Email<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
@@ -768,7 +768,7 @@ aria-label={`Select ${u.name}`}
               )}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#1F65FF]">*</span>
+                  Event<span className="text-red-500">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}

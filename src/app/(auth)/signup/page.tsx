@@ -346,7 +346,7 @@ export default function SignupPage() {
           <form onSubmit={handleRegisterSubmit} className="grid grid-cols-1 xl:grid-cols-2 gap-x-3 gap-y-2.5">
             <div>
               <label htmlFor="signup-name" className={authLabelClass}>
-                Full Name<span className="text-[#1F65FF]">*</span>
+                Full Name<span className="text-red-500">*</span>
               </label>
               <input
                 id="signup-name"
@@ -364,7 +364,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-email" className={authLabelClass}>
-                Email Address<span className="text-[#1F65FF]">*</span>
+                Email Address<span className="text-red-500">*</span>
               </label>
               <input
                 id="signup-email"
@@ -380,7 +380,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-phone" className={authLabelClass}>
-                Phone no<span className="text-[#1F65FF]">*</span>
+                Phone no<span className="text-red-500">*</span>
               </label>
               <PhoneInput
                 id="signup-phone"
@@ -394,7 +394,7 @@ export default function SignupPage() {
               />
             </div>
             <fieldset className="space-y-2" disabled={isSubmitting}>
-              <legend className={authLabelClass}>Organizer type<span className="text-[#1F65FF]">*</span></legend>
+              <legend className={authLabelClass}>Organizer type<span className="text-red-500">*</span></legend>
               <div className="grid grid-cols-2 gap-2">
                 {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
                   <label key={value} className={`flex items-center gap-2 rounded-lg border px-2.5 h-[47px] text-[13px] cursor-pointer transition-colors ${orgType === value ? "border-[#1F65FF] bg-[#EAF1FF] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
@@ -407,7 +407,7 @@ export default function SignupPage() {
             {orgType === "ORGANIZATION" && (
               <div className="xl:col-span-2">
                 <label htmlFor="signup-org-name" className={authLabelClass}>
-                  Organization name<span className="text-[#1F65FF]">*</span>
+                  Organization name<span className="text-red-500">*</span>
                 </label>
                 <input
                   id="signup-org-name"
@@ -425,7 +425,7 @@ export default function SignupPage() {
             )}
             {/* Invitation channel at signup: hidden until the client confirms what "change invitation option during signup" means. Uncomment to bring it back.
             <fieldset>
-              <legend className={authLabelClass}>How will you send invitations?<span className="text-[#1F65FF]">*</span></legend>
+              <legend className={authLabelClass}>How will you send invitations?<span className="text-red-500">*</span></legend>
               <div className="grid grid-cols-3 gap-2" role="radiogroup">
                 {INVITATION_CHANNEL_OPTIONS.map((o) => (
                   <label key={o.value} className={`flex flex-col items-center justify-center gap-0.5 rounded-lg border px-2 py-2.5 text-center cursor-pointer transition-colors ${invitationChannel === o.value ? "border-[#1F65FF] bg-[#EAF1FF]" : "border-[#E0E0E0] bg-white hover:border-gray-400"}`}>
@@ -439,7 +439,7 @@ export default function SignupPage() {
             */}
             <div>
               <label htmlFor="signup-password" className={authLabelClass}>
-                Password<span className="text-[#1F65FF]">*</span>
+                Password<span className="text-red-500">*</span>
               </label>
               <PasswordInput
                 id="signup-password"
@@ -452,7 +452,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-confirm" className={authLabelClass}>
-                Confirm Password<span className="text-[#1F65FF]">*</span>
+                Confirm Password<span className="text-red-500">*</span>
               </label>
               <PasswordInput
                 id="signup-confirm"

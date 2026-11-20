@@ -101,7 +101,7 @@ export default function UploadTemplateModal({ onClose, onCreated }: Props) {
           )}
           <div>
             <ImageUploadField
-              label={<>Your design<span className="text-[#1F65FF] ml-0.5">*</span></>}
+              label={<>Your design<span className="text-red-500 ml-0.5">*</span></>}
               value={imageKey}
               onChange={setImageKey}
               purpose="TEMPLATE"

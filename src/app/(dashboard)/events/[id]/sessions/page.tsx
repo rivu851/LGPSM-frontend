@@ -564,7 +564,7 @@ export default function EventSessionsPage() {
               <div className="border border-[#E0E0E0] rounded-lg p-5 space-y-5">
                 <div>
                   <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                    <span>Session Name<span className="text-[#1F65FF] ml-0.5">*</span></span>
+                    <span>Session Name<span className="text-red-500 ml-0.5">*</span></span>
                     <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." />
                   </label>
                   <input
@@ -581,7 +581,7 @@ export default function EventSessionsPage() {
                   {(["start", "end"] as const).map((field) => (
                     <div key={field} className="min-w-0">
                       <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-[#1F65FF] ml-0.5">*</span></span>
+                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-red-500 ml-0.5">*</span></span>
                         <InfoTip
                           label={`About the session ${field} time`}
                           text={field === "start" ? "When this session opens for check-in. It must fall within the event's dates." : "When this session closes. It must be after the start time."}

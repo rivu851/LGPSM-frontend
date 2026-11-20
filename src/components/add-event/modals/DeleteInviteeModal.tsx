@@ -97,7 +97,7 @@ function DeleteInviteeForm({
           </p>
 
           {askReason && <div className="w-full text-left">
-            <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason <span className="text-[#1F65FF]">*</span></label>
+            <label htmlFor="remove-reason" className="block text-xs font-semibold text-gray-800 mb-1">Reason <span className="text-red-500">*</span></label>
             <textarea
               id="remove-reason"
               value={reason}
@@ -130,7 +130,7 @@ function DeleteInviteeForm({
                 try { await onConfirm(askReason ? { reason: reason.trim(), email, whatsapp } : { reason: "", email: false, whatsapp: false }); } finally { setBusy(false); }
                 onClose();
               }}
-              className="w-full px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-2.5 bg-[#D92D20] hover:bg-[#B42318] text-white font-bold text-xs rounded-md transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {busy ? "Deleting..." : "Yes, Delete"}
             </button>

@@ -139,7 +139,7 @@ function AddUserContent() {
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
-              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#1F65FF] ml-0.5">*</span></label>
+              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-red-500 ml-0.5">*</span></label>
               <CustomDropdown
                 value={organizerId}
                 onChange={rememberOrganizer}

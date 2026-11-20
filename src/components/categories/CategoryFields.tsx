@@ -78,7 +78,7 @@ export default function CategoryFields({
   };
   const withDelete = (options: CategoryOption[], remove: (o: CategoryOption) => Promise<void>) =>
     removable ? options.map((o) => (o.custom ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
-  const starMark = <span className="text-[#1F65FF] ml-0.5">*</span>;
+  const starMark = <span className="text-red-500 ml-0.5">*</span>;
   const star = required ? starMark : null;
   // A subcategory can only be required once the chosen category has some; before that (or when it has none) the star would promise a rule that cannot apply
   const subStar = required && !subcategoryOptional && (!categoryId || subOptions.length > 0) ? starMark : null;

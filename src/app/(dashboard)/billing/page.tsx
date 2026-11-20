@@ -211,11 +211,11 @@ export default function BillingPage() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#1F65FF]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-red-500">*</span></span>
                 <BillingDateField label="Statement from date" placeholder="Select Date" value={statement.from} onChange={(from) => { setStatement((s) => ({ ...s, from, to: s.to && from > s.to ? from : s.to })); setStatementError(null); }} />
               </div>
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#1F65FF]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-red-500">*</span></span>
                 <BillingDateField label="Statement to date" placeholder="Select Date" value={statement.to} min={statement.from || undefined} onChange={(to) => { setStatement((s) => ({ ...s, to })); setStatementError(null); }} />
               </div>
               <PopupMessage message={statementError} />

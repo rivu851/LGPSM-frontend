@@ -268,7 +268,7 @@ export default function OrganizerDetailsPage() {
               <button
                 onClick={() => setIsDeactivateModalOpen(true)}
                 disabled={isDeactivated}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#EAF1FF] hover:bg-[#EEF3FF] text-[#1A56DB] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#FDE2E1] hover:bg-[#FAD0CE] text-[#B42318] text-xs font-semibold rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h12a6 6 0 00-6-6zM21 12h-6" />
@@ -485,7 +485,7 @@ export default function OrganizerDetailsPage() {
               {/* Reason Dropdown */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Reason<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Reason<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <CustomDropdown portal
                   value={deactivateReason}
@@ -503,7 +503,7 @@ export default function OrganizerDetailsPage() {
               {/* Message Organizer Textarea */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Message Organizer<span className="text-[#1F65FF] ml-0.5">*</span>
+                  Message Organizer<span className="text-red-500 ml-0.5">*</span>
                 </label>
                 <textarea
                   rows={6}
@@ -523,7 +523,7 @@ export default function OrganizerDetailsPage() {
                 <button
                   type="submit"
                   disabled={isDeactivating}
-                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60"
+                  className="px-6 py-[11px] bg-[#D92D20] hover:bg-[#B42318] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60"
                 >
                   Deactivate
                 </button>

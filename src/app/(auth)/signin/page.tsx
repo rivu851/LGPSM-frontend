@@ -167,7 +167,7 @@ function SigninContent() {
       {entering && createPortal(<div className="fixed inset-0 z-[100]"><BrandLoader label="Signing in" /></div>, document.body)}
       <div>
         <label htmlFor="signin-email" className={authLabelClass}>
-          Email Address<span className="text-[#1F65FF]">*</span>
+          Email Address<span className="text-red-500">*</span>
         </label>
         <input
           id="signin-email"
@@ -183,7 +183,7 @@ function SigninContent() {
       </div>
       <div className="mt-3">
         <label htmlFor="signin-password" className={authLabelClass}>
-          Password<span className="text-[#1F65FF]">*</span>
+          Password<span className="text-red-500">*</span>
         </label>
         <PasswordInput
           id="signin-password"

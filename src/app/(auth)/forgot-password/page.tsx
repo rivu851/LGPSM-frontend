@@ -109,7 +109,7 @@ function ForgotPasswordContent() {
           <form onSubmit={handleRequest} className="space-y-5">
             <div>
               <label htmlFor="forgot-email" className={authLabelClass}>
-                Email Address<span className="text-[#1F65FF]">*</span>
+                Email Address<span className="text-red-500">*</span>
               </label>
               <input id="forgot-email" type="email" required autoComplete="email" placeholder={INPUT_PLACEHOLDERS.auth.email}
                 value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -153,7 +153,7 @@ function ForgotPasswordContent() {
             {!tokenFromUrl && (
               <div>
                 <label htmlFor="reset-token" className={authLabelClass}>
-                  Reset Code<span className="text-[#1F65FF]">*</span>
+                  Reset Code<span className="text-red-500">*</span>
                 </label>
                 <input id="reset-token" type="text" required placeholder={INPUT_PLACEHOLDERS.auth.resetCode}
                   value={resetToken} onChange={(e) => setResetToken(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -161,7 +161,7 @@ function ForgotPasswordContent() {
             )}
             <div>
               <label htmlFor="reset-new" className={authLabelClass}>
-                New Password<span className="text-[#1F65FF]">*</span>
+                New Password<span className="text-red-500">*</span>
               </label>
               <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
@@ -169,7 +169,7 @@ function ForgotPasswordContent() {
             </div>
             <div>
               <label htmlFor="reset-repeat" className={authLabelClass}>
-                Repeat New Password<span className="text-[#1F65FF]">*</span>
+                Repeat New Password<span className="text-red-500">*</span>
               </label>
               <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />

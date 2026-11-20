@@ -68,7 +68,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-5">
           <div className="min-w-0">
             <label htmlFor="new-template-name" className={labelCls}>
-              Template Name<span className="text-[#1F65FF] ml-0.5">*</span>
+              Template Name<span className="text-red-500 ml-0.5">*</span>
             </label>
             <input
               id="new-template-name"
@@ -97,7 +97,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
         <div className="grid grid-cols-1 md:grid-cols-3 gap-x-[18px] gap-y-5">
           <div className="min-w-0">
             <ImageUploadField
-              label={<>Upload Card Template<span className="text-[#1F65FF] ml-0.5">*</span></>}
+              label={<>Upload Card Template<span className="text-red-500 ml-0.5">*</span></>}
               value={imageKey}
               onChange={setImageKey}
               purpose="TEMPLATE"
@@ -110,7 +110,7 @@ export default function AddNewTemplateCard({ categories, onAddTemplate }: AddNew
           {/* Not in the Figma frame, but every template needs one: it fills the empty space beside the upload box */}
           <div className="min-w-0">
             <span className={labelCls}>
-              Invitation Card Design<span className="text-[#1F65FF] ml-0.5">*</span>
+              Invitation Card Design<span className="text-red-500 ml-0.5">*</span>
             </span>
             <CustomDropdown ariaLabel="Invitation Card Design" value={cardDesign} onChange={(v) => setCardDesign(v as CardDesign)} options={CARD_DESIGNS.map((d) => ({ value: d, label: CARD_DESIGN_LABELS[d] }))} />
             <p className="mt-1 text-xs text-[#6B6B6B]">The layout generated for each invitee&apos;s PDF/QR card — separate from the preview image.</p>

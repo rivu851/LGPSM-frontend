@@ -41,7 +41,7 @@ const labelClass = "text-sm font-medium text-gray-900";
 const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black";
 const border = (err?: string) => (err ? "!border-rose-500" : "border-[#E0E0E0]");
 const Err = ({ msg }: { msg?: string }) => (msg ? <p className="mt-1 text-xs font-medium text-rose-600">{msg}</p> : null);
-const Req = () => <span className="text-[#1F65FF] ml-0.5">*</span>;
+const Req = () => <span className="text-red-500 ml-0.5">*</span>;
 
 function OrganizerSelectField({
   selectedIds,

@@ -189,7 +189,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                 </div>
                 {custom && (
                   <div>
-                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-[#1F65FF] ml-0.5">*</span></label>
+                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-red-500 ml-0.5">*</span></label>
                     <input
                       id={`card-info-title-${slot}`}
                       type="text"

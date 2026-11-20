@@ -343,7 +343,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             <p className="text-sm text-[#4B4F52]">Do you want to delete this set of list? {dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : "It has no guests left. "}The list is removed from Uploaded lists, and its history (when it was uploaded, by whom, and any set-aside guests) stays under Deleted lists.</p>
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setDropList(null)} disabled={dropping} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">No, keep it</button>
-              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
+              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#D92D20] hover:bg-[#B42318] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
             </div>
           </div>
         </div>
