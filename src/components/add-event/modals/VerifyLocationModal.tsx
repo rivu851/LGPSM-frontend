@@ -147,7 +147,7 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
 
           {chosen !== null && (
             <label className="flex items-start gap-2 text-sm text-[#4B4F52] cursor-pointer">
-              <input type="checkbox" checked={useMatchedAddress} onChange={(e) => setUseMatchedAddress(e.target.checked)} className="mt-0.5 size-4 accent-[#1F65FF]" />
+              <input type="checkbox" checked={useMatchedAddress} onChange={(e) => setUseMatchedAddress(e.target.checked)} className="mt-0.5 size-4 accent-[#16A34A]" />
               <span>Use the matched address for the event instead of what I typed<span className="block text-xs text-[#6B6B6B] break-words">{matches[chosen]?.label}</span></span>
             </label>
           )}

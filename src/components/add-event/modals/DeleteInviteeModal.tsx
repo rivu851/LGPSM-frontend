@@ -109,8 +109,8 @@ function DeleteInviteeForm({
             />
             <p className="mt-3 mb-1 text-xs font-semibold text-gray-800">Send this message by</p>
             <div className="flex items-center gap-5 text-xs text-gray-700">
-              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#1F65FF]" />Email</label>
-              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#1F65FF]" />WhatsApp</label>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={email} onChange={(e) => setEmail(e.target.checked)} className="accent-[#16A34A]" />Email</label>
+              <label className="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={whatsapp} onChange={(e) => setWhatsapp(e.target.checked)} className="accent-[#16A34A]" />WhatsApp</label>
             </div>
             <p className="mt-1 text-[11px] text-gray-500">Tick both to send it on both. Leave both unticked to remove without sending a message.</p>
           </div>}

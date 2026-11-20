@@ -633,7 +633,7 @@ export default function EventSessionsPage() {
                           setCopySourceId(e.target.checked ? copyOptions[0].value : "");
                           if (e.target.checked) { setUploadedFile(null); setUploadedFileName(""); }
                         }}
-                        className="size-4 rounded border-gray-300 accent-[#1F65FF] cursor-pointer"
+                        className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
                       />
                       Keep same invitees as
                     </label>

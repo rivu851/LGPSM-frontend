@@ -233,7 +233,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               type="checkbox"
               checked={draft.dietaryEnabled}
               onChange={(e) => onChange({ dietaryEnabled: e.target.checked })}
-              className="size-4 rounded border-gray-300 accent-[#1F65FF] cursor-pointer"
+              className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
             />
             <span className="text-sm font-medium text-gray-900">Ask for food preference</span>
           </label>

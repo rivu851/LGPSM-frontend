@@ -797,7 +797,7 @@ export default function InviteesManagementPage() {
                     aria-label="Select all visible invitees"
                     checked={allVisibleSelected}
                     onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
-                    className="size-4 cursor-pointer check-primary"
+                    className="size-4 cursor-pointer check-green"
                   />
                   Select All
                 </label>
@@ -866,7 +866,7 @@ export default function InviteesManagementPage() {
                               aria-label={`Select ${i.name}`}
                               checked={selectedIds.includes(i._id)}
                               onChange={() => setSelectedIds((p) => (p.includes(i._id) ? p.filter((x) => x !== i._id) : [...p, i._id]))}
-                              className="size-4 cursor-pointer check-primary"
+                              className="size-4 cursor-pointer check-green"
                             />
                           </td>
                           <td className="py-3 px-2.5 whitespace-nowrap">{i.name}</td>

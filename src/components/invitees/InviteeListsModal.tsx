@@ -294,7 +294,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                 <table className="w-full text-left text-sm min-w-[760px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-primary" /></th>
+                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-green" /></th>
                       <th className="py-2 pr-3 font-medium">Guest</th>
                       <th className="py-2 pr-3 font-medium">From list</th>
                       <th className="py-2 pr-3 font-medium">Set aside</th>
@@ -305,7 +305,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {aside.guests.map((g) => (
                       <tr key={g.id} className="align-top">
-                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-primary" /></td>
+                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-green" /></td>
                         <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#6B6B6B] break-all">{g.email || g.mobile || "—"}</span></td>
                         <td className="py-3 pr-3 max-w-[180px] break-words">{g.fromSet.name}</td>
                         <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#6B6B6B]">by {g.setAsideBy.name}</span> : null}</td>

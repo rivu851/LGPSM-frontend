@@ -150,7 +150,7 @@ export default function EarningsTable({
             id="selectAllEarnings"
             checked={selectedIds.length === records.length && records.length > 0}
             onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-primary"
+            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
           />
           <label htmlFor="selectAllEarnings" className="cursor-pointer">
             Select All
@@ -199,7 +199,7 @@ export default function EarningsTable({
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
                     aria-label="Select this row"
-                    className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-primary"
+                    className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
                   />
                 </td>
                 <td className="py-4 px-4 font-semibold text-gray-900">

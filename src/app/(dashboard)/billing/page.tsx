@@ -136,7 +136,7 @@ export default function BillingPage() {
             checked={allSelected}
             disabled={rows.length === 0}
             onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))}
-            className="size-4 rounded-sm border-gray-300 cursor-pointer disabled:cursor-not-allowed check-primary"
+            className="size-4 rounded-sm border-gray-300 cursor-pointer disabled:cursor-not-allowed check-green"
           />
           <label htmlFor="billing-select-all" className={rows.length === 0 ? "" : "cursor-pointer"}>Select All</label>
         </div>
@@ -175,7 +175,7 @@ export default function BillingPage() {
                         aria-label={`Select invoice ${r.invoiceId}`}
                         checked={selected.includes(r.id)}
                         onChange={() => setSelected((s) => (s.includes(r.id) ? s.filter((x) => x !== r.id) : [...s, r.id]))}
-                        className="size-4 rounded-sm border-gray-300 cursor-pointer check-primary"
+                        className="size-4 rounded-sm border-gray-300 cursor-pointer check-green"
                       />
                     </td>
                     <td className="px-4">{r.invoiceId}</td>

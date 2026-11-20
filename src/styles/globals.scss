@@ -396,8 +396,8 @@ html {
 }
 
 // Orange checkbox with a white tick. A native checkbox takes its tick colour from the browser, which picks black on orange, so this
-// one is drawn here: orange box, white tick (used by every orange checkbox in the app).
-input[type="checkbox"].check-primary {
+// one is drawn here: orange box, white tick (used by every checkbox in the app).
+input[type="checkbox"].check-green {
   appearance: none;
   -webkit-appearance: none;
   display: inline-grid;
@@ -413,10 +413,10 @@ input[type="checkbox"].check-primary {
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease;
 
-  &:not(:disabled):hover { border-color: #1F65FF; }
+  &:not(:disabled):hover { border-color: #16A34A; }
   &:checked {
-    background-color: #1F65FF; // the brand orange, dark enough for the white tick to read (4.5:1)
-    border-color: #1F65FF;
+    background-color: #15803D; // green, dark enough for the white tick to read (5:1)
+    border-color: #15803D;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;

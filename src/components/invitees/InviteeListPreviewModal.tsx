@@ -219,7 +219,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                 <tr>
                   {!readOnly && (
                     <th className="py-2.5 pr-2 w-8">
-                      <input type="checkbox" aria-label="Select all invitees on this page that can be deleted" checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-primary cursor-pointer disabled:cursor-not-allowed" />
+                      <input type="checkbox" aria-label="Select all invitees on this page that can be deleted" checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-green cursor-pointer disabled:cursor-not-allowed" />
                     </th>
                   )}
                   <th className="py-2.5 pr-3 font-medium w-12">#</th>
@@ -236,7 +236,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                   <tr key={m.id} className={selected.includes(m.id) ? "bg-blue-50/60" : undefined}>
                     {!readOnly && (
                       <td className="py-2.5 pr-2">
-                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 check-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
+                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 check-green cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
                       </td>
                     )}
                     <td className="py-2.5 pr-3 text-[#6B6B6B]">{(page - 1) * PAGE_SIZE + i + 1}</td>

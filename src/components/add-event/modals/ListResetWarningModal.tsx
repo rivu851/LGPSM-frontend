@@ -29,7 +29,7 @@ export default function ListResetWarningModal({ onCancel, onConfirm, busy = fals
           </p>
           <label className="mt-4 inline-flex items-center gap-2.5 text-sm font-medium text-[#15191C] cursor-pointer">
             <span className="relative size-4 shrink-0">
-              <input type="checkbox" checked={read} onChange={(e) => setRead(e.target.checked)} className="peer size-4 appearance-none rounded border border-gray-400 bg-white checked:border-[#1F65FF] checked:bg-[#1F65FF] cursor-pointer" />
+              <input type="checkbox" checked={read} onChange={(e) => setRead(e.target.checked)} className="peer size-4 appearance-none rounded border border-gray-400 bg-white checked:border-[#15803D] checked:bg-[#15803D] cursor-pointer" />
               <svg aria-hidden="true" viewBox="0 0 16 16" className="pointer-events-none absolute inset-0 size-4 text-white opacity-0 peer-checked:opacity-100"><path d="m3.5 8 3 3 6-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </span>
             Yes, I have read this

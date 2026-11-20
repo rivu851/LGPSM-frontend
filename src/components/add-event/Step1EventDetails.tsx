@@ -381,7 +381,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
                   type="checkbox"
                   checked={draft.rsvpEnabled}
                   onChange={(e) => onChange({ rsvpEnabled: e.target.checked })}
-                  className="size-4 rounded border-gray-300 accent-[#1F65FF] cursor-pointer"
+                  className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
                 />
                 <span className={labelClass}>Event RSVP Acceptance</span>
               </label>

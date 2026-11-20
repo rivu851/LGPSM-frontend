@@ -65,7 +65,7 @@ function ExcelLogo({ className = "w-4 h-4 shrink-0" }: { className?: string }) {
 function Checkbox({ checked, onChange, children, id }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; id: string }) {
   return (
     <label htmlFor={id} className="inline-flex items-center gap-2.5 cursor-pointer select-none text-sm text-[#4B4F52]">
-      <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded border-gray-300 accent-[#1F65FF] cursor-pointer" />
+      <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer" />
       {children}
     </label>
   );

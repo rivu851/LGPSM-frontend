@@ -63,7 +63,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
               <p>This pass was revoked for <strong className="font-medium">{reasonLabel(invitee.credentialRevocation?.category)}</strong>, which needs a review before a new pass is issued.</p>
               <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-primary" />
+                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-green" />
                 <span>I have reviewed why this pass was revoked and the guest may have a new one.</span>
               </label>
             </div>

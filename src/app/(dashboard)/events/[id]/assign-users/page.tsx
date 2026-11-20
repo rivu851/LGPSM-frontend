@@ -465,7 +465,7 @@ export default function EventAssignUsersPage() {
             id="selectAll"
             checked={isAllSelected}
             onChange={handleSelectAll}
-            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-primary"
+            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
           />
           <label htmlFor="selectAll" className="cursor-pointer">
             Select All ({selectedUserIds.length} selected)
@@ -539,7 +539,7 @@ export default function EventAssignUsersPage() {
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
                           aria-label={`Select ${u.name}`}
-                          className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer mt-0.5 check-primary"
+                          className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer mt-0.5 check-green"
                         />
                       </td>
 
