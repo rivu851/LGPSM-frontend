@@ -18,6 +18,7 @@ export default function UserNavDropdown() {
     || resolveImageUrl(user?.profile?.avatarKey)
     || user?.avatarUrl
     || null;
+  const avatarFallbackUrl = resolveImageUrl(user?.profile?.avatarKey, true);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -57,7 +58,16 @@ export default function UserNavDropdown() {
             {/* Figma header (222:34645): 32px #D9D9D9 avatar with a 17px glyph, 16px medium name, 24px chevron */}
             <div className="w-8 h-8 rounded-full bg-[#D9D9D9] flex items-center justify-center overflow-hidden shrink-0">
               {avatarUrl ? (
-                <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt="User Avatar"
+                  className="w-full h-full object-cover"
+                  onError={(event) => {
+                    if (avatarFallbackUrl && event.currentTarget.src !== avatarFallbackUrl) {
+                      event.currentTarget.src = avatarFallbackUrl;
+                    }
+                  }}
+                />
               ) : (
                 <Image src="/images/header/avatar-user.svg" alt="" width={17} height={17} />
               )}

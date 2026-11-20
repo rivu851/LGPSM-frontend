@@ -5,6 +5,7 @@ import CameraCaptureModal from "./modals/CameraCaptureModal";
 
 interface AvatarSectionProps {
   avatarUrl: string | null;
+  fallbackUrl: string | null;
   onAvatarChange: (file: File) => Promise<void>;
   onAvatarRemove: () => Promise<void>;
   isUploading: boolean;
@@ -12,6 +13,7 @@ interface AvatarSectionProps {
 
 export default function AvatarSection({
   avatarUrl,
+  fallbackUrl,
   onAvatarChange,
   onAvatarRemove,
   isUploading,
@@ -81,6 +83,11 @@ export default function AvatarSection({
             src={avatarUrl}
             alt="Profile Avatar"
             className="w-full h-full object-cover rounded-full"
+            onError={(event) => {
+              if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                event.currentTarget.src = fallbackUrl;
+              }
+            }}
           />
         ) : (
           /* Default Profile Icon */

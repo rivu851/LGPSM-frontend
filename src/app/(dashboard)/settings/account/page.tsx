@@ -39,6 +39,7 @@ export default function AccountSettingsPage() {
     || resolveImageUrl(user?.profile?.avatarKey)
     || user?.avatarUrl
     || null;
+  const avatarFallbackUrl = resolveImageUrl(user?.profile?.avatarKey, true);
   const avatarUrl = savedAvatarUrl && !/^(blob|data):/i.test(savedAvatarUrl) ? savedAvatarUrl : null;
 
   const handleSave = async (e: React.FormEvent) => {
@@ -132,7 +133,16 @@ export default function AccountSettingsPage() {
             <span className="relative size-[154px] shrink-0 rounded-full overflow-hidden bg-[#D9D9D9] flex items-center justify-center">
               {avatarUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element -- local preview or stored avatar URL
-                <img src={avatarUrl} alt="Profile photo" className="w-full h-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt="Profile photo"
+                  className="w-full h-full object-cover"
+                  onError={(event) => {
+                    if (avatarFallbackUrl && event.currentTarget.src !== avatarFallbackUrl) {
+                      event.currentTarget.src = avatarFallbackUrl;
+                    }
+                  }}
+                />
               ) : (
                 <Image src="/images/header/avatar-user.svg" alt="" width={68} height={68} />
               )}
@@ -150,6 +160,7 @@ export default function AccountSettingsPage() {
           <form onSubmit={handleSave} className="bg-[#F8F8F8] border border-[#E5E5E5] rounded-lg p-8 flex flex-col md:flex-row items-start gap-10">
             <AvatarSection
               avatarUrl={avatarUrl}
+              fallbackUrl={avatarFallbackUrl}
               onAvatarChange={handleAvatarChange}
               onAvatarRemove={handleAvatarRemove}
               isUploading={isAvatarUploading}
