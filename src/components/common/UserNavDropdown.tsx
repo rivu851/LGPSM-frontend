@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { flagExplicitLogout, loginRedirectPath } from "@/components/auth/authPortal";
 import { useAuth } from "@/context/AuthContext";
+import { resolveImageUrl } from "@/utils/mediaUrl";
 
 export default function UserNavDropdown() {
   const { user, logout } = useAuth();
@@ -13,7 +14,10 @@ export default function UserNavDropdown() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const displayName = (user?.role === "ORGANIZER" ? user.profile?.organizationName : null) || user?.fullName || user?.email || "Account Name";
-  const avatarUrl = user?.profile?.avatarUrl || user?.avatarUrl || null;
+  const avatarUrl = user?.profile?.avatarUrl
+    || resolveImageUrl(user?.profile?.avatarKey)
+    || user?.avatarUrl
+    || null;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

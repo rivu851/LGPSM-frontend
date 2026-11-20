@@ -1,6 +1,7 @@
 import { listAllPages } from "./listAll";
 import { apiClient, ApiResponse } from "./apiClient";
 import { UserData, tokenStorage } from "./tokenStorage";
+import { mediaService } from "./mediaService";
 
 // Fields accepted by PATCH /api/users/profile
 export interface UpdateProfilePayload {
@@ -20,17 +21,28 @@ export const userService = {
   },
 
   async updateProfilePhoto(file: File): Promise<ApiResponse<UserData>> {
-    const form = new FormData();
-    form.append("file", file);
-    const response = await apiClient<UserData>(
-      "/api/users/profile/photo",
-      { method: "PATCH", body: form },
-      true
-    );
-    if (response.success && response.data) {
-      tokenStorage.setUser(response.data);
+    const uploaded = await mediaService.uploadImage(file, "AVATAR");
+    if (!uploaded.success || !uploaded.data?.key) {
+      return {
+        success: false,
+        message: uploaded.message || "Failed to upload profile photo.",
+        ...(uploaded.status !== undefined ? { status: uploaded.status } : {}),
+      };
     }
-    return response;
+
+    const existingProfile = tokenStorage.getUser()?.profile || {};
+    const saved = await this.updateProfile({
+      profile: { ...existingProfile, avatarKey: uploaded.data.key },
+    });
+    if (saved.success && saved.data) {
+      saved.data.profile = {
+        ...saved.data.profile,
+        avatarKey: uploaded.data.key,
+        ...(uploaded.data.publicUrl ? { avatarUrl: uploaded.data.publicUrl } : {}),
+      };
+      tokenStorage.setUser(saved.data);
+    }
+    return saved;
   },
 
   async updateProfile(payload: UpdateProfilePayload): Promise<ApiResponse<UserData>> {

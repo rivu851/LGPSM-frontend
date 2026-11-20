@@ -87,7 +87,9 @@ export default function AccountSettingsPage() {
 
   const handleAvatarRemove = async () => {
     setErrorMessage("");
-    const res = await updateProfile({ profile: { avatarKey: "" } });
+    const res = await updateProfile({
+      profile: { ...(user?.profile || {}), avatarKey: "", avatarUrl: "" },
+    });
     if (!res.success) {
       setErrorMessage(res.message || "Failed to remove profile photo.");
     }
