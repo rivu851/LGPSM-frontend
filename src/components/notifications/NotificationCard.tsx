@@ -43,7 +43,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead, on
     >
       <div className="flex-1 min-w-0">
         <h2 className="flex items-center gap-2 text-base font-medium text-[#15191C] break-words">
-          {unread && <><span aria-hidden className="size-2 rounded-full bg-[#FF651D] shrink-0" /><span className="sr-only">Unread: </span></>}
+          {unread && <><span aria-hidden className="size-2 rounded-full bg-[#1F65FF] shrink-0" /><span className="sr-only">Unread: </span></>}
           {notification.title}
         </h2>
         <p className="mt-3 text-xs text-[#6B6B6B] leading-[1.25] break-words line-clamp-2">{notification.message}</p>
@@ -60,7 +60,7 @@ export default function NotificationCard({ notification, onClear, onMarkRead, on
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onMarkRead(notification.id); }}
-            className="text-[11px] font-semibold text-[#C44200] hover:bg-[#EEF3FF] px-2 py-1 rounded cursor-pointer whitespace-nowrap"
+            className="text-[11px] font-semibold text-[#1F65FF] hover:bg-[#EEF3FF] px-2 py-1 rounded cursor-pointer whitespace-nowrap"
             title="Mark as read"
           >
             Mark read

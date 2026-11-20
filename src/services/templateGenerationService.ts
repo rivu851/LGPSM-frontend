@@ -1,7 +1,7 @@
 import { apiClient, ApiResponse } from "./apiClient";
 import type { Template, TemplateKind } from "./templateService";
 
-// AI template generation (Google Stitch, run by the LGPSM backend: the browser never talks to the provider and never
+// AI template generation (Google Stitch, run by the EventQRapp backend: the browser never talks to the provider and never
 // sees its credential). A request becomes a job that is polled until it finishes.
 
 export type GenerationStatus = "QUEUED" | "RUNNING" | "SUCCEEDED" | "CONCEPT_ONLY" | "FAILED";
@@ -14,7 +14,7 @@ export interface GenerationVariant {
   notes: string[];
   /** what the provider drew (media:<id>) */
   conceptImageKey?: string;
-  /** the converted template with sample details, as LGPSM will draw it (media:<id>) */
+  /** the converted template with sample details, as EventQRapp will draw it (media:<id>) */
   previewImageKey?: string;
   templateId?: string;
 }

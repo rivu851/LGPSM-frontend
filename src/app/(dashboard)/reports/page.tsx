@@ -438,11 +438,11 @@ export default function ReportsPage() {
                     <h2 className="text-[30px] leading-tight font-medium text-[#15191C] break-words min-w-0">{selectedEventTitle}</h2>
                   )}
                   {selectedEvent?.categoryId?.name && (
-                    <span className="border border-orange-400 text-[#C44200] rounded-md px-2 py-0.5 text-[10px] font-semibold bg-orange-50/50">
+                    <span className="border border-blue-400 text-[#1F65FF] rounded-md px-2 py-0.5 text-[10px] font-semibold bg-blue-50/50">
                       {selectedEvent.categoryId.name}
                     </span>
                   )}
-                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#C44200] underline underline-offset-2">Open event</Link>}
+                  {selectedEventId && <Link href={`/events/${selectedEventId}`} className="text-xs font-semibold text-[#1F65FF] underline underline-offset-2">Open event</Link>}
                 </div>
                 {selectedEvent && (
                   <p className="text-xs text-gray-500 font-medium">

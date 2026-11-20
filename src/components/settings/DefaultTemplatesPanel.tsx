@@ -47,7 +47,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
   };
 
   return (
-    <section aria-labelledby="default-templates-title" className="border border-[#FFD9C2] bg-[#FFF8F3] rounded-lg p-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <section aria-labelledby="default-templates-title" className="border border-[#D6E4FF] bg-[#FFF8F3] rounded-lg p-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="min-w-0">
         <h2 id="default-templates-title" className="text-base font-semibold text-gray-900">Invitation designs from the design team</h2>
         <p className="mt-1 text-sm text-[#4B4F52]">
@@ -55,7 +55,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
         </p>
         <ul className="mt-3 flex flex-wrap gap-2">
           {plan.templatesToCreate.map((t) => (
-            <li key={t.name} className="text-xs bg-white border border-[#F0D9C8] rounded-full px-3 py-1 text-gray-800">
+            <li key={t.name} className="text-xs bg-white border border-[#E1EAF8] rounded-full px-3 py-1 text-gray-800">
               <span className="font-medium">{t.name}</span>
               <span className="text-[#6B6B6B]"> · {t.category}{t.subcategory ? ` › ${t.subcategory}` : ""}</span>
             </li>
@@ -66,7 +66,7 @@ export default function DefaultTemplatesPanel({ onInstalled }: { onInstalled: ()
         type="button"
         onClick={handleInstall}
         disabled={busy}
-        className="shrink-0 px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+        className="shrink-0 px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {busy ? "Adding..." : "Add default templates"}
       </button>

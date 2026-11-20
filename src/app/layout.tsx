@@ -1,7 +1,7 @@
 import DialogKeyboardSupport from "@/components/common/DialogKeyboardSupport";
 import type { Metadata } from "next";
 import { preconnect } from "react-dom";
-import { Inter, Space_Grotesk, Caveat } from "next/font/google";
+import { Inter, Space_Grotesk, Caveat, DM_Sans } from "next/font/google";
 import "@/styles/globals.scss";
 import { AuthProvider } from "@/context/AuthContext";
 import { AlertProvider } from "@/context/AlertContext";
@@ -11,6 +11,12 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/constants/site";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+// Headlines of the landing page (the new brand design)
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
 });
 
@@ -28,21 +34,21 @@ const caveat = Caveat({
   preload: false,
 });
 
-const DEFAULT_TITLE = "LGPSM · Digital Invitations & Event Management";
+const DEFAULT_TITLE = "EventQRapp · QR Invitations, RSVP & Event Entry";
 const SOCIAL_IMAGE = {
   url: "/images/home/top_hero.webp",
   width: 1713,
   height: 918,
-  alt: "LGPSM digital invitations and event management",
+  alt: "EventQRapp QR invitations, RSVP and event entry",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
-    template: "%s · LGPSM",
+    template: "%s · EventQRapp",
   },
-  description: `LGPSM - ${SITE_DESCRIPTION}`,
+  description: `EventQRapp - ${SITE_DESCRIPTION}`,
   applicationName: SITE_NAME,
   openGraph: {
     type: "website",
@@ -60,12 +66,12 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon.svg?v=2", type: "image/svg+xml" },
+      { url: "/favicon-32x32.png?v=2", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png?v=2", sizes: "16x16", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico?v=2",
+    apple: "/apple-touch-icon.png?v=2",
   },
 };
 
@@ -89,10 +95,10 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${spaceGrotesk.variable} ${caveat.variable} h-full antialiased`}
+      className={`${inter.variable} ${spaceGrotesk.variable} ${caveat.variable} ${dmSans.variable} h-full antialiased`}
     >
       {/* Browser extensions (e.g. security/ad-block tools) add attributes to <body> before hydration; ignore those on this element only */}
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-gray-900 selection:bg-[#FF5B22] selection:text-white">
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-white text-gray-900 selection:bg-[#1F65FF] selection:text-white">
         <DialogKeyboardSupport />
         <AuthProvider>
           <AlertProvider>

@@ -36,4 +36,4 @@ export default function ListControls({ label, searchId, placeholder, value, onCh
 }
 
 /** The orange "+ Add …" action from the same frames: 16px semibold, 24px icon, 11px x 24px padding. */
-export const addButtonClass = "inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg";
+export const addButtonClass = "inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg";

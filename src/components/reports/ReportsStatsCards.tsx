@@ -50,7 +50,7 @@ export default function ReportsStatsCards({
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Tile value={totalInvitees} label="Total Invitees" icon="invitees" tone="bg-[#FFDCCF]" />
+      <Tile value={totalInvitees} label="Total Invitees" icon="invitees" tone="bg-[#D6E4FF]" />
       <Tile value={totalAttendees} label="Total Attendees" icon="attendees" tone="bg-[#C9F6E6]" />
       <Tile value={String(totalSessions).padStart(2, "0")} label="Total Sessions" icon="sessions" tone="bg-[#DCE1FF]" />
       <Tile value={systemUsers} label="System Users" icon="staff" tone="bg-[#EBDDFF]" />

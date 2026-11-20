@@ -10,7 +10,9 @@ import { gsap } from "gsap";
 // left = orange sunburst panel (666px) with a 739px-tall rounded photo card, vertically centred, that
 // overhangs 71px into the white; right = 440px form column starting 190px past the panel, top-aligned at 80px.
 // aside gets z-10 so the card (right-[-10.66%]) overhangs on top of the white main panel.
-export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
+// `fit`: the page is exactly one screen tall and does not scroll (sign-up). The form is centred and, on wide screens, laid out in two columns
+// so it fits; only on a screen too short or too narrow for that does the form column scroll by itself, so nothing is ever cut off.
+export function AuthSplitLayout({ children, fit = false }: { children: React.ReactNode; fit?: boolean }) {
   const [cardLoaded, setCardLoaded] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -32,10 +34,10 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]">
+    <div className={`${fit ? "h-dvh overflow-hidden" : "min-h-screen"} bg-white text-[#15191C] flex font-[family-name:var(--font-inter)]`}>
       {/* z-10 so the card's right-[-10.66%] overhang renders on top of the white main panel */}
-      <aside className="hidden lg:block relative z-10 shrink-0 w-[46.25%] bg-[#FF651D]">
-        <Image src="/images/auth/auth-sunburst.svg" alt="" fill sizes="47vw" className="object-cover" priority />
+      <aside className="hidden lg:block relative z-10 shrink-0 w-[46.25%] bg-[#1F65FF]">
+        <Image src="/images/auth/auth-sunburst-blue.svg" alt="" fill sizes="47vw" className="object-cover" priority />
         <div
           ref={cardRef}
           className="absolute z-20 left-[12.61%] right-[-10.66%] top-1/2 -translate-y-1/2 h-[min(739px,calc(100%-48px))] rounded-[20px] overflow-hidden shadow-2xl"
@@ -62,8 +64,8 @@ export function AuthSplitLayout({ children }: { children: React.ReactNode }) {
           />
         </div>
       </aside>
-      <main className="flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 pt-10 lg:pt-20 pb-12">
-        <div ref={formRef} className="w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))]">
+      <main className={fit ? "flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 py-1 h-dvh overflow-y-auto flex" : "flex-1 min-w-0 relative z-0 px-4 sm:px-8 lg:px-0 pt-10 lg:pt-20 pb-12"}>
+        <div ref={formRef} className={fit ? "w-full max-w-[440px] xl:max-w-[520px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))] xl:ml-[min(24.55%,calc(100%-544px))] my-auto" : "w-full max-w-[440px] mx-auto lg:mx-0 lg:ml-[min(24.55%,calc(100%-464px))]"}>
           {children}
         </div>
       </main>
@@ -101,7 +103,7 @@ export function AdminAuthLayout({ children }: { children: React.ReactNode }) {
 export function AuthLogo() {
   return (
     <Link href="/" className="inline-block">
-      <Image src="/images/branding/lgpsm-logo.svg" alt="LGPSM" width={202} height={34} priority fetchPriority="high" className="h-[34px] w-auto" />
+      <Image src="/images/branding/eventqrapp-logo.svg" alt="EventQRapp" width={190} height={34} priority fetchPriority="high" className="h-[34px] w-auto" />
     </Link>
   );
 }
@@ -118,7 +120,7 @@ export function AuthLoadingShell() {
 
 export function BackLink({ href, label = "Back to Home", onClick }: { href?: string; label?: string; onClick?: () => void }) {
   const inner = (
-    <span className="inline-flex items-center gap-2 text-sm leading-6 font-semibold text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer">
+    <span className="inline-flex items-center gap-2 text-sm leading-6 font-semibold text-[#15191C] hover:text-[#1A56DB] transition-colors cursor-pointer">
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
       </svg>
@@ -132,11 +134,11 @@ export function BackLink({ href, label = "Back to Home", onClick }: { href?: str
   );
 }
 
-export function AuthHeading({ title, subtitle }: { title: string; subtitle: string }) {
+export function AuthHeading({ title, subtitle, compact = false }: { title: string; subtitle: string; compact?: boolean }) {
   return (
-    <div className="mb-[35px]">
+    <div className={compact ? "mb-4" : "mb-[35px]"}>
       <h1 className="text-[22px] leading-7 font-medium text-black">{title}</h1>
-      <p className="mt-[9px] text-sm leading-5 text-[#5C5C5C]">{subtitle}</p>
+      <p className={`${compact ? "mt-1" : "mt-[9px]"} text-sm leading-5 text-[#5C5C5C]`}>{subtitle}</p>
     </div>
   );
 }
@@ -156,7 +158,7 @@ export const authLabelClass = "block text-sm leading-5 font-medium text-[#15191C
 export const authFieldStackClass = "space-y-3";
 
 export const authPrimaryButtonClass =
-  "w-full h-[41px] bg-[#c65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
+  "w-full h-[41px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2";
 
 export function PasswordInput({
   value,

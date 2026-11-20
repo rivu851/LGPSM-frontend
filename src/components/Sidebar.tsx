@@ -27,6 +27,9 @@ const onLinkClick = (href: string, onNavigate: () => void) => (e: React.MouseEve
   onNavigate();
 };
 
+// The design's sidebar: pale blue with a soft glow low on the right (public/images/branding/sidebar-bg.svg, from the Figma "Vector 44" artwork)
+const SIDEBAR_BG: React.CSSProperties = { backgroundImage: "url(/images/branding/sidebar-bg.svg)", backgroundRepeat: "no-repeat", backgroundSize: "100% 100%" };
+
 function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; role: WebRole; activeItem: string; onNavigate: () => void }) {
   const children = entry.children || [];
   const groupActive = children.some((c) => c.key === activeItem);
@@ -48,7 +51,7 @@ function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; ro
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={`w-full flex items-center gap-2 py-2 ${style.itemPad} text-base font-medium cursor-pointer transition-colors ${
-          groupActive && style.highlightGroup ? "text-[#FF651D]" : "text-[#DEE2E5] hover:text-white"
+          groupActive && style.highlightGroup ? "text-[#1F65FF]" : "text-[#000B2C] hover:text-[#1F65FF]"
         }`}
       >
         <NavIcon name={entry.icon} />
@@ -66,7 +69,7 @@ function NavGroup({ entry, role, activeItem, onNavigate }: { entry: NavEntry; ro
                   onClick={onLinkClick(c.href, onNavigate)}
                   aria-current={active ? "page" : undefined}
                   className={`flex items-center ${style.childRow} pl-2.5 border-l-[1.5px] text-sm font-medium transition-colors ${
-                    active ? "border-[#FF651D] text-[#FF651D]" : "border-[#2C3135] text-white hover:text-[#FFB08A]"
+                    active ? "border-[#1F65FF] text-[#1F65FF]" : "border-[#C9D8FF] text-[#000B2C] hover:text-[#1F65FF]"
                   }`}
                 >
                   {c.label}
@@ -94,7 +97,7 @@ function NavList({ role, activeItem, onNavigate }: { role: WebRole; activeItem: 
             onClick={onLinkClick(entry.href!, onNavigate)}
             aria-current={activeItem === entry.key ? "page" : undefined}
             className={`flex items-center gap-2 py-2 ${itemPad} text-base font-medium transition-colors ${
-              activeItem === entry.key ? "text-[#FF651D]" : "text-[#DEE2E5] hover:text-white"
+              activeItem === entry.key ? "text-[#1F65FF]" : "text-[#000B2C] hover:text-[#1F65FF]"
             }`}
           >
             <NavIcon name={entry.icon} />
@@ -112,7 +115,7 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
       href="/events/add"
       onClick={onLinkClick("/events/add", onNavigate)}
       className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-base font-semibold text-white transition-colors ${
-        active ? "bg-[#C65318] hover:bg-[#A83800]" : "bg-[#262A2D] hover:bg-[#30353A]"
+        "bg-[#1F65FF] hover:bg-[#1A56DB]"
       }`}
     >
       <NavIcon name="add" />
@@ -125,7 +128,7 @@ function AddEventButton({ active, onNavigate }: { active: boolean; onNavigate: (
 function Logo() {
   return (
     <Link href="/dashboard" className="inline-block shrink-0">
-      <Image src="/images/branding/lgpsm-logo.svg" alt="LGPSM" width={202} height={34} priority className="h-[34px] w-[202px] max-w-full object-contain object-left" />
+      <Image src="/images/branding/eventqrapp-logo.svg" alt="EventQRapp" width={190} height={34} priority className="h-[34px] w-auto max-w-full object-contain object-left" />
     </Link>
   );
 }
@@ -149,12 +152,12 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile top bar (< md) */}
-      <div className="flex md:hidden items-center justify-between bg-[#15191C] px-4 py-3 sticky top-0 z-30 shrink-0 w-full">
+      <div className="flex md:hidden items-center justify-between bg-[#E5ECFF] px-4 py-3 sticky top-0 z-30 shrink-0 w-full border-b border-[#C9D8FF]">
         <Logo />
         <button
           type="button"
           onClick={() => setIsMobileOpen(true)}
-          className="p-2 text-[#DEE2E5] hover:text-white rounded-md cursor-pointer"
+          className="p-2 text-[#000B2C] hover:text-[#1F65FF] rounded-md cursor-pointer"
           aria-label="Open menu"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -165,13 +168,14 @@ export default function Sidebar() {
 
       {isMobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden flex" role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="fixed inset-0 bg-black/60" onClick={close} />
+          <div className="fixed inset-0 bg-[#000B2C]/50" onClick={close} />
           <div
-            className={`relative ${role === "ADMIN" ? "w-[271px]" : "w-[284px]"} max-w-[85vw] bg-[#15191C] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain animate-drawer`}
+            className={`relative ${role === "ADMIN" ? "w-[271px]" : "w-[284px]"} max-w-[85vw] bg-[#E5ECFF] h-full p-6 flex flex-col gap-8 justify-between overflow-y-auto overscroll-contain animate-drawer`}
+            style={SIDEBAR_BG}
           >
             <div className="flex items-center justify-between">
               <Logo />
-              <button type="button" onClick={close} className="p-1 text-[#DEE2E5] hover:text-white cursor-pointer" aria-label="Close menu">
+              <button type="button" onClick={close} className="p-1 text-[#000B2C] hover:text-[#1F65FF] cursor-pointer" aria-label="Close menu">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -183,9 +187,10 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Desktop sidebar (>= md) — Figma: 271px for ADMIN (Super Admin design), 284px for ORGANIZER (Admin design), #15191C, 24px padding */}
+      {/* Desktop sidebar (>= md) — Figma: 271px for ADMIN (Super Admin design), 284px for ORGANIZER (Admin design), #E5ECFF with the design's soft blue glow, 24px padding */}
       <aside
-        className={`hidden md:flex w-[240px] ${role === "ADMIN" ? "lg:w-[271px]" : "lg:w-[284px]"} shrink-0 h-screen sticky top-0 bg-[#15191C] flex-col gap-8 justify-between p-6 overflow-y-auto overscroll-contain no-scrollbar select-none z-30`}
+        className={`hidden md:flex w-[240px] ${role === "ADMIN" ? "lg:w-[271px]" : "lg:w-[284px]"} shrink-0 h-screen sticky top-0 bg-[#E5ECFF] flex-col gap-8 justify-between p-6 overflow-y-auto overscroll-contain no-scrollbar select-none z-30`}
+        style={SIDEBAR_BG}
       >
         <div className="flex flex-col gap-8">
           <Logo />

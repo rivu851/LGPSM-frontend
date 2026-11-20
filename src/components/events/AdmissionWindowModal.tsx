@@ -53,7 +53,7 @@ export default function AdmissionWindowModal({ isOpen, onClose, eventId, start, 
       <button type="button" onClick={() => setPicking(field)} aria-label={label} className="w-full px-3 py-2.5 border border-[#E0E0E0] rounded-md text-sm text-left cursor-pointer hover:bg-[#EEF3FF]">
         {draft[field] ? formatDateTime(draft[field]) : <span className="text-[#6B6B6B]">{fallbackLabel} — {formatDateTime(fallback)}</span>}
       </button>
-      {draft[field] && <button type="button" onClick={() => setDraft((d) => ({ ...d, [field]: null }))} className="mt-1 text-xs text-[#C44200] underline cursor-pointer">{fallbackLabel === "Event start" ? "Use event start" : "Use event end"}</button>}
+      {draft[field] && <button type="button" onClick={() => setDraft((d) => ({ ...d, [field]: null }))} className="mt-1 text-xs text-[#1F65FF] underline cursor-pointer">{fallbackLabel === "Event start" ? "Use event start" : "Use event end"}</button>}
     </div>
   );
 
@@ -69,7 +69,7 @@ export default function AdmissionWindowModal({ isOpen, onClose, eventId, start, 
         {row("closes", "Check-in closes", end, "Event end")}
         <PopupMessage message={problem || error} />
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={save} disabled={busy || !!problem} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{busy ? "Saving…" : "Save"}</button>
+          <button type="button" onClick={save} disabled={busy || !!problem} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{busy ? "Saving…" : "Save"}</button>
         </div>
       </div>
       <DateTimePickerModal

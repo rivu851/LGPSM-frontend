@@ -1,5 +1,5 @@
 /**
- * Shared input placeholder constants for LGPSM Frontend components.
+ * Shared input placeholder constants for EventQRapp Frontend components.
  *
  * Centralizes UI input placeholder strings for consistent form presentation
  * across authentication, event management, invitee imports, user assignments,

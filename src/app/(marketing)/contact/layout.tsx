@@ -3,7 +3,7 @@ import { publicPageMetadata } from "@/utils/seo";
 
 export const metadata: Metadata = publicPageMetadata({
   title: "Contact",
-  description: "Get in touch with the LGPSM team about QR-based digital invitations and event management.",
+  description: "Get in touch with the EventQRapp team about QR-based digital invitations and event management.",
   path: "/contact",
 });
 

@@ -281,7 +281,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
           <legend className="block text-sm font-medium text-gray-900 mb-1.5">What are you making?</legend>
           <div className="grid grid-cols-2 gap-2" role="radiogroup">
             {(["INVITATION", "POSTER"] as TemplateKind[]).map((k) => (
-              <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`rounded-md border px-3 py-2.5 text-sm font-medium cursor-pointer ${kind === k ? "border-[#FF651D] bg-[#FFF3EC] text-[#C2410C]" : "border-[#D9D9D9] text-gray-700 hover:bg-gray-50"}`}>
+              <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`rounded-md border px-3 py-2.5 text-sm font-medium cursor-pointer ${kind === k ? "border-[#1F65FF] bg-[#EAF1FF] text-[#1F65FF]" : "border-[#D9D9D9] text-gray-700 hover:bg-gray-50"}`}>
                 {k === "INVITATION" ? "Invitation" : "Poster"}
               </button>
             ))}
@@ -331,7 +331,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
 
         {error && !job && <ErrorBanner error={error} />}
 
-        <button type="submit" disabled={busy !== null || running || promptTooShort || usageExhausted(usage) || (!!editTemplateId && !editTarget)} className="w-full rounded-md bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 cursor-pointer">
+        <button type="submit" disabled={busy !== null || running || promptTooShort || usageExhausted(usage) || (!!editTemplateId && !editTarget)} className="w-full rounded-md bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 cursor-pointer">
           {busy === "starting" ? "Starting…" : running ? "Designing…" : editTarget ? "Apply edit" : "Generate designs"}
         </button>
         <p className={`text-xs text-center ${usageExhausted(usage) ? "text-amber-700 font-medium" : "text-[#6B6B6B]"}`} aria-live="polite">{usageLabel(usage) || `Up to ${options.limits.dailyQuota} generations per day.`}</p>
@@ -351,7 +351,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
             <p className="text-xs font-medium uppercase tracking-wide text-[#6B6B6B] mb-2">Recent</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {recent.map((j) => (
-                <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
+                <button key={j.id} type="button" onClick={() => { setJob(j); setSelected(Math.max(0, j.variants.findIndex((v) => v.ready))); setSaved(null); setError(null); setKind(j.kind); setPreset(j.preset); }} className={`shrink-0 max-w-[220px] text-left rounded-md border px-3 py-2 cursor-pointer ${job?.id === j.id ? "border-[#1F65FF] bg-[#EAF1FF]" : "border-[#E0E0E0] hover:bg-[#EEF3FF]"}`}>
                   <span className="block text-xs font-medium text-gray-900 truncate">{j.prompt}</span>
                   <span className="block text-xs text-[#6B6B6B]">{jobSummary(j)}</span>
                 </button>
@@ -363,7 +363,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
         {job && running && (
           <div className="rounded-lg border border-[#E0E0E0] bg-white p-6">
             <div className="flex items-center gap-3">
-              <span className="inline-block h-5 w-5 rounded-full border-2 border-[#FF651D] border-t-transparent animate-spin" aria-hidden />
+              <span className="inline-block h-5 w-5 rounded-full border-2 border-[#1F65FF] border-t-transparent animate-spin" aria-hidden />
               <p className="text-sm font-medium text-gray-900">{jobSummary(job)}</p>
             </div>
             <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-4" aria-hidden>
@@ -449,7 +449,7 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                       <div role="status" className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 space-y-3">
                         <p className="font-medium">&ldquo;{saved.name}&rdquo; is saved{saved.published ? " and ready to use" : " as a draft"}.</p>
                         <div className="flex flex-wrap gap-3">
-                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
+                          {saved.published && <Link href={`/events/add?template=${saved.id}`} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">Create an event with it</Link>}
                           <Link href="/templates?view=mine" className="px-4 py-2 border border-gray-300 hover:bg-white text-gray-800 text-sm font-medium rounded-md">Go to my templates</Link>
                         </div>
                       </div>
@@ -461,11 +461,11 @@ export default function AiTemplateStudio({ editTemplateId }: { editTemplateId?: 
                         </div>
                         {editTarget && (
                           <div className="flex flex-wrap gap-3">
-                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : `Replace “${editTarget.name}”`}</button>
+                            <button type="button" disabled={busy !== null} onClick={() => save(false, true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : `Replace “${editTarget.name}”`}</button>
                           </div>
                         )}
                         <div className="flex flex-wrap gap-3">
-                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : editTarget ? "Save as new template" : "Save and use"}</button>
+                          <button type="button" disabled={busy !== null} onClick={() => save(true)} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-50 text-white text-sm font-medium rounded-md cursor-pointer">{busy === "saving" ? "Saving…" : editTarget ? "Save as new template" : "Save and use"}</button>
                           <button type="button" disabled={busy !== null} onClick={() => save(false)} className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 text-gray-800 text-sm font-medium rounded-md cursor-pointer">{editTarget ? "Save new one as draft" : "Save as draft"}</button>
                         </div>
                       </div>
@@ -505,7 +505,7 @@ function Panel({ tone, title, message, action }: { tone: "error" | "info"; title
     <div role={tone === "error" ? "alert" : "status"} className={`rounded-lg border p-8 text-center ${tone === "error" ? "border-rose-200 bg-rose-50" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
       <p className="text-base font-medium text-gray-900">{title}</p>
       <p className="text-sm text-[#4B4F52] mt-1 max-w-md mx-auto">{message}</p>
-      {action && <Link href={action.href} className="inline-block mt-4 px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">{action.label}</Link>}
+      {action && <Link href={action.href} className="inline-block mt-4 px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">{action.label}</Link>}
     </div>
   );
 }

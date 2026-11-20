@@ -13,19 +13,19 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     quote:
-      "LGPSM completely simplified our event invitation process. Creating digital invites, sending them instantly, and tracking RSVPs in one dashboard saved us a lot of time. It's a modern solution that works perfectly for both personal and corporate events.",
+      "EventQRapp completely simplified our event invitation process. Creating digital invites, sending them instantly, and tracking RSVPs in one dashboard saved us a lot of time. It's a modern solution that works perfectly for both personal and corporate events.",
     author: "Rahul Mehta",
     role: "Corporate Event Manager",
   },
   {
     quote:
-      "Managing guest lists for large weddings used to be a nightmare until we found LGPSM. The instant QR code scanner at entry made event day seamless for our guests.",
+      "Managing guest lists for large weddings used to be a nightmare until we found EventQRapp. The instant QR code scanner at entry made event day seamless for our guests.",
     author: "Ananya Sharma",
     role: "Wedding Planner",
   },
   {
     quote:
-      "Real-time RSVP analytics helped us plan seating and catering without any guesswork. LGPSM is an absolute game changer for corporate tech summits.",
+      "Real-time RSVP analytics helped us plan seating and catering without any guesswork. EventQRapp is an absolute game changer for corporate tech summits.",
     author: "Vikram Patel",
     role: "Tech Conference Organizer",
   },
@@ -121,12 +121,12 @@ export default function TestimonialsSection() {
         {/* Section Header */}
         <div className="space-y-4 mb-14">
           {/* TESTIMONIALS Badge */}
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#c65318]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-[#1F65FF]">
             <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="9" y="2" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="2" y="9" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="9" y="9" width="5" height="5" rx="1" fill="#c65318" />
+              <rect x="2" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="9" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="2" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="9" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
             </svg>
             <span>TESTIMONIALS</span>
           </div>
@@ -146,7 +146,7 @@ export default function TestimonialsSection() {
           </p>
 
           {/* Orange Accent Line above Author */}
-          <div className="w-8 h-[2px] bg-[#FF5B22] mx-auto mt-8 mb-2" />
+          <div className="w-8 h-[2px] bg-[#1F65FF] mx-auto mt-8 mb-2" />
 
           {/* Author Name and Role */}
           <p className="text-xs sm:text-sm font-bold text-gray-700 font-[family-name:var(--font-space-grotesk)]">
@@ -165,7 +165,7 @@ export default function TestimonialsSection() {
             >
               <span aria-hidden className={`block transition-all duration-300 rounded-full ${
                 activeIdx === idx
-                  ? "w-3 h-3 bg-[#C65318] scale-110"
+                  ? "w-3 h-3 bg-[#1F65FF] scale-110"
                   : "w-2 h-2 bg-gray-400 group-hover:bg-gray-500"
               }`} />
             </button>

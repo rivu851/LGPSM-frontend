@@ -84,7 +84,7 @@ export default function OrganisationDetailsForm() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button type="submit" disabled={saving || !dirty} className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <button type="submit" disabled={saving || !dirty} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
             {saving ? "Saving..." : "Save"}
           </button>
           {dirty && !saving && (

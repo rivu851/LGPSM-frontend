@@ -155,7 +155,7 @@ export default function EditEventPage() {
         <div className="max-w-md w-full bg-white border border-gray-200 rounded-md p-8 text-center space-y-4">
           <h1 className="text-lg font-bold text-gray-900">Event unavailable</h1>
           <p className="text-xs text-gray-500 break-words">{loadError}</p>
-          <Link href="/events" className="inline-block px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-xs font-semibold">
+          <Link href="/events" className="inline-block px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-xs font-semibold">
             Back to Events
           </Link>
         </div>
@@ -181,8 +181,8 @@ export default function EditEventPage() {
       readOnlyReason={lockReason ?? undefined}
       readOnlyActions={lockReason ? (
         <>
-          {canStillAdd.users && <Link href={`/events/${eventId}/assign-users`} className="px-5 py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF1E8] text-sm font-medium rounded-md">Assign Users</Link>}
-          {canStillAdd.invitees && <Link href={`/events/${eventId}/invitees`} className="px-5 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">Add Invitees</Link>}
+          {canStillAdd.users && <Link href={`/events/${eventId}/assign-users`} className="px-5 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] text-sm font-medium rounded-md">Assign Users</Link>}
+          {canStillAdd.invitees && <Link href={`/events/${eventId}/invitees`} className="px-5 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">Add Invitees</Link>}
         </>
       ) : undefined}
       canDiscard

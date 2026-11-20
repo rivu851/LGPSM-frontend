@@ -39,7 +39,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
   const totalDelivery = sent + pending + failed;
 
   const segments = [
-    { key: "sent", label: "Sent", value: sent, color: "#FF5B22" },
+    { key: "sent", label: "Sent", value: sent, color: "#1F65FF" },
     { key: "pending", label: "Pending", value: pending, color: "#2D3139" },
     { key: "failed", label: "Failed", value: failed, color: "#D1D5DB" },
   ];
@@ -136,7 +136,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
         {/* Chart Legend */}
         <div className="flex items-center gap-4 text-[11px] font-medium text-gray-600">
           <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#FF5B22] inline-block" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#1F65FF] inline-block" />
             <span>Invitees</span>
           </div>
           <div className="flex items-center gap-1.5">
@@ -180,7 +180,7 @@ export default function ReportsCharts({ delivery, sessions = [], loading = false
                   >
                     <div className="flex items-end gap-1.5 h-48">
                       <div
-                        className="w-8 bg-[#FF5B22] rounded-t-xs"
+                        className="w-8 bg-[#1F65FF] rounded-t-xs"
                         style={{ height: `${maxValue > 0 ? (s.invited / maxValue) * 100 : 0}%` }}
                         title={`Invitees: ${s.invited}`}
                       />

@@ -132,7 +132,7 @@ export default function CustomDropdown({
         aria-invalid={invalid || undefined}
         aria-label={ariaLabel}
         onClick={() => setIsOpen(!isOpen)}
-        className={`${plain ? "h-[47px] px-4 text-xs font-medium rounded-md border border-transparent hover:text-[#15191C] gap-3 min-w-0 overflow-hidden" : `w-full ${compact ? "min-h-[47px] px-4 text-xs font-medium" : "min-h-[44px] px-3.5 py-2.5 text-sm"} rounded-md border gap-2`} transition-colors flex items-center justify-between cursor-pointer select-none ${
+        className={`${plain ? "h-[47px] px-4 text-xs font-medium rounded-md border border-transparent hover:text-[#15191C] gap-3 w-full min-w-0 overflow-hidden" : `w-full ${compact ? "min-h-[47px] px-4 text-xs font-medium" : "min-h-[44px] px-3.5 py-2.5 text-sm"} rounded-md border gap-2`} transition-colors flex items-center justify-between cursor-pointer select-none ${
           plain
             ? `bg-transparent ${isOpen || plainTone === "ink" ? "text-[#15191C]" : "text-[#7F7F7F]"}`
             : disabled
@@ -193,7 +193,7 @@ export default function CustomDropdown({
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 cursor-pointer ${
-                      isSelected ? "bg-orange-50 text-[#E5520F] font-medium" : "text-gray-700 hover:text-[#E5520F]"
+                      isSelected ? "bg-blue-50 text-[#1F65FF] font-medium" : "text-gray-700 hover:text-[#1F65FF]"
                     }`}
                   >
                     <span className="inline-flex items-center gap-2 min-w-0">

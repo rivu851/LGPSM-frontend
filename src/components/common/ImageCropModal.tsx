@@ -204,7 +204,7 @@ export default function ImageCropModal({ file, onCancel, onConfirm, aspect = 1, 
       </div>
       <div className="px-4 sm:px-6 py-4 flex flex-col items-center gap-3">
         {failed && <p role="alert" className="text-xs font-medium text-rose-300">This picture could not be cropped. Try another image.</p>}
-        <button type="button" onClick={confirm} disabled={!box || failed} className="px-8 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Use this crop</button>
+        <button type="button" onClick={confirm} disabled={!box || failed} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-sm font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Use this crop</button>
       </div>
     </div>
   );

@@ -435,7 +435,7 @@ export default function EventSessionsPage() {
               onClick={openAdd}
               disabled={historical}
               title={historical ? "This event can no longer be changed" : undefined}
-              className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
+              className="disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer shrink-0 w-fit"
             >
               <Icon name="events/add-white" width={24} height={24} />
               Add Session
@@ -512,7 +512,7 @@ export default function EventSessionsPage() {
                                 <div className="fixed inset-0 z-20" onClick={() => setMenuId(null)} aria-hidden />
                                 <div role="menu" style={{ top: menuPos.top, right: menuPos.right }} className="fixed z-30 w-40 rounded-md border border-[#E0E0E0] bg-white py-1 shadow-lg">
                                   <button type="button" role="menuitem" onClick={() => openEdit(sess)} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[#15191C] hover:bg-gray-50 cursor-pointer text-left">
-                                    <svg className="w-4 h-4 text-[#C44200]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                                    <svg className="w-4 h-4 text-[#1F65FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.4-9.4a2 2 0 112.8 2.8L11.8 15H9v-2.8l8.6-8.6z" />
                                     </svg>
                                     Edit
@@ -564,7 +564,7 @@ export default function EventSessionsPage() {
               <div className="border border-[#E0E0E0] rounded-lg p-5 space-y-5">
                 <div>
                   <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                    <span>Session Name<span className="text-[#C44200] ml-0.5">*</span></span>
+                    <span>Session Name<span className="text-red-500 ml-0.5">*</span></span>
                     <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." />
                   </label>
                   <input
@@ -581,7 +581,7 @@ export default function EventSessionsPage() {
                   {(["start", "end"] as const).map((field) => (
                     <div key={field} className="min-w-0">
                       <label className="flex items-center justify-between gap-2 text-sm font-medium text-[#15191C] mb-1.5">
-                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-[#C44200] ml-0.5">*</span></span>
+                        <span>{field === "start" ? "Start Time" : "End Time"}<span className="text-red-500 ml-0.5">*</span></span>
                         <InfoTip
                           label={`About the session ${field} time`}
                           text={field === "start" ? "When this session opens for check-in. It must fall within the event's dates." : "When this session closes. It must be after the start time."}
@@ -667,7 +667,7 @@ export default function EventSessionsPage() {
 
                   <div className="flex items-center justify-end gap-2 mt-2 text-sm">
                     <div className="w-4 h-4 rounded bg-emerald-600 text-white font-bold flex items-center justify-center text-[9px]">X</div>
-                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#A83800] cursor-pointer">
+                    <button type="button" onClick={() => downloadInviteeTemplate(sampleColumns)} className="text-[#15191C] font-medium underline hover:text-[#1A56DB] cursor-pointer">
                       Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
@@ -682,7 +682,7 @@ export default function EventSessionsPage() {
                 type="submit"
                 disabled={savingSession}
                 aria-busy={savingSession}
-                className="px-4 py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D]/5 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2 bg-white"
+                className="px-4 py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF]/5 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center gap-2 bg-white"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />

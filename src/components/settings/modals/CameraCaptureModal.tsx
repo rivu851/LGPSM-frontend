@@ -135,7 +135,7 @@ export default function CameraCaptureModal({
               type="button"
               onClick={handleSnap}
               disabled={!isCameraReady}
-              className="px-6 py-2 text-xs font-semibold text-white bg-[#C65318] hover:bg-[#A83800] rounded-md transition-colors cursor-pointer disabled:opacity-50"
+              className="px-6 py-2 text-xs font-semibold text-white bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md transition-colors cursor-pointer disabled:opacity-50"
             >
               Capture Photo
             </button>

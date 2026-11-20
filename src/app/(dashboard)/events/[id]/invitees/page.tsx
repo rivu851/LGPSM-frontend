@@ -82,7 +82,7 @@ function allowedIn(inv: Invitee, session: SessionData): boolean {
 
 // Status column (Figma 217:20587): delivery state, or the guest's answer once they have replied
 function InviteeStatusPill({ invitationStatus, rsvpStatus }: { invitationStatus: Invitee["invitationStatus"]; rsvpStatus: Invitee["rsvpStatus"] }) {
-  if (invitationStatus === "FAILED") return pill("bg-[#FFE3D7] text-[#A83800]", "Sending Failed");
+  if (invitationStatus === "FAILED") return pill("bg-[#FDE2E1] text-[#B42318]", "Sending Failed");
   if (invitationStatus === "PENDING") return pill("bg-[#EDEDED] text-[#6E6E6E]", "Not Yet Sent");
   if (rsvpStatus === "ACCEPTED") return pill("bg-[#CCD2FF] text-[#2C2EB5]", "Accepted");
   if (rsvpStatus === "DECLINED") return pill("bg-[#FFE9C0] text-[#6F5600]", "Declined");
@@ -113,7 +113,7 @@ function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; on
   };
   const run = (action: () => void) => () => { setPosition(null); action(); };
   const base = "flex items-center gap-1.5 py-1 text-sm font-medium cursor-pointer text-left";
-  const item = `${base} text-white hover:text-[#FFB08A]`;
+  const item = `${base} text-white hover:text-[#B8D0FF]`;
   return (
     <>
       <button ref={buttonRef} type="button" onClick={toggle} aria-label={`Actions for ${name}`} aria-expanded={!!position} className="px-2 py-1 rounded hover:bg-gray-100 cursor-pointer">
@@ -135,8 +135,8 @@ function InviteeRowMenu({ name, onEdit, onResend, onRemove }: { name: string; on
 }
 
 // Borderless picker from Figma 217:21076 ("Product Launch Event 2026 ▾", "All Session ▾"): 12px medium grey text
-function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean }) {
-  return <CustomDropdown variant="plain" value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} className="shrink-0" />;
+function PlainSelect({ value, onChange, options, ariaLabel, placeholder, disabled, className = "" }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; ariaLabel: string; placeholder?: string; disabled?: boolean; className?: string }) {
+  return <CustomDropdown variant="plain" value={value} onChange={onChange} options={options} ariaLabel={ariaLabel} placeholder={placeholder} disabled={disabled} className={`shrink-0 ${className}`} />;
 }
 
 export default function InviteesManagementPage() {
@@ -578,7 +578,7 @@ export default function InviteesManagementPage() {
 
   const btn = "inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed";
   // Figma send button: outlined orange, 16px semibold, washed out until something can be sent
-  const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#FF651D] text-[#C44200] bg-white hover:bg-[#EEF3FF] text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
+  const primaryOutline = "inline-flex items-center gap-2 px-6 py-[11px] border border-[#1F65FF] text-[#1F65FF] bg-white hover:bg-[#EEF3FF] text-base font-semibold rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed";
   // one definition of the event's invitee fields drives the Excel sample, this preview, and the manual Add Invitee form
   const fieldConfig = inviteeConfigFor({ cardInfo: event?.cardInfo, dietaryEnabled: !!event?.dietaryPreference?.enabled, corporate: isCorporate });
   const sampleColumns = excelColumnsFor(fieldConfig);
@@ -614,7 +614,7 @@ export default function InviteesManagementPage() {
                   options={eventsOptions}
                 />
                 <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Select session" value="" placeholder="Select Session" onChange={() => {}} options={[]} disabled />
-                <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
+                <button type="button" onClick={() => setPickerOpen(true)} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -629,7 +629,7 @@ export default function InviteesManagementPage() {
                 <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
               </svg>
               <p className="max-w-[300px] text-base text-[#4B4F52]">Select an event to check its invitee list.</p>
-              <button type="button" onClick={() => setPickerOpen(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer">Select Event</button>
+              <button type="button" onClick={() => setPickerOpen(true)} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer">Select Event</button>
             </div>
             {pickerOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setPickerOpen(false)}>
@@ -641,7 +641,7 @@ export default function InviteesManagementPage() {
                   <ul className="mt-3 max-h-[50vh] overflow-y-auto divide-y divide-[#EEE] border border-[#EEE] rounded-md">
                     {eventsOptions.filter((o) => o.label.toLowerCase().includes(pickerSearch.trim().toLowerCase())).map((o) => (
                       <li key={o.value}>
-                        <button type="button" onClick={() => { setPickerOpen(false); router.replace(`/events/select/invitees?from=sidebar&event=${o.value}`); }} className="w-full text-left px-4 py-3 text-sm text-[#15191C] hover:bg-[#FFF1EA] cursor-pointer break-words">{o.label}</button>
+                        <button type="button" onClick={() => { setPickerOpen(false); router.replace(`/events/select/invitees?from=sidebar&event=${o.value}`); }} className="w-full text-left px-4 py-3 text-sm text-[#15191C] hover:bg-[#EAF1FF] cursor-pointer break-words">{o.label}</button>
                       </li>
                     ))}
                     {eventsOptions.length === 0 && <li className="px-4 py-6 text-center text-xs text-[#6B6B6B]">No events yet. Create one first.</li>}
@@ -698,7 +698,7 @@ export default function InviteesManagementPage() {
                 <PlainSelect className="!w-[200px] !max-w-full" ariaLabel="Filter by session" value={sessionFilter} onChange={setSessionFilter} options={sessions.length === 1 ? [{ value: "", label: sessions[0].name }] /* one session is the whole event: its name, not "All" */ : [{ value: "", label: "All Session" }, ...sessions.map((s) => ({ value: s._id!, label: s.name }))]} />
                 <PlainSelect ariaLabel="Filter by invitation" value={invitationFilter} onChange={(v) => setInvitationFilter(v as "" | "SENT" | "NOT_SENT")} options={[{ value: "", label: "All Invitations" }, { value: "SENT", label: "Invitation Sent" }, { value: "NOT_SENT", label: "Not Sent" }]} />
                 {!historical && (
-                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
+                <button type="button" onClick={() => setShowChooser(true)} disabled={busy !== null || !event} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer disabled:opacity-50">
                   <Icon name="events/add-white" width={24} height={24} />
                   Add Invitees
                 </button>
@@ -797,7 +797,7 @@ export default function InviteesManagementPage() {
                     aria-label="Select all visible invitees"
                     checked={allVisibleSelected}
                     onChange={(e) => setSelectedIds(e.target.checked ? [...new Set([...selectedIds, ...visible.map((i) => i._id)])] : selectedIds.filter((id) => !visible.some((v) => v._id === id)))}
-                    className="size-4 cursor-pointer check-orange"
+                    className="size-4 cursor-pointer check-green"
                   />
                   Select All
                 </label>
@@ -831,7 +831,7 @@ export default function InviteesManagementPage() {
                   <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
                 </svg>
                 <p className="max-w-[300px] text-base text-[#4B4F52]">No invitees yet. Add invitees manually or upload an Excel sheet to get started.</p>
-                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#C44200] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
+                <button type="button" onClick={() => setShowChooser(true)} disabled={!event || historical} className="px-6 py-2 rounded-md bg-[#F6F6F6] hover:bg-gray-200 text-base font-medium text-[#1F65FF] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Add Invitees</button>
               </div>
             ) : (
               <div>
@@ -866,7 +866,7 @@ export default function InviteesManagementPage() {
                               aria-label={`Select ${i.name}`}
                               checked={selectedIds.includes(i._id)}
                               onChange={() => setSelectedIds((p) => (p.includes(i._id) ? p.filter((x) => x !== i._id) : [...p, i._id]))}
-                              className="size-4 cursor-pointer check-orange"
+                              className="size-4 cursor-pointer check-green"
                             />
                           </td>
                           <td className="py-3 px-2.5 whitespace-nowrap">{i.name}</td>
@@ -905,7 +905,7 @@ export default function InviteesManagementPage() {
                             <td key={sess._id} className="py-3 px-2.5">
                               {allowedIn(i, sess)
                                 ? <span role="img" aria-label={`Has access to ${sess.name}`} className="text-[#0F7A33] font-bold">✓</span>
-                                : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#C44200] font-bold">✕</span>}
+                                : <span role="img" aria-label={`No access to ${sess.name}`} className="text-[#1F65FF] font-bold">✕</span>}
                             </td>
                           ))}
                           <td className="py-3 px-2.5 text-right sticky right-0 bg-white group-hover:bg-gray-50 shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.12)]">
@@ -1089,7 +1089,7 @@ export default function InviteesManagementPage() {
                     </table>
                     <div className="mt-4 flex flex-wrap items-start gap-4">
                       {hasUnsent(passHistory) && (
-                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
+                        <button type="button" onClick={() => retryPassNotices(false)} disabled={retryingNotices} className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">{retryingNotices ? "Retrying…" : "Retry unsent messages"}</button>
                       )}
                       {hasUnknown(passHistory) && (
                         <div role="group" aria-label="Messages with an unknown outcome" className="rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900 space-y-2 max-w-md">

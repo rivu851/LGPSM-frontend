@@ -11,7 +11,7 @@ import { publicPageMetadata } from "@/utils/seo";
 export const metadata: Metadata = publicPageMetadata({
   title: "Pricing",
   description:
-    "Compare the Standard, Professional and Enterprise plans for LGPSM QR-based digital invitations and event management.",
+    "Compare the Standard, Professional and Enterprise plans for EventQRapp QR-based digital invitations and event management.",
   path: "/pricing",
 });
 

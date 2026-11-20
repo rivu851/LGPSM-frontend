@@ -326,7 +326,7 @@ export default function AddInviteeManualModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 text-sm font-medium bg-[#C65318] hover:bg-[#A83800] text-white rounded-md transition-colors cursor-pointer disabled:opacity-60 min-w-[80px]"
+              className="px-5 py-2 text-sm font-medium bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md transition-colors cursor-pointer disabled:opacity-60 min-w-[80px]"
             >
               {submitting ? (
                 <span className="flex items-center gap-2 justify-center">

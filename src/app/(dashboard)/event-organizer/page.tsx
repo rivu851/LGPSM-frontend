@@ -148,7 +148,7 @@ export default function AllOrganizersPage() {
                   {organizers.filter((o) => o.status !== "Active").length}
                 </span>
               </div>
-              <div className="w-11 h-11 rounded-full bg-orange-50 text-orange-400 flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-400 flex items-center justify-center shrink-0">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -226,7 +226,7 @@ aria-label="Select all"
                         tabIndex={0}
                         role="link"
                         aria-label={`Open ${org.name}`}
-                        className="hover:bg-gray-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FF5B22] transition-colors cursor-pointer"
+                        className="hover:bg-gray-50/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#1F65FF] transition-colors cursor-pointer"
                       >
                         <td className="py-4 px-4">
                           <button
@@ -252,7 +252,7 @@ aria-label={`Select ${org.name}`}
                         <td className="py-4 px-4 font-medium text-gray-900">
                           <Link
                             href={`/event-organizer/${org.id}`}
-                            className="hover:text-[#A83800] transition-colors cursor-pointer"
+                            className="hover:text-[#1A56DB] transition-colors cursor-pointer"
                           >
                             {org.name}
                             <span className="block text-xs font-normal text-gray-500">Account: {org.accountName}</span>
@@ -276,7 +276,7 @@ aria-label={`Select ${org.name}`}
                             </span>
                           )}
                           {org.status === "Deactivate" && (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-orange-100 text-orange-700">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
                               Deactivate
                             </span>
                           )}
