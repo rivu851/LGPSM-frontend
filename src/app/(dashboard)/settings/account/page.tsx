@@ -141,7 +141,7 @@ export default function AccountSettingsPage() {
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
               <p className="text-xl text-black break-all">{email}</p>
               {isOrganizer && user?._id && <p className="text-base text-[#4B4F52]">Organizer ID: <span className="font-medium text-black">{formatOrganizerId(user._id)}</span></p>}
-              <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] rounded-lg text-base font-semibold text-white cursor-pointer">
+              <button type="button" onClick={() => setEditing(true)} className="mt-4 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">
                 Edit Profile
               </button>
             </div>
@@ -177,14 +177,14 @@ export default function AccountSettingsPage() {
                   <label htmlFor="account-password" className="block text-sm font-medium text-[#15191C] mb-2">Password</label>
                   <div className="relative">
                     <input id="account-password" type="password" value={password} readOnly className={`${field} pr-36`} />
-                    <button type="button" onClick={() => setIsPasswordModalOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#C44200] hover:underline cursor-pointer">
+                    <button type="button" onClick={() => setIsPasswordModalOpen(true)} className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-[#1F65FF] hover:underline cursor-pointer">
                       Change password
                     </button>
                   </div>
                 </div>
               </div>
               <div className="flex gap-3 pt-1">
-                <button type="submit" className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] rounded-lg text-base font-semibold text-white cursor-pointer">Save</button>
+                <button type="submit" className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] rounded-lg text-base font-semibold text-white cursor-pointer">Save</button>
                 <button type="button" onClick={() => { setEditing(false); setFullName(user?.fullName || ""); }} className="px-6 py-[11px] bg-white border border-[#E0E0E0] hover:bg-gray-50 rounded-lg text-base font-semibold text-[#15191C] cursor-pointer">Cancel</button>
               </div>
             </div>

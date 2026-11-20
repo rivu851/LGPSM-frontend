@@ -10,7 +10,7 @@ export const stepsData: StepItem[] = [
     step: "Step 1 — Create Event",
     titleLine1: "Simple Steps to Create",
     titleLine2: "Your Digital Invitation",
-    desc: "Start by creating your event inside LGPSM. Add essential details such as the event name, date, time, venue location, and a short description. This information will appear on your invitation and help guests clearly understand the schedule and venue details.",
+    desc: "Start by creating your event inside EventQRapp. Add essential details such as the event name, date, time, venue location, and a short description. This information will appear on your invitation and help guests clearly understand the schedule and venue details.",
   },
   {
     step: "Step 2 — Add Invitees",

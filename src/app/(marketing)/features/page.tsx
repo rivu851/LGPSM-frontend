@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Reveal from "@/components/landing/Reveal";
+import { useReveal } from "@/components/landing/useReveal";
 import TopBanner from "@/components/TopBanner";
 import Navbar from "@/app/navbar/Navbar";
 import Footer from "@/components/Footer";
@@ -75,66 +75,7 @@ const featureBlocks: FeatureBlock[] = [
 
 /* ───────────── component ───────────── */
 export default function FeaturesPage() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const blocksRef = useRef<(HTMLElement | null)[]>([]);
-
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      /* hero title fade-in */
-      if (heroRef.current) {
-        gsap.fromTo(
-          heroRef.current,
-          { opacity: 0, y: 40 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power3.out",
-          }
-        );
-      }
-
-      /* each feature block stagger */
-      blocksRef.current.forEach((block) => {
-        if (!block) return;
-
-        const textCol = block.querySelector(".feat-text");
-        const imgCol = block.querySelector(".feat-img");
-
-        if (textCol) {
-          gsap.fromTo(
-            textCol,
-            { opacity: 0, x: -40 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: 0.9,
-              ease: "power3.out",
-              scrollTrigger: { trigger: block, start: "top 78%" },
-            }
-          );
-        }
-
-        if (imgCol) {
-          gsap.fromTo(
-            imgCol,
-            { opacity: 0, x: 40 },
-            {
-              opacity: 1,
-              x: 0,
-              duration: 0.9,
-              ease: "power3.out",
-              scrollTrigger: { trigger: block, start: "top 78%" },
-            }
-          );
-        }
-      });
-    });
-
-    return () => ctx.revert();
-  }, []);
+  const [heroRef, hero] = useReveal<HTMLDivElement>("up");
 
   return (
     <SmoothScroll>
@@ -147,10 +88,11 @@ export default function FeaturesPage() {
           <section className="pt-12 pb-6 lg:pt-20 lg:pb-10">
             <div
               ref={heroRef}
-              className="max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8 text-center"
+              style={hero.style}
+              className={`${hero.className} max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8 text-center`}
             >
               <h1 className="text-3xl sm:text-4xl lg:text-[48px] font-medium tracking-tight leading-[1.15] font-[family-name:var(--font-space-grotesk)] text-[#0D0D0D]">
-                Why choose LGPSM for your events?
+                Why choose EventQRapp for your events?
               </h1>
             </div>
           </section>
@@ -159,9 +101,6 @@ export default function FeaturesPage() {
           {featureBlocks.map((feat, idx) => (
             <section
               key={idx}
-              ref={(el) => {
-                blocksRef.current[idx] = el;
-              }}
               className="py-12 lg:py-20"
             >
               <div
@@ -172,7 +111,7 @@ export default function FeaturesPage() {
                 } items-center gap-10 lg:gap-16`}
               >
                 {/* ── Text Column ── */}
-                <div className="feat-text w-full lg:w-[45%] space-y-5">
+                <Reveal variant={feat.textFirst ? "left" : "right"} className="feat-text w-full lg:w-[45%] space-y-5">
                   <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-medium tracking-tight leading-tight font-[family-name:var(--font-space-grotesk)] text-[#0D0D0D]">
                     {feat.title}
                   </h2>
@@ -194,7 +133,7 @@ export default function FeaturesPage() {
                           className="flex items-start gap-2.5 text-sm sm:text-[15px] text-gray-500 leading-relaxed font-[family-name:var(--font-space-grotesk)]"
                         >
                           {/* orange bullet dot */}
-                          <span className="mt-[7px] w-2 h-2 rounded-full bg-[#FF5B22] shrink-0" />
+                          <span className="mt-[7px] w-2 h-2 rounded-full bg-[#1F65FF] shrink-0" />
                           <span>
                             <span className="font-semibold text-[#0D0D0D]">
                               {b.label}
@@ -205,10 +144,10 @@ export default function FeaturesPage() {
                       ))}
                     </ul>
                   )}
-                </div>
+                </Reveal>
 
                 {/* ── Image Column ── */}
-                <div className="feat-img w-full lg:w-[55%] flex justify-center">
+                <Reveal variant={feat.textFirst ? "right" : "left"} delay={120} className="feat-img w-full lg:w-[55%] flex justify-center">
                   <div className="relative w-full max-w-[560px]">
                     <Image
                       src={feat.image}
@@ -220,7 +159,7 @@ export default function FeaturesPage() {
                       priority={idx === 0}
                     />
                   </div>
-                </div>
+                </Reveal>
               </div>
             </section>
           ))}

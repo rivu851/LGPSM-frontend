@@ -38,7 +38,7 @@ export default function PricePerHeadCard({
         {/* Left Side Big Rate Display */}
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-5xl font-semibold text-[#C44200]">
+            <span className="text-5xl font-semibold text-[#1F65FF]">
               {rateText}
             </span>
             <span className="text-sm font-medium text-[#4B4F52]">Per head</span>
@@ -64,7 +64,7 @@ export default function PricePerHeadCard({
                 value={sliderVal}
                 aria-label="Price per invitee"
                 onChange={(e) => setSliderVal(parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#FF5B22]"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#1F65FF]"
               />
               <div className="flex justify-between text-xs font-medium text-[#6B6B6B]">
                 <span>{formatMoney(1, { maxFractionDigits: 0 })}</span>
@@ -77,7 +77,7 @@ export default function PricePerHeadCard({
               type="button"
               onClick={handleSave}
               disabled={saving || sliderVal === currentRate}
-              className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#C65318] text-white text-sm font-semibold rounded-md hover:bg-[#A83800] transition-colors shrink-0"
+              className="disabled:opacity-50 disabled:cursor-not-allowed px-5 py-2.5 bg-[#1F65FF] text-white text-sm font-semibold rounded-md hover:bg-[#1A56DB] transition-colors shrink-0"
             >
               {saving ? "Saving..." : "Save"}
             </button>

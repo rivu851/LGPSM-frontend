@@ -150,7 +150,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
   };
 
   const tabBtn = (id: Tab, label: string, count?: number) => (
-    <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer ${tab === id ? "border-[#FF651D] text-[#C44200]" : "border-transparent text-[#4B4F52] hover:text-gray-900"}`}>
+    <button type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)} className={`px-4 py-2 text-sm font-medium border-b-2 cursor-pointer ${tab === id ? "border-[#1F65FF] text-[#1F65FF]" : "border-transparent text-[#4B4F52] hover:text-gray-900"}`}>
       {label}{count !== undefined ? ` (${count})` : ""}
     </button>
   );
@@ -163,7 +163,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
           <h2 id="lists-title" className="text-base font-medium text-gray-900">Invitees Dataset</h2>
           <div className="flex items-center gap-3">
             {onAddInvitees && (
-              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
             )}
             <button type="button" onClick={onClose} aria-label="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
               <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -205,7 +205,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                       <React.Fragment key={s.id}>
                         <tr className="align-top">
                           <td className="py-3 pr-3 max-w-[220px]">
-                            <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#A83800] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
+                            <button type="button" onClick={() => toggleSet(s.id)} aria-expanded={open === s.id} className="text-left text-gray-900 font-medium hover:text-[#1A56DB] cursor-pointer break-words" title={s.name}>{listDisplayName(s.name)}</button>
                             {s.source === "SESSION" && <span className="block text-xs text-[#6B6B6B]">The guests of this session, taken from the other lists (not an upload)</span>}
                             {s.createdAt && <span className="block text-xs text-[#6B6B6B]">{s.source === "MANUAL" ? "Added" : "Uploaded"} {formatDateTime(s.createdAt, "")}{s.uploadedBy ? ` · by ${s.uploadedBy.name}` : ""}</span>}
                             <span className="sm:hidden mt-1 inline-block">{s.locked ? pill("bg-[#EDEDED] text-[#4B4F52]", "Locked") : pill("border border-[#1A9242] text-[#0F7A33] bg-white", "Open")}</span>
@@ -285,7 +285,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
               {aside && !aside.restorable && <p role="note" className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{aside.notRestorableReason}</p>}
               <div className="flex flex-wrap items-center gap-3 mb-3">
                 <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search set-aside guests" aria-label="Search set-aside guests" className="w-64 max-w-full px-3 py-2 bg-[#FAFAFA] border border-[#E0E0E0] rounded-md text-sm focus:outline-none focus:border-black" />
-                <button type="button" disabled={!picked.length || !aside?.restorable} onClick={() => { setOutcome(null); setConfirm(picked); }} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore selected ({picked.length})</button>
+                <button type="button" disabled={!picked.length || !aside?.restorable} onClick={() => { setOutcome(null); setConfirm(picked); }} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore selected ({picked.length})</button>
               </div>
               {asideError && <p role="alert" className="text-sm text-rose-600">{asideError} <button type="button" onClick={() => loadAside(q)} className="underline cursor-pointer">Try again</button></p>}
               {!aside && !asideError && <p className="text-sm text-[#6B6B6B]">Loading…</p>}
@@ -294,7 +294,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                 <table className="w-full text-left text-sm min-w-[760px]">
                   <thead className="text-[#6B6B6B] border-b border-[#D3D3D3]">
                     <tr>
-                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-orange" /></th>
+                      <th className="py-2 pr-2 w-8"><input type="checkbox" aria-label="Select all set-aside guests" disabled={!aside.restorable} checked={picked.length === aside.guests.length} onChange={(e) => setPicked(e.target.checked ? aside.guests.map((g) => g.id) : [])} className="size-4 check-green" /></th>
                       <th className="py-2 pr-3 font-medium">Guest</th>
                       <th className="py-2 pr-3 font-medium">From list</th>
                       <th className="py-2 pr-3 font-medium">Set aside</th>
@@ -305,12 +305,12 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
                   <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                     {aside.guests.map((g) => (
                       <tr key={g.id} className="align-top">
-                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-orange" /></td>
+                        <td className="py-3 pr-2"><input type="checkbox" aria-label={`Select ${g.name}`} disabled={!aside.restorable} checked={picked.includes(g.id)} onChange={() => setPicked((p) => (p.includes(g.id) ? p.filter((x) => x !== g.id) : [...p, g.id]))} className="size-4 check-green" /></td>
                         <td className="py-3 pr-3 text-gray-900">{g.name}<span className="block text-xs text-[#6B6B6B] break-all">{g.email || g.mobile || "—"}</span></td>
                         <td className="py-3 pr-3 max-w-[180px] break-words">{g.fromSet.name}</td>
                         <td className="py-3 pr-3 text-xs whitespace-nowrap">{formatDateTime(g.setAsideAt, "—")}{g.setAsideBy ? <span className="block text-[#6B6B6B]">by {g.setAsideBy.name}</span> : null}</td>
                         <td className="py-3 pr-3 text-xs">{g.reasonText || "Reason not recorded"}{g.replacedBy ? <span className="block text-[#6B6B6B]">by “{listDisplayName(g.replacedBy.name)}”</span> : null}</td>
-                        <td className="py-3 text-right"><button type="button" disabled={!aside.restorable} onClick={() => { setOutcome(null); setConfirm([g.id]); }} aria-label={`Restore ${g.name}`} className="px-3 py-1.5 border border-[#FF651D] text-[#C44200] hover:bg-[#D6F5E1] hover:text-[#0F7A33] rounded-md text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore</button></td>
+                        <td className="py-3 text-right"><button type="button" disabled={!aside.restorable} onClick={() => { setOutcome(null); setConfirm([g.id]); }} aria-label={`Restore ${g.name}`} className="px-3 py-1.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] rounded-md text-xs font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">Restore</button></td>
                       </tr>
                     ))}
                   </tbody>
@@ -329,7 +329,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             <input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} maxLength={200} aria-label="List name" className="w-full px-3.5 py-2.5 text-sm border border-[#E0E0E0] rounded-md bg-[#FAFAFA] focus:outline-none focus:border-black" />
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setRenameList(null)} disabled={renaming} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">Cancel</button>
-              <button type="button" onClick={doRename} disabled={renaming || !renameValue.trim()} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{renaming ? "Saving…" : "Save"}</button>
+              <button type="button" onClick={doRename} disabled={renaming || !renameValue.trim()} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{renaming ? "Saving…" : "Save"}</button>
             </div>
           </div>
         </div>
@@ -343,7 +343,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             <p className="text-sm text-[#4B4F52]">Do you want to delete this set of list? {dropList.total > 0 ? `Its ${dropList.total} ${dropList.total === 1 ? "guest has" : "guests have"} not been contacted and will be deleted with it. ` : "It has no guests left. "}The list is removed from Uploaded lists, and its history (when it was uploaded, by whom, and any set-aside guests) stays under Deleted lists.</p>
             <div className="flex justify-end gap-3">
               <button type="button" onClick={() => setDropList(null)} disabled={dropping} className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">No, keep it</button>
-              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
+              <button type="button" onClick={doDropList} disabled={dropping} className="px-4 py-2 bg-[#D92D20] hover:bg-[#B42318] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{dropping ? "Deleting…" : "Yes, delete"}</button>
             </div>
           </div>
         </div>
@@ -356,7 +356,7 @@ export default function InviteeListsModal({ eventId, initialTab = "lists", onRes
             <h3 id="restore-title" className="pr-8 text-base font-semibold text-gray-900">Restore {confirm.length === 1 ? nameOf(confirm[0]) : `${confirm.length} guests`}?</h3>
             <p className="text-sm text-[#4B4F52]">{confirm.length === 1 ? "This guest returns" : "These guests return"} to the active list as <b>Not sent</b>, in the list {confirm.length === 1 ? "they" : "they each"} came from. No invitation will be sent and no access pass will be created. Anyone whose email or mobile number is already on the active list will not be restored.</p>
             <div className="flex justify-end gap-3">
-              <button type="button" onClick={doRestore} disabled={restoring} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{restoring ? "Restoring…" : "Restore"}</button>
+              <button type="button" onClick={doRestore} disabled={restoring} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium cursor-pointer disabled:opacity-60">{restoring ? "Restoring…" : "Restore"}</button>
             </div>
           </div>
         </div>

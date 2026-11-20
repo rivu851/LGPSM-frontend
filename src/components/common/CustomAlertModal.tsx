@@ -87,7 +87,7 @@ export default function CustomAlertModal({
                 ? "bg-emerald-600 hover:bg-emerald-700"
                 : type === "error"
                 ? "bg-rose-600 hover:bg-rose-700"
-                : "bg-[#C65318] hover:bg-[#A83800]"
+                : "bg-[#1F65FF] hover:bg-[#1A56DB]"
             }`}
           >
             {buttonText}

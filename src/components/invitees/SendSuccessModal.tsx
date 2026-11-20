@@ -23,7 +23,7 @@ export default function SendSuccessModal({ title, message, details = [], onClose
             {details.map((d) => <li key={d}>{d}</li>)}
           </ul>
         )}
-        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-lg cursor-pointer">Okay</button>
+        <button type="button" onClick={onClose} autoFocus className="mt-6 w-full px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-lg cursor-pointer">Okay</button>
       </div>
     </div>
   );

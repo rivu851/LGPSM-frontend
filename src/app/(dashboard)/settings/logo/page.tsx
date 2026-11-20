@@ -111,7 +111,7 @@ export default function LogoSettingsPage() {
             <Icon name="events/alert-grey" width={16} height={14} className="mt-px shrink-0" />
             <span>
               This logo will show up in the footer of your QR Invitation card as organizer logo.{" "}
-              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={() => setPreviewOpen(true)} disabled={!shownUrl} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                 Preview
               </button>
               .
@@ -128,7 +128,7 @@ export default function LogoSettingsPage() {
             onDrop={(e) => { e.preventDefault(); setDragOver(false); selectFile(e.dataTransfer.files?.[0]); }}
             aria-label={shownUrl ? "Replace the organiser logo" : "Upload an organiser logo"}
             className={`relative w-full max-w-[541px] h-[109px] rounded-lg border p-4 flex items-center justify-center cursor-pointer disabled:cursor-wait ${
-              dragOver ? "border-[#FF651D] bg-orange-50/40" : "border-[#D2D2D2] hover:bg-[#EEF3FF]"
+              dragOver ? "border-[#1F65FF] bg-blue-50/40" : "border-[#D2D2D2] hover:bg-[#EEF3FF]"
             }`}
           >
             {uploading ? (
@@ -149,14 +149,14 @@ export default function LogoSettingsPage() {
             <p className="text-[#6B6B6B]">Best Image Dimension: 240x50. Only JPG &amp; PNG allowed. Select or drag a photo to crop and reposition before upload.</p>
             <p className="text-[#6B6B6B]">
               Organizer Logo:{" "}
-              <button type="button" onClick={() => { setStaged(null); }} disabled={!shownKey || saving} className="text-[#C44200] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
+              <button type="button" onClick={() => { setStaged(null); }} disabled={!shownKey || saving} className="text-[#1F65FF] underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60">
                 Reset to default
               </button>
             </p>
           </div>
 
           <div className="pt-3">
-            <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#C65318] hover:bg-[#A83800] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="button" onClick={save} disabled={!dirty || saving || uploading} className="h-[46px] px-6 rounded-lg bg-[#1F65FF] hover:bg-[#1A56DB] text-base font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               {saving ? "Updating…" : "Update"}
             </button>
           </div>

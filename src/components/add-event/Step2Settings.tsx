@@ -189,7 +189,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
                 </div>
                 {custom && (
                   <div>
-                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-[#C44200] ml-0.5">*</span></label>
+                    <label htmlFor={`card-info-title-${slot}`} className="block text-sm font-medium text-gray-900 mb-1.5">Title for the custom detail<span className="text-red-500 ml-0.5">*</span></label>
                     <input
                       id={`card-info-title-${slot}`}
                       type="text"
@@ -298,7 +298,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
               <button
                 type="button"
                 onClick={() => { const id = newClientKey("pref"); focusNext.current = `pref-title-${id}`; setCategories([...categories, { id, title: "", options: [""] }]); }}
-                className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white text-sm font-medium rounded-md cursor-pointer"
+                className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white text-sm font-medium rounded-md cursor-pointer"
               >
                 + Add another question
               </button>
@@ -312,7 +312,7 @@ export default function Step2Settings({ draft, onChange, errors, features, sampl
         <button type="button" onClick={onBack} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Back
         </button>
-        <button type="submit" className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer">
+        <button type="submit" className="px-7 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
       </div>}

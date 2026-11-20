@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { markIntroDone } from "@/components/landing/introScript";
 import { UserData, tokenStorage } from "@/services/tokenStorage";
 import { authService, LoginPayload, RegisterPayload, AuthResponseData } from "@/services/authService";
 import { userService, UpdateProfilePayload } from "@/services/userService";
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (res.success && res.data?.user) {
       setUser(res.data.user);
       rememberPortal(res.data.user.role);
+      markIntroDone(); // signed in: the landing page's opening animation is done with
     }
     return res;
   };
@@ -107,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (res.success && res.data?.user) {
       setUser(res.data.user);
       rememberPortal(res.data.user.role);
+      markIntroDone(); // signed in: the landing page's opening animation is done with
     }
     return res;
   };

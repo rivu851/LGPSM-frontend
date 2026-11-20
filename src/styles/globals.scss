@@ -6,15 +6,15 @@
 :root {
   --background: #ffffff;
   --foreground: #0d0d0d;
-  --brand-orange: #ff5b22;
-  --brand-orange-hover: #e04b16;
+  --brand-primary: #1F65FF;
+  --brand-primary-hover: #1A56DB;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-brand-orange: var(--brand-orange);
-  --color-brand-orange-hover: var(--brand-orange-hover);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-hover: var(--brand-primary-hover);
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
   --font-space-grotesk: var(--font-space-grotesk), sans-serif;
 }
@@ -57,7 +57,7 @@ body {
   background: rgba(156, 163, 175, 0.6);
 
   &:hover {
-    background: #ff5b22;
+    background: #1F65FF;
   }
 }
 
@@ -103,7 +103,7 @@ html {
   background: rgba(156, 163, 175, 0.6);
 
   &:hover {
-    background: #ff5b22;
+    background: #1F65FF;
   }
 }
 
@@ -126,9 +126,9 @@ html {
 .auth-card-shimmer {
   background: linear-gradient(
     105deg,
-    rgba(255, 101,  29, 0.55) 25%,
+    rgba(31, 101, 255, 0.55) 25%,
     rgba(255, 175,  90, 0.80) 50%,
-    rgba(255, 101,  29, 0.55) 75%
+    rgba(31, 101, 255, 0.55) 75%
   );
   background-size: 200% 100%;
   animation: authShimmer 1.6s ease-in-out infinite;
@@ -396,8 +396,8 @@ html {
 }
 
 // Orange checkbox with a white tick. A native checkbox takes its tick colour from the browser, which picks black on orange, so this
-// one is drawn here: orange box, white tick (used by every orange checkbox in the app).
-input[type="checkbox"].check-orange {
+// one is drawn here: orange box, white tick (used by every checkbox in the app).
+input[type="checkbox"].check-green {
   appearance: none;
   -webkit-appearance: none;
   display: inline-grid;
@@ -413,23 +413,60 @@ input[type="checkbox"].check-orange {
   cursor: pointer;
   transition: background-color 0.12s ease, border-color 0.12s ease;
 
-  &:not(:disabled):hover { border-color: #c44200; }
+  &:not(:disabled):hover { border-color: #16A34A; }
   &:checked {
-    background-color: #c65318; // the brand orange, dark enough for the white tick to read (4.5:1)
-    border-color: #c65318;
+    background-color: #15803D; // green, dark enough for the white tick to read (5:1)
+    border-color: #15803D;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
     background-size: 82% 82%;
   }
-  &:focus-visible { outline: 2px solid #c44200; outline-offset: 2px; }
+  &:focus-visible { outline: 2px solid #1F65FF; outline-offset: 2px; }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 // Keyboard focus: every link and button shows where the focus is, even when its own styles do not (the account menu, icon buttons).
 // :where() gives this no weight, so a control's own focus style still wins; the white halo keeps it visible on the dark sidebar too.
 :where(a, button, [role="button"], [role="checkbox"], summary):focus-visible {
-  outline: 2px solid #c44200;
+  outline: 2px solid #1F65FF;
   outline-offset: 2px;
   box-shadow: 0 0 0 4px #ffffff;
+}
+
+// ── Landing page motion ──────────────────────────────────────────────────────────────────────────────────────────────────
+// Scroll reveal (components/landing/Reveal.tsx): a short fade with a small shift, once, as a section comes into view.
+// Cards "pop" (a touch of scale), side-by-side blocks slide in from their own side. Nothing moves for people who ask for less motion.
+.reveal {
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-up { transform: translateY(18px); }
+.reveal-left { transform: translateX(-28px); }
+.reveal-right { transform: translateX(28px); }
+.reveal-pop { transform: translateY(10px) scale(0.965); }
+.reveal.is-in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+// Opening animation of the landing page (components/landing/LandingIntro.tsx): hidden unless the page script decided to play it
+.intro-overlay { visibility: hidden; }
+html[data-intro="play"] { overflow: hidden; }
+html[data-intro="play"] .intro-overlay { visibility: visible; }
+
+// First screen of the landing page (components/HeroSection.tsx): each piece eases in one after another as soon as the page is uncovered, i.e.
+// right after the opening animation, or at once when that is not playing. Held invisible while the opening is still running.
+.hero-anim { opacity: 0; transform: translateY(18px); }
+html:not([data-intro="play"]) .hero-anim { animation: hero-in 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) both; animation-delay: var(--d, 0ms); }
+.hero-anim-stage { transform: translateY(34px) scale(0.985); }
+html:not([data-intro="play"]) .hero-anim-stage { animation-name: hero-stage-in; animation-duration: 0.95s; }
+.hero-anim-nav { transform: translateY(-10px); }
+html:not([data-intro="play"]) .hero-anim-nav { animation-name: hero-nav-in; animation-duration: 0.6s; }
+@keyframes hero-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes hero-stage-in { from { opacity: 0; transform: translateY(34px) scale(0.985); } to { opacity: 1; transform: none; } }
+@keyframes hero-nav-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero-anim, .hero-anim-stage, .hero-anim-nav { opacity: 1; transform: none; animation: none !important; }
 }

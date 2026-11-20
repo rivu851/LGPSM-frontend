@@ -34,7 +34,7 @@ export default function SessionScopePicker({
     // every session ticked is the same thing as "All Sessions"
     onChange(next.length === allIds.length ? null : next);
   };
-  const box = "check-orange";
+  const box = "check-green";
 
   return (
     <fieldset className="space-y-1.5">

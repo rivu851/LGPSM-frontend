@@ -45,7 +45,7 @@ export const GoogleIcon = () => (
  * which the server verifies. Until a client id is configured (NEXT_PUBLIC_GOOGLE_CLIENT_ID) the button is drawn the same way and says
  * that Google sign-in is not set up yet when it is pressed.
  */
-export default function GoogleAuthButton({ mode, onCredential, disabled = false, orBelow = false }: { mode: "signin" | "signup"; onCredential: (credential: string) => void | Promise<void>; disabled?: boolean; /** the "or" line goes under the button instead of above it (the button sits above a form) */ orBelow?: boolean }) {
+export default function GoogleAuthButton({ mode, onCredential, disabled = false, orBelow = false, tight = false }: { mode: "signin" | "signup"; onCredential: (credential: string) => void | Promise<void>; disabled?: boolean; /** the "or" line goes under the button instead of above it (the button sits above a form) */ orBelow?: boolean; /** less space around it, for a page that has to fit one screen */ tight?: boolean }) {
   const slot = useRef<HTMLDivElement>(null);
   const latest = useRef(onCredential);
   useEffect(() => { latest.current = onCredential; });
@@ -86,9 +86,9 @@ export default function GoogleAuthButton({ mode, onCredential, disabled = false,
     </div>
   );
   return (
-    <div className={orBelow ? "mb-6" : "my-5"}>
+    <div className={orBelow ? (tight ? "mb-4" : "mb-6") : "my-5"}>
       {!orBelow && or}
-      <div className={`${orBelow ? "mb-4" : "mt-4"} flex justify-center ${disabled ? "pointer-events-none opacity-60" : ""}`}>
+      <div className={`${orBelow ? (tight ? "mb-3" : "mb-4") : "mt-4"} flex justify-center ${disabled ? "pointer-events-none opacity-60" : ""}`}>
         {CLIENT_ID ? (
           <div className="min-h-[44px] flex flex-col items-center justify-center">
             {/* Google's script owns everything inside this empty div: React never renders children into it, so the two cannot fight over its nodes */}

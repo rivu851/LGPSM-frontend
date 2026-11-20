@@ -63,7 +63,7 @@ export default function SuccessModal({ isOpen, onClose }: SuccessModalProps) {
         {/* Action Button */}
         <button
           onClick={handleNavigate}
-          className="w-full py-3 px-6 bg-[#C65318] hover:bg-[#A83800] active:bg-[#C93B0A] text-white font-bold text-xs sm:text-sm rounded-lg transition-all cursor-pointer"
+          className="w-full py-3 px-6 bg-[#1F65FF] hover:bg-[#1A56DB] active:bg-[#1647B8] text-white font-bold text-xs sm:text-sm rounded-lg transition-all cursor-pointer"
         >
           Go to your Invitees Management
         </button>

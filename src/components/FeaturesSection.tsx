@@ -23,7 +23,7 @@ const features: Feature[] = [
         <path d="M10 26v3a2 2 0 002 2h3" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" />
         <path d="M30 26v3a2 2 0 01-2 2h-3" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" />
         {/* Orange Horizontal Scanner Beam Line */}
-        <line x1="12" y1="20" x2="28" y2="20" stroke="#FF5B22" strokeWidth="3" strokeLinecap="round" />
+        <line x1="12" y1="20" x2="28" y2="20" stroke="#1F65FF" strokeWidth="3" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -37,7 +37,7 @@ const features: Feature[] = [
         <path d="M7 14l13 9 13-9" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         <rect x="7" y="14" width="26" height="17" rx="3" stroke="#1C2228" strokeWidth="2.5" />
         {/* Heart with Orange Outline inside top flap */}
-        <path d="M20 18.5c-1.3-1.8-3.8-1.8-5.1 0-1.2 1.6-.2 3.6 1.2 4.8l3.9 3.2 3.9-3.2c1.4-1.2 2.4-3.2 1.2-4.8-1.3-1.8-3.8-1.8-5.1 0z" stroke="#FF5B22" strokeWidth="2" fill="none" />
+        <path d="M20 18.5c-1.3-1.8-3.8-1.8-5.1 0-1.2 1.6-.2 3.6 1.2 4.8l3.9 3.2 3.9-3.2c1.4-1.2 2.4-3.2 1.2-4.8-1.3-1.8-3.8-1.8-5.1 0z" stroke="#1F65FF" strokeWidth="2" fill="none" />
       </svg>
     ),
   },
@@ -51,8 +51,8 @@ const features: Feature[] = [
         <path d="M26 9l5 5L17 28h-5v-5L26 9z" stroke="#1C2228" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M23 12l5 5" stroke="#1C2228" strokeWidth="2" />
         {/* Gear wheel on left attached to pencil with orange outline */}
-        <path d="M14 11a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" stroke="#FF5B22" strokeWidth="2.2" fill="none" />
-        <path d="M14 8.5v2.5M14 20v2.5M8.5 15.5h2.5M20 15.5h2.5M10.1 11.6l1.8 1.8M16.1 17.6l1.8 1.8M10.1 19.4l1.8-1.8M16.1 13.4l1.8-1.8" stroke="#FF5B22" strokeWidth="2" strokeLinecap="round" />
+        <path d="M14 11a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" stroke="#1F65FF" strokeWidth="2.2" fill="none" />
+        <path d="M14 8.5v2.5M14 20v2.5M8.5 15.5h2.5M20 15.5h2.5M10.1 11.6l1.8 1.8M16.1 17.6l1.8 1.8M10.1 19.4l1.8-1.8M16.1 13.4l1.8-1.8" stroke="#1F65FF" strokeWidth="2" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -63,7 +63,7 @@ const features: Feature[] = [
     icon: (
       <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none">
         {/* Left head (orange circle) */}
-        <circle cx="15" cy="14" r="4.5" stroke="#FF5B22" strokeWidth="2.5" fill="none" />
+        <circle cx="15" cy="14" r="4.5" stroke="#1F65FF" strokeWidth="2.5" fill="none" />
         <path d="M7 30v-1.5a5.5 5.5 0 015.5-5.5h5a5.5 5.5 0 015.5 5.5V30" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" />
         {/* Right head (dark circle) */}
         <circle cx="26" cy="16" r="4" stroke="#1C2228" strokeWidth="2.5" fill="none" />
@@ -82,7 +82,7 @@ const features: Feature[] = [
         <line x1="20" y1="13" x2="27" y2="27" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" />
         <line x1="13" y1="27" x2="27" y2="27" stroke="#1C2228" strokeWidth="2.5" strokeLinecap="round" />
         {/* Top Orange Node Circle */}
-        <circle cx="20" cy="12" r="3.5" stroke="#FF5B22" strokeWidth="2.5" fill="none" />
+        <circle cx="20" cy="12" r="3.5" stroke="#1F65FF" strokeWidth="2.5" fill="none" />
         {/* Lower Left Dark Node Circle */}
         <circle cx="12" cy="27" r="3.5" stroke="#1C2228" strokeWidth="2.5" fill="none" />
         {/* Lower Right Dark Node Circle */}
@@ -99,7 +99,7 @@ const features: Feature[] = [
         {/* Top Left Square */}
         <rect x="9" y="9" width="9" height="9" rx="2.5" stroke="#1C2228" strokeWidth="2.5" />
         {/* Top Right Orange Square */}
-        <rect x="22" y="9" width="9" height="9" rx="2.5" stroke="#FF5B22" strokeWidth="2.5" fill="none" />
+        <rect x="22" y="9" width="9" height="9" rx="2.5" stroke="#1F65FF" strokeWidth="2.5" fill="none" />
         {/* Bottom Left Square */}
         <rect x="9" y="22" width="9" height="9" rx="2.5" stroke="#1C2228" strokeWidth="2.5" />
         {/* Bottom Right Square */}
@@ -183,12 +183,12 @@ export default function FeaturesSection() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
           {/* FEATURES badge */}
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#c65318]">
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-[#1F65FF]">
             <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
-              <rect x="2" y="2" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="9" y="2" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="2" y="9" width="5" height="5" rx="1" fill="#c65318" />
-              <rect x="9" y="9" width="5" height="5" rx="1" fill="#c65318" />
+              <rect x="2" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="9" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="2" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
+              <rect x="9" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
             </svg>
             <span>FEATURES</span>
           </div>
@@ -202,7 +202,7 @@ export default function FeaturesSection() {
 
           {/* Description */}
           <p ref={descRef} className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-normal leading-relaxed font-[family-name:var(--font-space-grotesk)]">
-            LGPSM provides all the essential tools you need to create, send, and manage digital invitations effortlessly. From designing beautiful invitations and generating QR codes to organizing guest lists and tracking RSVPs, everything is available in one simple dashboard.
+            EventQRapp provides all the essential tools you need to create, send, and manage digital invitations effortlessly. From designing beautiful invitations and generating QR codes to organizing guest lists and tracking RSVPs, everything is available in one simple dashboard.
           </p>
         </div>
 
@@ -219,7 +219,7 @@ export default function FeaturesSection() {
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#A83800] transition-colors">
+              <h3 className="text-lg font-bold text-[#0D0D0D] tracking-tight font-[family-name:var(--font-space-grotesk)] group-hover:text-[#1A56DB] transition-colors">
                 {feature.title}
               </h3>
 

@@ -108,8 +108,8 @@ export default function AddEventOrganizerPage() {
                 <span className="block text-sm font-medium text-[#15191C]">Organizer type<span className="text-red-500">*</span></span>
                 <div className="flex gap-2">
                   {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
-                    <label key={value} className={`flex-1 flex items-center gap-2 h-[47px] px-3 rounded-md border text-sm cursor-pointer ${formData.organizationType === value ? "border-[#FF651D] bg-[#FFF3EC] font-semibold" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
-                      <input type="radio" name="organizer-type" checked={formData.organizationType === value} onChange={() => setFormData({ ...formData, organizationType: value })} className="accent-[#FF651D]" />
+                    <label key={value} className={`flex-1 flex items-center gap-2 h-[47px] px-3 rounded-md border text-sm cursor-pointer ${formData.organizationType === value ? "border-[#1F65FF] bg-[#EAF1FF] font-semibold" : "border-[#E0E0E0] bg-[#FAFAFA]"}`}>
+                      <input type="radio" name="organizer-type" checked={formData.organizationType === value} onChange={() => setFormData({ ...formData, organizationType: value })} className="accent-[#1F65FF]" />
                       {label}
                     </label>
                   ))}
@@ -235,9 +235,9 @@ export default function AddEventOrganizerPage() {
                     onDrop={handleDrop}
                     className="group relative rounded-md p-6 bg-white hover:bg-gray-50 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-[110px] select-none"
                   >
-                    <DashedBorder width={1} className="text-gray-300 group-hover:text-[#A83800]" />
+                    <DashedBorder width={1} className="text-gray-300 group-hover:text-[#1A56DB]" />
                     <span className="text-[11px] text-gray-500 max-w-[200px] leading-tight">
-                      Drag and drop a photo here or <span className="text-[#C44200] font-semibold underline">click to open file</span>
+                      Drag and drop a photo here or <span className="text-[#1F65FF] font-semibold underline">click to open file</span>
                     </span>
                     <span className="text-[10px] text-gray-500 mt-1">JPG, PNG or WEBP, up to 5 MB</span>
                   </div>
@@ -250,7 +250,7 @@ export default function AddEventOrganizerPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Adding...' : 'Add Organizer'}
               </button>

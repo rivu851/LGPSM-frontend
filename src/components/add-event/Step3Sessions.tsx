@@ -160,12 +160,12 @@ export default function Step3Sessions({
             <div>
               <div className="flex justify-between items-center mb-1.5 gap-2">
                 <label htmlFor={`session-name-${sess.key}`} className="text-sm font-medium text-gray-900">
-                  Session Name<span className="text-[#C44200] ml-0.5">*</span>
+                  Session Name<span className="text-red-500 ml-0.5">*</span>
                   {isPrimary && <span className="ml-2 text-xs font-normal text-[#6B6B6B]">Primary session</span>}
                 </label>
                 <InfoTip label="About the session name" text="Guests and system users see this name for the session, for example Entry or Lunch." className="ml-auto" />
                 {!sess.backendId && sessions.length > 1 && (
-                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#C44200] hover:underline cursor-pointer">
+                  <button type="button" onClick={() => handleRemoveSession(sess.key)} className="text-sm font-medium text-[#D92D20] hover:underline cursor-pointer">
                     Remove
                   </button>
                 )}
@@ -194,7 +194,7 @@ export default function Step3Sessions({
                   <span className={`${labelClass} flex items-center justify-between gap-2`}>
                     <span>
                       {field === "start" ? "Start Time" : "End Time"}
-                      <span className="text-[#C44200] ml-0.5">*</span>
+                      <span className="text-red-500 ml-0.5">*</span>
                     </span>
                     <InfoTip
                       label={`About the session ${field} time`}
@@ -216,7 +216,7 @@ export default function Step3Sessions({
               ))}
               <div className="min-w-0">
                 <span className={`${labelClass} flex items-center justify-between gap-2`}>
-                  <span>Access Control<span className="text-[#C44200] ml-0.5">*</span></span>
+                  <span>Access Control<span className="text-red-500 ml-0.5">*</span></span>
                   <InfoTip label="About access control" text="If the invitees are allowed access to the Session any number of times, set No Restrictions." />
                 </span>
                 <CustomDropdown
@@ -267,7 +267,7 @@ export default function Step3Sessions({
               <div>
                 {(() => {
                   const mustAdd = !skipInvitees && existingLists.length === 0 && !Object.values(sessionFiles).some(Boolean) && isPrimary;
-                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-[#C44200]">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
+                  return <span className={labelClass}>Add Invitees List {mustAdd ? <span className="text-red-500">*</span> : <span className="font-normal text-[#828282]">(optional)</span>}</span>;
                 })()}
                 <div className={`flex items-center bg-[#FAFAFA] border rounded-md p-1 min-w-0 ${fileError[sess.key] || (errors[`session:${sess.key}:invitees`] && !fileInfo) ? "border-rose-400" : "border-[#E0E0E0]"}`}>
                   <label className="px-4 py-2 bg-white border border-[#E0E0E0] hover:bg-gray-50 text-gray-800 text-sm font-medium rounded cursor-pointer shrink-0">
@@ -288,7 +288,7 @@ export default function Step3Sessions({
                       <button
                         type="button"
                         onClick={() => onOpenInviteesPreview(sess.key)}
-                        className="flex items-center gap-2 text-sm text-gray-800 hover:text-[#A83800] cursor-pointer min-w-0"
+                        className="flex items-center gap-2 text-sm text-gray-800 hover:text-[#1A56DB] cursor-pointer min-w-0"
                         title="Open the invitees list preview"
                       >
                         <ExcelLogo />
@@ -330,7 +330,7 @@ export default function Step3Sessions({
                 <div className="flex flex-wrap justify-between items-center gap-2 mt-2">
                   <p className="text-xs text-[#6B6B6B]">Imported when you save. Files are not kept in the saved draft.</p>
                   <span className="inline-flex items-center gap-2">
-                    <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#A83800] cursor-pointer">
+                    <button type="button" onClick={() => { void downloadInviteeTemplate(templateColumns).then((ok) => { if (ok) onSampleDownloaded?.(); }); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 underline hover:text-[#1A56DB] cursor-pointer">
                       <ExcelLogo /> Download Excel Sample
                     </button>
                     <InfoTip label="About the Excel sample" text="Download the sample template from the link and enter your invitees in the same format. There are three main columns - Name, Email and Mobile. Name and Mobile are mandatory fields. All numbers must be with country code, for e.g. +91xxxxxxxxxx, without any space in between." />
@@ -345,7 +345,7 @@ export default function Step3Sessions({
       <button
         type="button"
         onClick={handleAddSession}
-        className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#D6F5E1] hover:text-[#0F7A33] text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
+        className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] text-sm font-medium rounded-md inline-flex items-center gap-1.5 cursor-pointer bg-white"
       >
         <span aria-hidden>+</span> Add Sessions
       </button>
@@ -363,7 +363,7 @@ export default function Step3Sessions({
           <button
             type="submit"
             disabled={submitting}
-            className="px-7 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-7 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {submitting ? "Saving..." : submitLabel}
           </button>

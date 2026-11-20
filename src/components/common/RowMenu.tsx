@@ -72,7 +72,7 @@ export default function RowMenu({ label, items }: { label: string; items: RowMen
               type="button"
               role="menuitem"
               onClick={() => { setPos(null); item.onClick(); }}
-              className="flex items-center gap-2 hover:text-[#FF651D] transition-colors w-full text-left py-1 cursor-pointer"
+              className="flex items-center gap-2 hover:text-[#1F65FF] transition-colors w-full text-left py-1 cursor-pointer"
             >
               {item.icon}
               <span>{item.label}</span>

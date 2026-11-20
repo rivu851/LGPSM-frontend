@@ -68,13 +68,13 @@ export default function CompleteProfileModal() {
             <span aria-live="polite">{live.percent}%</span>
           </div>
           <div className="h-2 rounded-full bg-[#EDEDED] overflow-hidden" role="progressbar" aria-valuenow={live.percent} aria-valuemin={0} aria-valuemax={100} aria-label="Profile completion">
-            <div className={`h-full rounded-full transition-all ${live.complete ? "bg-[#1A9242]" : "bg-[#C65318]"}`} style={{ width: `${live.percent}%` }} />
+            <div className={`h-full rounded-full transition-all ${live.complete ? "bg-[#1A9242]" : "bg-[#1F65FF]"}`} style={{ width: `${live.percent}%` }} />
           </div>
           {live.missing.length > 0 && <p className="mt-1.5 text-xs text-[#6B6B6B]">Still needed: {live.missing.map((m) => m.label.toLowerCase()).join(", ")}.</p>}
         </div>
 
         <fieldset>
-          <legend className="block text-sm font-medium text-[#15191C] mb-2">You are signing up as<span className="text-[#C44200] ml-0.5">*</span></legend>
+          <legend className="block text-sm font-medium text-[#15191C] mb-2">You are signing up as<span className="text-red-500 ml-0.5">*</span></legend>
           <div className="flex gap-3">
             {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
               <label key={value} className={`flex-1 flex items-center gap-2 h-[47px] px-3 rounded-md border text-sm cursor-pointer ${current.type === value ? "border-black bg-[#F4F5F8] font-semibold" : bad("organizationType") ? "!border-rose-500" : "border-[#E0E0E0]"}`}>
@@ -86,19 +86,19 @@ export default function CompleteProfileModal() {
         </fieldset>
 
         <div>
-          <label htmlFor="cp-name" className="block text-sm font-medium text-[#15191C] mb-1.5">{current.type === "ORGANIZATION" ? "Contact person name" : "Full name"}<span className="text-[#C44200] ml-0.5">*</span></label>
+          <label htmlFor="cp-name" className="block text-sm font-medium text-[#15191C] mb-1.5">{current.type === "ORGANIZATION" ? "Contact person name" : "Full name"}<span className="text-red-500 ml-0.5">*</span></label>
           <input id="cp-name" value={current.fullName} onChange={(e) => setName(e.target.value)} maxLength={120} autoComplete="name" className={`${field} ${bad("fullName") ? "!border-rose-500" : ""}`} />
         </div>
 
         {current.type === "ORGANIZATION" && (
           <div>
-            <label htmlFor="cp-org" className="block text-sm font-medium text-[#15191C] mb-1.5">Organization name<span className="text-[#C44200] ml-0.5">*</span></label>
+            <label htmlFor="cp-org" className="block text-sm font-medium text-[#15191C] mb-1.5">Organization name<span className="text-red-500 ml-0.5">*</span></label>
             <input id="cp-org" value={current.orgName} onChange={(e) => setOrgName(e.target.value)} maxLength={150} className={`${field} ${bad("organizationName") ? "!border-rose-500" : ""}`} />
           </div>
         )}
 
         <div>
-          <label htmlFor="cp-phone" className="block text-sm font-medium text-[#15191C] mb-1.5">Phone number<span className="text-[#C44200] ml-0.5">*</span></label>
+          <label htmlFor="cp-phone" className="block text-sm font-medium text-[#15191C] mb-1.5">Phone number<span className="text-red-500 ml-0.5">*</span></label>
           <PhoneInput id="cp-phone" value={current.phone} onValueChange={setPhone} placeholder="10-digit phone number" className={`${field} ${bad("phone") ? "!border-rose-500" : ""}`} />
         </div>
 
@@ -109,7 +109,7 @@ export default function CompleteProfileModal() {
 
         <div className="flex items-center justify-between gap-3 pt-1">
           <button type="button" onClick={() => void logout()} className="text-sm text-[#4B4F52] underline hover:text-black cursor-pointer">Sign out</button>
-          <button type="submit" disabled={saving} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md cursor-pointer disabled:opacity-60">
+          <button type="submit" disabled={saving} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer disabled:opacity-60">
             {saving ? "Saving…" : "Save and continue"}
           </button>
         </div>

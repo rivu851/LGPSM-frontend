@@ -80,7 +80,7 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
     if (!marker.current) {
       const icon = L.divIcon({
         className: "",
-        html: '<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.2 0 0 7 0 15.6 0 27 16 40 16 40s16-13 16-24.4C32 7 24.8 0 16 0z" fill="#FF651D"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>',
+        html: '<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg"><path d="M16 0C7.2 0 0 7 0 15.6 0 27 16 40 16 40s16-13 16-24.4C32 7 24.8 0 16 0z" fill="#1F65FF"/><circle cx="16" cy="15" r="6" fill="#fff"/></svg>',
         iconSize: [32, 40], iconAnchor: [16, 40],
       });
       marker.current = L.marker([point.lat, point.lng], { icon, draggable: true }).addTo(m);
@@ -133,7 +133,7 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
                     role="option"
                     aria-selected={chosen === i}
                     onClick={() => choose(i)}
-                    className={`w-full text-left text-sm px-3 py-2 rounded-md border cursor-pointer ${chosen === i ? "border-[#FF651D] bg-[#FFF3EC] text-[#15191C]" : "border-[#E0E0E0] hover:bg-[#EEF3FF] text-[#4B4F52]"}`}
+                    className={`w-full text-left text-sm px-3 py-2 rounded-md border cursor-pointer ${chosen === i ? "border-[#1F65FF] bg-[#EAF1FF] text-[#15191C]" : "border-[#E0E0E0] hover:bg-[#EEF3FF] text-[#4B4F52]"}`}
                   >
                     {m.label}
                   </button>
@@ -158,7 +158,7 @@ export default function VerifyLocationModal({ address, pin, onConfirm, onClose }
             type="button"
             disabled={!point}
             onClick={() => point && onConfirm(point, useMatchedAddress && chosen !== null ? matches[chosen].label : undefined)}
-            className="px-6 py-[11px] text-base font-semibold text-white bg-[#C65318] rounded-lg hover:bg-[#A83800] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="px-6 py-[11px] text-base font-semibold text-white bg-[#1F65FF] rounded-lg hover:bg-[#1A56DB] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Confirm location
           </button>

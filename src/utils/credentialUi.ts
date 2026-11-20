@@ -32,7 +32,7 @@ export function validatePassForm(action: "REVOKE" | "REPLACE", form: { category:
 
 export const STATUS_PILL: Record<CredentialStatus, { label: string; cls: string }> = {
   ACTIVE: { label: "Active", cls: "bg-[#C0FFD5] text-[#1A9242]" },
-  REVOKED: { label: "Revoked", cls: "bg-[#FFE3D7] text-[#FF651D]" },
+  REVOKED: { label: "Revoked", cls: "bg-[#FDE2E1] text-[#B42318]" },
   EXPIRED: { label: "Expired", cls: "bg-[#EDEDED] text-[#6E6E6E]" },
   NOT_ISSUED: { label: "Not issued", cls: "bg-[#F4F4F4] text-[#828282]" },
 };

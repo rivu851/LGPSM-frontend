@@ -128,14 +128,14 @@ export default function ImageUploadField({
           className={`group relative w-full rounded-md p-6 text-center text-sm transition-colors cursor-pointer disabled:cursor-not-allowed ${
             fill ? "flex flex-1 flex-col items-center justify-center" : ""
           } ${emptyClassName} ${
-            dragOver ? "bg-orange-50/50" : "bg-[#FAFAFA]"
+            dragOver ? "bg-blue-50/50" : "bg-[#FAFAFA]"
           }`}
         >
-          <DashedBorder className={dragOver ? "text-[#FF651D]" : optional ? "text-[#D3D3D3] group-focus:text-[#16A34A]" : "text-[#D3D3D3] group-hover:text-[#FF651D]"} />
+          <DashedBorder className={dragOver ? "text-[#1F65FF]" : optional ? "text-[#D3D3D3] group-focus:text-[#16A34A]" : "text-[#D3D3D3] group-hover:text-[#1F65FF]"} />
           <span className="text-[#4B4F52]">
             {uploading ? "Uploading..." : (
               <>
-                Drag and drop an image here or <span className="text-[#E5520F] font-medium underline">click to open file</span>
+                Drag and drop an image here or <span className="text-[#1F65FF] font-medium underline">click to open file</span>
               </>
             )}
           </span>

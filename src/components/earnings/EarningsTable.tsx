@@ -55,7 +55,7 @@ export default function EarningsTable({
           <button
             type="button"
             onClick={onExportCSV}
-            className="font-bold text-[#C44200] hover:underline cursor-pointer"
+            className="font-bold text-[#1F65FF] hover:underline cursor-pointer"
           >
             Export CSV
           </button>
@@ -150,7 +150,7 @@ export default function EarningsTable({
             id="selectAllEarnings"
             checked={selectedIds.length === records.length && records.length > 0}
             onChange={toggleSelectAll}
-            className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
           />
           <label htmlFor="selectAllEarnings" className="cursor-pointer">
             Select All
@@ -162,9 +162,9 @@ export default function EarningsTable({
             type="button"
             onClick={onDeleteSelected}
             title="Delete Selected Records"
-            className="p-1.5 text-[#C44200] hover:bg-[#EEF3FF] rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-[#D92D20] hover:bg-[#FEF3F2] rounded-md transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5 text-[#C44200]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[#D92D20]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
           </button>
@@ -199,7 +199,7 @@ export default function EarningsTable({
                     checked={selectedIds.includes(r.id)}
                     onChange={() => toggleSelectRow(r.id)}
                     aria-label="Select this row"
-                    className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
+                    className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-green"
                   />
                 </td>
                 <td className="py-4 px-4 font-semibold text-gray-900">

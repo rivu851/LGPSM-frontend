@@ -133,7 +133,7 @@ export default function ConfirmModal({
             type="button"
             onClick={() => resolve(true)}
             className={`w-full py-2.5 font-bold text-xs rounded-md text-white transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 ${
-              danger ? "bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600" : "bg-[#C65318] hover:bg-[#A83800] focus-visible:outline-[#FF5B22]"
+              danger ? "bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600" : "bg-[#1F65FF] hover:bg-[#1A56DB] focus-visible:outline-[#1F65FF]"
             }`}
           >
             {confirmText}

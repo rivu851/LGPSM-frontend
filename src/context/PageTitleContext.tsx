@@ -27,11 +27,11 @@ const PageTitleContext = createContext<PageTitleContextType>({
   getEventTitle: () => null,
 });
 
-const BRAND_SUFFIX = " · LGPSM";
+const BRAND_SUFFIX = " · EventQRapp";
 
 function formatFullTitle(raw: string): string {
-  if (!raw) return "LGPSM · Digital Invitations & Event Management";
-  if (raw.includes("LGPSM")) return raw;
+  if (!raw) return "EventQRapp · QR Invitations, RSVP & Event Entry";
+  if (raw.includes("EventQRapp")) return raw;
   return `${raw}${BRAND_SUFFIX}`;
 }
 
@@ -79,7 +79,7 @@ function resolveRouteTitle(
   searchParams: URLSearchParams,
   eventTitle: string | null
 ): string {
-  if (pathname === "/") return "LGPSM · Digital Invitations & Event Management";
+  if (pathname === "/") return "EventQRapp · QR Invitations, RSVP & Event Entry";
   if (pathname === "/dashboard") return "Dashboard";
   if (pathname === "/events") return "Events";
   if (pathname === "/events/add") return "Create Event";
@@ -154,7 +154,7 @@ function resolveRouteTitle(
     return "Event Invitation";
   }
 
-  return "LGPSM";
+  return "EventQRapp";
 }
 
 function TitleWatcher({
