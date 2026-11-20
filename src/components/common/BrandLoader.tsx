@@ -11,7 +11,7 @@ export default function BrandLoader({ label = "Loading" }: { label?: string }) {
           <circle cx="44" cy="44" r="40" stroke="#D6E4FF" strokeWidth="4" />
           <path d="M44 4a40 40 0 0 1 40 40" stroke="#1F65FF" strokeWidth="4" strokeLinecap="round" />
         </svg>
-        <Image src="/favicon.svg" alt="" width={40} height={40} priority className="brand-loader-mark absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+        <Image src="/images/branding/eventqrapp-mark.svg" alt="" width={40} height={40} priority className="brand-loader-mark absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
       </div>
       <span className="sr-only">{label}</span>
     </div>
