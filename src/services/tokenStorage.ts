@@ -9,7 +9,7 @@ export interface UserData {
   isActive?: boolean;
   phone?: string;
   avatarUrl?: string | null;
-  profile?: { organizationName?: string; [key: string]: unknown };
+  profile?: { organizationName?: string; avatarKey?: string; avatarUrl?: string | null; [key: string]: unknown };
 }
 
 const ACCESS_TOKEN_KEY = "lgpsm_access_token";

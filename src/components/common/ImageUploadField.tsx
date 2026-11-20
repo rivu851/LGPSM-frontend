@@ -51,7 +51,8 @@ export default function ImageUploadField({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const preview = resolveImageUrl(value);
+  const [uploadedPreview, setUploadedPreview] = useState<{ key: string; url: string } | null>(null);
+  const preview = uploadedPreview?.key === value ? uploadedPreview.url : resolveImageUrl(value);
 
   // a picked picture goes to the crop window first when this field crops; an animated or vector picture is uploaded as it is
   const pick = (file: File | undefined) => {
@@ -69,7 +70,10 @@ export default function ImageUploadField({
     setUploading(false);
     onUploadingChange?.(false);
     if (inputRef.current) inputRef.current.value = "";
-    if (res.success && res.data?.key) onChange(res.data.key);
+    if (res.success && res.data?.key) {
+      setUploadedPreview(res.data.publicUrl ? { key: res.data.key, url: res.data.publicUrl } : null);
+      onChange(res.data.key);
+    }
     else setError(res.message || "Upload failed. Please try again.");
   };
 
@@ -99,7 +103,7 @@ export default function ImageUploadField({
             <button
               type="button"
               disabled={disabled || uploading}
-              onClick={() => onChange(null)}
+              onClick={() => { setUploadedPreview(null); onChange(null); }}
               className="px-3 py-1.5 rounded-md bg-white/95 border border-gray-200 text-xs font-medium text-rose-600 hover:bg-white cursor-pointer disabled:opacity-60"
             >
               Remove

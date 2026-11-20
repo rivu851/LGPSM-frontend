@@ -5,7 +5,7 @@ import React, { useRef, useState, useEffect } from "react";
 interface CameraCaptureModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCapture: (imageDataUrl: string) => void;
+  onCapture: (image: File) => Promise<void>;
 }
 
 export default function CameraCaptureModal({
@@ -81,9 +81,14 @@ export default function CameraCaptureModal({
     const ctx = canvas.getContext("2d");
     if (ctx) {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL("image/png");
-      onCapture(dataUrl);
-      handleClose();
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setError("Could not capture photo. Please try again.");
+          return;
+        }
+        void onCapture(new File([blob], `profile-photo-${Date.now()}.png`, { type: "image/png" }));
+        handleClose();
+      }, "image/png");
     }
   };
 

@@ -12,22 +12,20 @@ import AvatarSection from "@/components/settings/AvatarSection";
 
 import { userService } from "@/services/userService";
 import { useAlert } from "@/context/AlertContext";
+import { resolveImageUrl } from "@/utils/mediaUrl";
 
 
 export default function AccountSettingsPage() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, updateProfilePhoto } = useAuth();
   const { showAlert } = useAlert();
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [email, setEmail] = useState(user?.email || "");
   // (email is displayed read-only; the profile API does not change it)
   const [password, setPassword] = useState("••••••••••••••••");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(
-    (user as any)?.avatarUrl || null
-  );
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [avatarNotice, setAvatarNotice] = useState(false);
+  const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [editing, setEditing] = useState(false);
   const isOrganizer = user?.role === "ORGANIZER";
   const field = "w-full h-[47px] px-4 bg-white border border-[#E0E0E0] rounded-md text-[13px] text-[#15191C] focus:outline-none focus:border-black";
@@ -35,8 +33,13 @@ export default function AccountSettingsPage() {
   useEffect(() => {
     if (user?.fullName) setFullName(user.fullName);
     if (user?.email) setEmail(user.email);
-    if ((user as any)?.avatarUrl) setAvatarUrl((user as any).avatarUrl);
   }, [user]);
+
+  const savedAvatarUrl = user?.profile?.avatarUrl
+    || resolveImageUrl(user?.profile?.avatarKey)
+    || user?.avatarUrl
+    || null;
+  const avatarUrl = savedAvatarUrl && !/^(blob|data):/i.test(savedAvatarUrl) ? savedAvatarUrl : null;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +55,42 @@ export default function AccountSettingsPage() {
     setSavedMessage(true);
     setEditing(false);
     setTimeout(() => setSavedMessage(false), 3000);
+  };
+
+  const handleAvatarChange = async (file: File) => {
+    setErrorMessage("");
+    setIsAvatarUploading(true);
+    try {
+      const res = await updateProfilePhoto(file);
+      if (!res.success || !res.data) {
+        setErrorMessage(res.message || "Failed to upload profile photo.");
+        return;
+      }
+      const savedAvatarUrl = res.data.profile?.avatarUrl
+        || resolveImageUrl(res.data.profile?.avatarKey)
+        || res.data.avatarUrl
+        || null;
+      if (!savedAvatarUrl) {
+        setErrorMessage("Photo was saved, but the server did not return an image URL.");
+        return;
+      }
+      if (/^(blob|data):/i.test(savedAvatarUrl)) {
+        setErrorMessage("The server returned a temporary image URL. Please contact support.");
+        return;
+      }
+      setSavedMessage(true);
+      setTimeout(() => setSavedMessage(false), 3000);
+    } finally {
+      setIsAvatarUploading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setErrorMessage("");
+    const res = await updateProfile({ profile: { avatarKey: "" } });
+    if (!res.success) {
+      setErrorMessage(res.message || "Failed to remove profile photo.");
+    }
   };
 
   const handleUpdatePassword = async (oldPass: string, newPass: string): Promise<boolean> => {
@@ -109,19 +148,12 @@ export default function AccountSettingsPage() {
           <form onSubmit={handleSave} className="bg-[#F8F8F8] border border-[#E5E5E5] rounded-lg p-8 flex flex-col md:flex-row items-start gap-10">
             <AvatarSection
               avatarUrl={avatarUrl}
-              onAvatarChange={(newUrl) => {
-                // No media storage is configured, so the photo is only previewed locally
-                setAvatarUrl(newUrl);
-                setAvatarNotice(Boolean(newUrl));
-              }}
+              onAvatarChange={handleAvatarChange}
+              onAvatarRemove={handleAvatarRemove}
+              isUploading={isAvatarUploading}
             />
             <div className="flex-1 min-w-0 w-full space-y-4">
               <p className="text-[32px] leading-tight font-medium text-black break-words">{displayName}</p>
-              {avatarNotice && (
-                <p className="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                  Profile photo is shown for this session only - photo storage is not configured yet.
-                </p>
-              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-4">
                 {/* Not in the frame, but renaming the account is an existing feature */}
                 <div>

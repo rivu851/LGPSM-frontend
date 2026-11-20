@@ -16,6 +16,7 @@ interface AuthContextType {
   register: (payload: RegisterPayload) => Promise<ApiResponse<AuthResponseData>>;
   logout: () => Promise<void>;
   updateProfile: (payload: UpdateProfilePayload) => Promise<ApiResponse>;
+  updateProfilePhoto: (file: File) => Promise<ApiResponse<UserData>>;
   refreshUser: () => Promise<void>;
 }
 
@@ -146,6 +147,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res;
   };
 
+  const updateProfilePhoto = async (file: File): Promise<ApiResponse<UserData>> => {
+    const res = await userService.updateProfilePhoto(file);
+    if (res.success && res.data) {
+      setUser(res.data);
+      tokenStorage.setUser(res.data);
+    }
+    return res;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -157,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         logout,
         updateProfile,
+        updateProfilePhoto,
         refreshUser,
       }}
     >

@@ -19,6 +19,20 @@ export const userService = {
     return response;
   },
 
+  async updateProfilePhoto(file: File): Promise<ApiResponse<UserData>> {
+    const form = new FormData();
+    form.append("file", file);
+    const response = await apiClient<UserData>(
+      "/api/users/profile/photo",
+      { method: "PATCH", body: form },
+      true
+    );
+    if (response.success && response.data) {
+      tokenStorage.setUser(response.data);
+    }
+    return response;
+  },
+
   async updateProfile(payload: UpdateProfilePayload): Promise<ApiResponse<UserData>> {
     const response = await apiClient<UserData>(
       "/api/users/profile",

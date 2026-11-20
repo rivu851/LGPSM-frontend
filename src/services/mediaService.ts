@@ -16,6 +16,7 @@ export type MediaPurpose = "TEMPLATE" | "EVENT_LOGO" | "ORGANIZATION_LOGO" | "AV
 
 export interface StoredImage {
   key: string; // "media:<id>"
+  publicUrl?: string;
   contentType: string;
   width: number;
   height: number;

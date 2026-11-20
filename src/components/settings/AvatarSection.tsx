@@ -5,12 +5,16 @@ import CameraCaptureModal from "./modals/CameraCaptureModal";
 
 interface AvatarSectionProps {
   avatarUrl: string | null;
-  onAvatarChange: (newUrl: string | null) => void;
+  onAvatarChange: (file: File) => Promise<void>;
+  onAvatarRemove: () => Promise<void>;
+  isUploading: boolean;
 }
 
 export default function AvatarSection({
   avatarUrl,
   onAvatarChange,
+  onAvatarRemove,
+  isUploading,
 }: AvatarSectionProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
@@ -33,16 +37,9 @@ export default function AvatarSection({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          onAvatarChange(event.target.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) void onAvatarChange(file);
     setIsMenuOpen(false);
+    e.target.value = "";
   };
 
   const handleTakeCameraPhoto = () => {
@@ -57,7 +54,7 @@ export default function AvatarSection({
 
   const handleRemovePhoto = () => {
     setIsMenuOpen(false);
-    onAvatarChange(null);
+    void onAvatarRemove();
   };
 
   return (
@@ -68,13 +65,15 @@ export default function AvatarSection({
         ref={fileInputRef}
         accept="image/*"
         onChange={handleFileChange}
+        disabled={isUploading}
         className="hidden"
       />
 
       {/* Main Avatar Trigger Button */}
       <div
         onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="relative w-32 h-32 rounded-full overflow-hidden shrink-0 border-2 border-gray-200 bg-gray-100 flex items-center justify-center cursor-pointer group transition-all hover:bg-[#EEF3FF]"
+        className={`relative w-32 h-32 rounded-full overflow-hidden shrink-0 border-2 border-gray-200 bg-gray-100 flex items-center justify-center group transition-all hover:bg-[#EEF3FF] ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+        aria-busy={isUploading}
         title="Click to change profile photo"
       >
         {avatarUrl ? (
@@ -119,8 +118,9 @@ export default function AvatarSection({
             {/* 1. Take a Photo */}
             <button
               type="button"
+              disabled={isUploading}
               onClick={handleTakeCameraPhoto}
-              className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#EEF3FF] hover:text-[#A83800] transition-colors cursor-pointer"
+              className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#EEF3FF] hover:text-[#A83800] transition-colors cursor-pointer disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gray-500 group-hover:text-[#A83800]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -132,8 +132,9 @@ export default function AvatarSection({
             {/* 2. Upload a Photo */}
             <button
               type="button"
+              disabled={isUploading}
               onClick={handleUploadPhoto}
-              className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#EEF3FF] hover:text-[#A83800] transition-colors cursor-pointer"
+              className="w-full px-4 py-2.5 flex items-center gap-3 text-left hover:bg-[#EEF3FF] hover:text-[#A83800] transition-colors cursor-pointer disabled:opacity-50"
             >
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -147,8 +148,9 @@ export default function AvatarSection({
             <div className="py-1">
               <button
                 type="button"
+                disabled={isUploading}
                 onClick={handleRemovePhoto}
-                className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                className="w-full px-4 py-2.5 flex items-center gap-3 text-left text-red-700 hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50"
               >
                 <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -164,8 +166,9 @@ export default function AvatarSection({
       <CameraCaptureModal
         isOpen={isCameraModalOpen}
         onClose={() => setIsCameraModalOpen(false)}
-        onCapture={(dataUrl) => onAvatarChange(dataUrl)}
+        onCapture={onAvatarChange}
       />
+      {isUploading && <p className="mt-2 text-xs text-gray-600">Uploading photo…</p>}
     </div>
   );
 }
