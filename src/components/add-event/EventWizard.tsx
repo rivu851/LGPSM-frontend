@@ -436,7 +436,7 @@ export default function EventWizard({
                       setCurrentStep(1);
                       onDiscardDraft();
                     }}
-                    className="rounded-lg border border-rose-200 bg-white px-5 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-50 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
+                    className="rounded-lg bg-[#D92D20] px-5 py-3 text-sm font-semibold text-white hover:bg-rose-600 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600"
                   >
                     Discard draft
                   </button>
@@ -445,7 +445,7 @@ export default function EventWizard({
                   type="button"
                   autoFocus
                   onClick={onDismissDraftStatus}
-                  className="rounded-lg bg-[#1F65FF] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1F65FF] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F65FF]"
+                  className="rounded-lg bg-[#1F65FF] px-5 py-3 text-sm font-semibold text-white hover:bg-[#5b89ee] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F65FF] transistion-colors"
                 >
                   {canDiscard ? "Keep draft and continue" : "Continue"}
                 </button>
@@ -467,7 +467,7 @@ export default function EventWizard({
               {canDiscard && (
                 <>
                   {" · "}
-                  <button type="button" onClick={discard} className="underline cursor-pointer hover:text-rose-600">Discard draft</button>
+                  <button type="button" onClick={discard} className="underline cursor-pointer bg-[#D92D20] text-white px-2 py-1 rounded">Discard draft</button>
                 </>
               )}
             </p>
