@@ -63,14 +63,14 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
             <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 space-y-2">
               <p>This pass was revoked for <strong className="font-medium">{reasonLabel(invitee.credentialRevocation?.category)}</strong>, which needs a review before a new pass is issued.</p>
               <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-orange" />
+                <input type="checkbox" checked={reviewed} onChange={(e) => setReviewed(e.target.checked)} className="mt-0.5 size-4 check-primary" />
                 <span>I have reviewed why this pass was revoked and the guest may have a new one.</span>
               </label>
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-[#15191C] mb-1.5">Reason<span className="text-[#C44200]">*</span></label>
+            <label className="block text-sm font-medium text-[#15191C] mb-1.5">Reason<span className="text-[#1F65FF]">*</span></label>
             <CustomDropdown
               value={category}
               onChange={setCategory}
@@ -85,7 +85,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
 
           <div>
             <label htmlFor="pass-note" className="block text-sm font-medium text-[#15191C] mb-1.5">
-              Explanation{category === "OTHER" ? <span className="text-[#C44200]">*</span> : <span className="font-normal text-[#6B6B6B]"> (optional)</span>}
+              Explanation{category === "OTHER" ? <span className="text-[#1F65FF]">*</span> : <span className="font-normal text-[#6B6B6B]"> (optional)</span>}
             </label>
             <textarea
               id="pass-note"
@@ -103,7 +103,7 @@ export default function PassActionModal({ action, invitee, needsReview, onClose,
           <PopupMessage message={error} />
         </div>
         <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
-          <button type="button" onClick={submit} disabled={busy || (touched && !!blocked)} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-base font-semibold text-white cursor-pointer disabled:opacity-50">
+          <button type="button" onClick={submit} disabled={busy || (touched && !!blocked)} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-base font-semibold text-white cursor-pointer disabled:opacity-50">
             {busy ? (revoke ? "Revoking…" : "Replacing…") : revoke ? "Revoke" : "Replace"}
           </button>
         </div>

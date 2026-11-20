@@ -1,132 +1,40 @@
-"use client";
-
-import React, { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import FinalCta from "@/components/landing/FinalCta";
 
-export default function Footer() {
-  const router = useRouter();
-  const footerRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
+// Landing footer (Figma node 66:7177): the closing call to action, then the link columns. Only links to pages that exist are shown.
+const COLUMNS = [
+  { title: "Product", links: [{ label: "Features", href: "/features" }, { label: "How it works", href: "/#how-it-works" }, { label: "Pricing", href: "/#pricing" }] },
+  { title: "Use cases", links: [{ label: "Weddings", href: "/#features" }, { label: "Birthdays", href: "/#features" }, { label: "Corporate events", href: "/#features" }, { label: "Conferences", href: "/#features" }, { label: "Expos and fests", href: "/#features" }, { label: "Agencies", href: "/#features" }] },
+  { title: "Resources", links: [{ label: "FAQ", href: "/#faq" }, { label: "Contact", href: "/contact" }] },
+  { title: "Account", links: [{ label: "Log in", href: "/signin?mode=organizer" }, { label: "Sign up", href: "/signup" }] },
+];
 
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    const ctx = gsap.context(() => {
-      if (ctaRef.current) {
-        gsap.fromTo(
-          ctaRef.current.children,
-          { opacity: 0, y: 30 },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: ctaRef.current,
-              start: "top 85%",
-            },
-          }
-        );
-      }
-    }, footerRef);
-
-    return () => ctx.revert();
-  }, []);
-
+export default function Footer({ withCta = true }: { withCta?: boolean }) {
   return (
-    <footer
-      ref={footerRef}
-      className="relative text-gray-300 py-16 lg:py-24 overflow-hidden bg-[#242A2D]"
-    >
-      <Image
-        src="/images/footer/Footer.webp"
-        alt=""
-        fill
-        sizes="100vw"
-        className="object-cover object-center pointer-events-none"
-      />
-      <div className="relative z-10 max-w-[1240px] mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Top CTA Banner */}
-        <div ref={ctaRef} className="text-center max-w-xl mx-auto pb-16 lg:pb-24">
-          <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-medium text-white tracking-tight leading-tight font-[family-name:var(--font-space-grotesk)]">
-            Get started today
-          </h2>
-          
-          <p className="text-xs sm:text-sm text-gray-300 font-normal leading-relaxed mt-3 font-[family-name:var(--font-space-grotesk)]">
-            Design, customize, and share stunning QR-based invitations for weddings, events, and celebrations all in one simple platform.
-          </p>
-
-          {/* Email Subscription Form */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const email = String(new FormData(e.currentTarget).get("email") || "").trim();
-              router.push(`/signup${email ? `?email=${encodeURIComponent(email)}` : ""}`);
-            }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto mt-6"
-          >
-            <input
-              type="email"
-              name="email"
-              aria-label="Email address"
-              placeholder="hello@example.com"
-              className="w-full sm:w-72 px-4 py-2.5 rounded-md text-xs sm:text-sm text-gray-900 bg-white placeholder:text-gray-500 focus:outline-none font-[family-name:var(--font-space-grotesk)]"
-            />
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-xs sm:text-sm font-bold rounded-md transition-all hover:scale-105 active:scale-95 shrink-0 font-[family-name:var(--font-space-grotesk)] cursor-pointer"
-            >
-              Sign Up Free
-            </button>
-          </form>
-        </div>
-
-        {/* Bottom Footer Section */}
-        <div className="text-center max-w-lg mx-auto pt-8 border-t border-gray-800/60">
-          {/* LGPSM Logo */}
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/images/navbar/Nav_logo.webp"
-              alt="LGPSM Logo"
-              width={140}
-              height={47}
-              className="h-22 w-auto object-contain"
-            />
+    <>
+      {withCta ? <FinalCta /> : null}
+      <footer className="bg-[#000B2C] text-[#C3CCE6]">
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_repeat(4,1fr)] lg:px-12">
+          <div className="col-span-2 flex flex-col gap-4 lg:col-span-1">
+            <Image src="/images/branding/eventqrapp-logo-light.svg" alt="EventQRapp" width={180} height={32} className="h-8 w-auto self-start" />
+            <p className="max-w-[300px] text-[13px] leading-[1.5]">EventQRApp helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.</p>
           </div>
-
-          {/* Footer Description Paragraph */}
-          <p className="text-xs text-gray-500 leading-relaxed font-[family-name:var(--font-space-grotesk)]">
-            LGPSM helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.
-          </p>
-
-          {/* Navigation Links */}
-          <div className="flex items-center justify-center gap-6 mt-6 text-xs font-semibold text-gray-500 font-[family-name:var(--font-space-grotesk)]">
-            <Link href="/pages/features" className="hover:text-white transition-colors">
-              Features
-            </Link>
-            <Link href="/pages/pricing" className="hover:text-white transition-colors">
-              Pricing
-            </Link>
-            <Link href="/pages/contact" className="hover:text-white transition-colors">
-              Contact
-            </Link>
-          </div>
-
-          {/* Copyright Line */}
-          <p className="text-[11px] text-gray-500 mt-6 font-[family-name:var(--font-space-grotesk)]">
-            Copyright ©2026 LGPSM. All Rights Reserved.
-          </p>
+          {COLUMNS.map((c) => (
+            <nav key={c.title} aria-label={c.title} className="flex flex-col gap-3">
+              <h2 className="text-[13px] font-semibold text-white">{c.title}</h2>
+              <ul className="flex flex-col gap-2.5">
+                {c.links.map((l) => (
+                  <li key={l.label}><Link href={l.href} className="text-[13px] hover:text-white transition-colors">{l.label}</Link></li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
-
-      </div>
-    </footer>
+        <div className="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-12">
+          <div className="border-t border-white/15 py-6 text-[13px]">© {new Date().getFullYear()} EventQRapp. All rights reserved.</div>
+        </div>
+      </footer>
+    </>
   );
 }
-
-

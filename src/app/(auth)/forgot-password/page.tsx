@@ -109,7 +109,7 @@ function ForgotPasswordContent() {
           <form onSubmit={handleRequest} className="space-y-5">
             <div>
               <label htmlFor="forgot-email" className={authLabelClass}>
-                Email Address<span className="text-[#C44200]">*</span>
+                Email Address<span className="text-[#1F65FF]">*</span>
               </label>
               <input id="forgot-email" type="email" required autoComplete="email" placeholder={INPUT_PLACEHOLDERS.auth.email}
                 value={email} onChange={(e) => setEmail(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -123,8 +123,8 @@ function ForgotPasswordContent() {
 
       {stage === "sent" && (
         <>
-          <div className="w-14 h-14 rounded-full bg-[#FFE3D7] flex items-center justify-center mb-5">
-            <span className="w-9 h-9 rounded-full bg-[#C65318] flex items-center justify-center text-white">
+          <div className="w-14 h-14 rounded-full bg-[#D6E4FF] flex items-center justify-center mb-5">
+            <span className="w-9 h-9 rounded-full bg-[#1F65FF] flex items-center justify-center text-white">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
@@ -134,12 +134,12 @@ function ForgotPasswordContent() {
           <a href="https://mail.google.com" target="_blank" rel="noreferrer" className={`${authPrimaryButtonClass} mb-4`}>
             Open Gmail
           </a>
-          <button type="button" onClick={() => setStage("reset")} className="w-full text-sm font-medium text-[#2D2D2D] underline underline-offset-2 hover:text-[#A83800] cursor-pointer mb-3">
+          <button type="button" onClick={() => setStage("reset")} className="w-full text-sm font-medium text-[#2D2D2D] underline underline-offset-2 hover:text-[#1A56DB] cursor-pointer mb-3">
             I have a reset code
           </button>
           <p className="text-center text-sm text-[#4A5568]">
             Don&apos;t received the email?{" "}
-            <button type="button" onClick={() => setStage("request")} className="text-[#B83D00] font-semibold underline cursor-pointer">
+            <button type="button" onClick={() => setStage("request")} className="text-[#1A56DB] font-semibold underline cursor-pointer">
               Resend
             </button>
           </p>
@@ -153,7 +153,7 @@ function ForgotPasswordContent() {
             {!tokenFromUrl && (
               <div>
                 <label htmlFor="reset-token" className={authLabelClass}>
-                  Reset Code<span className="text-[#C44200]">*</span>
+                  Reset Code<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input id="reset-token" type="text" required placeholder={INPUT_PLACEHOLDERS.auth.resetCode}
                   value={resetToken} onChange={(e) => setResetToken(e.target.value)} disabled={isSubmitting} className={authInputClass} />
@@ -161,7 +161,7 @@ function ForgotPasswordContent() {
             )}
             <div>
               <label htmlFor="reset-new" className={authLabelClass}>
-                New Password<span className="text-[#C44200]">*</span>
+                New Password<span className="text-[#1F65FF]">*</span>
               </label>
               <PasswordInput id="reset-new" value={newPassword} onChange={setNewPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />
@@ -169,7 +169,7 @@ function ForgotPasswordContent() {
             </div>
             <div>
               <label htmlFor="reset-repeat" className={authLabelClass}>
-                Repeat New Password<span className="text-[#C44200]">*</span>
+                Repeat New Password<span className="text-[#1F65FF]">*</span>
               </label>
               <PasswordInput id="reset-repeat" value={repeatPassword} onChange={setRepeatPassword} placeholder={INPUT_PLACEHOLDERS.auth.password}
                 autoComplete="new-password" disabled={isSubmitting} />

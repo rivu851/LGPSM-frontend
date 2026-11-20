@@ -116,7 +116,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
           <h2 id="areas-title" className="text-base font-medium text-gray-900">Where the event&apos;s details go on your design</h2>
           <p className="mt-1 text-sm text-[#4B4F52]">Drag a box over the event name, the date and time, and the venue written in your picture. Each event&apos;s own details are written there in the same place, and the picture around them stays as it is.</p>
         </div>
-        {notice && <p role="status" className="mx-6 mb-2 rounded-md bg-[#FFF1EA] border border-[#FFD2B8] px-3 py-2 text-sm text-[#7A2E0E]">{notice}</p>}
+        {notice && <p role="status" className="mx-6 mb-2 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] px-3 py-2 text-sm text-[#0F3A99]">{notice}</p>}
         <div className="px-6 pb-6 grid grid-cols-1 md:grid-cols-[minmax(0,320px)_1fr] gap-6 items-start">
           <div>
             {loading || !canvas ? <div className="aspect-[9/16] rounded-md bg-[#F4F5F8] animate-pulse" /> : (
@@ -127,11 +127,11 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
                   <div
                     key={i}
                     onPointerDown={(e) => begin(i, "move", e)}
-                    className={`absolute cursor-move border-2 ${selected === i ? "border-[#C65318] bg-[#C65318]/15" : "border-[#2563EB] bg-[#2563EB]/10"}`}
+                    className={`absolute cursor-move border-2 ${selected === i ? "border-[#1F65FF] bg-[#1F65FF]/15" : "border-[#2563EB] bg-[#2563EB]/10"}`}
                     style={{ left: `${(z.x / canvas.width) * 100}%`, top: `${(z.y / canvas.height) * 100}%`, width: `${(z.w / canvas.width) * 100}%`, height: `${(z.h / canvas.height) * 100}%` }}
                   >
                     <span className="absolute -top-5 left-0 text-[10px] font-semibold bg-white/90 text-[#15191C] px-1 rounded">{labelOf(z.role)}</span>
-                    <span onPointerDown={(e) => begin(i, "size", e)} className="absolute -right-1.5 -bottom-1.5 size-3.5 rounded-sm bg-white border-2 border-[#C65318] cursor-nwse-resize" aria-hidden />
+                    <span onPointerDown={(e) => begin(i, "size", e)} className="absolute -right-1.5 -bottom-1.5 size-3.5 rounded-sm bg-white border-2 border-[#1F65FF] cursor-nwse-resize" aria-hidden />
                   </div>
                 ))}
               </div>
@@ -143,7 +143,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
               {ROLES.filter((r) => dynamic || !r.wording).map((r) => (
                 <button key={r.value} type="button" disabled={zones.some((z) => z.role === r.value) || loading} onClick={() => add(r.value)} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#DDD] hover:bg-gray-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">+ {r.label}</button>
               ))}
-              <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#C65318] text-[#C44200] hover:bg-[#FFF1EA] cursor-pointer disabled:opacity-60">{busy === "detect" ? "Looking…" : "Find the wording again"}</button>
+              <button type="button" onClick={detect} disabled={busy !== null || loading} className="px-3 py-1.5 text-xs font-semibold rounded-md border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] cursor-pointer disabled:opacity-60">{busy === "detect" ? "Looking…" : "Find the wording again"}</button>
             </div>
 
             {zones.length === 0 && !loading && <p className="text-sm text-[#6B6B6B]">No areas yet. {dynamic ? "Add the event name, the date and time and the venue, then drag each box over the wording in your picture." : "Add the QR code, then drag it to the place your design has for it."}</p>}
@@ -180,7 +180,7 @@ export default function TextAreasEditor({ templateId, intro, onClose }: Props) {
             <PopupMessage message={error} onClose={() => setError(null)} />
             <div className="flex justify-end gap-3 pt-1">
               <button type="button" onClick={() => onClose(changed)} disabled={busy !== null} className="px-5 py-2.5 border border-[#DDD] rounded-md text-sm font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-60">Close</button>
-              <button type="button" onClick={save} disabled={busy !== null || loading} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60">{busy === "save" ? "Saving…" : "Save areas"}</button>
+              <button type="button" onClick={save} disabled={busy !== null || loading} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md cursor-pointer disabled:opacity-60">{busy === "save" ? "Saving…" : "Save areas"}</button>
             </div>
           </div>
         </div>

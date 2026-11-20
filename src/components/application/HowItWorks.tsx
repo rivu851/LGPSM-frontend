@@ -107,18 +107,18 @@ export default function HowItWorks() {
       <div ref={headerRef} className="text-center mb-14 lg:mb-18">
         <div className="inline-flex items-center gap-2 mb-3">
           <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 16 16" fill="none">
-            <rect x="2" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
-            <rect x="9" y="2" width="5" height="5" rx="1" fill="#FF5B22" />
-            <rect x="2" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
-            <rect x="9" y="9" width="5" height="5" rx="1" fill="#FF5B22" />
+            <rect x="2" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+            <rect x="9" y="2" width="5" height="5" rx="1" fill="#1F65FF" />
+            <rect x="2" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
+            <rect x="9" y="9" width="5" height="5" rx="1" fill="#1F65FF" />
           </svg>
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#C44200]">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#1F65FF]">
             APPLICATION
           </span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-          How LGPSM Works
+          How EventQRapp Works
         </h2>
       </div>
 
@@ -147,11 +147,11 @@ export default function HowItWorks() {
 
         {/* Right Column: Mockup Card + Vertical Slider Indicator */}
         <div ref={mockupRef} className="lg:col-span-6 flex items-center gap-6 sm:gap-8">
-          <div className="flex-1 relative rounded-2xl p-2 sm:p-3 bg-gradient-to-r from-[#FF7338] via-[#FF5B22] to-[#FF8546] shadow-2xl overflow-hidden">
+          <div className="flex-1 relative rounded-2xl p-2 sm:p-3 bg-gradient-to-r from-[#1F65FF] via-[#2071FF] to-[#2181FF] shadow-2xl overflow-hidden">
             <div className="relative rounded-md overflow-hidden bg-gray-900 aspect-[16/10] sm:aspect-[16/9] flex items-center justify-center group cursor-pointer">
               <Image
                 src="/images/auth/Auth.webp"
-                alt="LGPSM Step Preview"
+                alt="EventQRapp Step Preview"
                 fill
                 sizes="(max-width: 1024px) 90vw, 560px"
                 className="object-cover object-center opacity-90 transition-transform duration-500 group-hover:scale-105"

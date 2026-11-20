@@ -57,7 +57,7 @@ function RoleTabs({ currentMode, onSelect }: { currentMode: PortalMode; onSelect
             onClick={() => onSelect(tab.mode)}
             className={`flex-1 py-2 px-1 sm:px-2 text-center rounded-lg transition-all cursor-pointer ${
               isActive
-                ? "bg-white text-[#C44200] font-bold border border-gray-200/60"
+                ? "bg-white text-[#1F65FF] font-bold border border-gray-200/60"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -167,7 +167,7 @@ function SigninContent() {
       {entering && createPortal(<div className="fixed inset-0 z-[100]"><BrandLoader label="Signing in" /></div>, document.body)}
       <div>
         <label htmlFor="signin-email" className={authLabelClass}>
-          Email Address<span className="text-[#C44200]">*</span>
+          Email Address<span className="text-[#1F65FF]">*</span>
         </label>
         <input
           id="signin-email"
@@ -183,7 +183,7 @@ function SigninContent() {
       </div>
       <div className="mt-3">
         <label htmlFor="signin-password" className={authLabelClass}>
-          Password<span className="text-[#C44200]">*</span>
+          Password<span className="text-[#1F65FF]">*</span>
         </label>
         <PasswordInput
           id="signin-password"
@@ -208,11 +208,11 @@ function SigninContent() {
                 forgetRememberedEmail(localStorage, mode);
               }
             }}
-            className="w-4 h-4 rounded border-[#CFD9E0] cursor-pointer check-orange"
+            className="w-4 h-4 rounded border-[#CFD9E0] cursor-pointer check-primary"
           />
           Remember me
         </label>
-        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#A83800]">
+        <Link href={forgotPasswordHref(mode)} className="font-medium text-[#15191C] underline underline-offset-2 hover:text-[#1A56DB]">
           Forgot Password?
         </Link>
       </div>
@@ -256,7 +256,7 @@ function SigninContent() {
           <AuthHeading title="Organizer Sign In" subtitle="Welcome back! Login to Organizer Portal" />
           {searchParams.get("notice") === "inactive" && <AuthAlert tone="error">Your account has been deactivated. Please contact your administrator.</AuthAlert>}
           {searchParams.get("notice") === "mobile-only" && (
-            <AuthAlert tone="info">On-ground staff sign in through the LGPSM mobile app. Organizers can sign in here.</AuthAlert>
+            <AuthAlert tone="info">On-ground staff sign in through the EventQRapp mobile app. Organizers can sign in here.</AuthAlert>
           )}
           {isVerifiedParam && <AuthAlert tone="success">Email verified successfully! Please sign in to access your dashboard.</AuthAlert>}
           {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
@@ -264,7 +264,7 @@ function SigninContent() {
           <GoogleAuthButton mode="signin" onCredential={handleGoogle} disabled={isSubmitting} />
           <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-[#C44200] font-bold underline underline-offset-2 hover:text-[#A83800]">
+            <Link href="/signup" className="text-[#1F65FF] font-bold underline underline-offset-2 hover:text-[#1A56DB]">
               Sign Up Free (Organizer)
             </Link>
           </p>

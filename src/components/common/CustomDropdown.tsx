@@ -193,7 +193,7 @@ export default function CustomDropdown({
                       setIsOpen(false);
                     }}
                     className={`w-full text-left px-3.5 py-2.5 text-sm flex items-center justify-between gap-2 cursor-pointer ${
-                      isSelected ? "bg-orange-50 text-[#E5520F] font-medium" : "text-gray-700 hover:text-[#E5520F]"
+                      isSelected ? "bg-blue-50 text-[#1F65FF] font-medium" : "text-gray-700 hover:text-[#1F65FF]"
                     }`}
                   >
                     <span className="inline-flex items-center gap-2 min-w-0">

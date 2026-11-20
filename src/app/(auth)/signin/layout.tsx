@@ -5,7 +5,7 @@ import { publicPageMetadata } from "@/utils/seo";
 // variants (?mode=..., ?from=...) all canonicalize to /signin.
 export const metadata: Metadata = publicPageMetadata({
   title: "Sign in",
-  description: "Sign in to your LGPSM account to manage events, invitees and QR-based digital invitations.",
+  description: "Sign in to your EventQRapp account to manage events, invitees and QR-based digital invitations.",
   path: "/signin",
 });
 

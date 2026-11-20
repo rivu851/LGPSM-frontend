@@ -412,9 +412,9 @@ export default function EventAssignUsersPage() {
               className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
             >
               <Icon name="events/filter" width={20} height={20} />
-              {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+              {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#1F65FF] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
             </button>
-            <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+            <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
               <Icon name="events/add-white" width={24} height={24} />
               Add User
             </Link>
@@ -451,7 +451,7 @@ export default function EventAssignUsersPage() {
               </div>
               <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
                 <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#FF651D] hover:bg-[#E5560F] text-sm font-semibold text-white cursor-pointer">Apply</button>
+                <button type="button" onClick={() => { setFilters(draft); setSelectedUserIds([]); setPage(1); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#1F65FF] hover:bg-[#1F65FF] text-sm font-semibold text-white cursor-pointer">Apply</button>
               </div>
             </div>
           </div>,
@@ -465,7 +465,7 @@ export default function EventAssignUsersPage() {
             id="selectAll"
             checked={isAllSelected}
             onChange={handleSelectAll}
-            className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer check-orange"
+            className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer check-primary"
           />
           <label htmlFor="selectAll" className="cursor-pointer">
             Select All ({selectedUserIds.length} selected)
@@ -499,19 +499,19 @@ export default function EventAssignUsersPage() {
                         <Icon name="events/users-empty" width={80} height={67} />
                         <p className="text-lg font-medium text-black/60">You have not added any system users yet.</p>
                         <p className="text-sm text-gray-500">Add one now and they are assigned to this event straight away.</p>
-                        <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+                        <Link href={`/user-management/add?new=1&event=${eventId}`} className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
                           Add User
                         </Link>
                       </div>
                     ) : effectiveFilter !== USERS_ON_EVENT && effectiveFilter !== ALL_SYSTEM_USERS && !searchQuery.trim() ? (
-                      <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#C44200] underline cursor-pointer">Show all system users</button> to assign someone.</span>
+                      <span>No system users are assigned to this session yet. <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="font-semibold text-[#1F65FF] underline cursor-pointer">Show all system users</button> to assign someone.</span>
                     ) : effectiveFilter === USERS_ON_EVENT && !searchQuery.trim() ? (
                       // Figma 217:19798 empty state; "Assign User" lists every system user to pick from
                       <div className="flex flex-col items-center gap-[26px] py-16 max-w-[344px] mx-auto whitespace-normal">
                         <Icon name="events/users-empty" width={80} height={67} />
                         <p className="text-lg font-medium text-black/50">No system users assigned yet. Assign system users to your event now.</p>
-                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#C44200] cursor-pointer">
+                        <button type="button" onClick={() => setUserFilter(ALL_SYSTEM_USERS)} className="px-6 py-[11px] bg-[#F3F3F3] hover:bg-[#EAEAEA] rounded-lg text-base font-semibold text-[#1F65FF] cursor-pointer">
                           Assign User
                         </button>
                       </div>
@@ -539,13 +539,13 @@ export default function EventAssignUsersPage() {
                           checked={isSelected}
                           onChange={() => toggleSelectUser(u.id)}
                           aria-label={`Select ${u.name}`}
-                          className="rounded border-gray-300 text-[#C44200] focus:ring-black cursor-pointer mt-0.5 check-orange"
+                          className="rounded border-gray-300 text-[#1F65FF] focus:ring-black cursor-pointer mt-0.5 check-primary"
                         />
                       </td>
 
                       <td className="py-4 px-4 font-medium text-gray-900">
                         <div>{u.name}</div>
-                        <span className="text-[10px] font-mono text-[#C44200] bg-[#FF5B22]/10 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-mono text-[#1F65FF] bg-[#1F65FF]/10 px-1.5 py-0.5 rounded">
                           SYSTEM_USER
                         </span>
                         {otherEvents.filter((o) => o.overlaps).map((o) => (
@@ -560,7 +560,7 @@ export default function EventAssignUsersPage() {
                         <button
                           type="button"
                           onClick={() => toggleExpand(u.id)}
-                          className="flex items-center gap-2 font-bold text-gray-800 hover:text-[#A83800] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-bold text-gray-800 hover:text-[#1A56DB] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -605,11 +605,11 @@ export default function EventAssignUsersPage() {
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
+                                    <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• {sessions.length === 1 ? sessions[0].name : "All sessions"}</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -673,7 +673,7 @@ export default function EventAssignUsersPage() {
               <button
                 type="button"
                 onClick={openAssignModal}
-                className="inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#FF5B22] text-[#C44200] hover:bg-[#FF5B22] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer"
+                className="inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer"
               >
                 <span>{allAlreadyOnEvent ? `Change sessions for ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}` : `Assign ${selectedUserIds.length} ${selectedUserIds.length === 1 ? "user" : "users"}`}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -704,7 +704,7 @@ export default function EventAssignUsersPage() {
 
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
               {alreadyOnEvent > 0 && (
-                <p className="p-3 rounded-md bg-[#FFF3EC] border border-[#FFE3D7] text-xs text-[#4B4F52]">
+                <p className="p-3 rounded-md bg-[#EAF1FF] border border-[#D6E4FF] text-xs text-[#4B4F52]">
                   {allAlreadyOnEvent
                     ? `${selectedRows.length === 1 ? "This user is" : "These users are"} already assigned to this event, so nothing is added twice. Pick the sessions ${selectedRows.length === 1 ? "they" : "they each"} should cover; this replaces the current choice.`
                     : `${alreadyOnEvent} of the ${selectedRows.length} selected ${alreadyOnEvent === 1 ? "is" : "are"} already assigned to this event. Their sessions are replaced by what you pick here; the others are newly assigned.`}
@@ -728,7 +728,7 @@ export default function EventAssignUsersPage() {
                 <button
                   type="submit"
                   disabled={submittingAssign}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : allAlreadyOnEvent ? "Save" : "Assign"}
                 </button>
@@ -748,7 +748,7 @@ export default function EventAssignUsersPage() {
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

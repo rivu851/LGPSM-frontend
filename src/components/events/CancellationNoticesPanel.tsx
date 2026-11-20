@@ -70,7 +70,7 @@ export default function CancellationNoticesPanel({ eventId }: { eventId: string 
             </div>
           )}
           {safeRetryCount(data) > 0 && (
-            <button type="button" onClick={() => retry(false)} disabled={retrying} className="px-4 py-2 border border-[#FF651D] text-[#C44200] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">
+            <button type="button" onClick={() => retry(false)} disabled={retrying} className="px-4 py-2 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EEF3FF] rounded-md text-sm font-medium cursor-pointer disabled:opacity-50">
               {retrying ? "Retrying…" : "Retry unsent notices"}
             </button>
           )}

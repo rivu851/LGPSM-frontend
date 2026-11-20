@@ -588,7 +588,7 @@ aria-label={`Select ${u.name}`}
                         <button
                           type="button"
                           onClick={() => toggleExpandUser(u.id)}
-                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#1A56DB] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -634,7 +634,7 @@ aria-label={`Select ${u.name}`}
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -673,7 +673,7 @@ aria-label={`Select ${u.name}`}
             type="button"
             onClick={handleBulkDelete}
             disabled={selectedIds.length === 0}
-            className="p-2.5 text-[#C44200] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
+            className="p-2.5 text-[#1F65FF] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer"
             title="Delete Selected Users"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -684,7 +684,7 @@ aria-label={`Select ${u.name}`}
             type="button"
             onClick={() => { setSessionScope(null); setErrorFeedback(null); setIsAssignModalOpen(true); }}
             disabled={selectedIds.length === 0}
-            className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#A83800]"
+            className="inline-flex items-center gap-2 px-4 py-[11px] border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-medium text-base rounded-lg transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#1A56DB]"
           >
             <span>Assign {selectedIds.length} users</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -714,7 +714,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#C44200]">*</span>
+                  User Name<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input
                   type="text"
@@ -727,7 +727,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#C44200]">*</span>
+                  Email<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input
                   type="email"
@@ -751,7 +751,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingEdit ? "Saving..." : "Save Changes"}
                 </button>
@@ -782,7 +782,7 @@ aria-label={`Select ${u.name}`}
               {isAdmin && (
                 <div className="space-y-1.5 pt-4">
                   <label className="text-sm font-medium text-[#15191C]">
-                    Organizer<span className="text-[#C44200] ml-0.5">*</span>
+                    Organizer<span className="text-[#1F65FF] ml-0.5">*</span>
                   </label>
                   <CustomDropdown
                     portal
@@ -805,7 +805,7 @@ aria-label={`Select ${u.name}`}
               <PopupMessage message={addUserFormError} />
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#C44200] ml-0.5">*</span>
+                  User Name<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -819,7 +819,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#C44200] ml-0.5">*</span>
+                  Contact No<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
@@ -832,7 +832,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#C44200] ml-0.5">*</span>
+                  Email<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
@@ -846,7 +846,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Password<span className="text-[#C44200] ml-0.5">*</span>
+                  Password<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
@@ -861,7 +861,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingUser}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingUser ? "Creating..." : "Add System User"}
                 </button>
@@ -891,7 +891,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleAssignSubmit} className="px-6 pt-5 space-y-5">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#C44200]">*</span>
+                  Event<span className="text-[#1F65FF]">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
@@ -918,7 +918,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingAssign || !selectedEventId}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : "Assign"}
                 </button>
@@ -939,14 +939,14 @@ aria-label={`Select ${u.name}`}
               <button
                 type="button"
                 onClick={() => { setSelectedIds([addedUser.id]); setSessionScope(null); setErrorFeedback(null); setAddedUser(null); setIsAssignModalOpen(true); }}
-                className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+                className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Assign User
               </button>
               <button
                 type="button"
                 onClick={() => { setAddedUser(null); setAddUserFormError(null); setIsAddUserModalOpen(true); }}
-                className="w-full py-2.5 border border-[#FF651D] text-[#C44200] hover:bg-[#FFF1E8] font-bold text-xs rounded-md transition-colors cursor-pointer"
+                className="w-full py-2.5 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#EAF1FF] font-bold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Add another user
               </button>
@@ -965,7 +965,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

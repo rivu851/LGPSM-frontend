@@ -20,7 +20,6 @@ import {
   PasswordInput,
   Spinner,
   authInputClass,
-  authFieldStackClass,
   authLabelClass,
   authPrimaryButtonClass,
 } from "@/components/auth/AuthLayouts";
@@ -325,21 +324,18 @@ export default function SignupPage() {
   };
 
   return (
-    <AuthSplitLayout>
-      <div className="mb-8 lg:mb-[45px] h-[34px]">
+    <AuthSplitLayout fit>
+      <div className="mb-5 h-[34px] flex justify-center">
         <AuthLogo />
       </div>
 
       {step === "details" ? (
         <>
-          <div className="mb-6">
-            <BackLink href="/" label="Back to Home" />
-          </div>
-
           {/* Google sits above the "Create your account" heading: it needs no form at all */}
-          <GoogleAuthButton mode="signup" onCredential={handleGoogle} disabled={isSubmitting} orBelow />
+          <GoogleAuthButton mode="signup" onCredential={handleGoogle} disabled={isSubmitting} orBelow tight />
 
           <AuthHeading
+            compact
             title="Create your account"
             subtitle="Register here and start sending invitations digitally"
           />
@@ -347,10 +343,10 @@ export default function SignupPage() {
           {errorMessage && <AuthAlert tone="error">{errorMessage}</AuthAlert>}
           {successMessage && <AuthAlert tone="success">{successMessage}</AuthAlert>}
 
-          <form onSubmit={handleRegisterSubmit} className={authFieldStackClass}>
+          <form onSubmit={handleRegisterSubmit} className="grid grid-cols-1 xl:grid-cols-2 gap-x-3 gap-y-2.5">
             <div>
               <label htmlFor="signup-name" className={authLabelClass}>
-                Full Name<span className="text-[#C44200]">*</span>
+                Full Name<span className="text-[#1F65FF]">*</span>
               </label>
               <input
                 id="signup-name"
@@ -368,7 +364,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-email" className={authLabelClass}>
-                Email Address<span className="text-[#C44200]">*</span>
+                Email Address<span className="text-[#1F65FF]">*</span>
               </label>
               <input
                 id="signup-email"
@@ -384,7 +380,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-phone" className={authLabelClass}>
-                Phone no<span className="text-[#C44200]">*</span>
+                Phone no<span className="text-[#1F65FF]">*</span>
               </label>
               <PhoneInput
                 id="signup-phone"
@@ -398,20 +394,20 @@ export default function SignupPage() {
               />
             </div>
             <fieldset className="space-y-2" disabled={isSubmitting}>
-              <legend className={authLabelClass}>Organizer type<span className="text-[#C44200]">*</span></legend>
+              <legend className={authLabelClass}>Organizer type<span className="text-[#1F65FF]">*</span></legend>
               <div className="grid grid-cols-2 gap-2">
                 {([["INDIVIDUAL", "Individual"], ["ORGANIZATION", "Organization"]] as const).map(([value, label]) => (
-                  <label key={value} className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm cursor-pointer transition-colors ${orgType === value ? "border-[#86EFAC] bg-[#F0FDF4] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
-                    <input type="radio" name="signup-org-type" value={value} checked={orgType === value} onChange={() => setOrgType(value)} className="accent-[#16A34A]" />
+                  <label key={value} className={`flex items-center gap-2 rounded-lg border px-2.5 h-[47px] text-[13px] cursor-pointer transition-colors ${orgType === value ? "border-[#1F65FF] bg-[#EAF1FF] font-semibold text-[#15191C]" : "border-[#E0E0E0] bg-white text-[#4B4F52] hover:border-gray-400"}`}>
+                    <input type="radio" name="signup-org-type" value={value} checked={orgType === value} onChange={() => setOrgType(value)} className="accent-[#1F65FF]" />
                     {label}
                   </label>
                 ))}
               </div>
             </fieldset>
             {orgType === "ORGANIZATION" && (
-              <div>
+              <div className="xl:col-span-2">
                 <label htmlFor="signup-org-name" className={authLabelClass}>
-                  Organization name<span className="text-[#C44200]">*</span>
+                  Organization name<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input
                   id="signup-org-name"
@@ -429,10 +425,10 @@ export default function SignupPage() {
             )}
             {/* Invitation channel at signup: hidden until the client confirms what "change invitation option during signup" means. Uncomment to bring it back.
             <fieldset>
-              <legend className={authLabelClass}>How will you send invitations?<span className="text-[#C44200]">*</span></legend>
+              <legend className={authLabelClass}>How will you send invitations?<span className="text-[#1F65FF]">*</span></legend>
               <div className="grid grid-cols-3 gap-2" role="radiogroup">
                 {INVITATION_CHANNEL_OPTIONS.map((o) => (
-                  <label key={o.value} className={`flex flex-col items-center justify-center gap-0.5 rounded-lg border px-2 py-2.5 text-center cursor-pointer transition-colors ${invitationChannel === o.value ? "border-[#FF651D] bg-[#FFF3EC]" : "border-[#E0E0E0] bg-white hover:border-gray-400"}`}>
+                  <label key={o.value} className={`flex flex-col items-center justify-center gap-0.5 rounded-lg border px-2 py-2.5 text-center cursor-pointer transition-colors ${invitationChannel === o.value ? "border-[#1F65FF] bg-[#EAF1FF]" : "border-[#E0E0E0] bg-white hover:border-gray-400"}`}>
                     <input type="radio" name="signup-invitation-channel" value={o.value} checked={invitationChannel === o.value} onChange={() => setInvitationChannel(o.value)} disabled={isSubmitting} className="sr-only" />
                     <span className="text-sm font-semibold text-[#15191C]">{o.label}</span>
                     <span className="text-[11px] text-[#6B6B6B] leading-tight">{o.hint}</span>
@@ -443,7 +439,7 @@ export default function SignupPage() {
             */}
             <div>
               <label htmlFor="signup-password" className={authLabelClass}>
-                Password<span className="text-[#C44200]">*</span>
+                Password<span className="text-[#1F65FF]">*</span>
               </label>
               <PasswordInput
                 id="signup-password"
@@ -456,7 +452,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="signup-confirm" className={authLabelClass}>
-                Confirm Password<span className="text-[#C44200]">*</span>
+                Confirm Password<span className="text-[#1F65FF]">*</span>
               </label>
               <PasswordInput
                 id="signup-confirm"
@@ -470,7 +466,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`${authPrimaryButtonClass} !mt-7`}
+              className={`${authPrimaryButtonClass} xl:col-span-2 mt-2`}
             >
               {isSubmitting ? (
                 <>
@@ -482,11 +478,11 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-center mt-[37px] text-sm leading-5 text-[#4A5568]">
+          <p className="text-center mt-3 text-sm leading-5 text-[#4A5568]">
             Already registered?{" "}
             <Link
               href={signinHref("organizer")}
-              className="text-[#B83D00] font-medium underline underline-offset-2"
+              className="text-[#1A56DB] font-medium underline underline-offset-2"
             >
               Sign in
             </Link>
@@ -542,7 +538,7 @@ export default function SignupPage() {
                     disabled={isVerifying}
                     className={`w-12 h-14 sm:w-14 sm:h-16 text-center text-2xl font-bold font-mono rounded-xl border-2 transition-all ${
                       digit
-                        ? "border-[#FF651D] bg-white text-gray-950"
+                        ? "border-[#1F65FF] bg-white text-gray-950"
                         : "border-gray-200 bg-[#FAFAFA] text-gray-900"
                     } focus:bg-white focus:border-black focus:ring-2 focus:ring-black/20 focus:outline-none`}
                   />
@@ -571,7 +567,7 @@ export default function SignupPage() {
                 className={`font-semibold transition-colors ${
                   resendCooldown > 0 || isResending || !email
                     ? "text-gray-500 cursor-not-allowed"
-                    : "text-[#C44200] hover:underline cursor-pointer"
+                    : "text-[#1F65FF] hover:underline cursor-pointer"
                 }`}
               >
                 {isResending ? (
@@ -609,7 +605,7 @@ export default function SignupPage() {
                 setSuccessMessage("");
               }}
               aria-expanded={changingEmail}
-              className="text-[#C44200] underline font-medium hover:text-[#C44200]"
+              className="text-[#1F65FF] underline font-medium hover:text-[#1F65FF]"
             >
               change email address
             </button>
@@ -637,7 +633,7 @@ export default function SignupPage() {
             Already registered?{" "}
             <Link
               href={signinHref("organizer")}
-              className="text-[#B83D00] font-medium underline underline-offset-2"
+              className="text-[#1A56DB] font-medium underline underline-offset-2"
             >
               Sign in
             </Link>

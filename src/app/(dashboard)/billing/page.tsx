@@ -84,7 +84,7 @@ export default function BillingPage() {
             </div>
           </div>
           <div className="flex items-center gap-4 shrink-0 relative" ref={filterRef}>
-            <button type="button" onClick={openStatement} className="h-[46px] px-6 bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg cursor-pointer">
+            <button type="button" onClick={openStatement} className="h-[46px] px-6 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg cursor-pointer">
               Download Statement
             </button>
             <button
@@ -111,10 +111,10 @@ export default function BillingPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <button type="button" onClick={() => setFilterOpen(false)} className="flex-1 py-1.5 bg-white border border-[#DDD] rounded text-[13px] font-semibold text-black cursor-pointer">Cancel</button>
-                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className="flex-1 py-1.5 bg-[#C65318] hover:bg-[#A83800] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
+                      <button type="button" onClick={() => { setRange(draft); setFilterOpen(false); }} className="flex-1 py-1.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded text-[13px] font-semibold text-white cursor-pointer">Apply</button>
                     </div>
                     {(range.from || range.to) && (
-                      <button type="button" onClick={() => { setRange({ from: "", to: "" }); setDraft({ from: "", to: "" }); setFilterOpen(false); }} className="w-full text-xs text-[#C44200] underline cursor-pointer">Clear dates</button>
+                      <button type="button" onClick={() => { setRange({ from: "", to: "" }); setDraft({ from: "", to: "" }); setFilterOpen(false); }} className="w-full text-xs text-[#1F65FF] underline cursor-pointer">Clear dates</button>
                     )}
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function BillingPage() {
             checked={allSelected}
             disabled={rows.length === 0}
             onChange={() => setSelected(allSelected ? [] : rows.map((r) => r.id))}
-            className="size-4 rounded-sm border-gray-300 cursor-pointer disabled:cursor-not-allowed check-orange"
+            className="size-4 rounded-sm border-gray-300 cursor-pointer disabled:cursor-not-allowed check-primary"
           />
           <label htmlFor="billing-select-all" className={rows.length === 0 ? "" : "cursor-pointer"}>Select All</label>
         </div>
@@ -175,7 +175,7 @@ export default function BillingPage() {
                         aria-label={`Select invoice ${r.invoiceId}`}
                         checked={selected.includes(r.id)}
                         onChange={() => setSelected((s) => (s.includes(r.id) ? s.filter((x) => x !== r.id) : [...s, r.id]))}
-                        className="size-4 rounded-sm border-gray-300 cursor-pointer check-orange"
+                        className="size-4 rounded-sm border-gray-300 cursor-pointer check-primary"
                       />
                     </td>
                     <td className="px-4">{r.invoiceId}</td>
@@ -211,17 +211,17 @@ export default function BillingPage() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#C44200]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">From<span className="text-[#1F65FF]">*</span></span>
                 <BillingDateField label="Statement from date" placeholder="Select Date" value={statement.from} onChange={(from) => { setStatement((s) => ({ ...s, from, to: s.to && from > s.to ? from : s.to })); setStatementError(null); }} />
               </div>
               <div>
-                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#C44200]">*</span></span>
+                <span className="block text-xs font-medium text-[#15191C] mb-2">To<span className="text-[#1F65FF]">*</span></span>
                 <BillingDateField label="Statement to date" placeholder="Select Date" value={statement.to} min={statement.from || undefined} onChange={(to) => { setStatement((s) => ({ ...s, to })); setStatementError(null); }} />
               </div>
               <PopupMessage message={statementError} />
             </div>
             <div className="flex justify-end gap-3 px-6 py-4 border-t border-[#E5E5E5]">
-              <button type="button" onClick={downloadStatement} className="px-6 py-2.5 bg-[#C65318] hover:bg-[#A83800] rounded-md text-base font-semibold text-white cursor-pointer">Download Statement</button>
+              <button type="button" onClick={downloadStatement} className="px-6 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-base font-semibold text-white cursor-pointer">Download Statement</button>
             </div>
           </div>
         </div>

@@ -2,8 +2,8 @@
 
 import PhoneInput from "@/components/common/PhoneInput";
 import PopupMessage from "@/components/common/PopupMessage";
-import React, { useEffect, useRef, useState } from "react";
-import gsap from "gsap";
+import React, { useRef, useState } from "react";
+import { useReveal } from "@/components/landing/useReveal";
 import TopBanner from "@/components/TopBanner";
 import Navbar from "@/app/navbar/Navbar";
 import Footer from "@/components/Footer";
@@ -31,29 +31,9 @@ export default function ContactPage() {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const leftBoxRef = useRef<HTMLDivElement>(null);
-  const formCardRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      if (leftBoxRef.current) {
-        gsap.fromTo(
-          leftBoxRef.current,
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
-        );
-      }
-      if (formCardRef.current) {
-        gsap.fromTo(
-          formCardRef.current,
-          { opacity: 0, y: 30 },
-          { opacity: 1, y: 0, duration: 0.8, delay: 0.15, ease: "power3.out" }
-        );
-      }
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
+  const [leftRef, left] = useReveal<HTMLDivElement>("left");
+  const [formRef, formReveal] = useReveal<HTMLDivElement>("right", 120);
 
   const setField = (field: keyof ContactFormValues, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -110,15 +90,15 @@ export default function ContactPage() {
 
         {/* ── Main Contact Hero Section ── */}
         <main className="flex-1 bg-white pt-12 pb-24 overflow-visible relative">
-          <h1 className="sr-only">Contact LGPSM</h1>
+          <h1 className="sr-only">Contact EventQRapp</h1>
           <div
             ref={containerRef}
             className="max-w-[1140px] mx-auto px-4 sm:px-6 relative flex flex-col md:flex-row items-start justify-center"
           >
             {/* ── Left Box: Light Gray Card with Fine High-Density White Rays & Small Circle Hub ── */}
             <div
-              ref={leftBoxRef}
-              className="w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[540px] h-[360px] sm:h-[400px] bg-[#F4F6F8] rounded-[18px] overflow-hidden relative shrink-0"
+              ref={leftRef} style={left.style}
+              className={`${left.className} w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[540px] h-[360px] sm:h-[400px] bg-[#F4F6F8] rounded-[18px] overflow-hidden relative shrink-0`}
             >
               {/* High-density Sunburst SVG */}
               <svg
@@ -160,8 +140,8 @@ export default function ContactPage() {
 
             {/* ── Right Form Card: Sharp Rectangular Card with Thin Border ── */}
             <div
-              ref={formCardRef}
-              className="w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[680px] bg-transparent border border-[#AAAAAA] p-8 sm:p-10 relative z-20 mt-[-40px] md:mt-72 md:-mb-24 md:-ml-6 shrink-0 rounded-none"
+              ref={formRef} style={formReveal.style}
+              className={`${formReveal.className} w-full md:flex-1 md:min-w-0 xl:flex-none xl:w-[680px] bg-transparent border border-[#AAAAAA] p-8 sm:p-10 relative z-20 mt-[-40px] md:mt-72 md:-mb-24 md:-ml-6 shrink-0 rounded-none`}
             >
               <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -261,7 +241,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-full py-3.5 bg-[#c65318] hover:bg-[#A83800] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm sm:text-base font-bold transition-all shadow-none active:scale-[0.99] font-[family-name:var(--font-space-grotesk)] cursor-pointer rounded-md"
+                  className="w-full py-3.5 bg-[#1F65FF] hover:bg-[#1A56DB] disabled:opacity-70 disabled:cursor-not-allowed text-white text-sm sm:text-base font-bold transition-all shadow-none active:scale-[0.99] font-[family-name:var(--font-space-grotesk)] cursor-pointer rounded-md"
                 >
                   {sending ? "Sending…" : "Submit"}
                 </button>

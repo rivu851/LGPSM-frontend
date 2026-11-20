@@ -55,7 +55,7 @@ export default function StepHeader({ currentStep, onStepClick, maxUnlockedStep }
 
               {/* Active Orange Underline */}
               {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#FF5B22] rounded-t-full" />
+                <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#1F65FF] rounded-t-full" />
               )}
             </button>
           );

@@ -33,7 +33,7 @@ const chevron = (up: boolean) => (
 );
 
 function StepColumn({ label, value, onUp, onDown }: StepColProps) {
-  const btn = "w-full h-8 flex items-center justify-center rounded-md text-[#C44200] hover:bg-[#FF5B22]/10 cursor-pointer transition-colors";
+  const btn = "w-full h-8 flex items-center justify-center rounded-md text-[#1F65FF] hover:bg-[#1F65FF]/10 cursor-pointer transition-colors";
   return (
     <div
       role="group"
@@ -146,7 +146,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
   const calendarCells: React.ReactNode[] = [];
   for (let i = firstDayOfWeek - 1; i >= 0; i--) {
     const d = prevMonthDays - i;
-    calendarCells.push(<span key={`prev-${d}`} className="text-[#FDBA74] py-1.5 cursor-default">{d < 10 ? `0${d}` : d}</span>);
+    calendarCells.push(<span key={`prev-${d}`} className="text-[#B8D0FF] py-1.5 cursor-default">{d < 10 ? `0${d}` : d}</span>);
   }
   for (let day = 1; day <= daysInMonth; day++) {
     const isSelected = day === Math.min(selectedDay, daysInMonth);
@@ -157,7 +157,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         onClick={() => setSelectedDay(day)}
         aria-pressed={isSelected}
         className={`mx-auto flex items-center justify-center text-[13px] font-semibold cursor-pointer transition-colors py-1.5 ${
-          isSelected ? "text-[#2563EB] border-b-2 border-[#2563EB]" : "hover:text-[#A83800] text-gray-900"
+          isSelected ? "text-[#2563EB] border-b-2 border-[#2563EB]" : "hover:text-[#1A56DB] text-gray-900"
         }`}
       >
         {day < 10 ? `0${day}` : day}
@@ -166,7 +166,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
   }
   const remaining = (7 - (calendarCells.length % 7)) % 7;
   for (let i = 1; i <= remaining; i++) {
-    calendarCells.push(<span key={`next-${i}`} className="text-[#FDBA74] text-[13px] font-semibold py-1.5 cursor-default">{i < 10 ? `0${i}` : i}</span>);
+    calendarCells.push(<span key={`next-${i}`} className="text-[#B8D0FF] text-[13px] font-semibold py-1.5 cursor-default">{i < 10 ? `0${i}` : i}</span>);
   }
 
   return (
@@ -192,11 +192,11 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
         <div className="p-4 grid grid-cols-1 sm:grid-cols-[1.45fr_1fr] gap-4 items-stretch">
           <div className="bg-[#F3F4F7] p-4 rounded-lg border border-[#E5E7EB]">
             <div className="flex items-center justify-between mb-3 px-1">
-              <button type="button" onClick={handlePrevMonth} aria-label="Previous month" className="text-[#C44200] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
+              <button type="button" onClick={handlePrevMonth} aria-label="Previous month" className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&lt;</button>
               <span className="text-[13px] font-semibold text-gray-900">{MONTH_NAMES[currentMonth]} {currentYear}</span>
-              <button type="button" onClick={handleNextMonth} aria-label="Next month" className="text-[#C44200] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
+              <button type="button" onClick={handleNextMonth} aria-label="Next month" className="text-[#1F65FF] hover:opacity-80 text-sm font-bold cursor-pointer px-1">&gt;</button>
             </div>
-            <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#C44200] mb-1.5">
+            <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#1F65FF] mb-1.5">
               <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
             <div className="grid grid-cols-7 text-center gap-y-1 text-[13px] font-semibold text-gray-800">
@@ -213,7 +213,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
                 ampmIdx={ampmIdx}   onAmpm={setAmpmIdx}
               />
             </div>
-            <div className="bg-[#FFF4EE] border border-[#FFD6C2] rounded-lg px-3 py-3 text-center">
+            <div className="bg-[#EAF1FF] border border-[#D6E4FF] rounded-lg px-3 py-3 text-center">
               <p className="text-[11px] text-gray-500 font-medium mb-1">Selected Date &amp; Time</p>
               <p className="text-[13px] font-semibold text-gray-900">
                 {Math.min(selectedDay, daysInMonth).toString().padStart(2, "0")} {MONTH_NAMES[currentMonth]} {currentYear}, {displayTime}
@@ -224,7 +224,7 @@ export default function DateTimePickerModal({ isOpen, onClose, onSave, value, ti
 
         {/* Footer */}
         <div className="px-5 py-3.5 border-t border-[#E5E5E5] flex justify-end gap-3">
-          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#C65318] hover:bg-[#A83800] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
+          <button type="button" onClick={handleSave} className="px-7 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-semibold text-sm rounded-lg transition-all cursor-pointer">
             Save
           </button>
         </div>

@@ -83,7 +83,7 @@ export default function ReportsLogsTable({
             onClick={() => setActiveTab("checkins")}
             className={`pb-3 font-semibold transition-colors cursor-pointer relative whitespace-nowrap shrink-0 ${
               activeTab === "checkins"
-                ? "text-gray-900 border-b-2 border-[#FF5B22]"
+                ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -95,7 +95,7 @@ export default function ReportsLogsTable({
             onClick={() => setActiveTab("invitees")}
             className={`pb-3 font-semibold transition-colors cursor-pointer relative whitespace-nowrap shrink-0 ${
               activeTab === "invitees"
-                ? "text-gray-900 border-b-2 border-[#FF5B22]"
+                ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -107,7 +107,7 @@ export default function ReportsLogsTable({
             onClick={() => setActiveTab("access")}
             className={`pb-3 font-semibold transition-colors cursor-pointer relative whitespace-nowrap shrink-0 ${
               activeTab === "access"
-                ? "text-gray-900 border-b-2 border-[#FF5B22]"
+                ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -119,7 +119,7 @@ export default function ReportsLogsTable({
             onClick={() => setActiveTab("sessions")}
             className={`pb-3 font-semibold transition-colors cursor-pointer relative whitespace-nowrap shrink-0 ${
               activeTab === "sessions"
-                ? "text-gray-900 border-b-2 border-[#FF5B22]"
+                ? "text-gray-900 border-b-2 border-[#1F65FF]"
                 : "text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -309,7 +309,7 @@ export default function ReportsLogsTable({
                         </span>
                       )}
                       {log.invitationStatus === "Failed" && (
-                        <span className="bg-orange-100/70 text-orange-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
+                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
                           Sending failed
                         </span>
                       )}
@@ -362,7 +362,7 @@ export default function ReportsLogsTable({
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         ) : (
-                          <svg className="w-4 h-4 text-orange-500 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-blue-500 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         )}
@@ -403,7 +403,7 @@ export default function ReportsLogsTable({
                           Successful
                         </span>
                       ) : (
-                        <span className="bg-orange-100/70 text-orange-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
+                        <span className="bg-blue-100/70 text-blue-700 px-3 py-1 rounded-full text-[11px] font-semibold inline-block">
                           failed
                         </span>
                       )}

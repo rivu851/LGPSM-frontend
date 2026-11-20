@@ -5,7 +5,7 @@ const SOCIAL_IMAGE = {
   url: "/images/home/top_hero.webp",
   width: 1713,
   height: 918,
-  alt: "LGPSM digital invitations and event management",
+  alt: "EventQRapp digital invitations and event management",
 };
 
 // Metadata for an indexable public page: unique title/description, self-referencing canonical,
@@ -19,7 +19,7 @@ export function publicPageMetadata({
   title: string;
   description: string;
   path: string;
-  // true: use the title as-is instead of applying the "%s · LGPSM" template (home page)
+  // true: use the title as-is instead of applying the "%s · EventQRapp" template (home page)
   absolute?: boolean;
 }): Metadata {
   const socialTitle = absolute ? title : `${title} · ${SITE_NAME}`;

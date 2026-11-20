@@ -18,20 +18,20 @@ export default function SidebarFooter({ activeItem, onNavigate }: SidebarFooterP
   const active = activeItem === "notification";
 
   return (
-    <div className="border-t border-[#2C3237] pt-2.5 flex flex-col">
+    <div className="border-t border-[#000B2C]/70 pt-2.5 flex flex-col">
       <Link
         href="/notification"
         onClick={onNavigate}
         aria-current={active ? "page" : undefined}
         className={`flex items-center gap-2 px-4 py-2 text-base font-medium transition-colors ${
-          active ? "text-[#FF651D]" : "text-[#DEE2E5] hover:text-white"
+          active ? "text-[#1F65FF]" : "text-[#000B2C] hover:text-[#1F65FF]"
         }`}
       >
         <NavIcon name="notifications" />
         <span className="flex-1">Notification</span>
         {unreadCount > 0 && (
           <span
-            className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#C65318] text-white text-[11px] font-semibold flex items-center justify-center"
+            className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#1F65FF] text-white text-[11px] font-semibold flex items-center justify-center"
             aria-label={`${unreadCount} unread notifications`}
           >
             {unreadCount > 99 ? "99+" : unreadCount}

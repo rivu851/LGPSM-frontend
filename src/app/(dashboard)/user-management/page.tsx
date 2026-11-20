@@ -414,7 +414,7 @@ export default function AllUsersPage() {
             className="relative h-[47px] px-3 rounded-md hover:bg-gray-100 cursor-pointer"
           >
             <Icon name="events/filter" width={20} height={20} />
-            {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#C65318] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
+            {activeFilterCount > 0 && <span className="absolute top-1.5 right-1 size-4 rounded-full bg-[#1F65FF] text-white text-[10px] flex items-center justify-center">{activeFilterCount}</span>}
           </button>
           <button type="button" onClick={() => setAddOpen(true)} className={`${addButtonClass} cursor-pointer`}>
             <Icon name="events/add-white" width={24} height={24} />
@@ -452,7 +452,7 @@ export default function AllUsersPage() {
               </div>
               <div className="flex gap-3 px-6 py-4 border-t border-[#EEE]">
                 <button type="button" onClick={() => setFiltersOpen(false)} className="flex-1 py-3 rounded-lg border border-[#DDD] text-sm font-semibold text-black hover:bg-gray-50 cursor-pointer">Cancel</button>
-                <button type="button" onClick={() => { setFilters(draft); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#FF651D] hover:bg-[#E5560F] text-sm font-semibold text-white cursor-pointer">Apply</button>
+                <button type="button" onClick={() => { setFilters(draft); setFiltersOpen(false); }} className="flex-1 py-3 rounded-lg bg-[#1F65FF] hover:bg-[#1F65FF] text-sm font-semibold text-white cursor-pointer">Apply</button>
               </div>
             </div>
           </div>,
@@ -566,7 +566,7 @@ aria-label={`Select ${u.name}`}
                         <button
                           type="button"
                           onClick={() => toggleExpand(u.id)}
-                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#A83800] transition-colors cursor-pointer"
+                          className="flex items-center gap-2 font-medium text-[#15191C] hover:text-[#1A56DB] transition-colors cursor-pointer"
                         >
                           <svg
                             className={`w-3.5 h-3.5 text-gray-700 transform transition-transform duration-200 ${
@@ -611,11 +611,11 @@ aria-label={`Select ${u.name}`}
 
                                 <div className="space-y-1.5 pt-1">
                                   {asn.sessions.length === 0 && (
-                                    <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
+                                    <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold">• All sessions</div>
                                   )}
                                   {asn.sessions.map((sess) => (
                                     <div key={sess.id} className="flex items-center gap-2 flex-wrap">
-                                      <div className="inline-flex items-center bg-[#C65318] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
+                                      <div className="inline-flex items-center bg-[#1F65FF] text-white px-2.5 py-1 rounded-md text-[10px] font-bold tracking-tight uppercase">
                                         • {sess.name} {sess.time ? `| ${sess.time}` : ""}
                                       </div>
                                     </div>
@@ -656,7 +656,7 @@ aria-label={`Select ${u.name}`}
               disabled={selectedIds.length === 0}
               aria-label="Delete selected users"
               title="Delete selected users"
-              className="p-2.5 text-[#C44200] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
+              className="p-2.5 text-[#1F65FF] hover:text-red-700 hover:bg-red-50 border border-transparent disabled:opacity-30 disabled:hover:bg-transparent rounded-md transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -666,7 +666,7 @@ aria-label={`Select ${u.name}`}
               type="button"
               onClick={() => { setErrorFeedback(null); setIsAssignModalOpen(true); }}
               disabled={selectedIds.length === 0}
-              className="order-first inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#FF651D] text-[#C44200] hover:bg-[#FF651D] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#A83800] disabled:cursor-not-allowed"
+              className="order-first inline-flex items-center justify-center gap-3 px-8 py-3.5 border-2 border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-semibold text-lg rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#1A56DB] disabled:cursor-not-allowed"
             >
               <span>Assign {selectedIds.length} {selectedIds.length === 1 ? "user" : "users"}</span>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -697,7 +697,7 @@ aria-label={`Select ${u.name}`}
             <form onSubmit={handleEditSubmit} className="px-6 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#C44200]">*</span>
+                  User Name<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input
                   type="text"
@@ -710,7 +710,7 @@ aria-label={`Select ${u.name}`}
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#C44200]">*</span>
+                  Email<span className="text-[#1F65FF]">*</span>
                 </label>
                 <input
                   type="email"
@@ -734,7 +734,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingEdit ? "Saving..." : "Save Changes"}
                 </button>
@@ -768,7 +768,7 @@ aria-label={`Select ${u.name}`}
               )}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Event<span className="text-[#C44200]">*</span>
+                  Event<span className="text-[#1F65FF]">*</span>
                 </label>
                 <CustomDropdown portal
                   value={selectedEventId}
@@ -792,7 +792,7 @@ aria-label={`Select ${u.name}`}
                 <button
                   type="submit"
                   disabled={submittingAssign || selectedIds.length === 0 || !selectedEventId || assignableEvents(eventsList).length === 0}
-                  className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50"
                 >
                   {submittingAssign ? "Saving..." : "Assign"}
                 </button>
@@ -813,7 +813,7 @@ aria-label={`Select ${u.name}`}
 
             <button
               onClick={() => setIsAssignSuccessModalOpen(false)}
-              className="w-full py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
+              className="w-full py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-md transition-colors cursor-pointer"
             >
               Okay
             </button>

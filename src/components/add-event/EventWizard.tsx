@@ -445,7 +445,7 @@ export default function EventWizard({
                   type="button"
                   autoFocus
                   onClick={onDismissDraftStatus}
-                  className="rounded-lg bg-[#FF651D] px-5 py-3 text-sm font-semibold text-white hover:bg-[#E5520F] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FF651D]"
+                  className="rounded-lg bg-[#1F65FF] px-5 py-3 text-sm font-semibold text-white hover:bg-[#1F65FF] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1F65FF]"
                 >
                   {canDiscard ? "Keep draft and continue" : "Continue"}
                 </button>
@@ -482,8 +482,8 @@ export default function EventWizard({
           <div className="w-full xl:w-[62%] flex flex-col min-w-0">
             <StepHeader currentStep={currentStep} onStepClick={handleStepChange} maxUnlockedStep={maxUnlockedStep} />
             {readOnly && (
-              <div role="status" className="mx-6 mt-5 rounded-md border border-[#FDBA74] bg-[#FFF7ED] px-4 py-3 text-sm text-[#7C2D12]">
-                <p className="font-semibold text-[#9A3412]">Editing is closed</p>
+              <div role="status" className="mx-6 mt-5 rounded-md border border-[#B8D0FF] bg-[#EAF1FF] px-4 py-3 text-sm text-[#0F3A99]">
+                <p className="font-semibold text-[#1647B8]">Editing is closed</p>
                 <p className="mt-0.5">{readOnlyReason ? `${readOnlyReason} ` : ""}Everything is shown as it was saved. You can look through the three steps, but nothing can be changed.</p>
               </div>
             )}
@@ -495,7 +495,7 @@ export default function EventWizard({
               ) : featuresError || !features ? (
                 <div className="p-8 text-center space-y-3" role="alert">
                   <p className="text-sm text-rose-700">{featuresError || "Event settings are unavailable."} The event form needs the saved platform settings before you can continue.</p>
-                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#FF651D] rounded-md text-sm font-medium text-[#C44200]">Retry</button>
+                  <button type="button" onClick={() => void loadFeatures()} className="px-4 py-2 border border-[#1F65FF] rounded-md text-sm font-medium text-[#1F65FF]">Retry</button>
                 </div>
               ) : currentStep === 1 ? (
                 <Step1EventDetails
@@ -551,7 +551,7 @@ export default function EventWizard({
               <div className="px-6 pb-6 pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-[#E5E5E5]">
                 <div className="flex items-center gap-3 pt-4">
                   {currentStep > 1 ? <button type="button" onClick={() => setCurrentStep(currentStep - 1)} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back</button> : <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
-                  {currentStep < 3 ? <button type="button" onClick={() => setCurrentStep(currentStep + 1)} className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">Next</button> : <button type="button" onClick={onCancel} className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
+                  {currentStep < 3 ? <button type="button" onClick={() => setCurrentStep(currentStep + 1)} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">Next</button> : <button type="button" onClick={onCancel} className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">Back to event</button>}
                 </div>
                 {readOnlyActions && <div className="flex items-center gap-3 pt-4">{readOnlyActions}</div>}
               </div>

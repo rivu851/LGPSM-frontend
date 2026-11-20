@@ -133,7 +133,7 @@ export default function SubHeroIntro() {
 
         {/* Description */}
         <p ref={descRef} className="max-w-2xl mx-auto text-sm sm:text-base text-gray-500 font-normal leading-relaxed font-[family-name:var(--font-space-grotesk)]">
-          LGPSM helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.
+          EventQRapp helps you create elegant digital invitations with QR codes, RSVP tracking, guest management, and instant sharing. Perfect for weddings, birthdays, corporate events, and special occasions.
         </p>
 
         {/* Book a Demo Button & Animated Spiralled Arrow SVG */}
@@ -143,9 +143,9 @@ export default function SubHeroIntro() {
           </Link>
           
           {/* Orange Spiralled Arrow SVG matching Figma design */}
-          <div ref={arrowContainerRef} className="mt-0 text-[#C44200] flex justify-center z-10">
+          <div ref={arrowContainerRef} className="mt-0 text-[#1F65FF] flex justify-center z-10">
             <svg
-              className="w-14 h-20 text-[#C44200]"
+              className="w-14 h-20 text-[#1F65FF]"
               viewBox="0 0 60 80"
               fill="none"
               stroke="currentColor"
@@ -169,7 +169,7 @@ export default function SubHeroIntro() {
           <div className="rounded-2xl overflow-hidden border border-gray-100 transition-shadow hover:">
             <Image
               src="/images/home/mid_hero.webp"
-              alt="LGPSM Interactive App Dashboard Preview"
+              alt="EventQRapp Interactive App Dashboard Preview"
               width={1200}
               height={700}
               loading="eager"

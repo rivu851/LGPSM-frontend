@@ -78,7 +78,7 @@ export default function CategoryFields({
   };
   const withDelete = (options: CategoryOption[], remove: (o: CategoryOption) => Promise<void>) =>
     removable ? options.map((o) => (o.custom ? { ...o, onRemove: () => void remove(o), removeLabel: `Delete ${stripCustom(o.label)}` } : o)) : options;
-  const starMark = <span className="text-[#FF651D] ml-0.5">*</span>;
+  const starMark = <span className="text-[#1F65FF] ml-0.5">*</span>;
   const star = required ? starMark : null;
   // A subcategory can only be required once the chosen category has some; before that (or when it has none) the star would promise a rule that cannot apply
   const subStar = required && !subcategoryOptional && (!categoryId || subOptions.length > 0) ? starMark : null;
@@ -233,7 +233,7 @@ export function CategoryModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-[11px] text-base font-semibold text-white bg-[#FF651D] rounded-lg hover:bg-[#E5520F] disabled:opacity-60 cursor-pointer"
+              className="px-6 py-[11px] text-base font-semibold text-white bg-[#1F65FF] rounded-lg hover:bg-[#1F65FF] disabled:opacity-60 cursor-pointer"
             >
               {submitting ? "Adding..." : "Add"}
             </button>

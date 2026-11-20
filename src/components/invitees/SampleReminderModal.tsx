@@ -29,8 +29,8 @@ export default function SampleReminderModal({ columns, onDownload, onContinue, o
         </div>
         {/* the three buttons always in one row */}
         <div className="grid grid-cols-2 gap-2 pt-1">
-          <button type="button" onClick={onDownload} className="px-2 py-2 whitespace-nowrap text-center border border-[#FF651D] rounded-md text-[13px] font-medium text-[#C44200] hover:bg-[#D6F5E1] hover:text-[#0F7A33] cursor-pointer">Download sample</button>
-          <button type="button" onClick={onContinue} className="px-2 py-2 whitespace-nowrap text-center bg-[#C65318] hover:bg-[#A83800] rounded-md text-[13px] font-medium text-white cursor-pointer">I have it, choose file</button>
+          <button type="button" onClick={onDownload} className="px-2 py-2 whitespace-nowrap text-center border border-[#1F65FF] rounded-md text-[13px] font-medium text-[#1F65FF] hover:bg-[#EAF1FF] hover:text-[#1A56DB] cursor-pointer">Download sample</button>
+          <button type="button" onClick={onContinue} className="px-2 py-2 whitespace-nowrap text-center bg-[#1F65FF] hover:bg-[#1A56DB] rounded-md text-[13px] font-medium text-white cursor-pointer">I have it, choose file</button>
         </div>
       </div>
     </div>

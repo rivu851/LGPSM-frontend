@@ -203,7 +203,7 @@ export default function PricingSection() {
           className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mb-14 text-xs sm:text-sm font-semibold text-[#1C2228]"
         >
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#1F65FF]/20 text-[#1F65FF] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Free 15-day trial</span>
@@ -212,7 +212,7 @@ export default function PricingSection() {
           <div className="w-[1px] h-4 bg-gray-200 hidden sm:block" />
 
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#1F65FF]/20 text-[#1F65FF] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Unlimited Team Members</span>
@@ -221,7 +221,7 @@ export default function PricingSection() {
           <div className="w-[1px] h-4 bg-gray-200 hidden sm:block" />
 
           <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-[#FF7338]/20 text-[#C44200] flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-5 h-5 rounded-full bg-[#1F65FF]/20 text-[#1F65FF] flex items-center justify-center text-xs font-bold shrink-0">
               ✓
             </span>
             <span>Cancel Anytime</span>
@@ -242,7 +242,7 @@ export default function PricingSection() {
               </span>
               
               {/* Curved SVG arrow starting from above "Billed Yearly", looping/arching upward to point to the text */}
-              <svg className="w-14 h-11 text-[#C44200] ml-3 -mt-3.5 overflow-visible" viewBox="0 0 55 40" fill="none">
+              <svg className="w-14 h-11 text-[#1F65FF] ml-3 -mt-3.5 overflow-visible" viewBox="0 0 55 40" fill="none">
                 {/* Looped curve arching up-left */}
                 <path
                   ref={arrowPathRef}
@@ -314,7 +314,7 @@ export default function PricingSection() {
               <p className="text-xs text-gray-500 font-medium mb-8">Up to 250 Attendees per month</p>
 
               {/* CTA Button */}
-              <Link href="/signup" className="block w-full text-center py-3 px-4 border border-[#c65318] text-[#c65318] hover:bg-[#c65318] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <Link href="/signup" className="block w-full text-center py-3 px-4 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </Link>
 
@@ -324,27 +324,27 @@ export default function PricingSection() {
               {/* Feature List */}
               <ul className="space-y-4 text-xs text-gray-500 font-normal leading-relaxed">
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Up to 250 Smart QR Invitations sent via Email/WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Secured Access Control: Basic dynamic QR generation to prevent duplicate entries</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Single-Session Check-in: One main gate scanning entry</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Essential Order/Attendee Info: Basic RSVP tracking and real-time dashboard</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Self-Serve Setup: Easy-to-use template builder for invitations</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Standard Support: Email support within 24 hours</span>
                 </li>
               </ul>
@@ -357,7 +357,7 @@ export default function PricingSection() {
               <h2 className="text-xl font-bold text-white mb-2">Professional Plan</h2>
               
               {/* Most Popular Badge */}
-              <div className="inline-block bg-[#c65318] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
+              <div className="inline-block bg-[#1F65FF] text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-none mb-3 tracking-wider">
                 Most Popular
               </div>
 
@@ -369,7 +369,7 @@ export default function PricingSection() {
               <p className="text-xs text-gray-300 font-medium mb-8">Up to 1,500 Attendees per month</p>
 
               {/* CTA Button */}
-              <Link href="/signup" className="block w-full text-center py-3 px-4 bg-[#c65318] hover:bg-[#A83800] text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <Link href="/signup" className="block w-full text-center py-3 px-4 bg-[#1F65FF] hover:bg-[#1A56DB] text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </Link>
 
@@ -379,19 +379,19 @@ export default function PricingSection() {
               {/* Feature List */}
               <ul className="space-y-4 text-xs text-gray-300 font-normal leading-relaxed">
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Up to 1,500 Smart QR Invitations sent via Email/WhatsApp</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Session-Wise Control: Manage separate entry permissions for up to 5 individual tracks or segments (e.g., Breakfast, Lunch, Dinner, Gaming Zones, VIP Lounges)</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Custom Branding: Remove platform watermarks and use your company's brand identity, logos, and custom colors</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Multi-Device Syncing: Allow up to 5 ground-crew members to scan and sync check-ins simultaneously in real-time</span>
                 </li>
               </ul>
@@ -412,7 +412,7 @@ export default function PricingSection() {
               </p>
 
               {/* CTA Button */}
-              <Link href="/signup" className="block w-full text-center py-3 px-4 border border-[#c65318] text-[#c65318] hover:bg-[#c65318] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
+              <Link href="/signup" className="block w-full text-center py-3 px-4 border border-[#1F65FF] text-[#1F65FF] hover:bg-[#1F65FF] hover:text-white font-bold text-xs rounded-none transition-all cursor-pointer mb-8">
                 Start My 15-day Trial
               </Link>
 
@@ -422,19 +422,19 @@ export default function PricingSection() {
               {/* Feature List */}
               <ul className="space-y-4 text-xs text-gray-500 font-normal leading-relaxed">
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Unlimited Smart QR Invitations & Attendee Capacity</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Unlimited Session-Wise Tracking: Complete granular control across endless breakout rooms, sub-events, and VIP segments</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Dedicated Account Manager & On-Ground Support: Remote or physical standby support to ensure zero entry bottlenecks on event day</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="w-2 h-2 rounded-full bg-[#FF5B22] shrink-0 mt-1.5" />
+                  <span className="w-2 h-2 rounded-full bg-[#1F65FF] shrink-0 mt-1.5" />
                   <span>Advanced API & CRM Integrations: Seamlessly sync attendee data with HubSpot, Salesforce, or your existing marketing stacks</span>
                 </li>
               </ul>

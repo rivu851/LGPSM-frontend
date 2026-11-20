@@ -41,7 +41,7 @@ const labelClass = "text-sm font-medium text-gray-900";
 const inputClass = "w-full px-3.5 py-2.5 bg-[#FAFAFA] border rounded-md text-sm text-gray-900 placeholder:text-[#6B6B6B] focus:outline-none focus:border-black";
 const border = (err?: string) => (err ? "!border-rose-500" : "border-[#E0E0E0]");
 const Err = ({ msg }: { msg?: string }) => (msg ? <p className="mt-1 text-xs font-medium text-rose-600">{msg}</p> : null);
-const Req = () => <span className="text-[#FF651D] ml-0.5">*</span>;
+const Req = () => <span className="text-[#1F65FF] ml-0.5">*</span>;
 
 function OrganizerSelectField({
   selectedIds,
@@ -149,7 +149,7 @@ function OrganizerSelectField({
                 return (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#FF651D]/10 text-[#C44200] border border-[#FF651D]/20"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1F65FF]/10 text-[#1F65FF] border border-[#1F65FF]/20"
                   >
                     <span>{name}</span>
                     <span
@@ -205,7 +205,7 @@ function OrganizerSelectField({
                     key={org._id}
                     onClick={() => toggleSelect(org._id)}
                     className={`flex items-center justify-between px-3 py-2 rounded-md cursor-pointer transition-colors ${
-                      isSelected ? "bg-orange-50/70 text-gray-900 font-medium" : "hover:bg-gray-50 text-gray-700"
+                      isSelected ? "bg-blue-50/70 text-gray-900 font-medium" : "hover:bg-gray-50 text-gray-700"
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -214,7 +214,7 @@ function OrganizerSelectField({
                         name="event-organizer"
                         checked={isSelected}
                         onChange={() => {}}
-                        className="w-4 h-4 border-gray-300 cursor-pointer accent-[#FF651D]"
+                        className="w-4 h-4 border-gray-300 cursor-pointer accent-[#1F65FF]"
                       />
                       <div className="truncate">
                         <div className="text-xs font-semibold text-gray-900 truncate">{organizationName}</div>
@@ -222,7 +222,7 @@ function OrganizerSelectField({
                         <div className="text-[11px] text-gray-500 truncate">{org.email}</div>
                       </div>
                     </div>
-                    {isSelected && <span className="text-[#FF651D] text-xs font-bold shrink-0 ml-2">✓</span>}
+                    {isSelected && <span className="text-[#1F65FF] text-xs font-bold shrink-0 ml-2">✓</span>}
                   </div>
                 );
               })
@@ -243,7 +243,7 @@ function DateButton({ label, value, placeholder, onClick, error, optional = fals
       onClick={onClick}
       aria-label={label}
       aria-invalid={!!error}
-      className={`${inputClass} ${border(error)} ${optional ? "focus:border-[#16A34A]" : "focus:border-[#FF651D]"} flex items-center justify-between gap-2 text-left cursor-pointer`}
+      className={`${inputClass} ${border(error)} ${optional ? "focus:border-[#16A34A]" : "focus:border-[#1F65FF]"} flex items-center justify-between gap-2 text-left cursor-pointer`}
     >
       <span className={value ? "text-gray-900" : "text-[#828282]"}>{formatDateTime(value, placeholder)}</span>
       <svg className="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -291,7 +291,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Product Launch Event 2026"
           aria-invalid={!!errors.title}
-          className={`${inputClass} ${border(errors.title)} focus:border-[#FF651D]`}
+          className={`${inputClass} ${border(errors.title)} focus:border-[#1F65FF]`}
         />
         <Err msg={errors.title} />
       </div>
@@ -381,7 +381,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
                   type="checkbox"
                   checked={draft.rsvpEnabled}
                   onChange={(e) => onChange({ rsvpEnabled: e.target.checked })}
-                  className="size-4 rounded border-gray-300 accent-[#16A34A] cursor-pointer"
+                  className="size-4 rounded border-gray-300 accent-[#1F65FF] cursor-pointer"
                 />
                 <span className={labelClass}>Event RSVP Acceptance</span>
               </label>
@@ -431,7 +431,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
           onChange={(e) => onChange({ venue: e.target.value })}
           placeholder="Where is it? (shown on the invitation card)"
           aria-invalid={!!errors.venue}
-          className={`${inputClass} ${border(errors.venue)} focus:border-[#FF651D]`}
+          className={`${inputClass} ${border(errors.venue)} focus:border-[#1F65FF]`}
         />
         <p className="mt-1 text-xs text-[#828282] text-right">{EVENT_LOCATION_MAX_LENGTH - draft.venue.length} Chars remaining</p>
         <Err msg={errors.venue} />
@@ -454,7 +454,7 @@ export default function Step1EventDetails({ draft, onChange, onOpenDatePicker, c
         <button type="button" onClick={onCancel} className="px-6 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-900 text-sm font-medium rounded-md cursor-pointer">
           Cancel
         </button>
-        <button type="submit" className="px-8 py-2.5 bg-[#FF651D] hover:bg-[#E5520F] text-white text-sm font-medium rounded-md cursor-pointer">
+        <button type="submit" className="px-8 py-2.5 bg-[#1F65FF] hover:bg-[#1F65FF] text-white text-sm font-medium rounded-md cursor-pointer">
           Next
         </button>
       </div>}

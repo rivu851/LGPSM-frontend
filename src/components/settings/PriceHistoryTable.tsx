@@ -33,7 +33,7 @@ export default function PriceHistoryTable({ history }: PriceHistoryTableProps) {
         <h2 className="text-xl font-medium text-[#15191C]">Price Change History</h2>
         <button
           onClick={handleExportCSV}
-          className="text-xs font-semibold text-[#C44200] hover:underline transition-all"
+          className="text-xs font-semibold text-[#1F65FF] hover:underline transition-all"
         >
           Export CSV
         </button>

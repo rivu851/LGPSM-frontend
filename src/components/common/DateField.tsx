@@ -156,8 +156,8 @@ export default function DateField({ value, onChange, placeholder, min, max, rang
                       aria-pressed={selected}
                       aria-current={v === today ? "date" : undefined}
                       className={`h-9 text-sm rounded-md cursor-pointer disabled:cursor-not-allowed disabled:text-[#C9C9C9] ${
-                        selected ? "bg-[#C65318] text-white font-semibold" : inRange ? "bg-[#FFF1EA] text-[#15191C] rounded-none hover:bg-[#FFE3D7]" : "text-[#15191C] hover:bg-gray-100"
-                      } ${v === today && !selected ? "ring-1 ring-inset ring-[#C65318] font-semibold" : ""}`}
+                        selected ? "bg-[#1F65FF] text-white font-semibold" : inRange ? "bg-[#EAF1FF] text-[#15191C] rounded-none hover:bg-[#D6E4FF]" : "text-[#15191C] hover:bg-gray-100"
+                      } ${v === today && !selected ? "ring-1 ring-inset ring-[#1F65FF] font-semibold" : ""}`}
                     >
                       {d}
                     </button>
@@ -169,12 +169,12 @@ export default function DateField({ value, onChange, placeholder, min, max, rang
             <div>
               <div className="grid grid-cols-4 gap-1 pb-2">
                 {years.map((y) => (
-                  <button key={y} type="button" onClick={() => setView((v) => ({ ...v, y }))} className={`h-8 text-xs rounded-md cursor-pointer ${y === view.y ? "bg-[#C65318] text-white font-semibold" : "hover:bg-gray-100 text-[#15191C]"}`}>{y}</button>
+                  <button key={y} type="button" onClick={() => setView((v) => ({ ...v, y }))} className={`h-8 text-xs rounded-md cursor-pointer ${y === view.y ? "bg-[#1F65FF] text-white font-semibold" : "hover:bg-gray-100 text-[#15191C]"}`}>{y}</button>
                 ))}
               </div>
               <div className="grid grid-cols-3 gap-1 border-t border-[#EEE] pt-2">
                 {MONTHS.map((name, m) => (
-                  <button key={name} type="button" onClick={() => { setView((v) => ({ ...v, m })); setMode("days"); }} className={`h-9 text-sm rounded-md cursor-pointer ${m === view.m ? "bg-[#FFF1EA] text-[#C44200] font-semibold" : "hover:bg-gray-100 text-[#15191C]"}`}>{name.slice(0, 3)}</button>
+                  <button key={name} type="button" onClick={() => { setView((v) => ({ ...v, m })); setMode("days"); }} className={`h-9 text-sm rounded-md cursor-pointer ${m === view.m ? "bg-[#EAF1FF] text-[#1F65FF] font-semibold" : "hover:bg-gray-100 text-[#15191C]"}`}>{name.slice(0, 3)}</button>
                 ))}
               </div>
             </div>
@@ -182,7 +182,7 @@ export default function DateField({ value, onChange, placeholder, min, max, rang
 
           <div className="mt-2 pt-2 border-t border-[#EEE] flex items-center justify-between">
             <button type="button" onClick={() => pick("")} disabled={!value} className="px-2 py-1 text-xs font-semibold text-[#6B6B6B] hover:text-black disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Clear</button>
-            <button type="button" onClick={() => { if (!((min && today < min) || (max && today > max))) pick(today); }} disabled={(!!min && today < min) || (!!max && today > max)} className="px-2 py-1 text-xs font-semibold text-[#C44200] hover:underline disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Today</button>
+            <button type="button" onClick={() => { if (!((min && today < min) || (max && today > max))) pick(today); }} disabled={(!!min && today < min) || (!!max && today > max)} className="px-2 py-1 text-xs font-semibold text-[#1F65FF] hover:underline disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Today</button>
           </div>
         </div>,
         document.body,

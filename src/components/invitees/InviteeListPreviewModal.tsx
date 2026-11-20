@@ -174,7 +174,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
           </div>
           <div className="flex items-center gap-3 shrink-0">
             {onAddInvitees && !readOnly && (
-              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
+              <button type="button" onClick={onAddInvitees} className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md cursor-pointer">Add Invitees</button>
             )}
             <button type="button" onClick={onClose} aria-label="Close" className="size-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-900 cursor-pointer">
               <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -219,7 +219,7 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
                 <tr>
                   {!readOnly && (
                     <th className="py-2.5 pr-2 w-8">
-                      <input type="checkbox" aria-label="Select all invitees on this page that can be deleted" checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-orange cursor-pointer disabled:cursor-not-allowed" />
+                      <input type="checkbox" aria-label="Select all invitees on this page that can be deleted" checked={allOnPage} disabled={!deletable.length} onChange={(e) => setSelected(e.target.checked ? Array.from(new Set([...selected, ...deletable.map((m) => m.id)])) : selected.filter((id) => !deletable.some((m) => m.id === id)))} className="size-4 check-primary cursor-pointer disabled:cursor-not-allowed" />
                     </th>
                   )}
                   <th className="py-2.5 pr-3 font-medium w-12">#</th>
@@ -233,10 +233,10 @@ export default function InviteeListPreviewModal({ eventId, title = "Invitee Prev
               </thead>
               <tbody className="divide-y divide-[#EEEEEE] text-[#4B4F52]">
                 {members.map((m, i) => (
-                  <tr key={m.id} className={selected.includes(m.id) ? "bg-orange-50/60" : undefined}>
+                  <tr key={m.id} className={selected.includes(m.id) ? "bg-blue-50/60" : undefined}>
                     {!readOnly && (
                       <td className="py-2.5 pr-2">
-                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 check-orange cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
+                        <input type="checkbox" aria-label={`Select ${m.name}`} checked={selected.includes(m.id)} disabled={!canDelete(m)}  onChange={(e) => setSelected(e.target.checked ? [...selected, m.id] : selected.filter((x) => x !== m.id))} className="size-4 check-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-40" />
                       </td>
                     )}
                     <td className="py-2.5 pr-3 text-[#6B6B6B]">{(page - 1) * PAGE_SIZE + i + 1}</td>

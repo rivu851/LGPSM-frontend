@@ -70,9 +70,9 @@ const clickableCard = "relative cursor-pointer transition-colors hover:bg-[#EEF3
 
 // Figma widget: coloured round icon, big number, label, arrow to the related list
 function MetricCard({ value, label, href, tone, icon }: { value: number | null; label: string; href: string; tone: "peach" | "mint" | "lavender"; icon: React.ReactNode }) {
-  const tones = { peach: "bg-[#FFDCCF] text-[#C44200]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
-  const arrow = { peach: "group-hover:text-[#C44200]", mint: "group-hover:text-[#15803D]", lavender: "group-hover:text-[#2C2EB5]" };
-  const hover = { peach: "hover:bg-[#FFDCCF]/60", mint: "hover:bg-[#C9F6E6]/60", lavender: "hover:bg-[#DCE1FF]/60" };
+  const tones = { peach: "bg-[#D6E4FF] text-[#1F65FF]", mint: "bg-[#C9F6E6] text-[#15803D]", lavender: "bg-[#DCE1FF] text-[#2C2EB5]" };
+  const arrow = { peach: "group-hover:text-[#1F65FF]", mint: "group-hover:text-[#15803D]", lavender: "group-hover:text-[#2C2EB5]" };
+  const hover = { peach: "hover:bg-[#D6E4FF]/60", mint: "hover:bg-[#C9F6E6]/60", lavender: "hover:bg-[#DCE1FF]/60" };
   return (
     <div className={`group ${card} relative cursor-pointer transition-colors focus-within:border-black ${hover[tone]} p-4 flex flex-col gap-3`}>
       <div className="flex items-start justify-between">
@@ -96,7 +96,7 @@ function Ring({ value, max, center, label }: { value: number; max: number; cente
       <div className="relative size-16">
         <svg viewBox="0 0 64 64" className="size-16 -rotate-90" aria-hidden>
           <circle cx="32" cy="32" r={r} fill="none" stroke="#E8ECFF" strokeWidth="6" />
-          <circle cx="32" cy="32" r={r} fill="none" stroke="#FF651D" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} />
+          <circle cx="32" cy="32" r={r} fill="none" stroke="#1F65FF" strokeWidth="6" strokeLinecap="round" strokeDasharray={`${pct * c} ${c}`} />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-900">{center}</span>
       </div>
@@ -110,7 +110,7 @@ function DeliveryDonut({ sent, notSent, failed }: { sent: number; notSent: numbe
   const r = 36;
   const c = 2 * Math.PI * r;
   const parts = [
-    { v: sent, color: "#FF651D", label: "Sent" },
+    { v: sent, color: "#1F65FF", label: "Sent" },
     { v: notSent, color: "#262A2D", label: "Not sent" },
     { v: failed, color: "#9CA3AF", label: "Failed" },
   ];
@@ -268,7 +268,7 @@ export default function EventDetailsPage() {
           <p className="text-sm text-[#4B4F52] break-words">{loadError}</p>
           <div className="flex justify-center gap-3">
             <button type="button" onClick={load} className="px-4 py-2 border border-[#E0E0E0] rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer">Retry</button>
-            <Link href="/events" className="px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white rounded-md text-sm font-medium">Back to Events</Link>
+            <Link href="/events" className="px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white rounded-md text-sm font-medium">Back to Events</Link>
           </div>
         </div>
       </div>
@@ -295,7 +295,7 @@ export default function EventDetailsPage() {
     "Invitation not sent": "bg-[#FFE9C0] text-[#6F5600]",
     Upcoming: "bg-[#C0FFD5] text-[#0F7A33]",
     Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
-    Completed: "bg-[#FFE3D7] text-[#A83800]",
+    Completed: "bg-[#D6E4FF] text-[#1A56DB]",
     Cancelled: "bg-gray-200 text-gray-700",
   };
   const sessionRow = (id: string) => report?.sessionReports.find((r) => String(r.sessionId) === id);
@@ -324,7 +324,7 @@ export default function EventDetailsPage() {
           <div className="min-w-0 md:flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h2 className="text-2xl sm:text-[28px] font-medium text-black break-words">{event.title}</h2>
-              {categoryPill && <span className="px-2.5 py-0.5 border border-[#FF651D] text-[#C44200] text-xs font-medium rounded">{categoryPill}</span>}
+              {categoryPill && <span className="px-2.5 py-0.5 border border-[#1F65FF] text-[#1F65FF] text-xs font-medium rounded">{categoryPill}</span>}
             </div>
             {/* from tablet width up the status, organizer, dates and venue stay on one line, whatever the status says; a long venue is shortened, not moved down */}
             <div className="mt-3 flex items-center gap-x-3 gap-y-2 flex-wrap md:flex-nowrap text-xs text-[#4B4F52]">
@@ -342,7 +342,7 @@ export default function EventDetailsPage() {
                 <>
                   <span className="text-[#D3D3D3] hidden sm:inline">|</span>
                   <span className="inline-flex items-start gap-1.5 min-w-0 md:items-center" title={venue}>
-                    <svg className="w-4 h-4 shrink-0 text-[#C44200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
+                    <svg className="w-4 h-4 shrink-0 text-[#1F65FF]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Location">
                       <path d="M12 21s7-6.2 7-11.5A7 7 0 005 9.5C5 14.8 12 21 12 21z" />
                       <circle cx="12" cy="9.5" r="2.5" />
                     </svg>
@@ -370,14 +370,14 @@ export default function EventDetailsPage() {
             )}
             {/* After sending, Figma 426:2 keeps Edit visible but faded: the event is locked (the API refuses edits too) */}
             {reportLoaded ? (
-              <Link href={`/events/${eventId}/edit`} title={editLocked ? "Editing is closed for this event: its details are shown as saved" : undefined} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
+              <Link href={`/events/${eventId}/edit`} title={editLocked ? "Editing is closed for this event: its details are shown as saved" : undefined} className="inline-flex items-center gap-2 px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               Edit
               </Link>
             ) : (
-              <button type="button" disabled title={editLocked ? "This event can’t be edited after invitations have been sent" : "Checking whether this event can still be edited…"} className="inline-flex items-center gap-2 px-4 py-2 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <button type="button" disabled title={editLocked ? "This event can’t be edited after invitations have been sent" : "Checking whether this event can still be edited…"} className="inline-flex items-center gap-2 px-4 py-2 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
@@ -460,7 +460,7 @@ export default function EventDetailsPage() {
           <section className={`${card} p-4 flex flex-col`} aria-labelledby="card-preview-heading">
             <div className="flex items-center justify-between mb-3">
               <h3 id="card-preview-heading" className="text-base font-medium text-gray-900">Card Preview</h3>
-              <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#A83800] cursor-pointer">
+              <button type="button" onClick={() => setCardExpanded(true)} aria-label="Expand card preview" className="p-1 -m-1 text-gray-900 hover:text-[#1A56DB] cursor-pointer">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
@@ -484,16 +484,16 @@ export default function EventDetailsPage() {
             </div>
             {/* Faded once invitations have gone out (Figma 426:2); resends happen per guest on the Invitees tab */}
             {event.status === "CANCELLED" ? (
-              <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
+              <span aria-disabled="true" title="This event is cancelled. Invitations can no longer be sent." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-40 cursor-not-allowed">
                 Send Invitation
               </span>
             ) : invitationLifecycleStarted ? (
-              <span aria-disabled="true" title="Invitations have been sent. Resend to guests from the Invitees tab." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
+              <span aria-disabled="true" title="Invitations have been sent. Resend to guests from the Invitees tab." className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] text-white text-sm font-medium rounded-md opacity-50 cursor-not-allowed">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
               Send Invitation
             </span>
             ) : (
-            <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-medium rounded-md">
+            <Link href={`/events/${eventId}/invitees`} className="mt-3 w-full inline-flex items-center justify-center gap-2 py-2.5 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-medium rounded-md">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
               Send Invitation
             </Link>

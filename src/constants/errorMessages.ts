@@ -1,5 +1,5 @@
 /**
- * Shared user-facing error messages and fallback error text for LGPSM Frontend.
+ * Shared user-facing error messages and fallback error text for EventQRapp Frontend.
  *
  * Centralizes standard UI validation messages, fallback network error strings,
  * and check-in/QR user-facing notices.

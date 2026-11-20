@@ -83,7 +83,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
                     role="switch"
                     aria-checked={values[item.key]}
                     onClick={() => setValues((v) => (v ? { ...v, [item.key]: !v[item.key] } : v))}
-                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer ${values[item.key] ? "bg-[#FF651D]" : "bg-gray-300"}`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer ${values[item.key] ? "bg-[#1F65FF]" : "bg-gray-300"}`}
                   >
                     <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${values[item.key] ? "translate-x-5" : ""}`} />
                   </button>
@@ -99,7 +99,7 @@ export default function SettingsToggleList<K extends string>({ title, descriptio
               type="button"
               onClick={handleSave}
               disabled={!dirty || saving}
-              className="px-4 py-[9px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-4 py-[9px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {saving ? "Saving..." : "Save Changes"}
             </button>

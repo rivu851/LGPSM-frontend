@@ -51,7 +51,7 @@ interface EventRow {
 const STATUS_STYLE: Record<RowStatus, string> = {
   Upcoming: "bg-[#C0FFD5] text-[#0F7A33]",
   Ongoing: "bg-[#CCD2FF] text-[#2C2EB5]",
-  Past: "bg-[#FFE3D7] text-[#A83800]",
+  Past: "bg-[#D6E4FF] text-[#1A56DB]",
   "Invitation not sent": "bg-[#FFE9C0] text-[#6F5600]",
   Cancelled: "bg-gray-200 text-gray-700",
 };
@@ -60,7 +60,7 @@ const STATUS_STYLE: Record<RowStatus, string> = {
 const STATUS_HOVER: Record<RowStatus, string> = {
   Upcoming: "hover:bg-[#C0FFD5]/50",
   Ongoing: "hover:bg-[#CCD2FF]/50",
-  Past: "hover:bg-[#FFE3D7]/60",
+  Past: "hover:bg-[#D6E4FF]/60",
   "Invitation not sent": "hover:bg-[#FFE9C0]/60",
   Cancelled: "hover:bg-gray-200/60",
 };
@@ -189,7 +189,7 @@ function OrganizerCardMenu({ row, onDelete }: { row: EventRow; onDelete: (row: E
     setPosition({ top: rect.bottom + 4, left: Math.max(8, Math.min(rect.left + rect.width / 2 - 77.5, window.innerWidth - 163)) });
     setOpen(true);
   };
-  const item = "flex items-center gap-1.5 py-1 text-sm font-medium text-white hover:text-[#FFB08A] cursor-pointer";
+  const item = "flex items-center gap-1.5 py-1 text-sm font-medium text-white hover:text-[#B8D0FF] cursor-pointer";
   const active = row.status !== "Cancelled" && !row.ended;
   return (
     <>
@@ -245,7 +245,7 @@ function OrganizerEventCard({ row, onOpen, onDelete }: { row: EventRow; onOpen: 
       <div className="flex-1 min-w-0 flex flex-col gap-3">
         <div className="flex flex-col gap-1.5 items-start">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2 py-[3px] border border-[#FF651D] rounded-[3px] text-xs font-medium text-[#C44200]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
+            <span className="px-2 py-[3px] border border-[#1F65FF] rounded-[3px] text-xs font-medium text-[#1F65FF]">{row.category === "—" ? "Event" : `${row.category} Event`}</span>
             <span className={`px-2.5 py-[3px] rounded-full text-xs font-medium ${STATUS_STYLE[row.phase]}`}>{row.phase}</span>
           </div>
           <h2 className="text-base font-medium text-[#15191C] break-words">{row.name}</h2>
@@ -428,7 +428,7 @@ export default function EventListingPage() {
       <DateField className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={filters.to} min={filters.from || undefined} rangeFrom={filters.from} rangeTo={filters.to} onChange={(v) => setFilter({ to: v })} />
       {applyingFilters && <span role="status" className="text-xs text-[#6B6B6B]">Loading session totals…</span>}
       {activeFilterCount > 0 && (
-        <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#C44200] hover:bg-[#FFF1EA] rounded-md cursor-pointer whitespace-nowrap">Clear filters</button>
+        <button type="button" onClick={clearFilters} className="h-[47px] px-3 text-xs font-semibold text-[#1F65FF] hover:bg-[#EAF1FF] rounded-md cursor-pointer whitespace-nowrap">Clear filters</button>
       )}
     </div>
   );
@@ -456,7 +456,7 @@ export default function EventListingPage() {
             </div>
             <div className="min-w-0 xl:shrink-0">{filterBar}</div>
             <div className="flex items-center gap-3 shrink-0 w-fit">
-              <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+              <Link href="/events/add" className="inline-flex items-center gap-2 px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
                 <Icon name="events/add-white" width={24} height={24} />
                 Add
               </Link>
@@ -479,7 +479,7 @@ export default function EventListingPage() {
             // a failed load is not "no events": the error banner above says what happened
             loadError && rows.length === 0 ? null : <p className="py-12 text-center text-sm text-[#6B6B6B]">
               {rows.length === 0 ? (
-                <>No events yet. <Link href="/events/add" className="text-[#C44200] font-medium underline">Create your first event</Link></>
+                <>No events yet. <Link href="/events/add" className="text-[#1F65FF] font-medium underline">Create your first event</Link></>
               ) : (
                 "No events match your search or filters."
               )}
@@ -528,7 +528,7 @@ export default function EventListingPage() {
                 placeholder="All Events"
               />
             </div>
-            <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg">
+            <Link href="/events/add" className="inline-flex items-center gap-2 px-4 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
               Add Event
             </Link>
@@ -557,7 +557,7 @@ export default function EventListingPage() {
                 loadError && rows.length === 0 ? null : <tr>
                   <td colSpan={9} className="py-12 text-center text-[#6B6B6B]">
                     {rows.length === 0 ? (
-                      <>No events yet. <Link href="/events/add" className="text-[#C44200] font-medium underline">Create your first event</Link></>
+                      <>No events yet. <Link href="/events/add" className="text-[#1F65FF] font-medium underline">Create your first event</Link></>
                     ) : (
                       "No events match your search or filters."
                     )}
@@ -566,8 +566,8 @@ export default function EventListingPage() {
               ) : (
                 visible.map((r) => (
                   <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} onKeyDown={(e) => { if (e.key === "Enter") router.push(`/events/${r.id}`); }} tabIndex={0} role="link" aria-label={`Open ${r.name}`} className={`border-b border-[#D3D3D3] ${STATUS_HOVER[r.status]} focus-visible:outline focus-visible:outline-2 focus-visible:outline-black cursor-pointer`}>
-                    <td className="h-[46px] px-2.5 font-medium whitespace-nowrap"><Link href={`/events/${r.id}`} className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]">{r.displayId}</Link></td>
-                    <td className="px-2.5 max-w-[240px]"><Link href={`/events/${r.id}`} title={r.name} className="block min-h-6 leading-6 text-gray-900 hover:text-[#A83800] truncate">{r.name}</Link></td>
+                    <td className="h-[46px] px-2.5 font-medium whitespace-nowrap"><Link href={`/events/${r.id}`} className="inline-block min-h-6 leading-6 align-middle hover:text-[#1A56DB]">{r.displayId}</Link></td>
+                    <td className="px-2.5 max-w-[240px]"><Link href={`/events/${r.id}`} title={r.name} className="block min-h-6 leading-6 text-gray-900 hover:text-[#1A56DB] truncate">{r.name}</Link></td>
                     <td className="px-2.5 max-w-[180px] truncate" title={r.organizer}>{r.organizer}</td>
                     <td className="px-2.5 whitespace-nowrap">{formatCompactDateTime(r.createdAt, "—")}</td>
                     <td className="px-2.5 whitespace-nowrap">{r.category}</td>

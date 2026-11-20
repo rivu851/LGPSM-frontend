@@ -66,7 +66,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
           {/* Admins: which organizer the new system user belongs to (required) */}
           {isAdmin && (
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#15191C]">Organizer<span className="text-[#C44200] ml-0.5">*</span></label>
+              <label className="text-sm font-medium text-[#15191C]">Organizer<span className="text-[#1F65FF] ml-0.5">*</span></label>
               <CustomDropdown
                 portal
                 value={organizerId}
@@ -85,7 +85,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               {/* User Name */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  User Name<span className="text-[#C44200] ml-0.5">*</span>
+                  User Name<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <input
                   type="text"
@@ -100,7 +100,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               {/* Contact No */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Contact No<span className="text-[#C44200] ml-0.5">*</span>
+                  Contact No<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <PhoneInput
                   required
@@ -114,7 +114,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               {/* Email */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Email<span className="text-[#C44200] ml-0.5">*</span>
+                  Email<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <input
                   type="email"
@@ -129,7 +129,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               {/* Temporary Password */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-[#15191C]">
-                  Temporary Password<span className="text-[#C44200] ml-0.5">*</span>
+                  Temporary Password<span className="text-[#1F65FF] ml-0.5">*</span>
                 </label>
                 <PasswordField
                   required
@@ -145,7 +145,7 @@ export default function AddSystemUserModal({ isAdmin, organizers = [], initialOr
               <PopupMessage message={formError} />
 
               <div className="-mx-6 mt-6 px-6 py-4 border-t border-[#E0E0E0] flex items-center justify-end gap-3">
-                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? "Select an organizer first" : undefined} className="px-6 py-[11px] bg-[#C65318] hover:bg-[#A83800] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" disabled={isSubmitting || missingOrganizer} title={missingOrganizer ? "Select an organizer first" : undefined} className="px-6 py-[11px] bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-base font-semibold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   {isSubmitting ? "Adding..." : "Add"}
                 </button>
               </div>

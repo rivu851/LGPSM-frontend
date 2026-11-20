@@ -55,9 +55,9 @@ const PHASE_BADGE: Record<OverviewRow["phase"], string> = {
 };
 // a card's hover is its own colour: orange cards go orange, green go green, blue go blue
 const clickableCard = "relative cursor-pointer transition-colors focus-within:border-black";
-const TONE_HOVER = { orange: "hover:bg-[#FFE9DE]", green: "hover:bg-[#DDF6EA]", blue: "hover:bg-[#E1E8FF]" } as const;
+const TONE_HOVER = { orange: "hover:bg-[#EAF1FF]", green: "hover:bg-[#DDF6EA]", blue: "hover:bg-[#E1E8FF]", black: "hover:bg-[#EEEFF0]" } as const;
 // the arrow takes its card's colour when the card is hovered
-const TONE_ARROW = { orange: "group-hover:text-[#C44200]", green: "group-hover:text-[#117A43]", blue: "group-hover:text-[#2F5BEA]" } as const;
+const TONE_ARROW = { orange: "group-hover:text-[#1F65FF]", green: "group-hover:text-[#117A43]", blue: "group-hover:text-[#2F5BEA]", black: "group-hover:text-black" } as const;
 const ArrowOut = ({ href, label, stretch, tone }: { href: string; label: string; stretch?: boolean; tone?: keyof typeof TONE_ARROW }) => (
   <Link href={href} aria-label={label} title={label} className={`text-[#15191C] ${tone ? TONE_ARROW[tone] : "hover:text-black"} transition-colors shrink-0${stretch ? " after:absolute after:inset-0 after:rounded-lg after:content-['']" : ""}`}>
     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
@@ -65,7 +65,7 @@ const ArrowOut = ({ href, label, stretch, tone }: { href: string; label: string;
 );
 
 function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
-  tone: "orange" | "green" | "blue";
+  tone: "orange" | "green" | "blue" | "black";
   icon: React.ReactNode;
   label: string;
   value: string;
@@ -74,7 +74,7 @@ function StatCard({ tone, icon, label, value, caption, lines, href, loading }: {
   href: string;
   loading: boolean;
 }) {
-  const t = { orange: ["bg-[#FFE9DE]", "text-[#C44200]"], green: ["bg-[#DDF6EA]", "text-[#117A43]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"] }[tone];
+  const t = { orange: ["bg-[#EAF1FF]", "text-[#1F65FF]"], green: ["bg-[#DDF6EA]", "text-[#117A43]"], blue: ["bg-[#E1E8FF]", "text-[#2F5BEA]"], black: ["bg-[#E6E7E8]", "text-[#15191C]"] }[tone];
   return (
     <div className={`group bg-white border border-[#E0E0E0] rounded-lg p-5 flex flex-col ${clickableCard} ${TONE_HOVER[tone]}`}>
       <div className="flex items-start justify-between gap-2">
@@ -100,13 +100,13 @@ function Donut({ invitees, attendees }: { invitees: number; attendees: number })
     <div className="flex items-center gap-4">
       <div className="relative size-28 shrink-0">
         <svg viewBox="0 0 120 120" className="size-28 -rotate-90" role="img" aria-label={`${attended} of ${invitees} invitees attended (${pctAttended}%)`}>
-          <circle cx="60" cy="60" r={r} fill="none" stroke="#FF651D" strokeWidth="22" />
+          <circle cx="60" cy="60" r={r} fill="none" stroke="#1F65FF" strokeWidth="22" />
           <circle cx="60" cy="60" r={r} fill="none" stroke="#2B2F33" strokeWidth="22" strokeDasharray={`${(pctAttended / 100) * c} ${c}`} />
         </svg>
         <span className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#15191C]">{pctAttended}%</span>
       </div>
       <div className="min-w-0 space-y-2.5 text-xs text-[#15191C]">
-        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#FF651D]" aria-hidden />Invitees <span className="font-semibold">{invitees}</span></p>
+        <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#1F65FF]" aria-hidden />Invitees <span className="font-semibold">{invitees}</span></p>
         <p className="flex items-center gap-2"><span className="size-2.5 shrink-0 rounded-full bg-[#2B2F33]" aria-hidden />Attendees <span className="font-semibold">{attended}</span></p>
       </div>
     </div>
@@ -295,12 +295,12 @@ export default function DashboardPage() {
                 caption="Total Events"
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
                 lines={[
-                  <><span className="font-semibold text-[#C44200]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
+                  <><span className="font-semibold text-[#1F65FF]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
                   <>Last Created: {shortDate(lastCreated)}</>,
                 ]}
               />
               <StatCard
-                tone="green"
+                tone="black"
                 label={isAdmin ? "Event Organizers" : "System Users"}
                 href={isAdmin ? "/event-organizer" : "/user-management"}
                 loading={loading}
@@ -308,12 +308,12 @@ export default function DashboardPage() {
                 caption={isAdmin ? "Total Organizers" : "Total System Users"}
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                 lines={[
-                  <><span className="font-semibold text-[#C44200]">{people.active.toLocaleString("en-IN")} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")} Inactive</span></>,
+                  <><span className="font-semibold text-[#15191C]">{people.active.toLocaleString("en-IN")} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")} Inactive</span></>,
                   <>{people.newThisMonth} New {isAdmin ? (people.newThisMonth === 1 ? "organizer" : "organizers") : people.newThisMonth === 1 ? "user" : "users"} added this month</>,
                 ]}
               />
               <StatCard
-                tone="blue"
+                tone="green"
                 label={isAdmin ? "Earnings Overview" : "Billing Overview"}
                 href={isAdmin ? "/earnings" : "/billing"}
                 loading={loading}
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                 caption={isAdmin ? "Total Earnings" : "Total Payments"}
                 icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
                 lines={[
-                  <>This Month: <span className="font-semibold text-[#C44200]">{fullMoney(thisMonth)}</span></>,
+                  <>This Month: <span className="font-semibold text-[#117A43]">{fullMoney(thisMonth)}</span></>,
                   lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>No billed events yet</>,
                 ]}
               />
@@ -336,11 +336,11 @@ export default function DashboardPage() {
                   <span className="text-xs text-[#6B6B6B]">To</span>
                   <DateField compact className="w-[150px]" placeholder="To" title="Events starting on or before this day" value={to} min={from || undefined} rangeFrom={from} rangeTo={to} onChange={(v) => { const r = settleRange({ from, to: v }, "to"); setFrom(r.from); setTo(r.to); setPage(1); }} />
                   {(from || to) && (
-                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#A83800] cursor-pointer">
+                    <button type="button" onClick={() => { setFrom(""); setTo(""); setPage(1); }} className="h-9 px-3 text-xs font-medium text-[#15191C] underline decoration-[#BDBDBD] underline-offset-2 hover:text-[#1A56DB] cursor-pointer">
                       Clear dates
                     </button>
                   )}
-                  <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#C65318] hover:bg-[#A83800] text-white text-sm font-semibold rounded-md">
+                  <Link href="/events/add" className="ml-1 inline-flex items-center gap-2 px-5 h-10 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-sm font-semibold rounded-md">
                     <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                     Add Event
                   </Link>
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                     ) : (
                       pageRows.map((r) => (
                         <tr key={r.id} onClick={() => router.push(`/events/${r.id}`)} className="cursor-pointer hover:bg-gray-50/80">
-                          <td className="py-3 px-2.5 truncate" title={r.title}><Link href={`/events/${r.id}`} onClick={(e) => e.stopPropagation()} className="inline-block min-h-6 leading-6 align-middle hover:text-[#A83800]">{r.title}</Link></td>
+                          <td className="py-3 px-2.5 truncate" title={r.title}><Link href={`/events/${r.id}`} onClick={(e) => e.stopPropagation()} className="inline-block min-h-6 leading-6 align-middle hover:text-[#1A56DB]">{r.title}</Link></td>
                           {isAdmin && <td className="py-3 px-2.5 truncate text-[#4B4F52]" title={r.organizer}>{r.organizer}</td>}
                           <td className="py-3 px-2.5 whitespace-nowrap">{r.start ? formatDateTime(r.start).replace(", ", " | ") : "—"}</td>
                           <td className="py-3 px-2.5 whitespace-nowrap">{r.end ? formatDateTime(r.end).replace(", ", " | ") : "—"}</td>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                               <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${PHASE_BADGE[r.phase]}`}>{r.phase}</span>
                             </td>
                           )}
-                          <td className="py-3 text-right text-[#C44200]" aria-hidden>
+                          <td className="py-3 text-right text-[#1F65FF]" aria-hidden>
                             <svg className="size-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 17L17 7M9 7h8v8" /></svg>
                           </td>
                         </tr>
@@ -439,7 +439,7 @@ export default function DashboardPage() {
             <section className={`group ${card} p-5 xl:flex-1 flex flex-col ${clickableCard} ${TONE_HOVER.orange}`} aria-labelledby="last-report-title">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="size-11 rounded-full bg-[#FFE9DE] text-[#C44200] flex items-center justify-center shrink-0" aria-hidden>
+                  <span className="size-11 rounded-full bg-[#EAF1FF] text-[#1F65FF] flex items-center justify-center shrink-0" aria-hidden>
                     <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 17V9m4 8V7m4 10v-4M4 21h16a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v16a1 1 0 001 1z" /></svg>
                   </span>
                   <div className="min-w-0">
@@ -495,7 +495,7 @@ export default function DashboardPage() {
               <h2 className="text-base font-bold text-gray-900">Top Organizers</h2>
               <Link
                 href="/event-organizer/add"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C65318] hover:bg-[#A83800] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#1F65FF] hover:bg-[#1A56DB] text-white text-xs font-semibold rounded-md transition-colors cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
@@ -538,7 +538,7 @@ export default function DashboardPage() {
                         <td className="py-4 px-4 font-medium">{org.ongoingEvents}</td>
                         <td className="py-4 px-4 font-medium">{org.pastEvents}</td>
                         <td className="py-4 px-2 text-right">
-                          <Link href={`/event-organizer/${org.id}`} className="text-[#C44200] font-semibold hover:underline">
+                          <Link href={`/event-organizer/${org.id}`} className="text-[#1F65FF] font-semibold hover:underline">
                             View
                           </Link>
                         </td>

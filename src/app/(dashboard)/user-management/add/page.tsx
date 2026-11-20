@@ -139,7 +139,7 @@ function AddUserContent() {
         <div className="px-4 sm:px-6 pt-[30px] pb-8 w-full space-y-8 flex-1 flex flex-col">
           {isAdmin && (
             <div className="max-w-sm space-y-1.5">
-              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#C44200] ml-0.5">*</span></label>
+              <label className="block text-sm font-medium text-[#15191C]">Organizer<span className="text-[#1F65FF] ml-0.5">*</span></label>
               <CustomDropdown
                 value={organizerId}
                 onChange={rememberOrganizer}
@@ -172,7 +172,7 @@ function AddUserContent() {
               <p className="text-sm font-semibold text-rose-600 text-center break-words">{loadError}</p>
               <button
                 onClick={() => loadSystemUsers()}
-                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-[#C44200] font-semibold text-xs rounded-md transition-colors cursor-pointer"
+                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-[#1F65FF] font-semibold text-xs rounded-md transition-colors cursor-pointer"
               >
                 Retry
               </button>
@@ -189,7 +189,7 @@ function AddUserContent() {
               </p>
               <button
                 onClick={() => setIsAddUserModalOpen(true)}
-                className="px-6 py-2 bg-[#F6F6F6] hover:bg-gray-200 text-[#C44200] font-medium text-base rounded-md transition-colors cursor-pointer"
+                className="px-6 py-2 bg-[#F6F6F6] hover:bg-gray-200 text-[#1F65FF] font-medium text-base rounded-md transition-colors cursor-pointer"
               >
                 Add User
               </button>

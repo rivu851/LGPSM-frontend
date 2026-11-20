@@ -2,7 +2,7 @@
 // Defaults to the current production deployment; set NEXT_PUBLIC_SITE_URL if the domain changes.
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://lgpsm-frontend.vercel.app").replace(/\/+$/, "");
 
-export const SITE_NAME = "LGPSM";
+export const SITE_NAME = "EventQRapp";
 
 export const SITE_DESCRIPTION =
   "Design, customize, and share stunning QR-based invitations for events and celebrations all in one simple platform.";

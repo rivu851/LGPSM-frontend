@@ -193,7 +193,7 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
           value={zoom}
           onChange={(event) => updateZoom(Number(event.target.value))}
           disabled={!ready || processing}
-          className="w-full accent-[#C65318] disabled:opacity-50"
+          className="w-full accent-[#1F65FF] disabled:opacity-50"
         />
         <PopupMessage message={error} />
 
@@ -201,7 +201,7 @@ export default function LogoCropDialog({ file, source, onClose, onCrop }: LogoCr
           <button type="button" onClick={onClose} disabled={processing} className="px-4 py-2 border border-[#D2D2D2] rounded-md text-sm font-medium hover:bg-gray-50 disabled:opacity-50">
             Cancel
           </button>
-          <button type="button" onClick={handleCrop} disabled={!ready || processing} className="px-4 py-2 rounded-md bg-[#C65318] hover:bg-[#A83800] text-sm font-semibold text-white disabled:opacity-50">
+          <button type="button" onClick={handleCrop} disabled={!ready || processing} className="px-4 py-2 rounded-md bg-[#1F65FF] hover:bg-[#1A56DB] text-sm font-semibold text-white disabled:opacity-50">
             {processing ? "Uploading…" : "Crop and upload"}
           </button>
         </div>

@@ -119,7 +119,7 @@ export default function ChangePasswordModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-[11px] text-base font-semibold text-white bg-[#C65318] rounded-lg hover:bg-[#A83800] transition-colors cursor-pointer disabled:opacity-50"
+              className="px-6 py-[11px] text-base font-semibold text-white bg-[#1F65FF] rounded-lg hover:bg-[#1A56DB] transition-colors cursor-pointer disabled:opacity-50"
             >
               {isSubmitting ? "Updating..." : "Update"}
             </button>
