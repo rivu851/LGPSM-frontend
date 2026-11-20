@@ -118,8 +118,8 @@ export default function PricingFaqSection() {
                   </div>
                   <div>
                     <span className="text-[11px] text-gray-500 font-normal block mb-0.5">Send Us Email</span>
-                    <a href="mailto:enquiry@kolkataseowala.com" className="text-[#1C2228] hover:text-[#1A56DB] transition-colors">
-                      enquiry@kolkataseowala.com
+                    <a href="mailto:hello@eventqrapp.com" className="text-[#1C2228] hover:text-[#1A56DB] transition-colors">
+                      hello@eventqrapp.com
                     </a>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { StatCalendarIcon, StatUsersIcon, StatMoneyIcon, StatReportsIcon } from "@/components/icons/DashboardIcons";
 import PageHeader from "@/components/common/PageHeader";
 import { useLiveRefresh } from "@/hooks/useLiveRefresh";
 import PopupMessage from "@/components/common/PopupMessage";
@@ -293,7 +294,7 @@ export default function DashboardPage() {
                 loading={loading}
                 value={rows.length.toLocaleString("en-IN")}
                 caption="Total Events"
-                icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M8 7V3m8 4V3M4 11h16M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
+                icon={<StatCalendarIcon className="h-[22px] w-5" />}
                 lines={[
                   <><span className="font-semibold text-[#1F65FF]">{counts.upcoming} Upcoming</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{counts.ongoing} Ongoing</span></>,
                   <>Last Created: {shortDate(lastCreated)}</>,
@@ -306,7 +307,7 @@ export default function DashboardPage() {
                 loading={loading}
                 value={people.total.toLocaleString("en-IN")}
                 caption={isAdmin ? "Total Organizers" : "Total System Users"}
-                icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.28-.36-1.86M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.28.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+                icon={<StatUsersIcon className="h-[18px] w-[21px]" />}
                 lines={[
                   <><span className="font-semibold text-[#15191C]">{people.active.toLocaleString("en-IN")} Active</span> <span className="mx-1">•</span> <span className="font-medium text-[#15191C]">{people.inactive.toLocaleString("en-IN")} Inactive</span></>,
                   <>{people.newThisMonth} New {isAdmin ? (people.newThisMonth === 1 ? "organizer" : "organizers") : people.newThisMonth === 1 ? "user" : "users"} added this month</>,
@@ -319,7 +320,7 @@ export default function DashboardPage() {
                 loading={loading}
                 value={earnings ? compactMoney(earnings.totalAmount) : "—"}
                 caption={isAdmin ? "Total Earnings" : "Total Payments"}
-                icon={<svg className="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>}
+                icon={<StatMoneyIcon className="size-6" />}
                 lines={[
                   <>This Month: <span className="font-semibold text-[#117A43]">{fullMoney(thisMonth)}</span></>,
                   lastBilled ? <>Last billed: <span className="font-semibold text-[#117A43]">{lastBilled.eventName}</span></> : <>No billed events yet</>,
@@ -440,7 +441,7 @@ export default function DashboardPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="size-11 rounded-full bg-[#EAF1FF] text-[#1F65FF] flex items-center justify-center shrink-0" aria-hidden>
-                    <svg className="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 17V9m4 8V7m4 10v-4M4 21h16a1 1 0 001-1V4a1 1 0 00-1-1H4a1 1 0 00-1 1v16a1 1 0 001 1z" /></svg>
+                    <StatReportsIcon className="size-6" />
                   </span>
                   <div className="min-w-0">
                     <h2 id="last-report-title" className="text-sm font-semibold text-[#15191C]">Last Event Report</h2>

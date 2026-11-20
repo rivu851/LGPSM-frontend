@@ -17,7 +17,7 @@ const CASES = [
 
 export default function UseCases() {
   return (
-    <section className="bg-[#000B2C] py-14 sm:py-20">
+    <section id="use-cases" className="scroll-mt-[69px] bg-[#000B2C] py-14 sm:py-20">
       <Container className="flex flex-col items-center gap-10">
         <Reveal className="flex max-w-[760px] flex-col items-center gap-4 text-center">
           <Headline className="text-white">Built for every kind of guest list</Headline>

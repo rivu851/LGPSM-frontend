@@ -80,6 +80,9 @@ const nextConfig: NextConfig = {
         destination: "/:path*",
         permanent: true,
       },
+      // The earlier Features and Pricing pages were replaced by sections of the landing page
+      { source: "/features", destination: "/#features", permanent: false },
+      { source: "/pricing", destination: "/#pricing", permanent: false },
     ];
   },
 };
