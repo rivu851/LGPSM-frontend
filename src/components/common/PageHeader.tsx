@@ -7,7 +7,7 @@ import NotificationBell from "./NotificationBell";
 // so existing callers compile, but it is not drawn.
 export default function PageHeader({ title, actions }: { title: React.ReactNode; icon?: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-20 bg-white border-b border-[#E5E5E5] px-4 sm:px-6 py-4 flex items-center gap-2.5 min-h-[68px]">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#E5E5E5] px-4 sm:px-6 py-4 flex items-center gap-2.5 min-h-[68px]">
       <h1 className="flex-1 min-w-0 truncate text-sm sm:text-xl font-medium text-black">{title}</h1>
       {actions}
       <NotificationBell />
